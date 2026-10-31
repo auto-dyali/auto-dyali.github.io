@@ -4,25 +4,15 @@
  */
 import type { JSX } from "react";
 
-const defs = (
-  <defs>
-    <linearGradient id="orIcon" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stopColor="#e9d998" />
-      <stop offset="100%" stopColor="#d6b66f" />
-    </linearGradient>
-  </defs>
-);
-
 const strokes = {
   fill: "none",
-  stroke: "url(#orIcon)",
+  stroke: "#E9D998",
   strokeWidth: 1.8,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
 };
 
-export type NomIcone =
-  | "ca" | "benefice" | "depenses" | "cle" | "commun"
+export type NomIcone = | "ca" | "benefice" | "depenses" | "cle" | "commun"
   | "voiture" | "carton" | "client" | "rapport"
   | "resistance" | "pos" | "barcode" | "planning" | "pointage"
   | "historique" | "cloche" | "profil" | "scanner" | "plus";
@@ -162,8 +152,7 @@ export function Icone({
       aria-hidden
       className={className}
     >
-      {defs}
-      {chemins[nom] ?? chemins.commun}
+      <g {...strokes}>{chemins[nom] ?? chemins.commun}</g>
     </svg>
   );
 }

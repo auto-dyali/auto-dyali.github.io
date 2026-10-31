@@ -55,11 +55,13 @@ export default function ConnexionPage() {
 
         <form className="mt-8 flex max-w-md flex-col gap-4" onSubmit={soumettre} noValidate>
           <div className="relative">
-            <span aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#d6b66f]">
-              ✉
-            </span>
+            <svg aria-hidden viewBox="0 0 20 20" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2">
+              <rect x="2.5" y="4.5" width="15" height="11" rx="2" fill="none" stroke="#d6b66f" strokeWidth="1.6" />
+              <path d="M3 6l7 5 7-5" fill="none" stroke="#d6b66f" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
             <input
-              className="champ pl-9"
+              style={{ paddingLeft: "2.6rem" }}
+              className="champ"
               type="email"
               autoComplete="username"
               placeholder="Email ou identifiant"
@@ -69,11 +71,13 @@ export default function ConnexionPage() {
           </div>
 
           <div className="relative">
-            <span aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#d6b66f]">
-              🔒
-            </span>
+            <svg aria-hidden viewBox="0 0 20 20" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2">
+              <rect x="4.5" y="9" width="11" height="7" rx="1.5" fill="none" stroke="#d6b66f" strokeWidth="1.6" />
+              <path d="M7 9V7a3 3 0 0 1 6 0v2" fill="none" stroke="#d6b66f" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
             <input
-              className="champ pl-9"
+              style={{ paddingLeft: "2.6rem" }}
+              className="champ"
               type="password"
               autoComplete="current-password"
               placeholder="Mot de passe"
