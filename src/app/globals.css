@@ -1,26 +1,115 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* =====================================================================
+   AUTO+ — Design system officiel (palette de la maquette)
+   ===================================================================== */
+@theme {
+  --color-fond: #102b32;          /* Fond principal */
+  --color-carte: #193a40;         /* Cartes */
+  --color-carte-2: #21464b;       /* Cartes secondaires */
+  --color-or: #d6b66f;            /* Or / Champagne — actions, titres */
+  --color-or-clair: #e9d998;      /* Or clair — dégradés, survols */
+  --color-ivoire: #f8ecc9;        /* Texte principal clair */
+  --color-texte2: #a8bb87;        /* Texte secondaire */
+  --color-succes: #38a987;
+  --color-alerte: #d69b6a;
+  --color-erreur: #d66868;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html,
+body {
+  background: var(--color-fond);
+  color: var(--color-ivoire);
+  font-family: var(--font-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Titres dorés type maquette */
+.titre-or {
+  background: linear-gradient(120deg, #f5e6c4 0%, #d6b66f 55%, #a8833e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Carte standard */
+.carte {
+  background: var(--color-carte);
+  border: 1px solid rgba(214, 182, 111, 0.12);
+  border-radius: 0.9rem;
+}
+.carte-2 {
+  background: var(--color-carte-2);
+  border: 1px solid rgba(214, 182, 111, 0.1);
+}
+
+/* Boutons or */
+.btn-or {
+  background: linear-gradient(120deg, #e9d998 0%, #d6b66f 100%);
+  color: #102b32;
+  font-weight: 700;
+  border-radius: 9999px;
+  transition: filter 0.15s ease;
+}
+.btn-or:hover {
+  filter: brightness(1.08);
+}
+.btn-or:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Champ de saisie */
+.champ {
+  background: rgba(33, 70, 75, 0.55);
+  border: 1px solid rgba(214, 182, 111, 0.25);
+  border-radius: 0.75rem;
+  color: var(--color-ivoire);
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  outline: none;
+}
+.champ:focus {
+  border-color: var(--color-or);
+}
+.champ::placeholder {
+  color: rgba(248, 236, 201, 0.45);
+}
+
+/* Barre de défilement discrète, style sombre */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(214, 182, 111, 0.25);
+  border-radius: 4px;
+}
+
+/* Flash d'apparition des écrans */
+@keyframes apparaitre {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
+.apparaitre {
+  animation: apparaitre 0.45s ease both;
+}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes clignote {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.clignote {
+  animation: clignote 1.4s ease-in-out infinite;
 }
