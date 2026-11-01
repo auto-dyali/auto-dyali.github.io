@@ -7,10 +7,10 @@
 export type StatutAtelier = "En cours" | "En attente" | "Planifié";
 
 export const kpiManager = [
-  { titre: "Chiffre d'affaires", valeur: "125 480 MAD", variation: "+12% vs mois dernier", pos: true, icone: "ca" },
-  { titre: "Bénéfice net", valeur: "38 750 MAD", variation: "+8% vs mois dernier", pos: true, icone: "benefice" },
-  { titre: "Dépenses", valeur: "46 320 MAD", variation: "-5% vs mois dernier", pos: true, icone: "depenses" },
-  { titre: "Interventions", valeur: "48", variation: "+15% vs mois dernier", pos: true, icone: "cle" },
+  { titre: "Chiffre d'affaires", valeur: "125 480 MAD", variation: "+12% vs mois dernier", pos: true, icone: "ca", image: "/images/car-premium.jpg" },
+  { titre: "Bénéfice net", valeur: "38 750 MAD", variation: "+8% vs mois dernier", pos: true, icone: "benefice", image: "/images/car-detail.jpg" },
+  { titre: "Dépenses", valeur: "46 320 MAD", variation: "-5% vs mois dernier", pos: true, icone: "depenses", image: "/images/garage-hero.jpg" },
+  { titre: "Interventions", valeur: "48", variation: "+15% vs mois dernier", pos: true, icone: "cle", image: "/images/car-detail.jpg" },
 ] as const;
 
 /* Évolution du chiffre d'affaires (jan → déc, en kMAD) */

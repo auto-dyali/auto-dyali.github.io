@@ -42,6 +42,7 @@ export default function TableauDeBordPage() {
             variation={k.variation}
             positif={!k.variation.startsWith("-")}
             icone={k.icone as NomIcone}
+            image={k.image}
           />
         ))}
       </section>

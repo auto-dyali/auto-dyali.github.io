@@ -57,12 +57,12 @@ export default function SplashPage() {
 /** Scène garage dessinée en CSS (silhouette voiture sur pont élévateur, halos dorés). */
 function SceneGarage() {
   return (
-    <div aria-hidden className="absolute inset-0">
+    <div aria-hidden className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/garage-hero.jpg')" }}>
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 bg-[#102b32]/70"
         style={{
-          background:
-            "radial-gradient(120% 90% at 50% 0%, #1b4550 0%, #102b32 55%, #0a1e23 100%)",
+          backgroundImage:
+            "linear-gradient(180deg, rgba(16,43,50,.35), rgba(8,25,30,.86)), radial-gradient(120% 90% at 50% 0%, rgba(27,69,80,.45), rgba(10,30,35,.78))",
         }}
       />
       {/* halos dorés */}

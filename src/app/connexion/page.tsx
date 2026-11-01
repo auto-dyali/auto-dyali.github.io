@@ -158,12 +158,12 @@ export default function ConnexionPage() {
 
 function SceneGarage() {
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/garage-hero.jpg')" }}>
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(110% 100% at 70% 30%, #1e4a55 0%, #122f36 55%, #0b2126 100%)",
+            "linear-gradient(90deg, rgba(16,43,50,.86), rgba(16,43,50,.2)), linear-gradient(180deg, rgba(16,43,50,.15), rgba(8,25,30,.72))",
         }}
       />
       <div
