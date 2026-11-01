@@ -235,16 +235,21 @@ create table purchase_orders (
   created_at        timestamptz not null default now(),
   unique (establishment_id, reference)
 );
+alter table purchase_orders add constraint purchase_orders_tenant_id_unique unique (establishment_id, id);
 
 create table purchase_order_items (
   id                uuid primary key default uuid_generate_v4(),
-  purchase_order_id uuid not null references purchase_orders(id) on delete cascade,
+  establishment_id  uuid not null references establishments(id) on delete cascade,
+  purchase_order_id uuid not null,
   product_id        uuid references products(id) on delete set null,
   label             text not null,
   quantity          numeric(10,2) not null default 1,
   received_quantity numeric(10,2) not null default 0,
   unit_price        numeric(10,2) not null default 0
 );
+alter table purchase_order_items add constraint purchase_order_items_order_tenant_fk
+  foreign key (establishment_id, purchase_order_id)
+  references purchase_orders(establishment_id, id) on delete cascade;
 
 -- ---------------------------------------------------------------------
 -- 6. ATELIER : ORDRES DE RÉPARATION & PLANNING
@@ -266,10 +271,12 @@ create table work_orders (
   created_at        timestamptz not null default now(),
   unique (establishment_id, reference)
 );
+alter table work_orders add constraint work_orders_tenant_id_unique unique (establishment_id, id);
 
 create table work_order_tasks (
   id                uuid primary key default uuid_generate_v4(),
-  work_order_id     uuid not null references work_orders(id) on delete cascade,
+  establishment_id  uuid not null references establishments(id) on delete cascade,
+  work_order_id     uuid not null,
   service_id        uuid references services(id) on delete set null,
   label             text not null,
   status            text not null default 'pending', -- pending | in_progress | done | cancelled
@@ -278,6 +285,9 @@ create table work_order_tasks (
   price             numeric(10,2) not null default 0,
   quality_checked   boolean not null default false
 );
+alter table work_order_tasks add constraint work_order_tasks_order_tenant_fk
+  foreign key (establishment_id, work_order_id)
+  references work_orders(establishment_id, id) on delete cascade;
 
 --(Notification) Rappels d'entretien automatiques
 create table maintenance_reminders (
@@ -323,10 +333,12 @@ create table sales (
   created_at        timestamptz not null default now(),
   unique (establishment_id, reference)
 );
+alter table sales add constraint sales_tenant_id_unique unique (establishment_id, id);
 
 create table sale_items (
   id                uuid primary key default uuid_generate_v4(),
-  sale_id           uuid not null references sales(id) on delete cascade,
+  establishment_id  uuid not null references establishments(id) on delete cascade,
+  sale_id           uuid not null,
   product_id        uuid references products(id) on delete set null,
   service_id        uuid references services(id) on delete set null,
   label             text not null,
@@ -335,6 +347,9 @@ create table sale_items (
   tax_rate          numeric(5,2)  not null default 20,
   discount          numeric(10,2) not null default 0
 );
+alter table sale_items add constraint sale_items_sale_tenant_fk
+  foreign key (establishment_id, sale_id)
+  references sales(establishment_id, id) on delete cascade;
 
 create table payments (
   id                uuid primary key default uuid_generate_v4(),
