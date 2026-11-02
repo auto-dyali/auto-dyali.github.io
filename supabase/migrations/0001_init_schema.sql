@@ -448,7 +448,7 @@ returns uuid language sql stable as $$
 $$;
 
 -- Helper : rôle de l'utilisateur connecté
-create or replace function current_role()
+create or replace function autoplus_current_role()
 returns user_role language sql stable as $$
   select role from profiles where id = auth.uid();
 $$;
@@ -456,13 +456,13 @@ $$;
 -- Helper : admin SaaS
 create or replace function is_saas_admin()
 returns boolean language sql stable as $$
-  select current_role() = 'saas_admin';
+  select autoplus_current_role() = 'saas_admin';
 $$;
 
 -- Helper : manager ou plus
 create or replace function is_manager()
 returns boolean language sql stable as $$
-  select current_role() in ('manager','saas_admin');
+  select autoplus_current_role() in ('manager','saas_admin');
 $$;
 
 -- Policies génériques : l'utilisateur voit uniquement son établissement
