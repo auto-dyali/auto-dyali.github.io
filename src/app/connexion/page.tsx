@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase-browser";
 
 /**
  * Écran 2 de la maquette — Connexion.
@@ -31,13 +32,20 @@ export default function ConnexionPage() {
       return;
     }
 
+    if (!supabase) {
+      setErreur("Supabase n’est pas configuré. Ajoutez les variables publiques dans .env.local.");
+      return;
+    }
+
     setEnCours(true);
-    // 🔒 TODO(PHASE 6) : auth réelle via /api/auth (Supabase) — clés en attente.
-    // En attendant : session de démonstration locale clairement marquée.
-    setTimeout(() => {
-      document.cookie = "autoplus_demo=1; path=/" + (seSouvenir ? "; max-age=2592000" : "");
-      router.push("/tableau-de-bord");
-    }, 700);
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: motPasse });
+    setEnCours(false);
+    if (error) {
+      setErreur(error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect." : error.message);
+      return;
+    }
+    if (seSouvenir) localStorage.setItem("autoplus_remember", "1");
+    router.push("/tableau-de-bord");
   }
 
   return (
