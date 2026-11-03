@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { ShellApp } from "@/components/shell-app";
-import { CarteKpi } from "@/components/carte-kpi";
+import { DashboardKpis } from "@/components/dashboard-kpis";
 import { CourbeCA, DonutServices } from "@/components/graphiques";
 import {
   Icone,
   type NomIcone,
 } from "@/components/icones";
 import {
-  kpiManager,
   caMensuel,
   caParService,
   vehiculesAtelier,
@@ -34,17 +33,7 @@ export default function TableauDeBordPage() {
     >
       {/* KPIs */}
       <section aria-label="Indicateurs clés" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {kpiManager.map((k) => (
-          <CarteKpi
-            key={k.titre}
-            titre={k.titre}
-            valeur={k.valeur}
-            variation={k.variation}
-            positif={!k.variation.startsWith("-")}
-            icone={k.icone as NomIcone}
-            image={k.image}
-          />
-        ))}
+        <DashboardKpis />
       </section>
 
       {/* Graphiques + véhicules */}
