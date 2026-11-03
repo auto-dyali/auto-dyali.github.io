@@ -15,7 +15,7 @@ const strokes = {
 export type NomIcone = | "ca" | "benefice" | "depenses" | "cle" | "commun"
   | "voiture" | "carton" | "client" | "rapport"
   | "resistance" | "pos" | "barcode" | "planning" | "pointage"
-  | "historique" | "cloche" | "profil" | "scanner" | "plus";
+  | "historique" | "cloche" | "profil" | "scanner" | "plus" | "oeil" | "deconnexion";
 
 const chemins: Record<NomIcone, JSX.Element> = {
   // KPIs
@@ -133,6 +133,18 @@ const chemins: Record<NomIcone, JSX.Element> = {
     </>
   ),
   plus: <path d="M10 4.5v11M4.5 10h11" />,
+  oeil: (
+    <>
+      <path d="M2.8 10s2.5-4 7.2-4 7.2 4 7.2 4-2.5 4-7.2 4-7.2-4-7.2-4Z" />
+      <circle cx="10" cy="10" r="1.8" />
+    </>
+  ),
+  deconnexion: (
+    <>
+      <path d="M8 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" />
+      <path d="M11 6.5 14.5 10 11 13.5M14 10H7" />
+    </>
+  ),
 };
 
 export function Icone({

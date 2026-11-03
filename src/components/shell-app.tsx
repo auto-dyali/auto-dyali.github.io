@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { Icone, type NomIcone } from "@/components/icones";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase-browser";
 
 /**
  * Shell de l'application connectée — navigation latérale fidèle à la
@@ -42,17 +43,46 @@ export function ShellApp({
 }) {
   const [ouvert, setOuvert] = useState(false);
   const [aujourdHui, setAujourdHui] = useState("");
+  const [heureActuelle, setHeureActuelle] = useState("");
+  const [confirmerDeconnexion, setConfirmerDeconnexion] = useState(false);
 
   useEffect(() => {
-    setAujourdHui(
-      new Intl.DateTimeFormat("fr-FR", {
+    const formatterDate = new Intl.DateTimeFormat("fr-FR", {
         weekday: "long",
         day: "numeric",
         month: "long",
         year: "numeric",
-      }).format(new Date())
-    );
+      });
+    const formatterHeure = new Intl.DateTimeFormat("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    const actualiserHorloge = () => {
+      const maintenant = new Date();
+      setAujourdHui(formatterDate.format(maintenant));
+      setHeureActuelle(formatterHeure.format(maintenant));
+    };
+    actualiserHorloge();
+    const intervalle = window.setInterval(actualiserHorloge, 1000);
+    return () => window.clearInterval(intervalle);
   }, []);
+
+  async function seDeconnecter() {
+    await supabase?.auth.signOut();
+    window.location.href = "/connexion/";
+  }
+
+  const actionDeconnexion = (
+    <button
+      type="button"
+      onClick={() => setConfirmerDeconnexion(true)}
+      className="mt-auto flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm text-[#d66868] transition hover:bg-[#d66868]/10"
+    >
+      <Icone nom="deconnexion" taille={18} />
+      Déconnexion
+    </button>
+  );
 
   const recherche = (e: FormEvent) => {
     e.preventDefault();
@@ -87,13 +117,14 @@ export function ShellApp({
       <aside className="carte hidden w-60 shrink-0 rounded-none border-y-0 border-l-0 lg:flex lg:flex-col p-5 sticky top-0 h-screen overflow-y-auto">
         <Logo compact />
         {nav}
+        {actionDeconnexion}
       </aside>
 
       {/* Tiroir mobile / tablette */}
       {ouvert && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-label="Menu">
           <div className="absolute inset-0 bg-black/60" onClick={() => setOuvert(false)} />
-          <aside className="carte absolute top-0 left-0 h-full w-64 rounded-none p-5 overflow-y-auto">
+          <aside className="carte absolute top-0 left-0 flex h-full w-64 flex-col rounded-none p-5 overflow-y-auto">
             <div className="flex items-center justify-between">
               <Logo compact />
               <button
@@ -105,6 +136,7 @@ export function ShellApp({
               </button>
             </div>
             {nav}
+            {actionDeconnexion}
           </aside>
         </div>
       )}
@@ -134,7 +166,8 @@ export function ShellApp({
           </form>
 
           <div className="hidden sm:block text-right text-[11px] leading-tight text-[#a8bb87] capitalize">
-            {aujourdHui}
+            <span>{aujourdHui}</span>
+            <span className="mt-0.5 block text-[#e9d998]">{heureActuelle}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -147,6 +180,22 @@ export function ShellApp({
 
         <main className="flex-1 p-4 lg:p-7">{enfants}</main>
       </div>
+
+      {confirmerDeconnexion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-5" role="dialog" aria-modal="true" aria-labelledby="deconnexion-titre">
+          <div className="carte w-full max-w-sm p-6 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d66868]/15"><Icone nom="deconnexion" taille={20} /></span>
+              <h2 id="deconnexion-titre" className="font-bold text-[#f8ecc9]">Confirmer la déconnexion</h2>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-[#a8bb87]">Voulez-vous vraiment quitter votre espace AUTO DYALI ? Votre session sera fermée en toute sécurité.</p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => setConfirmerDeconnexion(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87] hover:bg-[#21464b]">Annuler</button>
+              <button type="button" onClick={() => void seDeconnecter()} className="rounded-lg bg-[#d66868] px-4 py-2 text-sm font-bold text-white hover:bg-[#bd5555]">Se déconnecter</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
