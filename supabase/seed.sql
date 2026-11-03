@@ -5,7 +5,7 @@
 
 -- Établissement principal
 insert into establishments (id, name, slug, city, phone) values
-  ('00000000-0000-0000-0000-000000000001', 'Garage Auto+ Casablanca', 'auto-plus-casa', 'Casablanca', '+212 5 22 00 00 00')
+  ('00000000-0000-0000-0000-000000000001', 'Garage AUTO DYALI Agadir', 'auto-dyali-agadir', 'Agadir', '+212 5 28 00 00 00')
 on conflict (slug) do nothing;
 
 -- Employés / équipe de la maquette
@@ -18,11 +18,11 @@ on conflict do nothing;
 
 -- Clients
 insert into clients (id, establishment_id, code, full_name, phone, city) values
-  ('00000000-0000-0000-0000-0000000000c1','00000000-0000-0000-0000-000000000001','CL-0001','Ahmed Belkacem','+212 661 000 001','Casablanca'),
-  ('00000000-0000-0000-0000-0000000000c2','00000000-0000-0000-0000-000000000001','CL-0002','Fatima Zahra','+212 661 000 002','Casablanca'),
+  ('00000000-0000-0000-0000-0000000000c1','00000000-0000-0000-0000-000000000001','CL-0001','Ahmed Belkacem','+212 661 000 001','Agadir'),
+  ('00000000-0000-0000-0000-0000000000c2','00000000-0000-0000-0000-000000000001','CL-0002','Fatima Zahra','+212 661 000 002','Agadir'),
   ('00000000-0000-0000-0000-0000000000c3','00000000-0000-0000-0000-000000000001','CL-0003','Rachid Alaoui','+212 661 000 003','Mohammedia'),
-  ('00000000-0000-0000-0000-0000000000c4','00000000-0000-0000-0000-000000000001','CL-0004','Sanae Bennis','+212 661 000 004','Casablanca'),
-  ('00000000-0000-0000-0000-0000000000c5','00000000-0000-0000-0000-000000000001','CL-0005','Omar Tazi','+212 661 000 005','Casablanca')
+  ('00000000-0000-0000-0000-0000000000c4','00000000-0000-0000-0000-000000000001','CL-0004','Sanae Bennis','+212 661 000 004','Agadir'),
+  ('00000000-0000-0000-0000-0000000000c5','00000000-0000-0000-0000-000000000001','CL-0005','Omar Tazi','+212 661 000 005','Agadir')
 on conflict do nothing;
 
 -- Véhicules du panneau « Véhicules en atelier » de la maquette

@@ -10,7 +10,7 @@ export function ModuleEnConstruction({
   description: string;
 }) {
   return (
-    <ShellApp actif={actif} salutation={titre} sousTitre="Garage AUTO DYALI — Casablanca">
+    <ShellApp actif={actif} salutation={titre} sousTitre="Garage AUTO DYALI — Agadir">
       <section className="carte apparaitre p-8 text-center sm:p-12">
         <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Module Manager</p>
         <h1 className="titre-or mt-2 text-2xl font-extrabold">{titre}</h1>
