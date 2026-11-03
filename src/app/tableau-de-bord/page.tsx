@@ -30,7 +30,7 @@ export default function TableauDeBordPage() {
     <ShellApp
       actif="Tableau de bord"
       salutation="Bonjour, Administrateur"
-      sousTitre="Garage Auto+ — Casablanca"
+      sousTitre="Garage AUTO DYALI — Casablanca"
     >
       {/* KPIs */}
       <section aria-label="Indicateurs clés" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

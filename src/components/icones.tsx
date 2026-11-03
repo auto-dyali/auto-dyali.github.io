@@ -1,5 +1,5 @@
 /**
- * Jeu d'icônes linéaires dorées (SVG) — style maquette AUTO+.
+ * Jeu d'icônes linéaires dorées (SVG) — style AUTO DYALI.
  * Chaque icône = trait fin doré, fond transparent.
  */
 import type { JSX } from "react";

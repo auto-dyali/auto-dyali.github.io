@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Logo AUTO+ — fidèle à la maquette :
- * silhouette de voiture dorée au-dessus du wordmark « AUTO+ »,
+ * Logo AUTO DYALI — identité automobile dorée,
+ * silhouette de voiture au-dessus du wordmark « AUTO DYALI »,
  * souligné par un filet doré. Vectoriel (net à toute taille).
  */
 export function Logo({
@@ -54,10 +54,10 @@ export function Logo({
       <span
         className={cn(
           "titre-or font-black tracking-wide leading-none",
-          compact ? "text-xl" : "text-3xl"
+          compact ? "text-base sm:text-lg" : "text-2xl sm:text-3xl"
         )}
       >
-        AUTO<span className="text-[#d6b66f]" style={{ WebkitTextFillColor: "#d6b66f" }}>+</span>
+        AUTO DYALI
       </span>
 
       {!compact && (

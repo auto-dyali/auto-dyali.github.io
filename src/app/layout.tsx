@@ -9,10 +9,10 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "AUTO+ | Automotive Management",
+  title: "AUTO DYALI | Automotive Management",
   description:
-    "AUTO+ — SaaS de gestion automobile complet pour garages : atelier, POS, stocks, caisse, employés et réservations. ACH GROUP.",
-  applicationName: "AUTO+",
+    "AUTO DYALI — SaaS de gestion automobile complet pour garages : atelier, POS, stocks, caisse, employés et réservations. ACH GROUP.",
+  applicationName: "AUTO DYALI",
 };
 
 export const viewport: Viewport = {
