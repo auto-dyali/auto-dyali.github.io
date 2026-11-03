@@ -46,11 +46,8 @@ export default function ConnexionPage() {
     }
     if (seSouvenir) localStorage.setItem("autodyali_remember", "1");
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .maybeSingle();
+    const { data: profileRows, error: profileError } = await supabase.rpc("get_my_profile");
+    const profile = profileRows?.[0];
 
     setEnCours(false);
     if (profileError || !profile) {
