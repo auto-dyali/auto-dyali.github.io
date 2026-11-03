@@ -6,7 +6,10 @@ export function PwaRegister() {
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
-      navigator.serviceWorker.register(`${basePath}/sw.js`, { scope: `${basePath}/` }).catch(() => {
+      navigator.serviceWorker.register(`${basePath}/sw.js`, {
+        scope: `${basePath}/`,
+        updateViaCache: "none",
+      }).then((registration) => registration.update()).catch(() => {
         // L'installation reste facultative si le navigateur bloque les service workers.
       });
     }
