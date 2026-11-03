@@ -38,14 +38,34 @@ export default function ConnexionPage() {
     }
 
     setEnCours(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: motPasse });
-    setEnCours(false);
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: motPasse });
     if (error) {
+      setEnCours(false);
       setErreur(error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect." : error.message);
       return;
     }
-    if (seSouvenir) localStorage.setItem("autoplus_remember", "1");
-    router.push("/tableau-de-bord");
+    if (seSouvenir) localStorage.setItem("autodyali_remember", "1");
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    setEnCours(false);
+    if (profileError || !profile) {
+      await supabase.auth.signOut();
+      setErreur("Votre profil n’est pas encore configuré. Demandez à l’administrateur de vous associer à un établissement.");
+      return;
+    }
+
+    if (profile.role === "saas_admin") router.replace("/super-admin/");
+    else if (profile.role === "employee") router.replace("/employe/");
+    else if (profile.role === "manager") router.replace("/tableau-de-bord/");
+    else {
+      await supabase.auth.signOut();
+      setErreur("Ce compte n’a pas encore accès à un espace AUTO DYALI.");
+    }
   }
 
   return (

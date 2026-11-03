@@ -443,25 +443,29 @@ alter table client_notifications        enable row level security;
 
 -- Helper : establishment_id de l'utilisateur connecté
 create or replace function current_establishment_id()
-returns uuid language sql stable as $$
-  select establishment_id from profiles where id = auth.uid();
+returns uuid language sql stable security definer
+set search_path = public as $$
+  select establishment_id from public.profiles where id = auth.uid();
 $$;
 
 -- Helper : rôle de l'utilisateur connecté
 create or replace function autoplus_current_role()
-returns user_role language sql stable as $$
-  select role from profiles where id = auth.uid();
+returns user_role language sql stable security definer
+set search_path = public as $$
+  select role from public.profiles where id = auth.uid();
 $$;
 
 -- Helper : admin SaaS
 create or replace function is_saas_admin()
-returns boolean language sql stable as $$
+returns boolean language sql stable security definer
+set search_path = public as $$
   select autoplus_current_role() = 'saas_admin';
 $$;
 
 -- Helper : manager ou plus
 create or replace function is_manager()
-returns boolean language sql stable as $$
+returns boolean language sql stable security definer
+set search_path = public as $$
   select autoplus_current_role() in ('manager','saas_admin');
 $$;
 
