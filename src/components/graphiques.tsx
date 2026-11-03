@@ -71,13 +71,16 @@ export function DonutServices({
 }) {
   const r = 54;
   const c = 2 * Math.PI * r;
-  let offset = 0;
+  const segments = parts.map((part, index) => ({
+    part,
+    offset: parts.slice(0, index).reduce((total, previous) => total + (previous.pourcent / 100) * c, 0),
+  }));
 
   return (
     <div className="flex items-center gap-5">
       <svg viewBox="0 0 140 140" className="h-36 w-36 shrink-0" role="img" aria-label="CA par service">
         <circle cx="70" cy="70" r={r} fill="none" stroke="#21464b" strokeWidth="17" />
-        {parts.map((p) => {
+        {segments.map(({ part: p, offset }) => {
           const long = (p.pourcent / 100) * c;
           const el = (
             <circle
@@ -94,7 +97,6 @@ export function DonutServices({
               strokeLinecap="butt"
             />
           );
-          offset += long;
           return el;
         })}
       </svg>

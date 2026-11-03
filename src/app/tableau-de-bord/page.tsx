@@ -50,7 +50,7 @@ export default function TableauDeBordPage() {
       {/* Graphiques + véhicules */}
       <section className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="carte p-5 xl:col-span-6">
-          <h2 className="mb-3 text-sm font-bold text-[#f8ecc9]">Évolution du chiffre d'affaires</h2>
+          <h2 className="mb-3 text-sm font-bold text-[#f8ecc9]">Évolution du chiffre d&apos;affaires</h2>
           <CourbeCA donnees={caMensuel} />
         </div>
 
@@ -75,7 +75,7 @@ export default function TableauDeBordPage() {
             ))}
           </ul>
           <Link href="/tableau-de-bord/atelier" className="mt-4 block text-center text-xs text-[#d6b66f] hover:underline">
-            Voir l'atelier →
+            Voir l&apos;atelier →
           </Link>
         </div>
       </section>

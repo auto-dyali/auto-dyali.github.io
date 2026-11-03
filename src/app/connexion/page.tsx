@@ -39,7 +39,7 @@ export default function ConnexionPage() {
     }
 
     setEnCours(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: motPasse });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: motPasse });
     if (error) {
       setEnCours(false);
       setErreur(error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect." : error.message);

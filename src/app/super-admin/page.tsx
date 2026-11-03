@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { Icone } from "@/components/icones";
 import { supabase } from "@/lib/supabase-browser";
@@ -11,6 +12,7 @@ export default function SuperAdminPage() {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     async function load() {
@@ -28,7 +30,7 @@ export default function SuperAdminPage() {
 
   async function logout() {
     await supabase?.auth.signOut();
-    window.location.href = "/connexion/";
+    router.replace("/connexion/");
   }
 
   return (

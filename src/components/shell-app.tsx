@@ -2,6 +2,7 @@
 
 import { useState, useEffect, type ReactNode, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { Icone, type NomIcone } from "@/components/icones";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,7 @@ export function ShellApp({
   const [aujourdHui, setAujourdHui] = useState("");
   const [heureActuelle, setHeureActuelle] = useState("");
   const [confirmerDeconnexion, setConfirmerDeconnexion] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const formatterDate = new Intl.DateTimeFormat("fr-FR", {
@@ -70,7 +72,7 @@ export function ShellApp({
 
   async function seDeconnecter() {
     await supabase?.auth.signOut();
-    window.location.href = "/connexion/";
+    router.replace("/connexion/");
   }
 
   const actionDeconnexion = (

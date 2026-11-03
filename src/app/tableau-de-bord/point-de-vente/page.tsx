@@ -1,5 +1,6 @@
 import { ShellApp } from "@/components/shell-app";
 import { ModuleTable, type ModuleRow } from "@/components/module-table";
+import { PosModule } from "@/components/pos-module";
 
 const sales: ModuleRow[] = [
   { id: "sale1", primary: "VNT-2025-0184", secondary: "Ahmed Belkacem · aujourd'hui 10:42", cells: ["Pièces + prestation", "1 250 MAD", "Payée"], status: "Payée" },
@@ -8,5 +9,5 @@ const sales: ModuleRow[] = [
 ];
 
 export default function PointDeVentePage() {
-  return <ShellApp actif="Point de vente" salutation="Point de vente" sousTitre="Pièces, accessoires et prestations"><div className="apparaitre"><div className="mb-6"><p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Commerce</p><h1 className="titre-or mt-1 text-2xl font-extrabold">Ventes & encaissement</h1><p className="mt-1 text-sm text-[#a8bb87]">Le POS doit fonctionner indépendamment de l&apos;atelier.</p></div><ModuleTable rows={sales} headers={["Type", "Total", "Paiement"]} placeholder="Référence ou client…" actionLabel="Nouvelle vente" /></div></ShellApp>;
+  return <ShellApp actif="Point de vente" salutation="Point de vente" sousTitre="Pièces, accessoires et prestations"><div className="apparaitre"><div className="mb-6"><p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Commerce</p><h1 className="titre-or mt-1 text-2xl font-extrabold">Ventes & encaissement</h1><p className="mt-1 text-sm text-[#a8bb87]">POS tactile responsive : téléphone, tablette et écran de caisse.</p></div><PosModule /><div className="mt-6"><h2 className="mb-3 text-sm font-bold text-[#f8ecc9]">Dernières ventes de démonstration</h2><ModuleTable rows={sales} headers={["Type", "Total", "Paiement"]} placeholder="Référence ou client…" actionLabel="Nouvelle vente" /></div></div></ShellApp>;
 }
