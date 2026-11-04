@@ -3,11 +3,9 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { Icone, type NomIcone } from "@/components/icones";
-import {
-  tachesEmploye,
-  interventionsEmploye,
-  raccourcisEmploye,
-} from "@/lib/mock-data";
+import { raccourcisEmploye } from "@/lib/mock-data";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase-browser";
 
 /**
  * Écran 4 de la maquette — Tableau de bord Employé (smartphone d'abord).
@@ -19,11 +17,16 @@ export default function EmployePage() {
     "À faire": "bg-[#38a987]/20 text-[#38a987]",
   };
 
+  const [employee, setEmployee] = useState<{ id: string; full_name: string; job_title: string } | null>(null);
+  const [orders, setOrders] = useState<{ id: string; reference: string; status: string; diagnosis: string | null }[]>([]);
+  const [appointments, setAppointments] = useState<{ id: string; slot_start: string; status: string }[]>([]);
+  const [attendanceCount, setAttendanceCount] = useState(0);
+  useEffect(() => { const timer = window.setTimeout(async () => { if (!supabase) return; const { data: profile } = await supabase.rpc("get_my_profile"); const establishmentId = profile?.[0]?.establishment_id; if (!establishmentId) return; const { data: employeeData } = await supabase.from("employees").select("id, full_name, job_title").eq("profile_id", profile?.[0]?.id).maybeSingle(); const emp = employeeData as typeof employee; setEmployee(emp); if (emp) { const [{ data: orderData }, { count }, { data: appointmentData }] = await Promise.all([supabase.from("work_orders").select("id, reference, status, diagnosis").eq("assigned_to", emp.id).order("created_at", { ascending: false }).limit(6), supabase.from("attendance").select("id", { count: "exact", head: true }).eq("employee_id", emp.id), supabase.from("appointments").select("id, slot_start, status").eq("mechanic_id", emp.id).order("slot_start")]); setOrders((orderData ?? []) as typeof orders); setAttendanceCount(count ?? 0); setAppointments((appointmentData ?? []) as typeof appointments); } }, 0); return () => window.clearTimeout(timer); }, []);
   const tuiles = [
-    { label: "Mes interventions", valeur: tachesEmploye.interventions, icone: "cle" as NomIcone },
-    { label: "Pointage", valeur: tachesEmploye.pointage, icone: "pointage" as NomIcone },
-    { label: "Rendez-vous", valeur: tachesEmploye.rendezVous, icone: "planning" as NomIcone },
-    { label: "Tâches", valeur: tachesEmploye.taches, icone: "rapport" as NomIcone },
+    { label: "Mes interventions", valeur: orders.length, icone: "cle" as NomIcone },
+    { label: "Pointage", valeur: attendanceCount, icone: "pointage" as NomIcone },
+    { label: "Rendez-vous", valeur: appointments.length, icone: "planning" as NomIcone },
+    { label: "Tâches", valeur: orders.filter((o) => o.status !== "done").length, icone: "rapport" as NomIcone },
   ];
 
   return (
@@ -45,7 +48,7 @@ export default function EmployePage() {
 
       <div className="flex flex-col gap-4 p-4">
         <div>
-          <p className="text-sm font-bold text-[#f8ecc9]">Bonjour Mohamed</p>
+          <p className="text-sm font-bold text-[#f8ecc9]">Bonjour {employee?.full_name ?? "Employé"}</p>
           <p className="text-xs text-[#a8bb87]">Voici vos tâches du jour</p>
         </div>
 
@@ -63,18 +66,18 @@ export default function EmployePage() {
         {/* Interventions */}
         <section aria-label="Mes interventions">
           <h2 className="mb-2 text-sm font-bold text-[#f8ecc9]">Mes interventions</h2>
-          <ul className="flex flex-col gap-2">
-            {interventionsEmploye.map((i) => (
-              <li key={i.ref} className="carte flex items-center gap-3 p-3">
+          <ul className="flex flex-col gap-2">{!orders.length && <li className="carte p-4 text-center text-xs text-[#a8bb87]">Aucune intervention assignée.</li>}
+            {(orders.length ? orders : []).map((i) => (
+              <li key={i.id} className="carte flex items-center gap-3 p-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#21464b]">
                   <Icone nom="voiture" taille={20} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-[#f8ecc9]">{i.ref} — <span className="font-medium">{i.travail}</span></p>
-                  <p className="mt-0.5 text-[11px] text-[#a8bb87]">{i.heure}</p>
+                  <p className="text-xs font-bold text-[#f8ecc9]">{i.reference} — <span className="font-medium">{i.diagnosis ?? "Intervention atelier"}</span></p>
+                  <p className="mt-0.5 text-[11px] text-[#a8bb87]">Ordre de réparation</p>
                 </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${statutStyle[i.statut]}`}>
-                  {i.statut}
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${statutStyle[i.status] ?? "bg-[#38a987]/20 text-[#38a987]"}`}>
+                  {i.status}
                 </span>
               </li>
             ))}

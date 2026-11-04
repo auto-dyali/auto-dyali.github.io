@@ -10,6 +10,7 @@ type ClientRecord = {
   full_name: string;
   phone: string | null;
   balance_due: number;
+  vehicles: { id: string }[] | null;
 };
 
 export function ClientsModule() {
@@ -28,7 +29,7 @@ export function ClientsModule() {
     }
     const { data, error: queryError } = await supabase
       .from("clients")
-      .select("id, code, full_name, phone, balance_due")
+      .select("id, code, full_name, phone, balance_due, vehicles(id)")
       .order("created_at", { ascending: false });
     if (queryError) setError(queryError.message);
     else setClients((data ?? []) as ClientRecord[]);
@@ -73,7 +74,7 @@ export function ClientsModule() {
     id: client.id,
     primary: client.full_name,
     secondary: `${client.code} · ${client.phone ?? "Téléphone non renseigné"}`,
-    cells: ["—", `${Number(client.balance_due ?? 0).toLocaleString("fr-FR")} MAD`, "Actif"],
+    cells: [String(client.vehicles?.length ?? 0), `${Number(client.balance_due ?? 0).toLocaleString("fr-FR")} MAD`, "Actif"],
     status: "Actif",
   }));
 
