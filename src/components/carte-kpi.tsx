@@ -18,8 +18,8 @@ export function CarteKpi({
 }) {
   return (
     <article className="carte relative flex min-h-40 flex-col justify-between gap-4 overflow-hidden p-5 transition hover:border-[#d6b66f]/40">
-      {image && <div aria-hidden className="absolute inset-0 bg-cover bg-center opacity-25" style={{ backgroundImage: `url('${image}')` }} />}
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-[#193a40]/85 via-[#193a40]/70 to-[#102b32]/90" />
+      {image && <div aria-hidden className="absolute inset-0 bg-cover bg-center opacity-60" style={{ backgroundImage: `url('${image}')` }} />}
+      <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-[#193a40]/55 via-[#193a40]/40 to-[#102b32]/75" />
       <div className="relative z-10 flex h-full flex-col justify-between gap-4">
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-sm font-medium text-[#f8ecc9]/90">{titre}</h3>
