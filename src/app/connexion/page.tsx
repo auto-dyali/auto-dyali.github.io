@@ -60,6 +60,7 @@ export default function ConnexionPage() {
     if (profile.role === "saas_admin") router.replace("/super-admin/");
     else if (profile.role === "employee") router.replace("/employe/");
     else if (profile.role === "manager") router.replace("/tableau-de-bord/");
+    else if (profile.role === "client") router.replace("/espace-client/");
     else {
       await supabase.auth.signOut();
       setErreur("Ce compte n’a pas encore accès à un espace AUTO DYALI.");

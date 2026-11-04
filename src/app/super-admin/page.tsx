@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { Icone } from "@/components/icones";
 import { supabase } from "@/lib/supabase-browser";
 
 type Establishment = { id: string; name: string; city: string | null; plan: string; is_active: boolean };
+type ClientForm = { fullName: string; email: string; phone: string; password: string };
 
 export default function SuperAdminPage() {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [clientOpen, setClientOpen] = useState(false);
+  const [savingClient, setSavingClient] = useState(false);
+  const [clientForm, setClientForm] = useState<ClientForm>({ fullName: "", email: "", phone: "", password: "" });
   const router = useRouter();
 
   useEffect(() => {
@@ -33,6 +38,42 @@ export default function SuperAdminPage() {
     router.replace("/connexion/");
   }
 
+  async function createClient(event: FormEvent) {
+    event.preventDefault();
+    if (!supabase) return;
+    setSavingClient(true);
+    setError(null);
+    setNotice(null);
+    const { data: current } = await supabase.auth.getSession();
+    const adminSession = current.session;
+    const { data, error: signupError } = await supabase.auth.signUp({
+      email: clientForm.email.trim().toLowerCase(),
+      password: clientForm.password,
+      options: { data: { full_name: clientForm.fullName.trim() } },
+    });
+
+    if (adminSession) await supabase.auth.setSession({ access_token: adminSession.access_token, refresh_token: adminSession.refresh_token });
+    if (signupError || !data.user) {
+      setError(signupError?.message === "User already registered" ? "Cette adresse email existe déjà." : signupError?.message ?? "Impossible de créer le compte Client.");
+      setSavingClient(false);
+      return;
+    }
+
+    const { error: completeError } = await supabase.rpc("complete_client_account", {
+      p_user_id: data.user.id,
+      p_full_name: clientForm.fullName,
+      p_email: clientForm.email,
+      p_phone: clientForm.phone || null,
+    });
+    if (completeError) setError(completeError.message);
+    else {
+      setNotice(data.session ? "Compte Client créé et prêt à se connecter." : "Compte Client créé. Un email de confirmation a été envoyé.");
+      setClientForm({ fullName: "", email: "", phone: "", password: "" });
+      setClientOpen(false);
+    }
+    setSavingClient(false);
+  }
+
   return (
     <main className="min-h-screen bg-[#102b32] text-[#f8ecc9]">
       <header className="flex items-center justify-between border-b border-[#d6b66f]/15 bg-[#193a40] px-5 py-4 lg:px-10">
@@ -49,12 +90,14 @@ export default function SuperAdminPage() {
         </section>
 
         <section className="carte mt-6 overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[#d6b66f]/10 p-5"><div><h2 className="font-bold">Entreprises et établissements</h2><p className="mt-1 text-xs text-[#a8bb87]">Les données proviennent de Supabase.</p></div><button type="button" className="btn-or px-4 py-2 text-sm">+ Nouvel établissement</button></div>
+          <div className="flex flex-col gap-3 border-b border-[#d6b66f]/10 p-5 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="font-bold">Entreprises et établissements</h2><p className="mt-1 text-xs text-[#a8bb87]">Les données proviennent de Supabase.</p></div><div className="flex flex-wrap gap-2"><button type="button" className="rounded-lg border border-[#d6b66f]/40 px-4 py-2 text-sm text-[#e9d998]">+ Nouvel établissement</button><button type="button" onClick={() => { setNotice(null); setError(null); setClientOpen(true); }} className="btn-or px-4 py-2 text-sm">+ Nouveau Client</button></div></div>
+          {notice && <p className="border-b border-[#38a987]/20 bg-[#38a987]/10 px-5 py-3 text-sm text-[#69d3a8]">{notice}</p>}
           {loading && <p className="p-6 text-sm text-[#a8bb87]">Chargement…</p>}
           {error && <p className="p-6 text-sm text-[#d66868]">{error}</p>}
           {!loading && !error && <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left text-sm"><thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]"><tr><th className="px-5 py-3">Établissement</th><th className="px-5 py-3">Ville</th><th className="px-5 py-3">Édition</th><th className="px-5 py-3">État</th></tr></thead><tbody className="divide-y divide-[#d6b66f]/10">{establishments.map((establishment) => <tr key={establishment.id}><td className="px-5 py-4 font-semibold">{establishment.name}</td><td className="px-5 py-4 text-[#a8bb87]">{establishment.city ?? "—"}</td><td className="px-5 py-4 uppercase text-[#e9d998]">{establishment.plan}</td><td className="px-5 py-4 text-[#38a987]">{establishment.is_active ? "Actif" : "Suspendu"}</td></tr>)}</tbody></table>{!establishments.length && <p className="p-8 text-center text-sm text-[#a8bb87]">Aucun établissement enregistré.</p>}</div>}
         </section>
       </div>
+      {clientOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5"><form onSubmit={createClient} className="carte w-full max-w-lg p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Accès immédiat</p><h2 className="titre-or mt-1 text-xl font-extrabold">Créer un compte Client</h2></div><button type="button" onClick={() => setClientOpen(false)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button></div><div className="mt-5 grid gap-3"><input required className="champ min-h-11" placeholder="Nom complet" value={clientForm.fullName} onChange={(event) => setClientForm({ ...clientForm, fullName: event.target.value })} /><input required type="email" className="champ min-h-11" placeholder="Email de connexion" value={clientForm.email} onChange={(event) => setClientForm({ ...clientForm, email: event.target.value })} /><input className="champ min-h-11" placeholder="Téléphone" value={clientForm.phone} onChange={(event) => setClientForm({ ...clientForm, phone: event.target.value })} /><input required minLength={6} type="password" className="champ min-h-11" placeholder="Mot de passe temporaire (6 caractères minimum)" value={clientForm.password} onChange={(event) => setClientForm({ ...clientForm, password: event.target.value })} /></div><div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setClientOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button><button disabled={savingClient} type="submit" className="btn-or px-4 py-2 text-sm">{savingClient ? "Création…" : "Créer le compte"}</button></div></form></div>}
     </main>
   );
 }
