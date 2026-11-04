@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Logo } from "@/components/logo";
 
 /**
  * Écran 1 de la maquette — Splash / Chargement.
@@ -21,35 +20,6 @@ export default function SplashPage() {
       {/* Fond garage : scène CSS (photo à substituer plus tard) */}
       <SceneGarage />
 
-      <div className="relative z-10 flex flex-col items-center gap-10 px-8">
-        <Logo className="apparaitre" />
-
-        <div className="text-center apparaitre">
-          <p className="titre-or text-xl font-bold">Votre garage, notre technologie</p>
-          <p className="mt-2 text-sm text-[#a8bb87]">
-            Une gestion complète, simple et efficace
-          </p>
-        </div>
-
-        <div className="w-56">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#21464b]">
-            <div
-              className="h-full w-full rounded-full"
-              style={{
-                background: "linear-gradient(90deg,#e9d998,#d6b66f)",
-                animation: "charger 2.3s ease-in-out forwards",
-              }}
-            />
-          </div>
-          <p className="mt-3 text-center text-xs tracking-widest text-[#f8ecc9]/60 clignote">
-            Chargement…
-          </p>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes charger { from { transform: translateX(-100%);} to { transform: translateX(0);} }
-      `}</style>
     </main>
   );
 }
