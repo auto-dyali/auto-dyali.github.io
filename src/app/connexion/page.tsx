@@ -79,7 +79,7 @@ export default function ConnexionPage() {
           Accédez à votre espace en toute sécurité
         </p>
 
-        <form className="mt-8 flex max-w-md flex-col gap-4" onSubmit={soumettre} noValidate>
+        <form className="formulaire-3d mt-8 flex max-w-md flex-col gap-4" onSubmit={soumettre} noValidate>
           <div className="relative">
             <svg aria-hidden viewBox="0 0 20 20" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2">
               <rect x="2.5" y="4.5" width="15" height="11" rx="2" fill="none" stroke="#d6b66f" strokeWidth="1.6" />
@@ -87,7 +87,7 @@ export default function ConnexionPage() {
             </svg>
             <input
               style={{ paddingLeft: "2.6rem" }}
-              className="champ"
+              className="champ champ-3d"
               type="email"
               autoComplete="username"
               placeholder="Email ou identifiant"
@@ -103,7 +103,7 @@ export default function ConnexionPage() {
             </svg>
             <input
               style={{ paddingLeft: "2.6rem", paddingRight: "2.8rem" }}
-              className="champ"
+              className="champ champ-3d"
               type={motPasseVisible ? "text" : "password"}
               autoComplete="current-password"
               placeholder="Mot de passe"
@@ -146,7 +146,7 @@ export default function ConnexionPage() {
 
           <button
             type="submit"
-            className="btn-or mt-2 w-full py-3 text-sm tracking-wide"
+            className="btn-or btn-or-3d mt-2 w-full py-3 text-sm tracking-wide"
             disabled={enCours}
           >
             {enCours ? "Connexion…" : "Se connecter"}
