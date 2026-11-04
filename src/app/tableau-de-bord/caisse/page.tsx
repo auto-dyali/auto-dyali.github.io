@@ -1,5 +1,6 @@
-import { ModuleEnConstruction } from "@/components/module-en-construction";
+import { ShellApp } from "@/components/shell-app";
+import { CaisseModule } from "@/components/backoffice-modules";
 
 export default function CaissePage() {
-  return <ModuleEnConstruction actif="Caisse" titre="Caisse" description="Ouverture de caisse, mouvements et clôture journalière du garage." />;
+  return <ShellApp actif="Caisse" salutation="Caisse" sousTitre="Ouverture, mouvements et clôture journalière"><div className="apparaitre"><CaisseModule /></div></ShellApp>;
 }
