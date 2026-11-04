@@ -94,3 +94,42 @@ $$;
 
 revoke all on function public.complete_client_account(uuid, text, text, text) from public;
 grant execute on function public.complete_client_account(uuid, text, text, text) to authenticated;
+
+
+-- Finalisation d'un compte Employé depuis le dashboard Super Admin.
+create or replace function public.complete_employee_account(
+  p_user_id uuid,
+  p_full_name text,
+  p_email text,
+  p_phone text default null,
+  p_job_title text default 'Mécanicien'
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_establishment_id uuid;
+  v_employee_id uuid;
+begin
+  if not public.is_saas_admin() then
+    raise exception 'Accès réservé au Super Admin';
+  end if;
+
+  select id into v_establishment_id from public.establishments where is_active = true order by created_at limit 1;
+  if v_establishment_id is null then raise exception 'Aucun établissement actif'; end if;
+
+  update public.profiles
+  set full_name = trim(p_full_name), phone = nullif(trim(coalesce(p_phone, '')), ''), establishment_id = v_establishment_id, role = 'employee'::public.user_role, is_active = true
+  where id = p_user_id;
+  if not found then raise exception 'Profil Employé introuvable'; end if;
+
+  insert into public.employees (establishment_id, profile_id, code, full_name, job_title, weekly_hours, active_permanent)
+  values (v_establishment_id, p_user_id, 'EMP-' || upper(substr(replace(p_user_id::text, '-', ''), 1, 8)), trim(p_full_name), trim(p_job_title), 40, true)
+  returning id into v_employee_id;
+end;
+$$;
+
+revoke all on function public.complete_employee_account(uuid, text, text, text, text) from public;
+grant execute on function public.complete_employee_account(uuid, text, text, text, text) to authenticated;
