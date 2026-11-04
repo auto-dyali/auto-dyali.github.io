@@ -45,7 +45,10 @@ function SceneGarage() {
   const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
   return (
       <div aria-hidden className="splash-bg absolute inset-0 overflow-hidden bg-[#102b32]">
-      <img src={`${basePath}/images/backgrounds/splash.webp`} alt="" className="splash-art absolute inset-0 h-full w-full object-cover" />
+      <picture className="absolute inset-0 block h-full w-full">
+        <source media="(max-width: 768px)" srcSet={`${basePath}/images/backgrounds/splash-mobile.webp`} />
+        <img src={`${basePath}/images/backgrounds/splash.webp`} alt="" className="splash-art absolute inset-0 h-full w-full object-fill sm:object-cover" />
+      </picture>
       <div
         className="absolute inset-0 bg-[#102b32]/10"
         style={{
