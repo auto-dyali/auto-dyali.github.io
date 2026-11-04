@@ -1,17 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { ShellApp } from "@/components/shell-app";
 import { DashboardKpis } from "@/components/dashboard-kpis";
+import { DashboardLive } from "@/components/dashboard-live";
 import { CourbeCA, DonutServices } from "@/components/graphiques";
 import {
   Icone,
   type NomIcone,
 } from "@/components/icones";
-import {
-  caMensuel,
-  caParService,
-  vehiculesAtelier,
-  raccourcisDashboard,
-} from "@/lib/mock-data";
+import { caMensuel, caParService, raccourcisDashboard } from "@/lib/mock-data";
 
 /**
  * Écran 3 de la maquette — Tableau de bord Manager (Admin).
@@ -50,19 +48,7 @@ export default function TableauDeBordPage() {
 
         <div className="carte p-5 xl:col-span-2">
           <h2 className="mb-3 text-sm font-bold text-[#f8ecc9]">Véhicules en atelier</h2>
-          <ul className="flex flex-col gap-3">
-            {vehiculesAtelier.map((v) => (
-              <li key={v.plaque} className="flex items-center justify-between gap-2 text-xs">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-[#f8ecc9]">{v.modele}</p>
-                  <p className="text-[10px] text-[#a8bb87]">{v.plaque}</p>
-                </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${couleurStatut[v.statut]}`}>
-                  {v.statut}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <DashboardLive couleurStatut={couleurStatut} />
           <Link href="/tableau-de-bord/atelier" className="mt-4 block text-center text-xs text-[#d6b66f] hover:underline">
             Voir l&apos;atelier →
           </Link>
@@ -75,6 +61,7 @@ export default function TableauDeBordPage() {
           <button
             key={r.label}
             type="button"
+            onClick={() => { const href = (r as { href?: string }).href; if (href) window.location.assign(href); }}
             className="carte-2 group flex flex-col items-center gap-3 rounded-xl p-6 transition hover:border-[#d6b66f]/40 hover:-translate-y-0.5"
           >
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#102b32]">
