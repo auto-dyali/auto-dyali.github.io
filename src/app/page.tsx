@@ -30,8 +30,7 @@ export default function SplashPage() {
       {/* Fond garage : scène CSS (photo à substituer plus tard) */}
       <SceneGarage />
       <div className="relative z-10 mt-auto mb-8 w-56 px-3 sm:mb-10 sm:w-72">
-        <p className="mb-3 text-center text-xs font-semibold tracking-widest text-[#f8ecc9]" aria-live="polite">Chargement… {progress} %</p>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#21464b] shadow-[0_0_16px_rgba(214,182,111,.35)]">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-transparent">
           <div className="h-full rounded-full bg-gradient-to-r from-[#e9d998] via-[#d6b66f] to-[#a8833e] transition-[width] duration-75" style={{ width: `${progress}%` }} />
         </div>
       </div>
