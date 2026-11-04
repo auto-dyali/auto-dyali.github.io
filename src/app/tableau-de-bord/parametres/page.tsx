@@ -1,5 +1,6 @@
-import { ModuleEnConstruction } from "@/components/module-en-construction";
+import { ShellApp } from "@/components/shell-app";
+import { ParametresModule } from "@/components/backoffice-modules";
 
 export default function ParametresPage() {
-  return <ModuleEnConstruction actif="Paramètres" titre="Paramètres" description="Configuration de l’établissement, des utilisateurs et des permissions." />;
+  return <ShellApp actif="Paramètres" salutation="Paramètres" sousTitre="Configuration de l’établissement et des accès"><div className="apparaitre"><ParametresModule /></div></ShellApp>;
 }
