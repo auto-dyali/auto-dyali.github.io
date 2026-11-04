@@ -20,20 +20,23 @@ export default function SuperAdminPage() {
   const [clientForm, setClientForm] = useState<ClientForm>({ fullName: "", email: "", phone: "", password: "" });
   const [employeeOpen, setEmployeeOpen] = useState(false); const [employeeSaving, setEmployeeSaving] = useState(false); const [employeeForm, setEmployeeForm] = useState<EmployeeForm>({ fullName: "", email: "", phone: "", password: "", jobTitle: "Mécanicien" });
   const router = useRouter();
+  const [estConnecte, setEstConnecte] = useState(false);
 
   useEffect(() => {
     async function load() {
       if (!supabase) { setError("Supabase n’est pas configuré."); setLoading(false); return; }
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) { router.replace("/connexion/"); return; }
       const { data, error: queryError } = await supabase
         .from("establishments")
         .select("id, name, city, plan, is_active")
         .order("created_at", { ascending: false });
       if (queryError) setError(queryError.message);
-      else setEstablishments(data ?? []);
+      else { setEstablishments(data ?? []); setEstConnecte(true); }
       setLoading(false);
     }
     void load();
-  }, []);
+  }, [router]);
 
   async function logout() {
     await supabase?.auth.signOut();
@@ -89,6 +92,8 @@ export default function SuperAdminPage() {
     if (completeError) setError(completeError.message); else { setNotice(data.session ? "Compte Employé créé et prêt." : "Compte Employé créé. Confirmation email envoyée."); setEmployeeForm({ fullName: "", email: "", phone: "", password: "", jobTitle: "Mécanicien" }); setEmployeeOpen(false); }
     setEmployeeSaving(false);
   }
+
+  if (!estConnecte) return <main className="flex min-h-screen items-center justify-center bg-[#102b32] text-sm text-[#a8bb87]">Vérification de la session…</main>;
 
   return (
     <main className="min-h-screen bg-[#102b32] text-[#f8ecc9]">
