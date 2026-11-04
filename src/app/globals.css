@@ -25,6 +25,15 @@ body {
   font-family: var(--font-sans);
 }
 
+.splash-bg {
+  background-size: cover;
+}
+@media (max-width: 640px) {
+  .splash-bg {
+    background-size: contain;
+  }
+}
+
 /* Titres dorés type maquette */
 .titre-or {
   background: linear-gradient(120deg, #f5e6c4 0%, #d6b66f 55%, #a8833e 100%);

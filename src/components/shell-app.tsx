@@ -115,7 +115,7 @@ export function ShellApp({
   );
 
   return (
-    <div className="flex min-h-screen bg-[#102b32] bg-cover bg-center bg-fixed" style={{ backgroundImage: `linear-gradient(rgba(16,43,50,.88),rgba(16,43,50,.94)), url('${basePath}/images/backgrounds/dashboard.webp')` }}>
+    <div className="flex min-h-screen bg-[#102b32] bg-cover bg-center bg-fixed" style={{ backgroundImage: `linear-gradient(rgba(16,43,50,.64),rgba(16,43,50,.78)), url('${basePath}/images/backgrounds/dashboard.webp')` }}>
       {/* Sidebar desktop */}
       <aside className="carte hidden w-60 shrink-0 rounded-none border-y-0 border-l-0 lg:flex lg:flex-col p-5 sticky top-0 h-screen overflow-y-auto">
         <Logo compact />

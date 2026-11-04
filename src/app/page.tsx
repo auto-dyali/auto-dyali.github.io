@@ -19,6 +19,13 @@ export default function SplashPage() {
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#102b32] [padding-top:env(safe-area-inset-top)] [padding-bottom:env(safe-area-inset-bottom)]">
       {/* Fond garage : scène CSS (photo à substituer plus tard) */}
       <SceneGarage />
+      <div className="relative z-10 mt-auto mb-8 w-56 px-3 sm:mb-10 sm:w-72">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#21464b] shadow-[0_0_16px_rgba(214,182,111,.35)]">
+          <div className="h-full w-full rounded-full bg-gradient-to-r from-[#e9d998] via-[#d6b66f] to-[#a8833e]" style={{ animation: "charger 2.3s ease-in-out forwards" }} />
+        </div>
+        <p className="mt-3 text-center text-xs font-semibold tracking-widest text-[#f8ecc9] clignote">Chargement…</p>
+      </div>
+      <style>{`@keyframes charger { from { transform: translateX(-100%); } to { transform: translateX(0); } }`}</style>
 
     </main>
   );
@@ -28,12 +35,12 @@ export default function SplashPage() {
 function SceneGarage() {
   const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
   return (
-      <div aria-hidden className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('${basePath}/images/backgrounds/splash.webp')` }}>
+      <div aria-hidden className="splash-bg absolute inset-0 bg-[#102b32] bg-center bg-no-repeat" style={{ backgroundImage: `url('${basePath}/images/backgrounds/splash.webp')` }}>
       <div
-        className="absolute inset-0 bg-[#102b32]/70"
+        className="absolute inset-0 bg-[#102b32]/10"
         style={{
           backgroundImage:
-            "linear-gradient(180deg, rgba(16,43,50,.35), rgba(8,25,30,.86)), radial-gradient(120% 90% at 50% 0%, rgba(27,69,80,.45), rgba(10,30,35,.78))",
+            "linear-gradient(180deg, rgba(16,43,50,.08), rgba(8,25,30,.28)), radial-gradient(120% 90% at 50% 0%, rgba(27,69,80,.15), rgba(10,30,35,.28))",
         }}
       />
       {/* halos dorés */}
