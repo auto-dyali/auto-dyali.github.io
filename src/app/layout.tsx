@@ -13,6 +13,15 @@ export const metadata: Metadata = {
   description:
     "AUTO DYALI — SaaS de gestion automobile complet pour garages : atelier, POS, stocks, caisse, employés et réservations. ACH GROUP.",
   applicationName: "AUTO DYALI",
+  icons: {
+    icon: ["/icons/auto-dyali-192.png", "/icons/auto-dyali-512.png"],
+    apple: "/icons/auto-dyali-192.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "AUTO DYALI",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {

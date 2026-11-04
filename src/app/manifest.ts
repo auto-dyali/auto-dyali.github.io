@@ -7,17 +7,21 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "AUTO DYALI — Automotive Management",
     short_name: "AUTO DYALI",
+    id: `${basePath}/`,
     description: "Gestion automobile premium pour garages, ateliers et magasins de pièces.",
     lang: "fr",
     start_url: `${basePath}/`,
     scope: `${basePath}/`,
     display: "standalone",
+    display_override: ["window-controls-overlay", "standalone"],
     orientation: "any",
     background_color: "#102B32",
     theme_color: "#102B32",
     icons: [
       { src: `${basePath}/icons/auto-dyali-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: `${basePath}/icons/auto-dyali-192.png`, sizes: "192x192", type: "image/png", purpose: "maskable" },
       { src: `${basePath}/icons/auto-dyali-512.png`, sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: `${basePath}/icons/auto-dyali-512.png`, sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
     categories: ["business", "productivity", "automotive"],
   };

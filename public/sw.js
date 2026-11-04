@@ -1,4 +1,4 @@
-const CACHE = "auto-dyali-shell-v3";
+const CACHE = "auto-dyali-shell-v4";
 const SHELL = ["./", "./icons/auto-dyali-192.png", "./icons/auto-dyali-512.png"];
 
 self.addEventListener("install", (event) => {

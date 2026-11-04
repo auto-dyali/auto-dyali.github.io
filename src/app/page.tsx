@@ -16,7 +16,7 @@ export default function SplashPage() {
   }, [router]);
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#102b32] [padding-top:env(safe-area-inset-top)] [padding-bottom:env(safe-area-inset-bottom)]">
       {/* Fond garage : scène CSS (photo à substituer plus tard) */}
       <SceneGarage />
 
@@ -28,7 +28,7 @@ export default function SplashPage() {
 function SceneGarage() {
   const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
   return (
-      <div aria-hidden className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${basePath}/images/backgrounds/splash.webp')` }}>
+      <div aria-hidden className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('${basePath}/images/backgrounds/splash.webp')` }}>
       <div
         className="absolute inset-0 bg-[#102b32]/70"
         style={{
