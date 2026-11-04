@@ -1,0 +1,3 @@
+"use client";
+import { useRouter } from "next/navigation";
+export default function ScannerPage() { const router = useRouter(); return <main className="min-h-screen bg-[#102b32] p-5 text-[#f8ecc9]"><button onClick={() => router.replace("/employe/")} className="text-sm text-[#d6b66f]">← Retour</button><h1 className="titre-or mt-6 text-2xl font-extrabold">Scanner produit</h1><p className="mt-2 text-sm text-[#a8bb87]">Placez le code-barres du produit dans le champ de scan. La recherche est disponible depuis le point de vente.</p><div className="carte mt-8 flex min-h-56 items-center justify-center text-center text-sm text-[#a8bb87]">Scanner disponible sur terminal tactile</div></main>; }

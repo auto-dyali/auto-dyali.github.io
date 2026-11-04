@@ -41,11 +41,11 @@ export const vehiculesAtelier = [
 ] as const;
 
 export const raccourcisDashboard = [
-  { label: "Vente rapide", icone: "resistance" },
-  { label: "Nouvelle intervention", icone: "voiture" },
-  { label: "Commande fournisseur", icone: "carton" },
-  { label: "Nouveau client", icone: "client" },
-  { label: "Rapport", icone: "rapport" },
+  { label: "Vente rapide", icone: "resistance", href: "/tableau-de-bord/point-de-vente" },
+  { label: "Nouvelle intervention", icone: "voiture", href: "/tableau-de-bord/atelier" },
+  { label: "Commande fournisseur", icone: "carton", href: "/tableau-de-bord/achats" },
+  { label: "Nouveau client", icone: "client", href: "/tableau-de-bord/clients" },
+  { label: "Rapport", icone: "rapport", href: "/tableau-de-bord/rapports" },
 ] as const;
 
 /* — Écran employé (mobile) — */

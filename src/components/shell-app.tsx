@@ -48,6 +48,8 @@ export function ShellApp({
   const [confirmerDeconnexion, setConfirmerDeconnexion] = useState(false);
   const router = useRouter();
   const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
+  const [estConnecte, setEstConnecte] = useState(false);
+  useEffect(() => { let vivant = true; const timer = window.setTimeout(async () => { const { data } = await supabase?.auth.getSession() ?? { data: { session: null } }; if (!vivant) return; if (!data.session) { router.replace("/connexion/"); return; } setEstConnecte(true); }, 0); return () => { vivant = false; window.clearTimeout(timer); }; }, [router]);
 
   useEffect(() => {
     const formatterDate = new Intl.DateTimeFormat("fr-FR", {
@@ -113,6 +115,8 @@ export function ShellApp({
       ))}
     </nav>
   );
+
+  if (!estConnecte) return <div className="flex min-h-screen items-center justify-center bg-[#102b32] text-sm text-[#a8bb87]">Vérification de la session…</div>;
 
   return (
     <div className="flex min-h-screen bg-[#102b32] bg-cover bg-center bg-fixed" style={{ backgroundImage: `linear-gradient(rgba(16,43,50,.64),rgba(16,43,50,.78)), url('${basePath}/images/backgrounds/dashboard.webp')` }}>

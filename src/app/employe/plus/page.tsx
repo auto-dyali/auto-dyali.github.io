@@ -1,0 +1,3 @@
+"use client";
+import { useRouter } from "next/navigation";
+export default function PlusPage() { const router = useRouter(); return <main className="min-h-screen bg-[#102b32] p-5 text-[#f8ecc9]"><button onClick={() => router.replace("/employe/")} className="text-sm text-[#d6b66f]">← Retour</button><h1 className="titre-or mt-6 text-2xl font-extrabold">Plus</h1><div className="mt-6 grid gap-3">{[["Mon planning","/employe/"],["Pointage","/employe/"],["Historique","/employe/"],["Notifications","/employe/"]].map(([label, href]) => <button key={label} onClick={() => router.replace(href)} className="carte min-h-14 px-5 text-left text-sm">{label}</button>)}</div></main>; }
