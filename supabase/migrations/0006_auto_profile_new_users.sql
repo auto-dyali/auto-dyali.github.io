@@ -133,3 +133,32 @@ $$;
 
 revoke all on function public.complete_employee_account(uuid, text, text, text, text) from public;
 grant execute on function public.complete_employee_account(uuid, text, text, text, text) to authenticated;
+
+
+-- Facturation automatique d'une vente payée.
+create or replace function public.create_invoice_for_sale(p_sale_id uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_sale sales%rowtype;
+  v_invoice_id uuid;
+  v_number text;
+begin
+  if not public.is_manager() then raise exception 'Accès réservé au Manager'; end if;
+  select * into v_sale from public.sales where id = p_sale_id and establishment_id = public.current_establishment_id();
+  if not found then raise exception 'Vente introuvable'; end if;
+  if v_sale.total <= 0 then raise exception 'Vente vide'; end if;
+  select coalesce(max(i.number), 'FAC-' || to_char(current_date, 'YYYYMM') || '-00000') into v_number from public.invoices as i where i.establishment_id = v_sale.establishment_id and i.number like 'FAC-' || to_char(current_date, 'YYYYMM') || '-%';
+  if v_number = 'FAC-' || to_char(current_date, 'YYYYMM') || '-00000' then v_number := 'FAC-' || to_char(current_date, 'YYYYMM') || '-00001'; else v_number := 'FAC-' || to_char(current_date, 'YYYYMM') || '-' || lpad((substring(v_number from '([0-9]+)$')::int + 1)::text, 5, '0'); end if;
+  insert into public.invoices (establishment_id, sale_id, number, issued_at, total)
+  values (v_sale.establishment_id, p_sale_id, v_number, current_date, v_sale.total)
+  returning id into v_invoice_id;
+  return v_invoice_id;
+end;
+$$;
+
+revoke all on function public.create_invoice_for_sale(uuid) from public;
+grant execute on function public.create_invoice_for_sale(uuid) to authenticated;
