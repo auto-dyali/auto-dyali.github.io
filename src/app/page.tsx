@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 /**
@@ -9,10 +9,20 @@ import { useRouter } from "next/navigation";
  */
 export default function SplashPage() {
   const router = useRouter();
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const t = setTimeout(() => router.push("/connexion"), 2400);
-    return () => clearTimeout(t);
+    const startedAt = Date.now();
+    const duration = 2400;
+    const timer = window.setInterval(() => {
+      const value = Math.min(100, Math.round(((Date.now() - startedAt) / duration) * 100));
+      setProgress(value);
+      if (value >= 100) {
+        window.clearInterval(timer);
+        router.replace("/connexion/");
+      }
+    }, 24);
+    return () => window.clearInterval(timer);
   }, [router]);
 
   return (
@@ -20,12 +30,11 @@ export default function SplashPage() {
       {/* Fond garage : scène CSS (photo à substituer plus tard) */}
       <SceneGarage />
       <div className="relative z-10 mt-auto mb-8 w-56 px-3 sm:mb-10 sm:w-72">
-        <p className="mb-3 text-center text-xs font-semibold tracking-widest text-[#f8ecc9] clignote">Chargement…</p>
+        <p className="mb-3 text-center text-xs font-semibold tracking-widest text-[#f8ecc9]" aria-live="polite">Chargement… {progress} %</p>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#21464b] shadow-[0_0_16px_rgba(214,182,111,.35)]">
-          <div className="h-full w-full rounded-full bg-gradient-to-r from-[#e9d998] via-[#d6b66f] to-[#a8833e]" style={{ animation: "charger 2.3s ease-in-out forwards" }} />
+          <div className="h-full rounded-full bg-gradient-to-r from-[#e9d998] via-[#d6b66f] to-[#a8833e] transition-[width] duration-75" style={{ width: `${progress}%` }} />
         </div>
       </div>
-      <style>{`@keyframes charger { from { transform: translateX(-100%); } to { transform: translateX(0); } }`}</style>
 
     </main>
   );
@@ -35,7 +44,8 @@ export default function SplashPage() {
 function SceneGarage() {
   const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
   return (
-      <div aria-hidden className="splash-bg absolute inset-0 bg-[#102b32] bg-center bg-no-repeat" style={{ backgroundImage: `url('${basePath}/images/backgrounds/splash.webp')` }}>
+      <div aria-hidden className="splash-bg absolute inset-0 overflow-hidden bg-[#102b32]">
+      <img src={`${basePath}/images/backgrounds/splash.webp`} alt="" className="splash-art absolute inset-0 h-full w-full object-contain sm:object-cover" />
       <div
         className="absolute inset-0 bg-[#102b32]/10"
         style={{

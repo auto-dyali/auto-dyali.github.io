@@ -33,6 +33,9 @@ body {
     background-size: contain;
   }
 }
+.splash-art {
+  image-rendering: auto;
+}
 
 /* Titres dorés type maquette */
 .titre-or {
