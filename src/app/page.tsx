@@ -19,6 +19,13 @@ export default function SplashPage() {
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#102b32] [padding-top:env(safe-area-inset-top)] [padding-bottom:env(safe-area-inset-bottom)]">
       {/* Fond garage : scène CSS (photo à substituer plus tard) */}
       <SceneGarage />
+      <div className="relative z-10 mt-auto mb-8 w-56 px-3 sm:mb-10 sm:w-72">
+        <p className="mb-3 text-center text-xs font-semibold tracking-widest text-[#f8ecc9] clignote">Chargement…</p>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#21464b] shadow-[0_0_16px_rgba(214,182,111,.35)]">
+          <div className="h-full w-full rounded-full bg-gradient-to-r from-[#e9d998] via-[#d6b66f] to-[#a8833e]" style={{ animation: "charger 2.3s ease-in-out forwards" }} />
+        </div>
+      </div>
+      <style>{`@keyframes charger { from { transform: translateX(-100%); } to { transform: translateX(0); } }`}</style>
 
     </main>
   );
