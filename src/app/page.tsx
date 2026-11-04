@@ -28,7 +28,7 @@ export default function SplashPage() {
 function SceneGarage() {
   const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
   return (
-      <div aria-hidden className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${basePath}/images/backgrounds/splash.png')` }}>
+      <div aria-hidden className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${basePath}/images/backgrounds/splash.webp')` }}>
       <div
         className="absolute inset-0 bg-[#102b32]/70"
         style={{

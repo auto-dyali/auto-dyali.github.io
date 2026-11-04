@@ -196,7 +196,7 @@ export default function ConnexionPage() {
 function SceneGarage() {
   const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
   return (
-    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${basePath}/images/backgrounds/connexion.jpg')` }}>
+    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${basePath}/images/backgrounds/connexion.webp')` }}>
       <div
         className="absolute inset-0"
         style={{
