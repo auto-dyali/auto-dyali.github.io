@@ -47,6 +47,8 @@ export function AtelierModule() {
   useEffect(() => {
     const timer = window.setTimeout(() => void loadOrders(), 0);
     return () => window.clearTimeout(timer);
+    // Chargement initial unique ; loadOrders est rappelé manuellement après ajout.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function addOrder(event: FormEvent) {
