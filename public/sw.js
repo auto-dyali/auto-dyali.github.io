@@ -1,5 +1,5 @@
 const CACHE = "auto-dyali-shell-v3";
-const SHELL = ["./", "./icons/auto-dyali.svg", "./icons/auto-dyali-192.png", "./icons/auto-dyali-512.png"];
+const SHELL = ["./", "./icons/auto-dyali-192.png", "./icons/auto-dyali-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
