@@ -17,8 +17,8 @@ export default function EmployePage() {
     pending: "bg-[#5b8a8f]/25 text-[#a8bb87]",
     in_progress: "bg-[#d6b66f]/20 text-[#e9d998]",
     waiting_parts: "bg-[#d6b66f]/15 text-[#e9d998]",
-    done: "bg-[#38a987]/20 text-[#38a987]",
-    delivered: "bg-[#38a987]/25 text-[#38a987]",
+    done: "bg-[#90a0b0]/20 text-[#90a0b0]",
+    delivered: "bg-[#90a0b0]/25 text-[#90a0b0]",
     cancelled: "bg-[#d66868]/15 text-[#d66868]",
   };
   const statutLabel: Record<string, string> = {
@@ -95,7 +95,7 @@ export default function EmployePage() {
                   <p className="text-xs font-bold text-[#f8ecc9]">{i.reference} — <span className="font-medium">{i.diagnosis ?? "Intervention atelier"}</span></p>
                   <p className="mt-0.5 text-[11px] text-[#a8bb87]">Ordre de réparation</p>
                 </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${statutStyle[i.status] ?? "bg-[#38a987]/20 text-[#38a987]"}`}>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${statutStyle[i.status] ?? "bg-[#90a0b0]/20 text-[#90a0b0]"}`}>
                   {statutLabel[i.status] ?? i.status}
                 </span>
               </li>

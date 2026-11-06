@@ -56,10 +56,10 @@ const STATUTS: { cle: string; label: string }[] = [
 
 const STATUT_COULEUR: Record<string, string> = {
   pending: "bg-[#d6b66f]/15 text-[#e9d998]",
-  in_progress: "bg-[#38a987]/15 text-[#69d3a8]",
+  in_progress: "bg-[#90a0b0]/15 text-[#90a0b0]",
   waiting_parts: "bg-[#d6b66f]/15 text-[#e9d998]",
-  done: "bg-[#38a987]/20 text-[#69d3a8]",
-  delivered: "bg-[#38a987]/25 text-[#69d3a8]",
+  done: "bg-[#90a0b0]/20 text-[#90a0b0]",
+  delivered: "bg-[#90a0b0]/25 text-[#90a0b0]",
   cancelled: "bg-[#d66868]/15 text-[#d66868]",
 };
 
@@ -319,7 +319,7 @@ export function AtelierModule() {
         <button type="button" onClick={() => setOpen(true)} className="btn-or min-h-11 px-5 text-sm">+ Nouvel ordre</button>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#90a0b0]/10 px-4 py-3 text-sm text-[#90a0b0]">{notice}</p>}
       {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
 
       <section className="carte overflow-hidden">
@@ -393,7 +393,7 @@ export function AtelierModule() {
                         disabled={traitement === order.id}
                         onClick={() => void basculerValidation(order)}
                         className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold disabled:opacity-40 ${
-                          order.approved_by_client ? "bg-[#38a987]/20 text-[#69d3a8]" : "border border-[#d6b66f]/30 text-[#a8bb87]"
+                          order.approved_by_client ? "bg-[#90a0b0]/20 text-[#90a0b0]" : "border border-[#d6b66f]/30 text-[#a8bb87]"
                         }`}
                       >
                         {order.approved_by_client ? "✓ Validé client" : "En attente client"}
@@ -534,7 +534,7 @@ export function AtelierModule() {
                             type="button"
                             onClick={() => void basculerControleQualite(t)}
                             className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold ${
-                              t.quality_checked ? "bg-[#38a987]/20 text-[#69d3a8]" : "border border-[#d6b66f]/30 text-[#a8bb87]"
+                              t.quality_checked ? "bg-[#90a0b0]/20 text-[#90a0b0]" : "border border-[#d6b66f]/30 text-[#a8bb87]"
                             }`}
                           >
                             {t.quality_checked ? "✓ Contrôle qualité" : "Contrôle qualité"}

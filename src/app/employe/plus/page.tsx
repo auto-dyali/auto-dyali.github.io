@@ -119,7 +119,7 @@ export default function PlusPage() {
         <p className="mt-1 text-sm text-[#a8bb87]">Entrées et sorties réelles de la journée.</p>
 
         {erreur && <p role="alert" className="mt-4 rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{erreur}</p>}
-        {notice && <p role="status" className="mt-4 rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
+        {notice && <p role="status" className="mt-4 rounded-lg bg-[#90a0b0]/10 px-4 py-3 text-sm text-[#90a0b0]">{notice}</p>}
 
         <section className="carte mt-5 p-5 text-center">
           {chargement ? (
