@@ -529,7 +529,7 @@ ${estPartiel ? `<div class="muted">Réglé : ${formatMad(montantRegle)} — rest
               <span className="mt-1 block text-xs leading-4 text-[#f8ecc9]/80">{produit.nom}</span>
               <span className="mt-2 block text-sm font-bold text-[#e9d998]">
                 {formatMad(produit.prix)}
-                {produit.stock > 0 && <span className="ml-2 text-[10px] font-normal text-[#38a987]">stock {produit.stock}</span>}
+                {produit.stock > 0 && <span className="ml-2 text-[10px] font-normal text-[#90a0b0]">stock {produit.stock}</span>}
               </span>
             </button>
           ))}
@@ -685,7 +685,7 @@ ${estPartiel ? `<div class="muted">Réglé : ${formatMad(montantRegle)} — rest
           </button>
         </div>
 
-        {message && <p role="status" className="mt-2 text-xs text-[#38a987]">{message}</p>}
+        {message && <p role="status" className="mt-2 text-xs text-[#90a0b0]">{message}</p>}
         {erreur && <p role="alert" className="mt-2 text-xs text-[#d66868]">{erreur}</p>}
       </aside>
     </section>
