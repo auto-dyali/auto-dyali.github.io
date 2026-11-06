@@ -9,6 +9,7 @@ export type ProduitTest = {
     | "Accessoire"
     | "Pièce"
     | "Merchandising"
+    | "Pneumatique"
     | "Autre";
   prix: number;
   stock: number;

@@ -230,7 +230,6 @@ export function PosModule() {
 
     if (!supabase) { setErreur("Supabase n’est pas configuré : encaissement impossible."); return; }
     if (!lignes.length) { setErreur("Ticket vide."); return; }
-    if (lignes.some((l) => !l.produit.id)) { setErreur("Produits hors ligne : reconnexion requise avant l’encaissement."); return; }
     if (modePaiement === "credit" && !clientId) { setErreur("Un client doit être sélectionné pour une vente à crédit."); return; }
     if (modePaiement === "acompte" && (montantRecuNum <= 0 || montantRecuNum >= totalTTC)) {
       setErreur("Saisissez un montant d’acompte strictement inférieur au total.");
@@ -438,6 +437,15 @@ ${estPartiel ? `<div class="muted">Réglé : ${formatMad(montantRegle)} — rest
   /* ---------------------------------------------------------------
    * Rendu — 3 zones
    * --------------------------------------------------------------- */
+  // Bip sonore scanner
+  const bip = () => {
+    try {
+      const audio = new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=");
+      audio.volume = 0.5;
+      void audio.play();
+    } catch { /* silencieux */ }
+  };
+
   return (
     <section className="grid gap-5 xl:grid-cols-[13rem_1fr_23rem]">
       {/* Zone 1 : navigation et catégories */}
@@ -462,11 +470,27 @@ ${estPartiel ? `<div class="muted">Réglé : ${formatMad(montantRegle)} — rest
         <div className="mt-5 border-t border-[#d6b66f]/10 pt-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Scanner</p>
           <p className="mt-2 text-xs leading-5 text-[#a8bb87]">
-            Douchette USB/Bluetooth ou caméra : scannez un <strong className="text-[#e9d998]">EAN-13</strong> — le produit est ajouté automatiquement.
+            Scannez ou saisissez un <strong className="text-[#e9d998]">code-barres EAN-13</strong>.
           </p>
-          <button type="button" onClick={() => rechercheRef.current?.focus()} className="mt-3 w-full rounded-lg border border-[#d6b66f]/40 px-3 py-2 text-xs text-[#e9d998]">
-            Placer le curseur dans la recherche
-          </button>
+          <div className="mt-2 flex gap-1">
+            <input
+              ref={rechercheRef}
+              type="text"
+              maxLength={13}
+              placeholder="EAN-13…"
+              className="champ flex-1 min-h-9 py-1 text-xs"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const code = (e.target as HTMLInputElement).value.replace(/[^\dA-Za-z]/g, "");
+                  if (code) { traiterCode(code); bip(); (e.target as HTMLInputElement).value = ""; }
+                }
+              }}
+            />
+            <button type="button" onClick={() => { const v = rechercheRef.current?.value ?? ""; if (v) { traiterCode(v.replace(/[^\dA-Za-z]/g, "")); bip(); if (rechercheRef.current) rechercheRef.current.value = ""; } }} className="rounded-lg px-2.5 py-1 text-xs bg-[#d6b66f] text-[#102b32] font-bold">
+              Scanner
+            </button>
+          </div>
+          <p className="mt-1 text-[10px] text-[#a8bb87]">Bip sonore à chaque scan.</p>
         </div>
       </aside>
 
@@ -685,6 +709,8 @@ function categorieProduit(catégorieBase: string): ProduitTest["categorie"] {
       return "Pièce";
     case "filtre":
       return "Filtre";
+    case "pneumatique":
+      return "Pneumatique";
     default:
       return "Autre";
   }
