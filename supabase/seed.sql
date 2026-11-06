@@ -1,5 +1,5 @@
 -- =====================================================================
--- AUTO+ — Données de démonstration locales (fidèles à la maquette)
+-- AUTO DYALI — Données de démonstration locales (fidèles à la maquette)
 -- Sera exécuté après la migration sur la base fournie.
 -- =====================================================================
 

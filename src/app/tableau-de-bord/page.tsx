@@ -4,12 +4,12 @@ import Link from "next/link";
 import { ShellApp } from "@/components/shell-app";
 import { DashboardKpis } from "@/components/dashboard-kpis";
 import { DashboardLive } from "@/components/dashboard-live";
-import { CourbeCA, DonutServices } from "@/components/graphiques";
+import { CourbeCAReelle, DonutCAReel } from "@/components/dashboard-graphiques";
 import {
   Icone,
   type NomIcone,
 } from "@/components/icones";
-import { caMensuel, caParService, raccourcisDashboard } from "@/lib/mock-data";
+import { raccourcisDashboard } from "@/lib/mock-data";
 
 /**
  * Écran 3 de la maquette — Tableau de bord Manager (Admin).
@@ -25,7 +25,7 @@ export default function TableauDeBordPage() {
 
   return (
     <ShellApp
-      actif="Tableau de bord"
+      actif="Tableau de bord" feature="dashboard"
       salutation="Bonjour, Administrateur"
       sousTitre="Garage AUTO DYALI — Agadir"
     >
@@ -37,13 +37,13 @@ export default function TableauDeBordPage() {
       {/* Graphiques + véhicules */}
       <section className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="carte p-5 xl:col-span-6">
-          <h2 className="mb-3 text-sm font-bold text-[#f8ecc9]">Évolution du chiffre d&apos;affaires</h2>
-          <CourbeCA donnees={caMensuel} />
+          <h2 className="mb-3 text-sm font-bold text-[#f8ecc9]">Évolution du chiffre d&apos;affaires — 6 derniers mois</h2>
+          <CourbeCAReelle />
         </div>
 
         <div className="carte p-5 xl:col-span-4">
-          <h2 className="mb-3 text-sm font-bold text-[#f8ecc9]">CA par service</h2>
-          <DonutServices parts={caParService} />
+          <h2 className="mb-3 text-sm font-bold text-[#f8ecc9]">CA par catégorie</h2>
+          <DonutCAReel />
         </div>
 
         <div className="carte p-5 xl:col-span-2">

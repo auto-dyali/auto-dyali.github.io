@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { Icone, type NomIcone } from "@/components/icones";
-import { raccourcisEmploye } from "@/lib/mock-data";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-browser";
 
 /**
@@ -12,16 +12,30 @@ import { supabase } from "@/lib/supabase-browser";
  * 4 tuiles rapides, interventions du jour, raccourcis, barre de nav basse.
  */
 export default function EmployePage() {
+  const router = useRouter();
   const statutStyle: Record<string, string> = {
-    "En cours": "bg-[#d6b66f]/20 text-[#e9d998]",
-    "À faire": "bg-[#38a987]/20 text-[#38a987]",
+    pending: "bg-[#5b8a8f]/25 text-[#a8bb87]",
+    in_progress: "bg-[#d6b66f]/20 text-[#e9d998]",
+    waiting_parts: "bg-[#d6b66f]/15 text-[#e9d998]",
+    done: "bg-[#38a987]/20 text-[#38a987]",
+    delivered: "bg-[#38a987]/25 text-[#38a987]",
+    cancelled: "bg-[#d66868]/15 text-[#d66868]",
+  };
+  const statutLabel: Record<string, string> = {
+    pending: "À faire",
+    in_progress: "En cours",
+    waiting_parts: "Pièces en attente",
+    done: "Terminé",
+    delivered: "Livré",
+    cancelled: "Annulé",
   };
 
   const [employee, setEmployee] = useState<{ id: string; full_name: string; job_title: string } | null>(null);
   const [orders, setOrders] = useState<{ id: string; reference: string; status: string; diagnosis: string | null }[]>([]);
   const [appointments, setAppointments] = useState<{ id: string; slot_start: string; status: string }[]>([]);
   const [attendanceCount, setAttendanceCount] = useState(0);
-  useEffect(() => { const timer = window.setTimeout(async () => { if (!supabase) return; const { data: profile } = await supabase.rpc("get_my_profile"); const establishmentId = profile?.[0]?.establishment_id; if (!establishmentId) return; const { data: employeeData } = await supabase.from("employees").select("id, full_name, job_title").eq("profile_id", profile?.[0]?.id).maybeSingle(); const emp = employeeData as typeof employee; setEmployee(emp); if (emp) { const [{ data: orderData }, { count }, { data: appointmentData }] = await Promise.all([supabase.from("work_orders").select("id, reference, status, diagnosis").eq("assigned_to", emp.id).order("created_at", { ascending: false }).limit(6), supabase.from("attendance").select("id", { count: "exact", head: true }).eq("employee_id", emp.id), supabase.from("appointments").select("id, slot_start, status").eq("mechanic_id", emp.id).order("slot_start")]); setOrders((orderData ?? []) as typeof orders); setAttendanceCount(count ?? 0); setAppointments((appointmentData ?? []) as typeof appointments); } }, 0); return () => window.clearTimeout(timer); }, []);
+  const [accesRefuse, setAccesRefuse] = useState(false);
+  useEffect(() => { const timer = window.setTimeout(async () => { if (!supabase) return; const { data: session } = await supabase.auth.getSession(); if (!session.session) { router.replace("/connexion/"); return; } const { data: profile } = await supabase.rpc("get_my_profile"); if (profile?.[0]?.role && profile[0].role !== "employee" && profile[0].role !== "manager") { setAccesRefuse(true); return; } const establishmentId = profile?.[0]?.establishment_id; if (!establishmentId) return; const { data: employeeData } = await supabase.from("employees").select("id, full_name, job_title").eq("profile_id", profile?.[0]?.id).maybeSingle(); const emp = employeeData as typeof employee; setEmployee(emp); if (emp) { const [{ data: orderData }, { count }, { data: appointmentData }] = await Promise.all([supabase.from("work_orders").select("id, reference, status, diagnosis").eq("assigned_to", emp.id).order("created_at", { ascending: false }).limit(6), supabase.from("attendance").select("id", { count: "exact", head: true }).eq("employee_id", emp.id), supabase.from("appointments").select("id, slot_start, status").eq("mechanic_id", emp.id).order("slot_start")]); setOrders((orderData ?? []) as typeof orders); setAttendanceCount(count ?? 0); setAppointments((appointmentData ?? []) as typeof appointments); } }, 0); return () => window.clearTimeout(timer); }, [router]);
   const tuiles = [
     { label: "Mes interventions", valeur: orders.length, icone: "cle" as NomIcone },
     { label: "Pointage", valeur: attendanceCount, icone: "pointage" as NomIcone },
@@ -29,21 +43,26 @@ export default function EmployePage() {
     { label: "Tâches", valeur: orders.filter((o) => o.status !== "done").length, icone: "rapport" as NomIcone },
   ];
 
+  if (accesRefuse) return (
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#102b32] p-6 text-center text-[#f8ecc9]">
+      <p className="text-sm text-[#d66868]">Accès refusé : cet espace est réservé aux employés.</p>
+      <button type="button" onClick={() => router.replace("/connexion/")} className="btn-or px-5 py-2 text-sm">Revenir à la connexion</button>
+    </main>
+  );
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-[#102b32] pb-24">
       {/* En-tête */}
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#d6b66f]/15 bg-[#102b32]/95 px-4 py-3 backdrop-blur">
-        <button aria-label="Ouvrir le menu" className="rounded-lg bg-[#21464b] p-2">
-          <svg viewBox="0 0 20 20" width="16" height="16">
-            <path d="M3 5h14M3 10h11M3 15h14" stroke="#d6b66f" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
         <Logo compact className="flex-1 items-center" />
-        <button aria-label="Notifications" className="relative rounded-lg bg-[#21464b] p-2">
-          <Icone nom="cloche" taille={16} />
-          <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-[#d66868] text-[9px] font-bold text-[#102b32] leading-3">2</span>
-        </button>
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#21464b] text-[10px] font-bold text-[#e9d998]">MM</span>
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#21464b] text-[10px] font-bold text-[#e9d998]">
+          {(employee?.full_name ?? "Employé")
+            .split(" ")
+            .map((mot) => mot[0])
+            .slice(0, 2)
+            .join("")
+            .toUpperCase()}
+        </span>
       </header>
 
       <div className="flex flex-col gap-4 p-4">
@@ -77,7 +96,7 @@ export default function EmployePage() {
                   <p className="mt-0.5 text-[11px] text-[#a8bb87]">Ordre de réparation</p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${statutStyle[i.status] ?? "bg-[#38a987]/20 text-[#38a987]"}`}>
-                  {i.status}
+                  {statutLabel[i.status] ?? i.status}
                 </span>
               </li>
             ))}
@@ -86,11 +105,15 @@ export default function EmployePage() {
 
         {/* Raccourcis */}
         <section aria-label="Raccourcis" className="grid grid-cols-3 gap-2">
-          {raccourcisEmploye.map((r) => (
-            <button key={r.label} type="button" className="carte-2 flex flex-col items-center gap-2 rounded-xl p-4 transition hover:border-[#d6b66f]/40">
-              <Icone nom={r.icone as NomIcone} taille={22} />
+          {[
+            { label: "Scanner produit", icone: "barcode" as NomIcone, href: "/employe/scanner" },
+            { label: "Pointage", icone: "pointage" as NomIcone, href: "/employe/plus" },
+            { label: "Historique", icone: "historique" as NomIcone, href: "/employe/plus" },
+          ].map((r) => (
+            <Link key={r.label} href={r.href} className="carte-2 flex flex-col items-center gap-2 rounded-xl p-4 transition hover:border-[#d6b66f]/40">
+              <Icone nom={r.icone} taille={22} />
               <span className="text-center text-[10px] font-semibold text-[#f8ecc9]">{r.label}</span>
-            </button>
+            </Link>
           ))}
         </section>
       </div>

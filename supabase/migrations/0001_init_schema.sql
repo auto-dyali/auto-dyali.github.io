@@ -1,5 +1,5 @@
 -- =====================================================================
--- AUTO+ — Schéma initial (migration supabase)
+-- AUTO DYALI — Schéma initial (migration supabase)
 -- SaaS multi-établissements : tout enregistrement métier porte
 -- establishment_id et est protégé par RLS.
 -- Rôles SaaS : saas_admin (plateforme) | manager | employee | client

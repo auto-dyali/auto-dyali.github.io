@@ -2,5 +2,5 @@ import { ShellApp } from "@/components/shell-app";
 import { PlanningModule } from "@/components/backoffice-modules";
 
 export default function PlanningPage() {
-  return <ShellApp actif="Planning" salutation="Planning & réservations" sousTitre="Rendez-vous et postes de travail"><div className="apparaitre"><PlanningModule /></div></ShellApp>;
+  return <ShellApp actif="Planning" feature="appointments" salutation="Planning & réservations" sousTitre="Rendez-vous et postes de travail"><div className="apparaitre"><PlanningModule /></div></ShellApp>;
 }

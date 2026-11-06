@@ -1,4 +1,4 @@
-const CACHE = "auto-dyali-shell-v4";
+const CACHE = "auto-dyali-shell-v6";
 const SHELL = ["./", "./icons/auto-dyali-192.png", "./icons/auto-dyali-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -14,9 +14,66 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+/**
+ * Stratégie :
+ * - Requêtes non-GET ou API Supabase (REST/JSON) → réseau uniquement.
+ *   Jamais de mise en cache des données : hors ligne, on ne sert JAMAIS
+ *   des données potentiellement périmées comme si elles étaient réelles.
+ * - Navigations (HTML) → réseau d'abord, repli sur la page mise en cache
+ *   (la dernière version vue reste consultable hors connexion).
+ * - Assets statiques (/_next/static, images, polices) → cache d'abord,
+ *   ils sont immuables puisque leur URL contient un hash.
+ */
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const request = event.request;
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+  const sameOrigin = url.origin === self.location.origin;
+  const isApi = /\/rest\/v1\/|\/auth\/v1\/|\/functions\/v1\//.test(url.pathname);
+  if (isApi) return; // réseau uniquement, aucune donnée API en cache
+
+  const isStaticAsset = sameOrigin && (
+    url.pathname.includes("/_next/static/") ||
+    /\.(?:css|js|png|svg|ico|woff2?)$/i.test(url.pathname)
+  );
+
+  if (isStaticAsset) {
+    // Cache d'abord (URLs hashées = immuables), puis réseau.
+    event.respondWith(
+      caches.match(request).then((cached) =>
+        cached || fetch(request).then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+          }
+          return response;
+        })
+      )
+    );
+    return;
+  }
+
+  if (request.mode === "navigate") {
+    // Réseau d'abord pour avoir la version fraîche, repli cache hors ligne.
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then((cached) => cached || caches.match("./") || Response.error())
+        )
+    );
+    return;
+  }
+
+  // Autres GET (mêmes origines) : réseau d'abord, repli cache.
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request).then((cached) => cached || Response.error()))
+    fetch(request).catch(() => caches.match(request).then((cached) => cached || Response.error()))
   );
 });

@@ -15,11 +15,13 @@ export function ModuleTable({
   headers,
   placeholder,
   actionLabel = "Ajouter",
+  onAdd,
 }: {
   rows: ModuleRow[];
   headers: string[];
   placeholder: string;
   actionLabel?: string;
+  onAdd?: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Tous");
@@ -47,7 +49,7 @@ export function ModuleTable({
             {statuses.map((value) => <option key={value}>{value}</option>)}
           </select>
         )}
-        <button type="button" className="btn-or whitespace-nowrap px-5 py-2.5 text-sm">+ {actionLabel}</button>
+        <button type="button" className="btn-or whitespace-nowrap px-5 py-2.5 text-sm" onClick={onAdd}>+ {actionLabel}</button>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[680px] text-left text-sm">
