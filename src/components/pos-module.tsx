@@ -57,6 +57,7 @@ export function PosModule() {
   const [recherche, setRecherche] = useState("");
   const [categorie, setCategorie] = useState("Toutes");
   const rechercheRef = useRef<HTMLInputElement>(null);
+  const eanRef = useRef<HTMLInputElement>(null);
 
   // Finances
   const [tauxTVA, setTauxTVA] = useState(20);
@@ -166,7 +167,8 @@ export function PosModule() {
     } else {
       setErreur(`Code-barres ${propre} introuvable dans le catalogue.`);
     }
-    rechercheRef.current?.focus();
+    eanRef.current?.focus();
+    eanRef.current?.select();
   }
 
   /* ---------------------------------------------------------------
@@ -476,7 +478,7 @@ ${estPartiel ? `<div class="muted">Réglé : ${formatMad(montantRegle)} — rest
           </p>
           <div className="mt-2 flex gap-1">
             <input
-              ref={rechercheRef}
+              ref={eanRef}
               type="text"
               maxLength={13}
               placeholder="EAN-13…"
@@ -488,7 +490,22 @@ ${estPartiel ? `<div class="muted">Réglé : ${formatMad(montantRegle)} — rest
                 }
               }}
             />
-            <button type="button" onClick={() => { const v = rechercheRef.current?.value ?? ""; if (v) { traiterCode(v.replace(/[^\dA-Za-z]/g, "")); bip(); if (rechercheRef.current) rechercheRef.current.value = ""; } }} className="rounded-lg px-2.5 py-1 text-xs bg-[#d6b66f] text-[#102b32] font-bold">
+            <button
+              type="button"
+              onClick={() => {
+                const champ = eanRef.current;
+                const v = (champ?.value ?? "").replace(/[^\dA-Za-z]/g, "");
+                if (!v) {
+                  setErreur("Saisissez un code-barres EAN-13 (ou scannez avec la douchette / la caméra).");
+                  champ?.focus();
+                  return;
+                }
+                traiterCode(v);
+                bip();
+                if (champ) champ.value = "";
+              }}
+              className="rounded-lg px-2.5 py-1 text-xs bg-[#d6b66f] text-[#102b32] font-bold"
+            >
               Scanner
             </button>
           </div>
