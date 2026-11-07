@@ -1,16 +1,20 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { ScannerCamera } from "@/components/scanner-camera";
 
 /**
  * Champ de scan EAN-13 réutilisable (POS, Stock, Catalogue).
  *
- * Logique :
- * - Saisie manuelle ou douchette USB/Bluetooth HID (le champ a le focus,
- *   la douchette envoie les chiffres puis Entrée) → `onCode(code)`.
- * - Bouton « Scanner » : lit la valeur du champ, bip sonore, renvoie le code.
- * - Aucun code valide → message d'erreur + focus (pas de clic silencieux).
- * - Après un scan : le champ est vidé et re-sélectionné pour un scan suivant.
+ * Logique de repli caméra (demande du propriétaire) :
+ * - Douchette USB/Bluetooth HID : elle a le focus, envoie les chiffres puis
+ *   Entrée → code traité immédiatement.
+ * - Bouton « Scanner » avec un code saisi → traité (saisie manuelle).
+ * - Bouton « Scanner » SANS code saisi (pas de douchette connectée) →
+ *   la caméra s'ouvre automatiquement (PC ou smartphone) et lit le code.
+ * - Bouton « Caméra » explicite : ouverture directe de la caméra.
+ * - La caméra utilise l'API native `BarcodeDetector` ; si le navigateur ne
+ *   la supporte pas, message honnête (pas de lecture simulée).
  */
 
 /** Bip sonore partagé (data URI WAV court, aucun fichier externe). */
@@ -33,15 +37,21 @@ export function ScanChamp({
 }) {
   const champRef = useRef<HTMLInputElement>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [camOuverte, setCamOuverte] = useState(false);
 
+  /** Traite la saisie ; si vide → repli automatique caméra. */
   function traiter(valeur: string) {
     const propre = valeur.replace(/[^\dA-Za-z]/g, "");
     if (!propre) {
-      setErreur("Saisissez un code-barres (ou scannez avec la douchette / la caméra).");
-      champRef.current?.focus();
+      // Pas de douchette (aucun code reçu) : on passe à la caméra.
+      setErreur(null);
+      setInfo("Aucun code détecté à la saisie — ouverture de la caméra…");
+      setCamOuverte(true);
       return;
     }
     setErreur(null);
+    setInfo(null);
     onCode(propre);
     bip();
     if (champRef.current) {
@@ -49,6 +59,15 @@ export function ScanChamp({
       champRef.current.focus();
       champRef.current.select();
     }
+  }
+
+  function codeCamera(code: string) {
+    setCamOuverte(false);
+    setErreur(null);
+    setInfo(null);
+    onCode(code);
+    bip();
+    champRef.current?.focus();
   }
 
   return (
@@ -71,12 +90,27 @@ export function ScanChamp({
         <button
           type="button"
           onClick={() => traiter(champRef.current?.value ?? "")}
+          title="Scanner avec la douchette, ou ouvrir la caméra si aucun code n'est saisi"
           className="min-h-11 shrink-0 rounded-lg bg-[#d6b66f] px-4 text-sm font-bold text-[#102b32]"
         >
           Scanner
         </button>
+        <button
+          type="button"
+          onClick={() => setCamOuverte(true)}
+          title="Lire un code avec la caméra du PC ou du smartphone"
+          aria-label="Scanner avec la caméra"
+          className="min-h-11 shrink-0 rounded-lg border border-[#d6b66f]/40 px-3 text-sm text-[#e9d998]"
+        >
+          📷
+        </button>
       </div>
       {erreur && <p role="alert" className="mt-1 text-xs text-[#d66868]">{erreur}</p>}
+      {info && <p role="status" className="mt-1 text-xs text-[#90a0b0]">{info}</p>}
+
+      {camOuverte && (
+        <ScannerCamera onCode={codeCamera} fermer={() => { setCamOuverte(false); champRef.current?.focus(); }} />
+      )}
     </div>
   );
 }
