@@ -1,20 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScannerCamera } from "@/components/scanner-camera";
 
 /**
  * Champ de scan EAN-13 réutilisable (POS, Stock, Catalogue).
  *
- * Logique de repli caméra (demande du propriétaire) :
- * - Douchette USB/Bluetooth HID : elle a le focus, envoie les chiffres puis
- *   Entrée → code traité immédiatement.
- * - Bouton « Scanner » avec un code saisi → traité (saisie manuelle).
- * - Bouton « Scanner » SANS code saisi (pas de douchette connectée) →
- *   la caméra s'ouvre automatiquement (PC ou smartphone) et lit le code.
- * - Bouton « Caméra » explicite : ouverture directe de la caméra.
- * - La caméra utilise l'API native `BarcodeDetector` ; si le navigateur ne
- *   la supporte pas, message honnête (pas de lecture simulée).
+ * Trois sources de code, toutes affichées dans la case de saisie :
+ * 1. Douchette USB/Bluetooth (HID) : elle émet un burst de touches partout
+ *    dans la page — un écouteur global les capte, LES AFFICHE dans la case
+ *    puis traite le code (même si le focus n'était pas sur le champ).
+ * 2. Caméra (PC / smartphone) : le code lu est écrit dans la case, puis traité.
+ * 3. Saisie manuelle + bouton Scanner / Entrée.
+ * Repli caméra : bouton Scanner sur case vide, ou bouton 📷 explicite.
  */
 
 /** Bip sonore partagé (data URI WAV court, aucun fichier externe). */
@@ -40,35 +38,77 @@ export function ScanChamp({
   const [info, setInfo] = useState<string | null>(null);
   const [camOuverte, setCamOuverte] = useState(false);
 
-  /** Traite la saisie ; si vide → repli automatique caméra. */
+  /** Écrit le code dans la case de saisie (visible pour l'utilisateur). */
+  function afficherCode(code: string) {
+    if (champRef.current) champRef.current.value = code;
+  }
+
+  /** Traite le code : l'affiche, bip, renvoie au parent. */
   function traiter(valeur: string) {
     const propre = valeur.replace(/[^\dA-Za-z]/g, "");
     if (!propre) {
-      // Pas de douchette (aucun code reçu) : on passe à la caméra.
       setErreur(null);
-      setInfo("Aucun code détecté à la saisie — ouverture de la caméra…");
+      setInfo("Aucun code détecté — ouverture de la caméra…");
       setCamOuverte(true);
       return;
     }
     setErreur(null);
     setInfo(null);
+    afficherCode(propre); // le code reste visible dans la case
     onCode(propre);
     bip();
-    if (champRef.current) {
-      champRef.current.value = "";
-      champRef.current.focus();
-      champRef.current.select();
-    }
+    champRef.current?.focus();
+    champRef.current?.select();
   }
 
   function codeCamera(code: string) {
     setCamOuverte(false);
     setErreur(null);
     setInfo(null);
+    afficherCode(code); // le code lu à la caméra apparaît dans la case
     onCode(code);
     bip();
     champRef.current?.focus();
   }
+
+  /* ---------------------------------------------------------------
+   * Écouteur GLOBAL douchette (HID) : capture le burst de touches
+   * même quand le focus est ailleurs, l'affiche dans la case, traite.
+   * --------------------------------------------------------------- */
+  useEffect(() => {
+    let tampon = "";
+    let minuteur: number | undefined;
+
+    function onClavier(e: KeyboardEvent) {
+      const cible = e.target as HTMLElement | null;
+      const dansSaisie = !!cible && (cible.tagName === "INPUT" || cible.tagName === "SELECT" || cible.tagName === "TEXTAREA");
+
+      // Entrée après un code complet → traitement.
+      if (e.key === "Enter" && tampon.length >= 8) {
+        e.preventDefault();
+        afficherCode(tampon);
+        traiter(tampon);
+        tampon = "";
+        return;
+      }
+      // Quand le focus EST sur notre champ, la boucle onKeyDown du champ gère.
+      if (dansSaisie) return;
+      if (/^[0-9]$/.test(e.key)) {
+        tampon += e.key;
+        afficherCode(tampon); // on montre le code en cours de frappe
+        window.clearTimeout(minuteur);
+        minuteur = window.setTimeout(() => { tampon = ""; }, 120);
+        if (tampon.length === 13) { traiter(tampon); tampon = ""; }
+      }
+    }
+
+    document.addEventListener("keydown", onClavier);
+    return () => {
+      document.removeEventListener("keydown", onClavier);
+      window.clearTimeout(minuteur);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className={compact ? "" : "w-full"}>
@@ -90,7 +130,7 @@ export function ScanChamp({
         <button
           type="button"
           onClick={() => traiter(champRef.current?.value ?? "")}
-          title="Scanner avec la douchette, ou ouvrir la caméra si aucun code n'est saisi"
+          title="Scanner le code saisi, ou ouvrir la caméra si aucun code n'est saisi"
           className="min-h-11 shrink-0 rounded-lg bg-[#d6b66f] px-4 text-sm font-bold text-[#102b32]"
         >
           Scanner
@@ -98,7 +138,7 @@ export function ScanChamp({
         <button
           type="button"
           onClick={() => setCamOuverte(true)}
-          title="Lire un code avec la caméra du PC ou du smartphone"
+          title="Lire un code-barres ou un QR avec la caméra"
           aria-label="Scanner avec la caméra"
           className="min-h-11 shrink-0 rounded-lg border border-[#d6b66f]/40 px-3 text-sm text-[#e9d998]"
         >

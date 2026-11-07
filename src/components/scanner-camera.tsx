@@ -8,11 +8,15 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
  *
  * Décodeur : `html5-qrcode` (JS pur) — fonctionne sur PC (Chrome, Edge,
  * Firefox, Safari) et smartphone, contrairement à l'API native
- * `BarcodeDetector` absente des navigateurs desktop. Formats lus :
- * EAN-13, EAN-8, UPC-A/E, Code 128, Code 39, Code 93, Inter2of5, QR.
+ * `BarcodeDetector` absente des navigateurs desktop.
+ * Formats : EAN-13, EAN-8, UPC-A/E, Code 128/39/93, ITF, QR.
  *
- * Aucune lecture simulée : si la caméra est refusée ou indisponible,
- * message explicite + repli sur la saisie manuelle / douchette.
+ * Points techniques critiques :
+ * - le conteneur vidéo doit avoir une HAUTEUR explicite, sinon la caméra
+ *   s'initialise à 0 px et ne lit rien (erreur silencieuse) ;
+ * - aucun `qrbox` imposé : il casse sur les caméras basse résolution ;
+ * - le contenu brut du QR est conservé (les codes non alphanumériques ne
+ *   sont pas strippés à vide).
  */
 export function ScannerCamera({ onCode, fermer }: { onCode: (code: string) => void; fermer: () => void }) {
   const [erreur, setErreur] = useState<string | null>(null);
@@ -24,7 +28,10 @@ export function ScannerCamera({ onCode, fermer }: { onCode: (code: string) => vo
     let scanner: Html5Qrcode | null = null;
 
     async function demarrer() {
-      if (!zoneRef.current) return;
+      const zone = zoneRef.current;
+      if (!zone) return;
+      // Nettoyage d'une éventuelle instance précédente sur le même nœud.
+      zone.innerHTML = "";
       try {
         scanner = new Html5Qrcode("zone-scan-camera", {
           formatsToSupport: [
@@ -42,12 +49,14 @@ export function ScannerCamera({ onCode, fermer }: { onCode: (code: string) => vo
         });
         await scanner.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
+          { fps: 10 }, // pas de qrbox : détection sur toute l'image
           (texte: string) => {
             if (!vivant || traite.current) return;
             traite.current = true; // anti double-lecture
-            const propre = texte.replace(/[^\dA-Za-z]/g, "");
-            if (propre) onCode(propre);
+            // On garde le contenu tel quel si le strippage viderait la chaîne.
+            const chiffresLettres = texte.replace(/[^\dA-Za-z]/g, "");
+            const code = chiffresLettres || texte.trim();
+            if (code) onCode(code);
             else traite.current = false;
           },
           () => { /* frame sans code : ignorer */ },
@@ -82,7 +91,8 @@ export function ScannerCamera({ onCode, fermer }: { onCode: (code: string) => vo
         {erreur ? (
           <p role="alert" className="mt-4 rounded-lg bg-[#d66868]/15 px-3 py-2 text-sm text-[#d66868]">{erreur}</p>
         ) : (
-          <div id="zone-scan-camera" ref={zoneRef} className="mt-4 w-full overflow-hidden rounded-xl bg-black" />
+          /* Hauteur EXPLICITE obligatoire : sans elle, vidéo à 0 px = rien ne se lit. */
+          <div id="zone-scan-camera" ref={zoneRef} className="mt-4 h-72 w-full overflow-hidden rounded-xl bg-black" />
         )}
         <p className="mt-3 text-center text-xs text-[#a8bb87]">
           Codes-barres (EAN-13, UPC, Code 128…) et QR — cadrage du code, lecture automatique puis fermeture.

@@ -1,6 +1,8 @@
 // Types for the catalogue
 export type ProduitTest = {
   sku: string;
+  /** Code-barres EAN-13 renseigné en base (optionnel) — lu par le scanner. */
+  barcode?: string | null;
   nom: string;
   marque: string;
   categorie:

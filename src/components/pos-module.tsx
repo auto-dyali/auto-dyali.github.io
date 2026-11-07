@@ -88,7 +88,7 @@ export function PosModule() {
       return;
     }
     const [produitsReq, clientsReq] = await Promise.all([
-      supabase.from("products").select("id, sku, name, category, sale_price, stock").eq("is_active", true).order("name"),
+      supabase.from("products").select("id, sku, barcode, name, category, sale_price, stock").eq("is_active", true).order("name"),
       supabase.from("clients").select("id, full_name").order("full_name").limit(200),
     ]);
     if (!produitsReq.error && produitsReq.data?.length) {
@@ -96,6 +96,7 @@ export function PosModule() {
         produitsReq.data.map((p) => ({
           id: p.id,
           sku: p.sku,
+          barcode: p.barcode ?? null,
           nom: p.name,
           marque: p.name.split(" ")[0] || "Marque",
           categorie: categorieProduit(p.category),
@@ -137,6 +138,7 @@ export function PosModule() {
       const saisie = cible && (cible.tagName === "INPUT" || cible.tagName === "SELECT" || cible.tagName === "TEXTAREA");
       // Espace ou Entrée après un code complet → traitement.
       if (e.key === "Enter" && tampon.length >= 8) {
+        if (eanRef.current) eanRef.current.value = tampon; // visible dans la case EAN
         traiterCode(tampon);
         tampon = "";
         return;
@@ -144,8 +146,9 @@ export function PosModule() {
       if (saisie) return; // la recherche gère les frappes manuelles
       if (/^[0-9]$/.test(e.key)) {
         tampon += e.key;
+        if (eanRef.current) eanRef.current.value = tampon; // on montre le code en cours
         window.clearTimeout(minuteur);
-        minuteur = window.setTimeout(() => { tampon = ""; }, 80);
+        minuteur = window.setTimeout(() => { tampon = ""; }, 120);
         if (tampon.length === 13) { traiterCode(tampon); tampon = ""; }
       }
     }
@@ -159,7 +162,11 @@ export function PosModule() {
 
   function traiterCode(code: string) {
     const propre = code.replace(/[^\dA-Za-z]/g, "");
-    const produit = produits.find((p) => p.sku.toLowerCase() === propre.toLowerCase());
+    // Le code reste visible dans la case de saisie (case EAN).
+    if (eanRef.current) eanRef.current.value = propre;
+    const produit =
+      produits.find((p) => p.sku.toLowerCase() === propre.toLowerCase()) ??
+      produits.find((p) => (p.barcode ?? "").toLowerCase() === propre.toLowerCase());
     if (produit) {
       ajouter(produit);
       setMessage(`Code ${propre} : ${produit.nom} ajouté au ticket.`);
