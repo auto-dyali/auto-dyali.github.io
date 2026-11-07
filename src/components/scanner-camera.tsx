@@ -1,58 +1,74 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
 /**
- * Scanner caméra — lecture réelle de codes-barres (EAN-13…) via l'API native
- * `BarcodeDetector` (Chrome / Edge / Android, y compris la plupart des
- * smartphones). Aucun décodage simulé : si le navigateur ne supporte pas
- * l'API, un message clair invite à utiliser la douchette ou la saisie manuelle.
+ * Scanner caméra — lecture RÉELLE de codes-barres et QR.
+ *
+ * Décodeur : `html5-qrcode` (JS pur) — fonctionne sur PC (Chrome, Edge,
+ * Firefox, Safari) et smartphone, contrairement à l'API native
+ * `BarcodeDetector` absente des navigateurs desktop. Formats lus :
+ * EAN-13, EAN-8, UPC-A/E, Code 128, Code 39, Code 93, Inter2of5, QR.
+ *
+ * Aucune lecture simulée : si la caméra est refusée ou indisponible,
+ * message explicite + repli sur la saisie manuelle / douchette.
  */
 export function ScannerCamera({ onCode, fermer }: { onCode: (code: string) => void; fermer: () => void }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const zoneRef = useRef<HTMLDivElement | null>(null);
+  const traite = useRef(false);
 
   useEffect(() => {
     let vivant = true;
-    let flux: MediaStream | null = null;
-    let boucle = 0;
+    let scanner: Html5Qrcode | null = null;
 
     async function demarrer() {
-      if (!("BarcodeDetector" in window)) {
-        setErreur("Ce navigateur ne prend pas en charge la lecture caméra. Utilisez la douchette USB/Bluetooth ou la saisie manuelle EAN-13.");
-        return;
-      }
-      const Detecteur = (window as unknown as { BarcodeDetector: new (options?: { formats?: string[] }) => { detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]> } }).BarcodeDetector;
+      if (!zoneRef.current) return;
       try {
-        flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        const video = videoRef.current;
-        if (!video || !vivant) return;
-        video.srcObject = flux;
-        await video.play();
-        const detector = new Detecteur({ formats: ["ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "qr_code"] });
-        const verifier = async () => {
-          if (!vivant) return;
-          try {
-            if (videoRef.current?.readyState === 4) {
-              const codes = await detector.detect(videoRef.current);
-              if (codes.length && vivant) {
-                const code = codes[0].rawValue.replace(/\D/g, "");
-                if (code) { onCode(code); return; }
-              }
-            }
-          } catch { /* frame sans code : ignorer */ }
-          boucle = window.setTimeout(() => void verifier(), 300);
-        };
-        void verifier();
+        scanner = new Html5Qrcode("zone-scan-camera", {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.QR_CODE,
+          ],
+          verbose: false,
+        });
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (texte: string) => {
+            if (!vivant || traite.current) return;
+            traite.current = true; // anti double-lecture
+            const propre = texte.replace(/[^\dA-Za-z]/g, "");
+            if (propre) onCode(propre);
+            else traite.current = false;
+          },
+          () => { /* frame sans code : ignorer */ },
+        );
       } catch {
-        setErreur("Accès caméra refusé. Autorisez la caméra dans les réglages du navigateur.");
+        if (!vivant) return;
+        setErreur(
+          "Caméra indisponible : accès refusé, aucun appareil détecté ou navigateur incompatible. Utilisez la douchette ou la saisie manuelle EAN-13.",
+        );
       }
     }
+
     void demarrer();
     return () => {
       vivant = false;
-      window.clearTimeout(boucle);
-      flux?.getTracks().forEach((t) => t.stop());
+      if (scanner) {
+        try {
+          const arret = scanner.stop();
+          if (arret && typeof arret.then === "function") arret.then(() => { try { scanner?.clear(); } catch { /* déjà nettoyé */ } }).catch(() => {});
+        } catch { /* déjà arrêté */ }
+      }
     };
   }, [onCode]);
 
@@ -66,9 +82,11 @@ export function ScannerCamera({ onCode, fermer }: { onCode: (code: string) => vo
         {erreur ? (
           <p role="alert" className="mt-4 rounded-lg bg-[#d66868]/15 px-3 py-2 text-sm text-[#d66868]">{erreur}</p>
         ) : (
-          <video ref={videoRef} playsInline muted className="mt-4 w-full rounded-xl bg-black" />
+          <div id="zone-scan-camera" ref={zoneRef} className="mt-4 w-full overflow-hidden rounded-xl bg-black" />
         )}
-        <p className="mt-3 text-center text-xs text-[#a8bb87]">Cadrage du code-barres / QR — lecture EAN-13, EAN-8, Code 128, UPC, QR.</p>
+        <p className="mt-3 text-center text-xs text-[#a8bb87]">
+          Codes-barres (EAN-13, UPC, Code 128…) et QR — cadrage du code, lecture automatique puis fermeture.
+        </p>
       </div>
     </div>
   );

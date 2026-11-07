@@ -496,21 +496,23 @@ ${estPartiel ? `<div class="muted">Réglé : ${formatMad(montantRegle)} — rest
                 const champ = eanRef.current;
                 const v = (champ?.value ?? "").replace(/[^\dA-Za-z]/g, "");
                 if (!v) {
-                  setErreur("Saisissez un code-barres EAN-13 (ou scannez avec la douchette / la caméra).");
-                  champ?.focus();
+                  // Pas de douchette ni de saisie : ouverture de la caméra.
+                  setErreur(null);
+                  setCamOuverte(true);
                   return;
                 }
                 traiterCode(v);
                 bip();
                 if (champ) champ.value = "";
               }}
+              title="Scanner le code saisi, ou ouvrir la caméra si aucun code n'est saisi"
               className="rounded-lg px-2.5 py-1 text-xs bg-[#d6b66f] text-[#102b32] font-bold"
             >
               Scanner
             </button>
           </div>
           <button type="button" onClick={() => setCamOuverte(true)} className="mt-2 w-full rounded-lg border border-[#d6b66f]/40 px-3 py-2 text-xs text-[#e9d998]">
-            Scanner caméra (smartphone / tablette)
+            📷 Scanner caméra (PC / smartphone) — codes-barres + QR
           </button>
           <p className="mt-1 text-[10px] text-[#a8bb87]">Bip sonore à chaque scan.</p>
         </div>
