@@ -44,6 +44,7 @@ const modules: { label: string; icone: NomIcone; href: string; feature: FeatureK
   { label: "Planning", icone: "planning", href: "/tableau-de-bord/planning", feature: "appointments" },
   { label: "Rapports", icone: "rapport", href: "/tableau-de-bord/rapports", feature: "reports_basic" },
   { label: "AUTO DYALI AI", icone: "plus", href: "/tableau-de-bord/assistant", feature: "ai" },
+  { label: "Permissions", icone: "cle", href: "/tableau-de-bord/permissions", feature: "advanced_permissions" },
   { label: "Import / Export", icone: "scanner", href: "/tableau-de-bord/import-export", feature: "excel" },
   { label: "Support", icone: "cloche", href: "/tableau-de-bord/support", feature: "support" },
   { label: "Notifications", icone: "cloche", href: "/tableau-de-bord/notifications", feature: "alerts" },
