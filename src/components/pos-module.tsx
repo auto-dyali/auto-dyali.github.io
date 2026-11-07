@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { catalogueTest, formatMad, type ProduitTest } from "@/lib/catalogue-test";
 import { supabase } from "@/lib/supabase-browser";
+import { ScannerCamera } from "@/components/scanner-camera";
 
 /**
  * POS AUTO DYALI — architecture 3 zones :
@@ -50,6 +51,7 @@ export function PosModule() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [camOuverte, setCamOuverte] = useState(false);
 
   // Recherche & filtres
   const [recherche, setRecherche] = useState("");
@@ -490,6 +492,9 @@ ${estPartiel ? `<div class="muted">Réglé : ${formatMad(montantRegle)} — rest
               Scanner
             </button>
           </div>
+          <button type="button" onClick={() => setCamOuverte(true)} className="mt-2 w-full rounded-lg border border-[#d6b66f]/40 px-3 py-2 text-xs text-[#e9d998]">
+            Scanner caméra (smartphone / tablette)
+          </button>
           <p className="mt-1 text-[10px] text-[#a8bb87]">Bip sonore à chaque scan.</p>
         </div>
       </aside>
@@ -688,6 +693,13 @@ ${estPartiel ? `<div class="muted">Réglé : ${formatMad(montantRegle)} — rest
         {message && <p role="status" className="mt-2 text-xs text-[#90a0b0]">{message}</p>}
         {erreur && <p role="alert" className="mt-2 text-xs text-[#d66868]">{erreur}</p>}
       </aside>
+
+      {camOuverte && (
+        <ScannerCamera
+          onCode={(code) => { traiterCode(code); bip(); setCamOuverte(false); }}
+          fermer={() => setCamOuverte(false)}
+        />
+      )}
     </section>
   );
 }
