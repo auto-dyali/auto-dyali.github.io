@@ -342,6 +342,16 @@ export function ClientsModule() {
                   {selection.code} · {selection.phone ?? "téléphone non renseigné"}
                   {selection.email ? ` · ${selection.email}` : ""}
                 </p>
+                {selection.phone && (
+                  <a
+                    href={`https://wa.me/${selection.phone.replace(/\D/g, "").replace(/^0/, "212")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block rounded-lg border border-[#90a0b0]/40 px-3 py-1.5 text-xs text-[#90a0b0]"
+                  >
+                    Ouvrir WhatsApp (conversation réelle)
+                  </a>
+                )}
               </div>
               <button type="button" onClick={() => setSelection(null)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button>
             </div>
