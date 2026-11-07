@@ -38,6 +38,7 @@ const modules: { label: string; icone: NomIcone; href: string; feature: FeatureK
   { label: "Fournisseurs", icone: "client", href: "/tableau-de-bord/fournisseurs", feature: "suppliers" },
   { label: "Caisse", icone: "ca", href: "/tableau-de-bord/caisse", feature: "dashboard" },
   { label: "Chèques", icone: "ca", href: "/tableau-de-bord/cheques", feature: "cheques" },
+  { label: "Créances", icone: "benefice", href: "/tableau-de-bord/creances", feature: "reports_finance" },
   { label: "Devis", icone: "rapport", href: "/tableau-de-bord/devis", feature: "quotes" },
   { label: "Facturation", icone: "rapport", href: "/tableau-de-bord/facturation", feature: "invoices" },
   { label: "Employés", icone: "profil", href: "/tableau-de-bord/employes", feature: "employees" },
