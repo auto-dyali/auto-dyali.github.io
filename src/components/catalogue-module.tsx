@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
+import { ScanChamp } from "@/components/scan-champ";
 import { formatMad } from "@/lib/catalogue-test";
 
 /**
@@ -10,7 +11,7 @@ import { formatMad } from "@/lib/catalogue-test";
  * source obligatoire + validation (jamais de compatibilité inventée).
  */
 
-type Produit = { id: string; sku: string; name: string; category: string; sale_price: number; stock: number };
+type Produit = { id: string; sku: string; barcode: string | null; name: string; category: string; sale_price: number; stock: number };
 
 type Vehicule = {
   id: string;
@@ -71,7 +72,7 @@ export function CatalogueModule() {
       return;
     }
     const [produitsReq, vehiculesReq] = await Promise.all([
-      supabase.from("products").select("id, sku, name, category, sale_price, stock").eq("is_active", true).order("name").limit(1000),
+      supabase.from("products").select("id, sku, barcode, name, category, sale_price, stock").eq("is_active", true).order("name").limit(1000),
       supabase.from("vehicle_catalog").select("id, brand, model, generation, year_from, year_to, fuel, engine_code, displacement, vehicle_type").order("brand").order("model").limit(1000),
     ]);
     if (produitsReq.error && !produitsReq.error.message.includes("does not exist")) setError(produitsReq.error.message);
@@ -118,7 +119,7 @@ export function CatalogueModule() {
     const q = rechercheProduit.trim().toLowerCase();
     if (!q) return [];
     return produits
-      .filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
+      .filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || (p.barcode ?? "").includes(q))
       .slice(0, 8);
   }, [produits, rechercheProduit]);
 
@@ -143,6 +144,23 @@ export function CatalogueModule() {
     setModele(v.model);
     setMoteur(v.engine_code ?? "—");
     void chargerCompat(v.id);
+  }
+
+  /* ---------------------------------------------------------------
+   * Scan code-barres : sélectionne directement la pièce scannée
+   * --------------------------------------------------------------- */
+  function scannerPiece(code: string) {
+    const trouve =
+      produits.find((p) => (p.barcode ?? "") === code) ??
+      produits.find((p) => p.sku.toLowerCase() === code.toLowerCase());
+    if (trouve) {
+      setProduitSelectionne(trouve);
+      setRechercheProduit(trouve.name);
+      setNotice(`Code ${code} : pièce « ${trouve.name} » sélectionnée.`);
+      setError(null);
+    } else {
+      setError(`Code-barres ${code} introuvable dans le catalogue. Vérifiez le code ou ajoutez la pièce.`);
+    }
   }
 
   /* ---------------------------------------------------------------
@@ -332,6 +350,9 @@ export function CatalogueModule() {
                   className="champ mt-1 min-h-10"
                 />
               </label>
+              <div className="mt-2">
+                <ScanChamp onCode={scannerPiece} placeholder="Scanner la pièce (EAN-13)…" />
+              </div>
               {produitsFiltres.length > 0 && !produitSelectionne && (
                 <ul className="mt-1 max-h-44 divide-y divide-[#d6b66f]/10 overflow-y-auto rounded-lg bg-[#193a40]">
                   {produitsFiltres.map((p) => (
