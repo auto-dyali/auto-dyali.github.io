@@ -31,6 +31,7 @@ const modules: { label: string; icone: NomIcone; href: string; feature: FeatureK
   { label: "Atelier", icone: "cle", href: "/tableau-de-bord/atelier", feature: "workshop" },
   { label: "Point de vente", icone: "pos", href: "/tableau-de-bord/point-de-vente", feature: "pos" },
   { label: "Historique des ventes", icone: "historique", href: "/tableau-de-bord/historique-ventes", feature: "pos" },
+  { label: "Scan Pro", icone: "scanner", href: "/tableau-de-bord/scan-pro", feature: "pos" },
   { label: "Catalogue", icone: "carton", href: "/tableau-de-bord/catalogue", feature: "catalogue" },
   { label: "Stock", icone: "carton", href: "/tableau-de-bord/stock", feature: "stock" },
   { label: "Pneumatiques", icone: "resistance", href: "/tableau-de-bord/pneumatiques", feature: "tires" },
