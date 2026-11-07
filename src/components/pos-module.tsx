@@ -127,7 +127,7 @@ type Reglement = { methode: "especes" | "carte" | "cheque" | "virement" | "mobil
 
 type ClientOption = { id: string; full_name: string };
 type VehiculeOption = { id: string; plate: string; brand: string; model: string; year: number | null };
-type PermRow = { module: string; can_create: boolean; can_edit: boolean };
+type PermRow = { module: string; can_create: boolean; can_edit: boolean; can_view: boolean };
 
 type LigneCatalogue = {
   id: string;
@@ -266,7 +266,7 @@ export function PosModule() {
       if (profil.is(["manager", "saas_admin"])) { setPermRows([]); return; }
       void client
         .from("permissions")
-        .select("module, can_create, can_edit")
+        .select("module, can_create, can_edit, can_view")
         .eq("role", profil.role)
         .then(({ data }) => { if (vivant) setPermRows((data ?? []) as PermRow[]); });
     }, 0);
@@ -276,10 +276,12 @@ export function PosModule() {
 
   const roleConnue = profil.role !== null;
   const estManager = profil.is(["manager", "saas_admin"]);
-  const aDroit = (module: string, champ: "can_create" | "can_edit") =>
+  const aDroit = (module: string, champ: "can_create" | "can_edit" | "can_view") =>
     !roleConnue || estManager || (permRows?.some((r) => r.module === module && r[champ]) ?? false);
   const posEdit = aDroit("pos", "can_edit");
   const peutCreerClient = aDroit("clients", "can_create");
+  const peutVoirHistClient = aDroit("clients", "can_view");
+  const peutVoirInterventions = aDroit("atelier", "can_view");
   const peutCreerVehicule =
     !roleConnue ||
     estManager ||
@@ -1554,7 +1556,7 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
             </button>
           </span>
         </label>
-        {histClient !== null && histClient > 0 && (
+        {peutVoirHistClient && histClient !== null && histClient > 0 && (
           <p className="mt-1 text-[10px] text-[#90a0b0]">{histClient} vente(s) précédente(s) pour ce client</p>
         )}
 
@@ -1585,10 +1587,10 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
                 </button>
               </span>
             </label>
-            {vehiculeId && histVehicule !== null && histVehicule > 0 && (
+            {vehiculeId && peutVoirInterventions && histVehicule !== null && histVehicule > 0 && (
               <p className="mt-1 text-[10px] text-[#90a0b0]">{histVehicule} intervention(s) précédente(s) sur ce véhicule</p>
             )}
-            {vehiculeId && ordresOuverts.length > 0 && (
+            {vehiculeId && peutVoirInterventions && ordresOuverts.length > 0 && (
               <label className="mt-2 block text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">
                 Ordre de réparation (optionnel)
                 <select

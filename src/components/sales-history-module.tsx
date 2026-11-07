@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
 import { formatMad } from "@/lib/catalogue-test";
+import { useProfil } from "@/lib/features";
 
 /**
  * Historique des ventes — §6 du cahier des charges.
@@ -64,6 +65,35 @@ export function SalesHistoryModule() {
   // Retour
   const [retour, setRetour] = useState<Vente | null>(null);
   const [motifRetour, setMotifRetour] = useState("");
+
+  /* ---------------------------------------------------------------
+   * Permission remboursement (module pos ou caisse · can_edit) :
+   * acte sensible vérifié côté client AVANT toute exécution.
+   * --------------------------------------------------------------- */
+  const profil = useProfil();
+  const [permRows, setPermRows] = useState<{ module: string; can_edit: boolean }[] | null>(null);
+
+  useEffect(() => {
+    if (!supabase || !profil.role) return;
+    const client = supabase;
+    let vivant = true;
+    const timer = window.setTimeout(() => {
+      if (profil.is(["manager", "saas_admin"])) { setPermRows([]); return; }
+      void client
+        .from("permissions")
+        .select("module, can_edit")
+        .eq("role", profil.role)
+        .in("module", ["pos", "caisse"])
+        .then(({ data }) => { if (vivant) setPermRows((data ?? []) as { module: string; can_edit: boolean }[]); });
+    }, 0);
+    return () => { vivant = false; window.clearTimeout(timer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- rôle isolé : profil est un objet recréé à chaque rendu
+  }, [profil.role]);
+
+  const roleConnue = profil.role !== null;
+  const estManager = profil.is(["manager", "saas_admin"]);
+  const peutRembourser =
+    !roleConnue || estManager || (permRows?.some((r) => r.can_edit) ?? false);
 
   async function charger() {
     if (!supabase) {
@@ -225,6 +255,11 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
 
   async function retournerVente() {
     if (!supabase || !retour) return;
+    // Garde-fou : permission de remboursement vérifiée avant exécution.
+    if (!peutRembourser) {
+      setError("Permission refusée : le remboursement n'est pas autorisé pour votre rôle.");
+      return;
+    }
     setTraitement(retour.id);
     setError(null);
     try {
@@ -395,7 +430,7 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
                           <button type="button" onClick={() => void imprimerFacture(v)} className="rounded-lg border border-[#d6b66f]/40 px-2.5 py-1.5 text-xs text-[#e9d998]">
                             Imprimer
                           </button>
-                          {retournable && (
+                          {retournable && peutRembourser && (
                             <button
                               type="button"
                               onClick={() => { setRetour(v); setMotifRetour(""); setError(null); }}
