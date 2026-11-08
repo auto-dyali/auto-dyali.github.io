@@ -99,6 +99,10 @@ export function ShellApp({
   feature?: FeatureKey;
 }) {
   const [ouvert, setOuvert] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("auto-dyali-sidebar") === "collapsed";
+  });
   const [aujourdHui, setAujourdHui] = useState("");
   const [heureActuelle, setHeureActuelle] = useState("");
   const [confirmerDeconnexion, setConfirmerDeconnexion] = useState(false);
@@ -137,6 +141,14 @@ export function ShellApp({
     }, 0);
     return () => { vivant = false; window.clearTimeout(timer); };
   }, [router]);
+
+  function toggleSidebar() {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("auto-dyali-sidebar", next ? "collapsed" : "expanded");
+      return next;
+    });
+  }
 
   // Garde de rôle : le tableau de bord est réservé aux managers / super admin.
   useEffect(() => {
@@ -213,7 +225,7 @@ export function ShellApp({
           )}
         >
           <Icone nom={m.icone} taille={18} />
-          {m.label}
+          <span className="menu-label">{m.label}</span>
         </Link>
       ))}
     </nav>
@@ -242,8 +254,21 @@ export function ShellApp({
   return (
     <div className="flex min-h-screen bg-[#252D2D] bg-cover bg-center bg-fixed" style={{ backgroundImage: `linear-gradient(rgba(37,45,45,.64),rgba(37,45,45,.78)), url('${basePath}/images/backgrounds/dashboard.webp')` }}>
       {/* Sidebar desktop */}
-      <aside className="carte hidden w-60 shrink-0 rounded-none border-y-0 border-l-0 lg:flex lg:flex-col p-5 sticky top-0 h-screen overflow-y-auto">
+      <aside
+        className={`carte hidden shrink-0 rounded-none border-y-0 border-l-0 lg:flex lg:flex-col p-5 sticky top-0 h-screen overflow-y-auto app-sidebar ${
+          sidebarCollapsed ? "is-collapsed" : ""
+        }`}
+      >
         <Logo compact />
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={sidebarCollapsed ? "Développer le menu" : "Réduire le menu"}
+          title={sidebarCollapsed ? "Développer le menu" : "Réduire le menu"}
+          className="btn-sidebar-toggle mb-3"
+        >
+          {sidebarCollapsed ? "›" : "<>"}
+        </button>
         {nav}
         {droits.plan && (
           <p className="mt-4 rounded-xl bg-[#344440] px-3 py-2 text-center text-[10px] uppercase tracking-[0.2em] text-[#DFE7E2]">

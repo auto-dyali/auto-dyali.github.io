@@ -22,17 +22,295 @@
   --color-ivoire: #e8ece8;        /* Texte principal — gris clair */
   --color-texte2: #a7b7a8;        /* Texte secondaire */
   --color-muted: #8da298;         /* Texte atténué */
-  --color-succes: #5d9e7f;        /* Succès doux */
-  --color-succes2: #7fbf9e;       /* Succès clair (textes) */
+  --color-succes: #5d9e7f;        /* Succès doux (historique, conservé) */
+  --color-succes2: #7fbf9e;       /* Succès clair (textes) (historique, conservé) */
   --color-alerte: #c79a6b;
-  --color-erreur: #c5716b;        /* Rouge adouci */
+  --color-erreur: #c5716b;        /* Rouge adouci (historique, conservé) */
   --color-info: #5b7fc7;
+
+  /* =====================================================================
+     NOUVELLE IDENTITÉ GRAPHIQUE — palette officielle AUTO DYALI premium
+     Ces tokens complètent l'existant (non destructif). Les composants
+     doivent privilégier ces variables plutôt que des codes en dur.
+     ===================================================================== */
+  --color-bg: #252d2d;            /* Fond principal graphite profond */
+  --color-surface: #303a38;       /* Fond des surfaces (cartes, panneaux) */
+  --color-surface-raised: #37433e; /* Surfaces surélevées */
+  --color-primary: #49675b;       /* Vert émeraude — actions principales */
+  --color-primary-soft: #a7b7a8;  /* Vert sauge — texte secondaire */
+  --color-accent: #d0c6ae;        /* Champagne — accent premium, détails */
+  --color-text: #e8ece8;          /* Texte clair principal */
+  --color-muted: #aeb9b2;         /* Texte secondaire atténué */
+  --color-border: #46524d;        /* Bordures gris-vert */
+  --color-success: #4d9b73;       /* Succès — vert lisible */
+  --color-warning: #d6a34d;       /* Alerte — ambre */
+  --color-danger: #c66a68;        /* Erreur — rouge doux */
+
+  --radius-card: 16px;            /* Rayon carte premium */
+  --radius-button: 12px;          /* Rayon bouton premium */
+
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.22);
+  --shadow-button: 0 4px 10px rgba(0, 0, 0, 0.22);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 
   --radius-carte: 1rem;
   --ombre-1: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 24px rgba(0, 0, 0, 0.18);
   --ombre-2: 0 2px 6px rgba(0, 0, 0, 0.30), 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+/* =====================================================================
+   BOUTON PREMIUM — système réutilisable (3D, enfoncement tactile, 48px)
+   Variantes : primary (émeraude), secondary (graphite clair), accent
+   (champagne), danger (rouge doux). Utiliser dans toute l'application.
+   ===================================================================== */
+.btn-premium {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;                                    /* 48 px tactile */
+  min-width: 3rem;
+  padding: 0 1.125rem;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: var(--color-text);
+  border: 1px solid rgba(208, 198, 174, 0.22);
+  box-shadow: var(--shadow-button);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease,
+    background 160ms ease;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.btn-premium:hover {
+  filter: brightness(1.08);
+}
+.btn-premium:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+.btn-premium:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.btn-premium:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: translateY(0);
+  filter: none;
+}
+
+/* Variante secondaire — graphite clair */
+.btn-premium-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  min-width: 3rem;
+  padding: 0 1.125rem;
+  border-radius: var(--radius-button);
+  background: var(--color-surface-raised);
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 3px 0 #26302e, var(--shadow-card);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease,
+    background 160ms ease;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.btn-premium-secondary:hover {
+  filter: brightness(1.12);
+  background: #3d4a47;
+}
+.btn-premium-secondary:active {
+  box-shadow: 0 1px 0 #26302e;
+}
+.btn-premium-secondary:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.btn-premium-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: translateY(0);
+  filter: none;
+}
+
+/* Variante accent — champagne */
+.btn-premium-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  min-width: 3rem;
+  padding: 0 1.125rem;
+  border-radius: var(--radius-button);
+  background: var(--color-accent);
+  color: #252d2d;
+  border: 1px solid rgba(208, 198, 174, 0.35);
+  box-shadow: var(--shadow-button);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease,
+    background 160ms ease;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.btn-premium-accent:hover {
+  filter: brightness(1.06);
+}
+.btn-premium-accent:active {
+  box-shadow: none;
+}
+.btn-premium-accent:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.btn-premium-accent:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: translateY(0);
+  filter: none;
+}
+
+/* Variante danger — rouge doux */
+.btn-premium-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  min-width: 3rem;
+  padding: 0 1.125rem;
+  border-radius: var(--radius-button);
+  background: var(--color-danger);
+  color: #ffffff;
+  border: 1px solid rgba(198, 106, 104, 0.35);
+  box-shadow: var(--shadow-button);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease,
+    background 160ms ease;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.btn-premium-danger:hover {
+  filter: brightness(1.08);
+}
+.btn-premium-danger:active {
+  box-shadow: none;
+}
+.btn-premium-danger:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.btn-premium-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: translateY(0);
+  filter: none;
+}
+
+/* =====================================================================
+   CARTE PREMIUM — opaque, élégante, ombre douce, rayon 16px
+   ===================================================================== */
+.carte-premium {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.carte-premium-raised {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), var(--shadow-card);
+}
+
+/* Mise à jour des cartes existantes pour cohérence visuelle (non destructif) */
+.carte {
+  border-radius: var(--radius-card);
+}
+.carte-2 {
+  border-radius: var(--radius-card);
+}
+
+/* =====================================================================
+   SIDEBAR INTELLIGENTE ET RÉTRACTABLE — Dashboard & POS
+   États : développé (230 px) / réduit (72 px), transition 200 ms.
+   ===================================================================== */
+.app-sidebar {
+  width: 230px;
+  min-width: 230px;
+  transition: width 200ms ease, min-width 200ms ease;
+}
+.app-sidebar.is-collapsed {
+  width: 72px;
+  min-width: 72px;
+}
+.app-sidebar .menu-label {
+  opacity: 1;
+  transition: opacity 150ms ease;
+  white-space: nowrap;
+}
+.app-sidebar.is-collapsed .menu-label {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* Bouton de contrôle de la sidebar */
+.btn-sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 3rem; /* 48 px tactile */
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  border: 1px solid var(--color-accent);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition:
+    transform 160ms ease,
+    filter 160ms ease,
+    background 160ms ease;
+  touch-action: manipulation;
+  cursor: pointer;
+  text-align: left;
+}
+.btn-sidebar-toggle:hover {
+  filter: brightness(1.1);
+  background: #3a4744;
+}
+.btn-sidebar-toggle:active {
+  transform: translateY(1px);
+}
+.btn-sidebar-toggle:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.btn-sidebar-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: translateY(0);
 }
 
 html,

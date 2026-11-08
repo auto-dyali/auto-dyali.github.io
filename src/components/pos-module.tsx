@@ -317,6 +317,20 @@ export function PosModule() {
   // Smartphone : panier en feuille + barre fixe
   const [panierMobile, setPanierMobile] = useState(false);
 
+  // Mémorisation de l'état de la sidebar POS (initialisé côté client).
+  const [posSidebarCollapsed, setPosSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("auto-dyali-pos-sidebar") === "collapsed";
+  });
+
+  function togglePosSidebar() {
+    setPosSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("auto-dyali-pos-sidebar", next ? "collapsed" : "expanded");
+      return next;
+    });
+  }
+
   // Section courante du POS (catalogue / panier / clients / …)
   const [posSection, setPosSection] = useState<PosSection>("catalogue");
 
@@ -1393,9 +1407,22 @@ export function PosModule() {
       {/* ------------------------------------------------------------
        * Zone 1 — Barre latérale POS fixe (toujours visible sur PC)
        * ------------------------------------------------------------ */}
-      <aside className="carte h-fit p-3 hidden xl:flex">
+      <aside
+        className={`carte h-fit p-3 hidden xl:flex app-sidebar ${
+          posSidebarCollapsed ? "is-collapsed" : ""
+        }`}
+      >
         <div className="flex flex-col gap-2">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8] mb-1">POS</p>
+          <button
+            type="button"
+            onClick={togglePosSidebar}
+            aria-label={posSidebarCollapsed ? "Développer le menu" : "Réduire le menu"}
+            title={posSidebarCollapsed ? "Développer le menu" : "Réduire le menu"}
+            className="btn-sidebar-toggle mb-3"
+          >
+            {posSidebarCollapsed ? "›" : "<>"}
+          </button>
           {POS_NAV.map((n) => {
             const actif = posSection === n.cle;
             return (
@@ -1409,7 +1436,7 @@ export function PosModule() {
                 aria-pressed={actif}
               >
                 <span className="shrink-0 text-xl">{n.icone === "carton" ? "📦" : n.icone === "client" ? "👤" : n.icone === "voiture" ? "🚗" : n.icone === "historique" ? "🕒" : n.icone === "rapport" ? "📄" : n.icone === "ca" ? "💳" : n.icone === "imprimante" ? "🖨️" : n.icone === "cle" ? "🔧" : n.icone === "plus" ? "⚙️" : "📋"}</span>
-                {n.label}
+                <span className="menu-label">{n.label}</span>
               </button>
             );
           })}
