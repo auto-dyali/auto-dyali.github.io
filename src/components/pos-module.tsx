@@ -86,21 +86,36 @@ const ORDRE_FAMILLES = [
 /** Clé de catégorie réservée : vue des prestations (main-d'œuvre). */
 const CAT_SERVICES = "__services__";
 
-type ModePaiement = "especes" | "carte" | "cheque" | "virement" | "mobile" | "partiel" | "credit";
+type ModePaiement =
+  | "especes"
+  | "visa"
+  | "mastercard"
+  | "cheque"
+  | "virement"
+  | "mobile"
+  | "partiel"
+  | "credit";
 
 /** Correspondance UI → enum payment_method de la base. */
 const METHODE_BDD: Record<string, string> = {
   especes: "cash",
-  carte: "card",
+  visa: "card",
+  mastercard: "card",
   cheque: "cheque",
   virement: "transfer",
   mobile: "mobile",
 };
 
-const MODES: { cle: ModePaiement; label: string }[] = [
-  { cle: "especes", label: "Espèces" },
-  { cle: "carte", label: "Carte" },
-  { cle: "cheque", label: "Chèque" },
+/** Quatre moyens de paiement immédiatement visibles (exigence métier : VISA, MASTERCARD, CHÈQUE, ESPÈCES). */
+const MOYENS_PAIEMENT: { cle: ModePaiement; label: string; badge: string }[] = [
+  { cle: "especes", label: "Espèces", badge: "💵" },
+  { cle: "visa", label: "Visa", badge: "VISA" },
+  { cle: "mastercard", label: "Mastercard", badge: "Mastercard" },
+  { cle: "cheque", label: "Chèque", badge: "🧾" },
+];
+
+/** Moyens secondaires (paiement mixte / partiel / différé). */
+const MODES_SECONDAIRES: { cle: ModePaiement; label: string }[] = [
   { cle: "virement", label: "Virement" },
   { cle: "mobile", label: "Mobile" },
   { cle: "partiel", label: "Partiel" },
@@ -162,7 +177,16 @@ type Ligne = {
   tva: number;
 };
 
-type Reglement = { methode: "especes" | "carte" | "cheque" | "virement" | "mobile"; montant: number };
+type Reglement = {
+  methode:
+    | "especes"
+    | "visa"
+    | "mastercard"
+    | "cheque"
+    | "virement"
+    | "mobile";
+  montant: number;
+};
 
 type ClientOption = { id: string; full_name: string };
 type VehiculeOption = { id: string; plate: string; brand: string; model: string; year: number | null };
@@ -938,7 +962,7 @@ export function PosModule() {
   }
 
   function ajouterReglement() {
-    setReglements((cur) => [...cur, { methode: "carte", montant: Math.max(0, round2(totalTTC - montantRegle)) }]);
+    setReglements((cur) => [...cur, { methode: "especes", montant: Math.max(0, round2(totalTTC - montantRegle)) }]);
   }
 
   function majReglement(i: number, patch: Partial<Reglement>) {
@@ -1389,6 +1413,42 @@ export function PosModule() {
               </button>
             );
           })}
+          {/* Zone D — Moyens de paiement fixes (bas de la barre latérale PC) */}
+          <div className="mt-auto pt-4 border-t border-[#8FB59B]/20 flex flex-col gap-2">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Paiement</p>
+            <div className="grid grid-cols-2 gap-2">
+              {MOYENS_PAIEMENT.map((m) => {
+                const actif = modePaiement === m.cle;
+                return (
+                  <button
+                    key={m.cle}
+                    type="button"
+                    onClick={() => choisirMode(m.cle)}
+                    aria-pressed={actif}
+                    className={`flex flex-col items-center gap-1 rounded-lg px-2 py-3 text-xs transition touch-manipulation ${
+                      actif
+                        ? "bg-[#8FB59B] font-bold text-[#252D2D]"
+                        : "text-[#E8ECE8]/80 hover:bg-[#344440] hover:text-[#E8ECE8]"
+                    }`}
+                  >
+                    <span className={actif ? "font-bold text-[#252D2D]" : "text-[#DFE7E2]"}>
+                      {m.badge === "VISA" || m.badge === "Mastercard" ? m.badge : m.badge}
+                    </span>
+                    <span>{m.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={encaisser}
+              disabled={!lignes.length || saving}
+              className="btn-or min-h-12 w-full text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Valider l'encaissement"
+            >
+              {saving ? "Enregistrement…" : `ENCAISSER ${lignes.length ? formatMad(totalTTC) : ""}`}
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -1578,7 +1638,7 @@ export function PosModule() {
                   <button
                     type="button"
                     onClick={() => ajouterPrestation(s)}
-                    className="min-h-9 rounded-lg bg-[#8FB59B] px-3 text-xs font-bold text-[#252D2D]"
+                    className="min-h-12 rounded-lg bg-[#8FB59B] px-3 text-sm font-bold text-[#252D2D]"
                   >
                     Ajouter
                   </button>
@@ -2047,21 +2107,52 @@ export function PosModule() {
                 <span className="text-right text-lg font-extrabold text-[#DFE7E2]">{formatMad(totalTTC)}</span>
               </div>
 
-              {/* Modes */}
+              {/* Modes — quatre moyens immédiatement visibles (VISA, MASTERCARD, CHÈQUE, ESPÈCES) */}
               <p className="mt-4 text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Mode de paiement</p>
-              <div className="mt-2 grid grid-cols-4 gap-1.5">
-                {MODES.map((m) => (
-                  <button
-                    key={m.cle}
-                    type="button"
-                    onClick={() => choisirMode(m.cle)}
-                    className={`min-h-11 touch-manipulation rounded-lg px-1 py-2 text-[11px] transition ${
-                      modePaiement === m.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "bg-[#344440] text-[#8FB59B] hover:bg-[#41524E]"
-                    }`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {MOYENS_PAIEMENT.map((m) => {
+                  const actif = modePaiement === m.cle;
+                  return (
+                    <button
+                      key={m.cle}
+                      type="button"
+                      onClick={() => choisirMode(m.cle)}
+                      aria-pressed={actif}
+                      className={`min-h-12 flex flex-col items-center gap-1 rounded-lg px-2 py-2.5 transition touch-manipulation ${
+                        actif
+                          ? "bg-[#8FB59B] font-bold text-[#252D2D]"
+                          : "bg-[#344440] text-[#DFE7E2]/90 hover:bg-[#41524E] hover:text-[#E8ECE8]"
+                      }`}
+                    >
+                      <span className={`text-xs font-bold ${actif ? "text-[#252D2D]" : "text-[#DFE7E2]"}`}>
+                        {m.badge}
+                      </span>
+                      <span className="text-[10px]">{m.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Moyens secondaires (mixte / partiel / différé) */}
+              <p className="mt-3 text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Autres moyens</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {MODES_SECONDAIRES.map((m) => {
+                  const actif = modePaiement === m.cle;
+                  return (
+                    <button
+                      key={m.cle}
+                      type="button"
+                      onClick={() => choisirMode(m.cle)}
+                      aria-pressed={actif}
+                      className={`min-h-9 shrink-0 rounded-lg px-2.5 py-1.5 text-[10px] transition ${
+                        actif
+                          ? "bg-[#8FB59B] font-bold text-[#252D2D]"
+                          : "bg-[#344440] text-[#DFE7E2]/80 hover:bg-[#41524E]"
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Règlements (1 ou N modes → règlement mixte) */}
@@ -2087,7 +2178,8 @@ export function PosModule() {
                           aria-label={`Mode de paiement ${i + 1}`}
                         >
                           <option value="especes">Espèces</option>
-                          <option value="carte">Carte</option>
+                          <option value="visa">Visa</option>
+                          <option value="mastercard">Mastercard</option>
                           <option value="cheque">Chèque</option>
                           <option value="virement">Virement</option>
                           <option value="mobile">Mobile</option>
