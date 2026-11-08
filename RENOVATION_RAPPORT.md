@@ -62,3 +62,9 @@ Date : 8 novembre 2026 · Branche `main` · Commit `4327685`
 - Tests verts : 45 (24+21) · Lint : 0 erreur · Lighthouse : 96/100/100
 - Modules dédiés rénovés : connexion, shell/nav, splash, POS (phase précédente)
 - Zéro suppression de fonctionnalité · Zéro migration destructive
+
+## 2026-11-08 — Identité verte AUTO DYALI (commit `fba0d78`, Actions success)
+- **Assets remplacés** depuis `~/Documents/auto-dyali/` : logo badge circulaire transparent (72 Ko, branding + favicon ICO + icônes PWA 192/512), splash 157 Ko + splash mobile portrait (recadré voiture + enseigne, 89 Ko), scène connexion sans carte incrustée (89 Ko).
+- **Connexion refaite selon la maquette** : scène garage plein écran + carte verre dépoli (`panneau-connexion` règles : `backdrop-blur`, bordure blanc 15 %) posée à droite ; logo centré, « Bienvenue ! », champs icônes ivoire, `Se connecter` vert avec flèche, souvenir/oublié, séparateur « ou », footer « Performance • Innovation • Confiance ». Boutons OAuth placeholder retirés (absents de la maquette). **Logique auth 100 % inchangée** (`soumettre`, `get_my_profile`, redirections 4 rôles).
+- **Thème vert vif #3ECF6A → #2FA04E appliqué à toute l'app** : tokens `@theme` (`emeraude`, `or`, `succes`, `champagne`), `.btn-or`/`.btn-or-3d` (relief `#1d5f38`), `.champ` (verre translucide + focus vert), focus rings, scrollbar, `.titre-or` (ivoire→vert) ; remap inline `#8FB59B→#3ECF6A` (267) et `#D0C6AE→#DFE7E2` (154) sur 41 fichiers ; `theme_color`/manifest `#101F1A`.
+- **Preuves** : lint 0 erreur (1 warning `<img>` historique logo.tsx) · build 40/40 pages vérifié · tests Print Pro 24/24 + Scan Pro 21/21 · prod 200 (connexion, logo.webp) avec `#3ECF6A`, « Bienvenue ! », footer marque servis. Données Supabase et migrations non touchées.
