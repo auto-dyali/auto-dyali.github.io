@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { catalogueTest, formatMad, type ProduitTest } from "@/lib/catalogue-test";
 import { supabase } from "@/lib/supabase-browser";
 import { ScanChamp } from "@/components/scan-champ";
+import type { NomIcone } from "@/components/icones";
 import { useProfil } from "@/lib/features";
 import { PaveNumerique } from "@/components/pave-numerique";
 import {
@@ -104,6 +105,27 @@ const MODES: { cle: ModePaiement; label: string }[] = [
   { cle: "mobile", label: "Mobile" },
   { cle: "partiel", label: "Partiel" },
   { cle: "credit", label: "Crédit" },
+];
+
+/* ------------------------------------------------------------------
+ * Navigation interne du POS — barre latérale fixe (PC)
+ * 12 entrées métier. Chaque entrée garde la même logique métier ;
+ * seule la vue affichée change (catalogue / panier / clients / …).
+ * ------------------------------------------------------------------ */
+type PosSection =
+  | "catalogue" | "panier" | "clients" | "vehicules" | "historique"
+  | "devis" | "interventions" | "paiements" | "imprimantes" | "parametres";
+const POS_NAV: { cle: PosSection; label: string; icone: NomIcone; href?: string }[] = [
+  { cle: "catalogue", label: "Catalogue", icone: "carton" },
+  { cle: "panier", label: "Panier", icone: "carton" },
+  { cle: "clients", label: "Clients", icone: "client" },
+  { cle: "vehicules", label: "Véhicules", icone: "voiture" },
+  { cle: "historique", label: "Historique", icone: "historique", href: "/tableau-de-bord/historique-ventes" },
+  { cle: "devis", label: "Devis", icone: "rapport", href: "/tableau-de-bord/devis" },
+  { cle: "interventions", label: "Tickets intervention", icone: "cle" },
+  { cle: "paiements", label: "Paiements", icone: "ca" },
+  { cle: "imprimantes", label: "Imprimantes", icone: "imprimante", href: "/tableau-de-bord/print-pro" },
+  { cle: "parametres", label: "Paramètres POS", icone: "plus" },
 ];
 
 const TVA_OPTIONS = [0, 7, 10, 14, 20];
@@ -270,6 +292,9 @@ export function PosModule() {
 
   // Smartphone : panier en feuille + barre fixe
   const [panierMobile, setPanierMobile] = useState(false);
+
+  // Section courante du POS (catalogue / panier / clients / …)
+  const [posSection, setPosSection] = useState<PosSection>("catalogue");
 
   // Création rapide client / véhicule
   const [modalClient, setModalClient] = useState(false);
@@ -1318,41 +1343,52 @@ export function PosModule() {
 
   return (
     <section className="grid gap-5 xl:grid-cols-[13rem_1fr_23rem]">
+      {/* En-tête compacte mobile (cachée sur PC) */}
+      <div className="xl:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-[#8FB59B]/20 px-4 py-3 bg-[#252D2D]/90 backdrop-blur-md">
+        <button
+          type="button"
+          onClick={() => setPanierMobile(true)}
+          className="min-h-10 min-w-10 shrink-0 rounded-lg border border-[#8FB59B]/40 flex items-center justify-center text-[#DFE7E2]"
+          aria-label="Ouvrir le panier"
+        >
+          🛒
+        </button>
+        <h1 className="titre-or text-base font-extrabold flex-1 text-center">AUTO DYALI POS</h1>
+        <button
+          type="button"
+          onClick={ouvrirPaiement}
+          disabled={!lignes.length || saving}
+          className={`min-h-10 min-w-10 shrink-0 rounded-lg border border-[#8FB59B]/40 flex items-center justify-center px-2 text-xs font-bold transition ${
+            !lignes.length || saving ? "text-[#8FB59B]/40" : "bg-[#8FB59B] text-[#252D2D]"
+          }`}
+          aria-label="Paiement"
+        >
+          PAY
+        </button>
+      </div>
       {/* ------------------------------------------------------------
-       * Zone 1 — Catégories automobiles (gauche) : dynamiques, seules les
-       * familles présentes au catalogue sont affichées.
+       * Zone 1 — Barre latérale POS fixe (toujours visible sur PC)
        * ------------------------------------------------------------ */}
-      <aside className="carte h-fit p-4">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Catégories</p>
-        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 xl:flex-col xl:overflow-visible xl:pb-0">
-          <button
-            type="button"
-            onClick={() => setCategorie("Toutes")}
-            className={`shrink-0 rounded-lg px-3 py-2 text-left text-sm transition ${
-              categorie === "Toutes" ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440]"
-            }`}
-          >
-            Toutes
-          </button>
-          {categoriesSidebar.map((cat) => (
-            <button
-              key={cat.cle}
-              type="button"
-              onClick={() => setCategorie(cat.cle)}
-              className={`shrink-0 rounded-lg px-3 py-2 text-left text-sm transition ${
-                categorie === cat.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440]"
-              }`}
-            >
-              {cat.libelle}
-            </button>
-          ))}
-        </div>
-        <div className="mt-5 hidden border-t border-[#8FB59B]/10 pt-4 xl:block">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Scan</p>
-          <p className="mt-2 text-xs leading-5 text-[#A7B7A8]">
-            <strong className="text-[#DFE7E2]">Douchette USB/Bluetooth</strong> : scannez n&apos;importe où sur la
-            page — le code s&apos;affiche dans la case EAN au centre. Caméra : bouton 📷.
-          </p>
+      <aside className="carte h-fit p-3 hidden xl:flex">
+        <div className="flex flex-col gap-2">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8] mb-1">POS</p>
+          {POS_NAV.map((n) => {
+            const actif = posSection === n.cle;
+            return (
+              <button
+                key={n.cle}
+                type="button"
+                onClick={() => { if (!n.href) setPosSection(n.cle); }}
+                className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition touch-manipulation ${
+                  actif ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440] hover:text-[#E8ECE8]"
+                }`}
+                aria-pressed={actif}
+              >
+                <span className="shrink-0 text-xl">{n.icone === "carton" ? "📦" : n.icone === "client" ? "👤" : n.icone === "voiture" ? "🚗" : n.icone === "historique" ? "🕒" : n.icone === "rapport" ? "📄" : n.icone === "ca" ? "💳" : n.icone === "imprimante" ? "🖨️" : n.icone === "cle" ? "🔧" : n.icone === "plus" ? "⚙️" : "📋"}</span>
+                {n.label}
+              </button>
+            );
+          })}
         </div>
       </aside>
 
@@ -1370,6 +1406,37 @@ export function PosModule() {
                 ? `${prestationsFiltre.length} prestation(s) — cliquez pour ajouter au panier.`
                 : `${catalogueVehicule.length} produit(s) — cliquez pour ajouter au panier.`}
           </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <label className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8] shrink-0">Famille</label>
+            <button
+              type="button"
+              onClick={() => setCategorie("Toutes")}
+              className={`shrink-0 rounded-lg px-3 py-2 text-xs transition ${
+                categorie === "Toutes" ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440]"
+              }`}
+            >
+              Toutes
+            </button>
+            {categoriesSidebar.map((cat) => (
+              <button
+                key={cat.cle}
+                type="button"
+                onClick={() => setCategorie(cat.cle)}
+                className={`shrink-0 rounded-lg px-3 py-2 text-xs transition ${
+                  categorie === cat.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440]"
+                }`}
+              >
+                {cat.libelle}
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center gap-2 border-t border-[#8FB59B]/10 pt-3">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8] shrink-0">Scan</p>
+            <div className="flex-1">
+              <ScanChamp onCode={traiterCode} placeholder="EAN-13, QR, code-barres…" />
+            </div>
+            <p className="text-[10px] text-[#A7B7A8]">📷 caméra</p>
+          </div>
         </div>
 
         {/* Sélecteur véhicule facultatif : Marque → Modèle → Année → Motorisation → Version */}
@@ -1886,25 +1953,33 @@ export function PosModule() {
         {erreur && <p role="alert" className="mt-2 text-xs text-[#C5716B]">{erreur}</p>}
       </aside>
 
-      {/* Barre fixe smartphone : panier + paiement toujours accessibles */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-2 border-t border-[#8FB59B]/20 bg-[#1D2424]/95 p-3 backdrop-blur xl:hidden">
-        <button
-          type="button"
-          onClick={() => setPanierMobile(true)}
-          className="min-h-12 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm font-semibold text-[#DFE7E2]"
-        >
-          🛒 Panier · {lignes.length} · {formatMad(totalTTC)}
-        </button>
-        <button
-          type="button"
-          onClick={ouvrirPaiement}
-          disabled={!lignes.length || saving}
-          className="btn-or min-h-12 flex-1 text-sm font-bold disabled:opacity-40"
-        >
-          PAIEMENT
-        </button>
-      </div>
-      <div className="h-20 xl:hidden" aria-hidden="true" />
+      {/* Barre de navigation fixe smartphone — 5 accès métiers toujours accessibles */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-[#8FB59B]/20 bg-[#1D2424]/95 p-1 backdrop-blur-md xl:hidden safe-bas">
+        {[
+          { label: "Catalogue", icone: "📦", onClick: () => { setPanierMobile(false); setPosSection("catalogue"); } },
+          { label: "Panier", icone: "🛒", onClick: () => setPanierMobile(true) },
+          { label: "Clients", icone: "👤", onClick: () => { setModalClient(true); } },
+          { label: "Paiement", icone: "💳", onClick: () => { setPanierMobile(false); ouvrirPaiement(); }, disabled: !lignes.length || saving },
+          { label: "Menu", icone: "☰", onClick: () => { /* Menu complet disponible dans la barre latérale du shell (hamburger en haut à gauche) */ } },
+        ].map((item, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={item.onClick}
+            disabled={item.disabled}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 text-xs transition touch-manipulation ${
+              item.disabled
+                ? "opacity-40 text-[#8FB59B]/40"
+                : "bg-[#344440] text-[#DFE7E2] hover:bg-[#41524E]"
+            }`}
+            aria-pressed={item.disabled ? undefined : false}
+          >
+            <span className="text-[16px]">{item.icone}</span>
+            <span className={item.disabled ? "text-[#8FB59B]/40" : "font-bold"}>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+      <div className="h-24 xl:hidden" aria-hidden="true" />
 
       {/* ------------------------------------------------------------
        * Panneau de paiement compact (sans quitter le POS)
