@@ -3,6 +3,15 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase-browser";
 import { formatMad } from "@/lib/catalogue-test";
+import { modeleBonInterventionHtml, libelleStatut, type DonneesBon, type Etablissement } from "@/lib/print-pro";
+import {
+  chargerImprimantes,
+  compterImpressions,
+  etablissementCourant,
+  imprimanteParDefaut,
+  journaliserImpression,
+  ouvrirImpressionNavigateur,
+} from "@/lib/print-pro-client";
 
 /**
  * Atelier & interventions — §9 du cahier des charges.
@@ -15,6 +24,8 @@ type WorkOrder = {
   reference: string;
   status: string;
   diagnosis: string | null;
+  due_at?: string | null;
+  client_id: string;
   approved_by_client: boolean;
   total_amount: number;
   assigned_to: string | null;
@@ -95,7 +106,7 @@ export function AtelierModule() {
     const [{ data: ordersData, error: ordersError }, { data: vehiclesData }, { data: clientsData }, { data: employesData }] = await Promise.all([
       supabase
         .from("work_orders")
-        .select("id, reference, status, diagnosis, approved_by_client, total_amount, assigned_to, vehicle_id, created_at, vehicles(plate, brand, model), clients(full_name), employees(full_name)")
+        .select("id, reference, status, diagnosis, approved_by_client, total_amount, assigned_to, vehicle_id, client_id, created_at, due_at, vehicles(plate, brand, model), clients(full_name), employees(full_name)")
         .order("created_at", { ascending: false }),
       supabase.from("vehicles").select("id, plate, brand, model, client_id").order("plate"),
       supabase.from("clients").select("id, full_name").order("full_name"),
@@ -298,6 +309,95 @@ export function AtelierModule() {
     setSaving(false);
   }
 
+  /** Bon d'intervention imprimable — thermique (58/80) ou A4/PDF.
+   *  Ce document N'EST NI une facture NI un ticket de paiement (mention
+   *  en pied de page). Imprimable à l'ouverture, en suivi comme à la
+   *  clôture : le statut courant figure sur le document. */
+  async function imprimerBon(order: WorkOrder, format: "80mm" | "A4") {
+    if (!supabase || traitement === order.id) return;
+    setTraitement(order.id);
+    setError(null);
+    try {
+      const [etab, tasksReq, ventesReq, vehiculeReq, clientReq] = await Promise.all([
+        etablissementCourant(),
+        supabase.from("work_order_tasks").select("label, status, price").eq("work_order_id", order.id).order("created_at"),
+        supabase.from("sales").select("id, reference").eq("work_order_id", order.id),
+        supabase.from("vehicles").select("mileage").eq("id", order.vehicle_id).single(),
+        supabase.from("clients").select("phone").eq("id", order.client_id).single(),
+      ]);
+      if (tasksReq.error && !tasksReq.error.message.includes("does not exist")) throw new Error(tasksReq.error.message);
+
+      // Pièces réellement consommées : lignes produits des ventes liées à l'ordre.
+      const pieces: DonneesBon["pieces"] = [];
+      const ventesLiees: string[] = [];
+      for (const v of ventesReq.data ?? []) {
+        ventesLiees.push(v.reference);
+        const { data: items } = await supabase.from("sale_items").select("label, quantity, unit_price, product_id").eq("sale_id", v.id);
+        for (const it of items ?? []) {
+          if (!it.product_id) continue;
+          pieces.push({ label: it.label, prix: Math.round(Number(it.quantity) * Number(it.unit_price) * 100) / 100 });
+        }
+      }
+
+      const travaux: DonneesBon["travaux"] = (tasksReq.data ?? []).map((t) => ({ label: t.label, statut: libelleStatut(t.status, "fr") }));
+      const mainOeuvre: DonneesBon["mainOeuvre"] = (tasksReq.data ?? [])
+        .filter((t) => Number(t.price) > 0)
+        .map((t) => ({ label: t.label, prix: Number(t.price) }));
+
+      const donnees: DonneesBon = {
+        reference: order.reference,
+        dateOuverture: new Date(order.created_at).toLocaleString("fr-FR"),
+        client: order.clients?.full_name ?? null,
+        telephoneClient: clientReq.data?.phone ?? null,
+        vehicule: {
+          marque: order.vehicles?.brand ?? null,
+          modele: order.vehicles?.model ?? null,
+          plaque: order.vehicles?.plate ?? null,
+          kilometrage: vehiculeReq.data?.mileage ?? null,
+        },
+        motif: null, // champ « motif » absent du schéma (non destructif) : le diagnostic décrit la visite
+        diagnostic: order.diagnosis ?? null,
+        travaux,
+        pieces,
+        mainOeuvre,
+        technicien: order.employees?.full_name ?? null,
+        statut: order.status,
+        livraisonPrevue: order.due_at ? new Date(order.due_at).toLocaleDateString("fr-FR") : null,
+        observations: null,
+        clientApprouve: order.approved_by_client,
+        ventesLiees: ventesLiees.length ? ventesLiees : undefined,
+      };
+
+      const etabSource: Etablissement = etab
+        ? { nom: etab.nom, adresse: etab.adresse, ville: etab.ville, telephone: etab.telephone, email: etab.email }
+        : { nom: "AUTO DYALI", adresse: null, ville: null, telephone: null, email: null };
+
+      const reimpression = await compterImpressions(order.reference, "bon_intervention");
+      const imprimantesListe = etab ? await chargerImprimantes(etab.id) : [];
+      const imprimante = format === "A4" ? null : imprimanteParDefaut(imprimantesListe, "bon_intervention");
+
+      const html = modeleBonInterventionHtml(donnees, etabSource, "fr", format, { copies: 1 });
+      const res = ouvrirImpressionNavigateur(html);
+      if (!res.ok) throw new Error(res.message ?? "Impression impossible.");
+      setNotice(
+        reimpression > 0
+          ? `Bon d'intervention ${order.reference} réimprimé (n°${reimpression + 1}) — numéro initial conservé.`
+          : `Bon d'intervention ${order.reference} envoyé au dialogue d'impression.`,
+      );
+      if (etab) {
+        await journaliserImpression(
+          etab.id, imprimante,
+          { documentType: "bon_intervention", reference: order.reference, workOrderId: order.id, reimpression: reimpression > 0 ? reimpression + 1 : 0 },
+          format, "fr", 1,
+        );
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Impression du bon impossible.");
+    } finally {
+      setTraitement(null);
+    }
+  }
+
   return (
     <section className="space-y-6">
       {/* KPI réels */}
@@ -414,6 +514,26 @@ export function AtelierModule() {
                           <option value="">Changer…</option>
                           {STATUTS.filter((s) => s.cle !== order.status).map((s) => <option key={s.cle} value={s.cle}>{s.label}</option>)}
                         </select>
+                        <div className="flex gap-1.5">
+                          <button
+                            type="button"
+                            disabled={traitement === order.id}
+                            onClick={() => void imprimerBon(order, "80mm")}
+                            title="Bon d'intervention thermique (80 mm par défaut, ou format de l'imprimante configurée)"
+                            className="min-h-9 flex-1 touch-manipulation rounded-lg border border-[#d6b66f]/40 px-2 py-1 text-[11px] text-[#e9d998] disabled:opacity-40"
+                          >
+                            Bon
+                          </button>
+                          <button
+                            type="button"
+                            disabled={traitement === order.id}
+                            onClick={() => void imprimerBon(order, "A4")}
+                            title="Bon d'intervention A4 / PDF (avec zone de signature client)"
+                            className="min-h-9 flex-1 touch-manipulation rounded-lg border border-[#d6b66f]/40 px-2 py-1 text-[11px] text-[#e9d998] disabled:opacity-40"
+                          >
+                            A4
+                          </button>
+                        </div>
                       </div>
                     </td>
                   </tr>

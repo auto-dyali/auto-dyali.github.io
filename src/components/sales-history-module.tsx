@@ -4,6 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
 import { formatMad } from "@/lib/catalogue-test";
 import { useProfil } from "@/lib/features";
+import { modeleTicketHtml, ticketEscpos, type DonneesTicket } from "@/lib/print-pro";
+import {
+  chargerImprimantes,
+  compterImpressions,
+  envoyerEscpos,
+  etablissementCourant,
+  imprimanteParDefaut,
+  journaliserImpression,
+  ouvrirImpressionNavigateur,
+} from "@/lib/print-pro-client";
 
 /**
  * Historique des ventes — §6 du cahier des charges.
@@ -253,6 +263,93 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
     fenetre.print();
   }
 
+  /** Réimpression TRACÉE du ticket d'une vente passée :
+   *  données réelles rechargées (articles + règlements), numéro de vente
+   *  initial conservé, compteur de réimpressions journalisé (0024). */
+  async function imprimerTicketVente(vente: Vente) {
+    if (!supabase || traitement === vente.id) return;
+    setTraitement(vente.id);
+    setError(null);
+    try {
+      const [etab, itemsReq, paymentsReq, venteReq] = await Promise.all([
+        etablissementCourant(),
+        supabase.from("sale_items").select("label, quantity, unit_price, tax_rate, discount").eq("sale_id", vente.id),
+        supabase.from("payments").select("method, amount").eq("sale_id", vente.id).order("paid_at"),
+        supabase.from("sales").select("vehicle_id").eq("id", vente.id).single(),
+      ]);
+      if (itemsReq.error) throw new Error(itemsReq.error.message);
+
+      let vehicule: string | null = null;
+      const vehicleId = venteReq.data?.vehicle_id;
+      if (vehicleId) {
+        const { data: v } = await supabase.from("vehicles").select("plate, brand, model").eq("id", vehicleId).single();
+        if (v) vehicule = `${v.plate} — ${v.brand ?? ""} ${v.model ?? ""}`.trim();
+      }
+
+      const imprimantesListe = etab ? await chargerImprimantes(etab.id) : [];
+      const imprimante = imprimanteParDefaut(imprimantesListe, "ticket_vente");
+      const format = imprimante?.format ?? "80mm";
+      const langue = imprimante?.langue_defaut ?? "fr";
+      const copies = imprimante?.copies_par_defaut ?? 1;
+      const reimpression = await compterImpressions(vente.reference, "ticket_vente");
+
+      const total = Number(vente.total);
+      const paye = Number(vente.paid_total);
+      const donnees: DonneesTicket = {
+        reference: vente.reference,
+        date: new Date(vente.created_at).toLocaleString("fr-FR"),
+        caissier: null,
+        client: vente.client_nom ?? null,
+        vehicule,
+        lignes: (itemsReq.data ?? []).map((l) => ({
+          nom: l.label,
+          quantite: Number(l.quantity),
+          prix: Number(l.unit_price),
+          remisePct: Number(l.discount) || 0,
+          tvaPct: Number(l.tax_rate) || 0,
+        })),
+        remiseTicket: Number(vente.discount),
+        totalTTC: total,
+        reglements: (paymentsReq.data ?? []).map((p) => ({ methode: p.method, montant: Number(p.amount) })),
+        paye,
+        reste: Math.max(0, Math.round((total - paye) * 100) / 100),
+        monnaie: 0,
+        referenceTransaction: vente.id.slice(0, 8),
+        reimpression: reimpression > 0 ? reimpression + 1 : null,
+      };
+
+      const etabSource = etab
+        ? { nom: etab.nom, adresse: etab.adresse, ville: etab.ville, telephone: etab.telephone, email: etab.email }
+        : { nom: "AUTO DYALI", adresse: null, ville: null, telephone: null, email: null };
+
+      if (format === "A4" || !imprimante || imprimante.connexion === "navigateur" || imprimante.connexion === "reseau") {
+        const html = modeleTicketHtml(donnees, etabSource, langue, format, { copies });
+        const res = ouvrirImpressionNavigateur(html);
+        if (!res.ok) throw new Error(res.message ?? "Impression impossible.");
+        setNotice(
+          reimpression > 0
+            ? `Réimpression n°${reimpression + 1} du ticket ${vente.reference} — numéro initial conservé.`
+            : `Ticket ${vente.reference} envoyé au dialogue d'impression.`,
+        );
+      } else {
+        const payload = ticketEscpos(donnees, etabSource, format);
+        const res = await envoyerEscpos(payload, imprimante, `ticket-${vente.reference}.bin`);
+        setNotice(res.message ?? `Ticket envoyé via ${imprimante.connexion}.`);
+      }
+      if (etab) {
+        await journaliserImpression(
+          etab.id, imprimante,
+          { documentType: "ticket_vente", reference: vente.reference, saleId: vente.id, reimpression: reimpression > 0 ? reimpression + 1 : 0 },
+          format, langue, copies,
+        );
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Réimpression du ticket impossible.");
+    } finally {
+      setTraitement(null);
+    }
+  }
+
   async function retournerVente() {
     if (!supabase || !retour) return;
     // Garde-fou : permission de remboursement vérifiée avant exécution.
@@ -427,6 +524,9 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
                               Facture
                             </button>
                           )}
+                          <button type="button" onClick={() => void imprimerTicketVente(v)} disabled={traitement === v.id} className="rounded-lg border border-[#d6b66f]/40 px-2.5 py-1.5 text-xs text-[#e9d998] disabled:opacity-40">
+                            Ticket
+                          </button>
                           <button type="button" onClick={() => void imprimerFacture(v)} className="rounded-lg border border-[#d6b66f]/40 px-2.5 py-1.5 text-xs text-[#e9d998]">
                             Imprimer
                           </button>

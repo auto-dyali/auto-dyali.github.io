@@ -5,6 +5,23 @@ import { catalogueTest, formatMad, type ProduitTest } from "@/lib/catalogue-test
 import { supabase } from "@/lib/supabase-browser";
 import { ScanChamp } from "@/components/scan-champ";
 import { useProfil } from "@/lib/features";
+import { PaveNumerique } from "@/components/pave-numerique";
+import {
+  modeleTicketHtml,
+  ticketEscpos,
+  type DonneesTicket,
+  type Etablissement,
+} from "@/lib/print-pro";
+import {
+  chargerImprimantes,
+  compterImpressions,
+  envoyerEscpos,
+  etablissementCourant,
+  imprimanteParDefaut,
+  journaliserImpression,
+  ouvrirImpressionNavigateur,
+  type ImprimanteRow,
+} from "@/lib/print-pro-client";
 
 /**
  * MINI-POS AUTO DYALI — ergonomie PHARMA+ / logique métier automobile.
@@ -142,7 +159,7 @@ type LigneCatalogue = {
 type Recu = {
   reference: string;
   date: string;
-  lignes: { nom: string; quantite: number; prix: number }[];
+  lignes: { nom: string; quantite: number; prix: number; reference?: string | null; remisePct?: number; tva?: number }[];
   sousTotal: number;
   remise: number;
   tva: number;
@@ -152,6 +169,16 @@ type Recu = {
   monnaie: number;
   client: string | null;
   vehicule: string | null;
+  /** Détails du véhicule (marque/modèle) si connus. */
+  vehiculeDetails?: string | null;
+  /** Règlements réellement enregistrés (méthode = clé BDD). */
+  reglements?: { methode: string; montant: number }[];
+  /** Référence de transaction (id de vente tronqué) si connue. */
+  referenceTransaction?: string | null;
+  /** Nom du caissier (profil connecté). */
+  caissier?: string | null;
+  /** Compteur de réimpression (rempli avant impression). */
+  reimpression?: number | null;
 };
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -253,6 +280,27 @@ export function PosModule() {
 
   /** Verrou anti double-encaissement (ventes en double). */
   const verrouEncaissement = useRef(false);
+
+  /* --- Print Pro : établissement + imprimantes (0024, silencieux si absente) --- */
+  const [etabInfo, setEtabInfo] = useState<Etablissement | null>(null);
+  const [imprimantes, setImprimantes] = useState<ImprimanteRow[]>([]);
+  const [paveOuvert, setPaveOuvert] = useState(false);
+  const [impressionEnCours, setImpressionEnCours] = useState(false);
+
+  useEffect(() => {
+    let vivant = true;
+    const timer = window.setTimeout(async () => {
+      try {
+        const e = await etablissementCourant();
+        if (!vivant) return;
+        setEtabInfo(e ? { ...e, url_verification: null } : null);
+        if (e) setImprimantes(await chargerImprimantes(e.id));
+      } catch {
+        /* 0024 pas encore exécutée : impression via dialogue navigateur par défaut */
+      }
+    }, 200);
+    return () => { vivant = false; window.clearTimeout(timer); };
+  }, []);
 
   /* ---------------------------------------------------------------
    * Permissions (rôle + table permissions, module pos/clients/vehicules)
@@ -1060,7 +1108,7 @@ export function PosModule() {
       const recu: Recu = {
         reference,
         date: new Date().toLocaleString("fr-FR"),
-        lignes: lignes.map((l) => ({ nom: l.nom, quantite: l.quantite, prix: l.prix })),
+        lignes: lignes.map((l) => ({ nom: l.nom, quantite: l.quantite, prix: l.prix, reference: l.detail, remisePct: l.remisePct, tva: l.tva })),
         sousTotal,
         remise: totalRemise,
         tva: montantTVA,
@@ -1070,6 +1118,9 @@ export function PosModule() {
         monnaie: monnaieRendue,
         client: clients.find((c) => c.id === clientId)?.full_name ?? null,
         vehicule: vehiculeLibelle,
+        reglements: payments.length ? payments.map((p) => ({ methode: p.method, montant: p.amount })) : [{ methode: METHODE_BDD[reglements[0]?.methode ?? "especes"], montant: montantRegle }],
+        referenceTransaction: typeof saleId === "string" ? saleId.slice(0, 8) : null,
+        caissier: profil.fullName || null,
       };
       setDerniereVente(recu);
       setMessage(`Vente ${reference} enregistrée — ${formatMad(totalTTC)}${recu.reste > 0 ? `, reste à payer : ${formatMad(recu.reste)}` : ""}.`);
@@ -1162,49 +1213,90 @@ export function PosModule() {
   }
 
   /* ---------------------------------------------------------------
-   * Impression (ticket d'aperçu + reçu après encaissement)
+   * Impression (Print Pro) — ticket d'aperçu + reçu après encaissement.
+   * Voie choisie selon la configuration : dialogue navigateur (toujours
+   * disponible), ESC/POS USB/Bluetooth quand configuré et supporté.
    * --------------------------------------------------------------- */
-  const echapper = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-  function htmlRecu(recu: Recu): string {
-    const lignesHtml = recu.lignes
-      .map((l) => `<tr><td>${echapper(l.nom)}</td><td style="text-align:center">${l.quantite}</td><td style="text-align:right">${formatMad(round2(l.prix * l.quantite))}</td></tr>`)
-      .join("");
-    return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Ticket AUTO DYALI</title>
-<style>body{font-family:ui-monospace,Menlo,monospace;font-size:13px;width:300px;margin:16px auto;color:#000}
-h1{font-size:16px;text-align:center;margin:0 0 4px}table{width:100%;border-collapse:collapse;margin-top:8px}
-td{padding:3px 0;border-bottom:1px dashed #999}.total{font-weight:bold;font-size:15px;margin-top:8px}
-.muted{color:#555;font-size:11px;text-align:center}.row{display:flex;justify-content:space-between}</style></head><body>
-<h1>AUTO DYALI</h1>
-<p class="muted">${echapper(recu.reference)} — ${echapper(recu.date)}</p>
-${recu.client ? `<p class="muted">Client : ${echapper(recu.client)}</p>` : ""}
-${recu.vehicule ? `<p class="muted">Véhicule : ${echapper(recu.vehicule)}</p>` : ""}
-<table><tbody>${lignesHtml}</tbody></table>
-<div class="row"><span>Sous-total HT</span><span>${formatMad(recu.sousTotal)}</span></div>
-${recu.remise > 0 ? `<div class="row"><span>Remise</span><span>- ${formatMad(recu.remise)}</span></div>` : ""}
-<div class="row"><span>TVA</span><span>${formatMad(recu.tva)}</span></div>
-<div class="total row"><span>Total TTC</span><span>${formatMad(recu.total)}</span></div>
-${recu.paye > 0 ? `<div class="row"><span>Payé</span><span>${formatMad(recu.paye)}</span></div>` : ""}
-${recu.monnaie > 0 ? `<div class="row"><span>Monnaie rendue</span><span>${formatMad(recu.monnaie)}</span></div>` : ""}
-${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMad(recu.reste)}</span></div>` : ""}
-<p class="muted">Merci de votre confiance — AUTO DYALI</p></body></html>`;
+  function etabImprimable(): Etablissement {
+    return etabInfo ?? { nom: "AUTO DYALI", adresse: null, ville: null, telephone: null, email: null, url_verification: null };
   }
 
-  function imprimerHtml(html: string) {
-    const fenetre = window.open("", "_blank", "width=420,height=640");
-    if (!fenetre) { setErreur("Autorisez les fenêtres pop-up pour imprimer."); return; }
-    fenetre.document.write(html);
-    fenetre.document.close();
-    fenetre.focus();
-    fenetre.print();
+  function construireDonneesTicket(recu: Recu): DonneesTicket {
+    return {
+      reference: recu.reference,
+      date: recu.date,
+      caissier: recu.caissier ?? null,
+      client: recu.client,
+      vehicule: recu.vehicule,
+      vehiculeDetails: recu.vehiculeDetails ?? null,
+      lignes: recu.lignes.map((l) => ({
+        nom: l.nom,
+        reference: l.reference ?? null,
+        quantite: l.quantite,
+        prix: l.prix,
+        remisePct: l.remisePct ?? undefined,
+        tvaPct: l.tva ?? undefined,
+      })),
+      remiseTicket: recu.remise,
+      totalTTC: recu.total,
+      reglements: (recu.reglements ?? [{ methode: "especes", montant: recu.paye }]),
+      paye: recu.paye,
+      reste: recu.reste,
+      monnaie: recu.monnaie,
+      referenceTransaction: recu.referenceTransaction ?? null,
+      reimpression: recu.reimpression ?? null,
+    };
+  }
+
+  /** Impression du reçu : numéro de vente initial conservé, réimpression
+   *  comptée et journalisée (print_jobs, migration 0024). */
+  async function imprimerRecuEnrichi(recu: Recu) {
+    if (impressionEnCours) return;
+    setImpressionEnCours(true);
+    setErreur(null);
+    try {
+      const imprimante = imprimanteParDefaut(imprimantes, "ticket_vente");
+      const format = imprimante?.format ?? "80mm";
+      const langue = imprimante?.langue_defaut ?? "fr";
+      const copies = imprimante?.copies_par_defaut ?? 1;
+      const reimpression = await compterImpressions(recu.reference, "ticket_vente");
+      const donnees = construireDonneesTicket(recu);
+      donnees.reimpression = reimpression > 0 ? reimpression + 1 : null;
+
+      if (format === "A4" || !imprimante || imprimante.connexion === "navigateur" || imprimante.connexion === "reseau") {
+        const html = modeleTicketHtml(donnees, etabImprimable(), langue, format, { copies });
+        const res = ouvrirImpressionNavigateur(html);
+        if (!res.ok) throw new Error(res.message ?? "Impression impossible.");
+        setMessage(
+          reimpression > 0
+            ? `Réimpression n°${reimpression + 1} du ticket ${recu.reference} — numéro initial conservé.`
+            : `Ticket ${recu.reference} envoyé au dialogue d'impression.`,
+        );
+      } else {
+        const payload = ticketEscpos(donnees, etabImprimable(), format);
+        const res = await envoyerEscpos(payload, imprimante, `ticket-${recu.reference}.bin`);
+        setMessage(res.message ?? `Ticket envoyé via ${imprimante.connexion}.`);
+      }
+      if (etabInfo?.id) {
+        await journaliserImpression(
+          etabInfo.id, imprimante,
+          { documentType: "ticket_vente", reference: recu.reference, reimpression: reimpression > 0 ? reimpression + 1 : 0 },
+          format, langue, copies,
+        );
+      }
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Impression impossible.");
+    } finally {
+      setImpressionEnCours(false);
+    }
   }
 
   function imprimerTicket() {
     if (!lignes.length) return;
-    imprimerHtml(htmlRecu({
-      reference: "Aperçu du ticket",
+    const recuApercu: Recu = {
+      reference: "APERÇU — pas une vente",
       date: new Date().toLocaleString("fr-FR"),
-      lignes: lignes.map((l) => ({ nom: l.nom, quantite: l.quantite, prix: l.prix })),
+      lignes: lignes.map((l) => ({ nom: l.nom, quantite: l.quantite, prix: l.prix, reference: l.detail, remisePct: l.remisePct, tva: l.tva })),
       sousTotal,
       remise: totalRemise,
       tva: montantTVA,
@@ -1214,7 +1306,14 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
       monnaie: monnaieRendue,
       client: clients.find((c) => c.id === clientId)?.full_name ?? null,
       vehicule: vehiculeLibelle,
-    }));
+      reglements: [{ methode: METHODE_BDD[reglements[0]?.methode ?? "especes"] ?? "especes", montant: montantRegle }],
+      caissier: profil.fullName || null,
+    };
+    const imprimante = imprimanteParDefaut(imprimantes, "ticket_vente");
+    const format = imprimante?.format ?? "80mm";
+    const html = modeleTicketHtml(construireDonneesTicket(recuApercu), etabImprimable(), imprimante?.langue_defaut ?? "fr", format, { copies: 1 });
+    const res = ouvrirImpressionNavigateur(html);
+    if (!res.ok) setErreur(res.message ?? "Impression impossible.");
   }
 
   return (
@@ -1623,7 +1722,7 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
                   <button
                     type="button"
                     onClick={() => supprimerLigne(l.cle)}
-                    className="min-h-7 min-w-7 rounded bg-[#d66868]/15 text-xs text-[#d66868]"
+                    className="min-h-10 min-w-10 touch-manipulation rounded bg-[#d66868]/15 text-sm text-[#d66868]"
                     aria-label={`Supprimer ${l.nom}`}
                   >
                     ✕
@@ -1633,16 +1732,16 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
                   <button
                     type="button"
                     onClick={() => retirerLigne(l.cle)}
-                    className="min-h-7 min-w-7 rounded-lg bg-[#21464b] text-sm text-[#d6b66f]"
+                    className="min-h-10 min-w-10 touch-manipulation rounded-lg bg-[#21464b] text-base text-[#d6b66f]"
                     aria-label={`Retirer une unité de ${l.nom}`}
                   >
                     −
                   </button>
-                  <span className="w-6 text-center text-sm text-[#f8ecc9]">{l.quantite}</span>
+                  <span className="w-7 text-center text-sm text-[#f8ecc9]">{l.quantite}</span>
                   <button
                     type="button"
                     onClick={() => augmenterLigne(l)}
-                    className="min-h-7 min-w-7 rounded-lg bg-[#21464b] text-sm text-[#d6b66f]"
+                    className="min-h-10 min-w-10 touch-manipulation rounded-lg bg-[#21464b] text-base text-[#d6b66f]"
                     aria-label={`Ajouter une unité de ${l.nom}`}
                   >
                     +
@@ -1654,7 +1753,7 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
                     value={l.prix}
                     disabled={!posEdit}
                     onChange={(e) => majLigne(l.cle, { prix: Math.max(0, Number(e.target.value) || 0) })}
-                    className="champ min-h-7 w-16 px-1 py-0.5 text-xs disabled:opacity-50"
+                    className="champ min-h-9 w-20 px-1 py-0.5 text-xs disabled:opacity-50"
                     aria-label={`Prix unitaire de ${l.nom}`}
                     title={posEdit ? "Prix unitaire" : "Permission requise pour modifier le prix"}
                   />
@@ -1671,7 +1770,7 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
                     value={l.remisePct}
                     disabled={!posEdit}
                     onChange={(e) => majLigne(l.cle, { remisePct: Math.min(100, Math.max(0, Number(e.target.value) || 0)) })}
-                    className="champ min-h-7 w-14 px-1 py-0.5 text-xs disabled:opacity-50"
+                    className="champ min-h-9 w-14 px-1 py-0.5 text-xs disabled:opacity-50"
                     aria-label={`Remise en % de ${l.nom}`}
                     title={posEdit ? "Remise de la ligne (%)" : "Permission requise pour la remise"}
                   />
@@ -1845,10 +1944,11 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
               <div className="mt-4 flex gap-2">
                 <button
                   type="button"
-                  onClick={() => imprimerHtml(htmlRecu(derniereVente))}
-                  className="min-h-11 flex-1 rounded-lg border border-[#d6b66f]/40 px-3 text-sm text-[#e9d998]"
+                  onClick={() => void imprimerRecuEnrichi(derniereVente)}
+                  disabled={impressionEnCours}
+                  className="min-h-11 flex-1 rounded-lg border border-[#d6b66f]/40 px-3 text-sm text-[#e9d998] disabled:opacity-40"
                 >
-                  Imprimer le reçu
+                  {impressionEnCours ? "Impression…" : "Imprimer le ticket"}
                 </button>
                 <button type="button" onClick={fermerRecu} className="btn-or min-h-11 flex-1 text-sm font-bold">
                   Nouvelle vente
@@ -1880,7 +1980,7 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
                     key={m.cle}
                     type="button"
                     onClick={() => choisirMode(m.cle)}
-                    className={`rounded-lg px-1 py-2 text-[11px] transition ${
+                    className={`min-h-11 touch-manipulation rounded-lg px-1 py-2 text-[11px] transition ${
                       modePaiement === m.cle ? "bg-[#d6b66f] font-bold text-[#102b32]" : "bg-[#21464b] text-[#d6b66f] hover:bg-[#2a555b]"
                     }`}
                   >
@@ -1932,7 +2032,7 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
                           <button
                             type="button"
                             onClick={() => supprimerReglement(i)}
-                            className="min-h-8 min-w-8 rounded bg-[#d66868]/15 text-xs text-[#d66868]"
+                            className="min-h-10 min-w-10 touch-manipulation rounded bg-[#d66868]/15 text-sm text-[#d66868]"
                             aria-label="Retirer ce règlement"
                           >
                             ✕
@@ -1953,16 +2053,34 @@ ${recu.reste > 0 ? `<div class="row"><span>Reste à payer</span><span>${formatMa
                 {estEspeces && (
                   <label className="flex items-center justify-between gap-2">
                     <span className="text-[#a8bb87]">Montant reçu (MAD)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={montantRecu}
-                      onChange={(e) => setMontantRecu(e.target.value)}
-                      placeholder={String(totalTTC)}
-                      className="champ min-h-9 w-28 py-1 text-xs"
-                    />
+                    <span className="flex gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        inputMode="decimal"
+                        value={montantRecu}
+                        onChange={(e) => setMontantRecu(e.target.value)}
+                        placeholder={String(totalTTC)}
+                        className="champ min-h-10 w-24 py-1 text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPaveOuvert(!paveOuvert)}
+                        aria-label={paveOuvert ? "Masquer le pavé numérique" : "Ouvrir le pavé numérique tactile"}
+                        className={`min-h-10 min-w-10 touch-manipulation rounded-lg border border-[#d6b66f]/40 text-lg ${paveOuvert ? "bg-[#d6b66f]/25 text-[#e9d998]" : "bg-[#21464b] text-[#d6b66f]"}`}
+                      >
+                        ⌨
+                      </button>
+                    </span>
                   </label>
+                )}
+                {estEspeces && paveOuvert && (
+                  <PaveNumerique
+                    valeur={montantRecu}
+                    onChangement={setMontantRecu}
+                    ariaLabel="Saisie tactile du montant reçu"
+                  />
                 )}
                 {estEspeces && montantRecuNum > 0 && (
                   <div className="flex justify-between">

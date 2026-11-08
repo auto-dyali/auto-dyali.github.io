@@ -15,7 +15,7 @@ const strokes = {
 export type NomIcone = | "ca" | "benefice" | "depenses" | "cle" | "commun"
   | "voiture" | "carton" | "client" | "rapport"
   | "resistance" | "pos" | "barcode" | "planning" | "pointage"
-  | "historique" | "cloche" | "profil" | "scanner" | "plus" | "oeil" | "deconnexion";
+  | "historique" | "cloche" | "profil" | "scanner" | "plus" | "oeil" | "deconnexion" | "imprimante";
 
 const chemins: Record<NomIcone, JSX.Element> = {
   // KPIs
@@ -130,6 +130,14 @@ const chemins: Record<NomIcone, JSX.Element> = {
     <>
       <rect x="4" y="4" width="12" height="12" rx="2" />
       <path d="M7 8l2 2-2 2M11 12h2.5" />
+    </>
+  ),
+  imprimante: (
+    <>
+      <path d="M6 7V3.5h8V7" />
+      <rect x="3.5" y="7" width="13" height="6" rx="1.5" />
+      <rect x="6" y="11" width="8" height="5.5" rx="1" />
+      <path d="M12.5 13.5h1" />
     </>
   ),
   plus: <path d="M10 4.5v11M4.5 10h11" />,
