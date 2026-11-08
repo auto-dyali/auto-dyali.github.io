@@ -32,11 +32,11 @@ type Message = {
 };
 
 const STATUTS: Record<string, { label: string; classe: string }> = {
-  open: { label: "Ouvert", classe: "bg-[#d6b66f]/15 text-[#e9d998]" },
-  in_progress: { label: "En cours", classe: "bg-[#38a987]/15 text-[#69d3a8]" },
-  waiting_reply: { label: "En attente de vous", classe: "bg-[#d6b66f]/15 text-[#e9d998]" },
-  resolved: { label: "Résolu", classe: "bg-[#38a987]/20 text-[#69d3a8]" },
-  closed: { label: "Fermé", classe: "bg-[#21464b] text-[#a8bb87]" },
+  open: { label: "Ouvert", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
+  in_progress: { label: "En cours", classe: "bg-[#5D9E7F]/15 text-[#7FBF9E]" },
+  waiting_reply: { label: "En attente de vous", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
+  resolved: { label: "Résolu", classe: "bg-[#5D9E7F]/20 text-[#7FBF9E]" },
+  closed: { label: "Fermé", classe: "bg-[#344440] text-[#A7B7A8]" },
 };
 
 const CATEGORIES: { cle: string; label: string }[] = [
@@ -215,29 +215,29 @@ export function SupportModule() {
       {/* KPI réels */}
       <div className="grid gap-4 sm:grid-cols-3">
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Tickets ouverts</p>
+          <p className="text-xs text-[#A7B7A8]">Tickets ouverts</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : ouverts}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Total des tickets</p>
+          <p className="text-xs text-[#A7B7A8]">Total des tickets</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : tickets.length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Résolus</p>
+          <p className="text-xs text-[#A7B7A8]">Résolus</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">
             {loading ? "…" : tickets.filter((t) => t.status === "resolved" || t.status === "closed").length}
           </p>
         </article>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Assistance AUTO DYALI</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Assistance AUTO DYALI</p>
           <h1 className="titre-or mt-1 text-2xl font-extrabold">Support & tickets</h1>
-          <p className="mt-1 text-sm text-[#a8bb87]">Ouvrez un ticket, suivez les réponses de l’équipe.</p>
+          <p className="mt-1 text-sm text-[#A7B7A8]">Ouvrez un ticket, suivez les réponses de l’équipe.</p>
         </div>
         <button type="button" onClick={() => { setOuvert(true); setError(null); setNotice(null); }} className="btn-or min-h-11 px-5 text-sm">
           + Nouveau ticket
@@ -247,13 +247,13 @@ export function SupportModule() {
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         {/* Liste */}
         <section className="carte overflow-hidden">
-          <div className="border-b border-[#d6b66f]/10 p-4">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Mes tickets</p>
+          <div className="border-b border-[#8FB59B]/10 p-4">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Mes tickets</p>
           </div>
           {loading ? (
-            <p className="p-8 text-center text-sm text-[#a8bb87]">Chargement…</p>
+            <p className="p-8 text-center text-sm text-[#A7B7A8]">Chargement…</p>
           ) : (
-            <ul className="divide-y divide-[#d6b66f]/10">
+            <ul className="divide-y divide-[#8FB59B]/10">
               {tickets.map((t) => {
                 const info = STATUTS[t.status] ?? STATUTS.open;
                 return (
@@ -261,11 +261,11 @@ export function SupportModule() {
                     <button
                       type="button"
                       onClick={() => setSelection(t.id === selection ? null : t.id)}
-                      className={`flex w-full flex-wrap items-center justify-between gap-2 px-5 py-4 text-left transition hover:bg-[#21464b]/40 ${selection === t.id ? "bg-[#21464b]/60" : ""}`}
+                      className={`flex w-full flex-wrap items-center justify-between gap-2 px-5 py-4 text-left transition hover:bg-[#344440]/40 ${selection === t.id ? "bg-[#344440]/60" : ""}`}
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold text-[#f8ecc9]">{t.subject}</p>
-                        <p className="mt-0.5 text-xs text-[#a8bb87]">
+                        <p className="truncate font-semibold text-[#E8ECE8]">{t.subject}</p>
+                        <p className="mt-0.5 text-xs text-[#A7B7A8]">
                           {CATEGORIES.find((c) => c.cle === t.category)?.label ?? t.category}
                           {" · "}
                           {new Date(t.created_at).toLocaleDateString("fr-FR")}
@@ -278,7 +278,7 @@ export function SupportModule() {
                 );
               })}
               {!tickets.length && (
-                <li className="p-8 text-center text-sm text-[#a8bb87]">Aucun ticket — ouvrez le premier avec « + Nouveau ticket ».</li>
+                <li className="p-8 text-center text-sm text-[#A7B7A8]">Aucun ticket — ouvrez le premier avec « + Nouveau ticket ».</li>
               )}
             </ul>
           )}
@@ -288,15 +288,15 @@ export function SupportModule() {
         <aside className="carte h-fit p-5">
           {!ticketSelectionne ? (
             <>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Fil de discussion</p>
-              <p className="mt-3 text-sm text-[#a8bb87]">Sélectionnez un ticket pour lire les échanges et répondre.</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Fil de discussion</p>
+              <p className="mt-3 text-sm text-[#A7B7A8]">Sélectionnez un ticket pour lire les échanges et répondre.</p>
             </>
           ) : (
             <>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Ticket</p>
-                  <h2 className="mt-1 font-bold text-[#f8ecc9]">{ticketSelectionne.subject}</h2>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Ticket</p>
+                  <h2 className="mt-1 font-bold text-[#E8ECE8]">{ticketSelectionne.subject}</h2>
                 </div>
                 <select
                   aria-label="Statut du ticket"
@@ -310,11 +310,11 @@ export function SupportModule() {
 
               <div className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1">
                 {messages.length === 0 && (
-                  <p className="text-sm text-[#a8bb87]">{ticketSelectionne.body}</p>
+                  <p className="text-sm text-[#A7B7A8]">{ticketSelectionne.body}</p>
                 )}
                 {messages.map((m) => (
-                  <div key={m.id} className={`rounded-lg px-3 py-2 text-sm ${m.is_staff ? "bg-[#d6b66f]/10 text-[#e9d998]" : "bg-[#21464b]/60 text-[#f8ecc9]"}`}>
-                    <p className="mb-1 text-[10px] uppercase text-[#a8bb87]">
+                  <div key={m.id} className={`rounded-lg px-3 py-2 text-sm ${m.is_staff ? "bg-[#8FB59B]/10 text-[#D0C6AE]" : "bg-[#344440]/60 text-[#E8ECE8]"}`}>
+                    <p className="mb-1 text-[10px] uppercase text-[#A7B7A8]">
                       {m.is_staff ? "Équipe AUTO DYALI" : "Vous"} · {new Date(m.created_at).toLocaleString("fr-FR")}
                     </p>
                     <p className="leading-5 whitespace-pre-wrap">{m.body}</p>
@@ -348,23 +348,23 @@ export function SupportModule() {
           <form onSubmit={(e) => void creerTicket(e)} className="carte max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Assistance</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Assistance</p>
                 <h2 className="titre-or mt-1 text-xl font-extrabold">Nouveau ticket</h2>
               </div>
-              <button type="button" onClick={() => setOuvert(false)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button>
+              <button type="button" onClick={() => setOuvert(false)} className="text-2xl text-[#A7B7A8]" aria-label="Fermer">×</button>
             </div>
 
             <div className="mt-5 grid gap-3">
-              <label className="text-xs text-[#a8bb87]">Objet *
+              <label className="text-xs text-[#A7B7A8]">Objet *
                 <input required className="champ mt-1 min-h-11" placeholder="Résumé du problème" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
               </label>
               <div className="grid grid-cols-2 gap-3">
-                <label className="text-xs text-[#a8bb87]">Catégorie
+                <label className="text-xs text-[#A7B7A8]">Catégorie
                   <select className="champ mt-1 min-h-11" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                     {CATEGORIES.map((c) => <option key={c.cle} value={c.cle}>{c.label}</option>)}
                   </select>
                 </label>
-                <label className="text-xs text-[#a8bb87]">Priorité
+                <label className="text-xs text-[#A7B7A8]">Priorité
                   <select className="champ mt-1 min-h-11" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
                     <option value="low">Basse</option>
                     <option value="normal">Normale</option>
@@ -373,13 +373,13 @@ export function SupportModule() {
                   </select>
                 </label>
               </div>
-              <label className="text-xs text-[#a8bb87]">Description *
+              <label className="text-xs text-[#A7B7A8]">Description *
                 <textarea required rows={5} className="champ mt-1 py-2 text-sm" placeholder="Décrivez le problème ou la demande…" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
               </label>
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button>
+              <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>
               <button type="submit" disabled={saving} className="btn-or px-4 py-2 text-sm disabled:opacity-40">{saving ? "Envoi…" : "Ouvrir le ticket"}</button>
             </div>
           </form>

@@ -40,18 +40,18 @@ type Facture = {
 type Produit = { id: string; name: string; sku: string; stock: number };
 
 const STATUTS_RETOUR: Record<string, { label: string; classe: string }> = {
-  en_attente: { label: "En attente", classe: "bg-[#d6b66f]/15 text-[#e9d998]" },
-  expedie: { label: "Expédié", classe: "bg-[#90a0b0]/20 text-[#90a0b0]" },
-  rembourse: { label: "Remboursé", classe: "bg-[#90a0b0]/25 text-[#e9d998]" },
-  annule: { label: "Annulé", classe: "bg-[#21464b] text-[#a8bb87]" },
+  en_attente: { label: "En attente", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
+  expedie: { label: "Expédié", classe: "bg-[#8DA298]/20 text-[#8DA298]" },
+  rembourse: { label: "Remboursé", classe: "bg-[#8DA298]/25 text-[#D0C6AE]" },
+  annule: { label: "Annulé", classe: "bg-[#344440] text-[#A7B7A8]" },
 };
 
 const STATUTS_FACTURE: Record<string, { label: string; classe: string }> = {
-  a_payer: { label: "À payer", classe: "bg-[#d66868]/15 text-[#d66868]" },
-  partiellement_payee: { label: "Partielle", classe: "bg-[#d6b66f]/15 text-[#e9d998]" },
-  payee: { label: "Payée", classe: "bg-[#90a0b0]/20 text-[#e9d998]" },
-  contestee: { label: "Contestée", classe: "bg-[#d69b6a]/20 text-[#d69b6a]" },
-  annulee: { label: "Annulée", classe: "bg-[#21464b] text-[#a8bb87]" },
+  a_payer: { label: "À payer", classe: "bg-[#C5716B]/15 text-[#C5716B]" },
+  partiellement_payee: { label: "Partielle", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
+  payee: { label: "Payée", classe: "bg-[#8DA298]/20 text-[#D0C6AE]" },
+  contestee: { label: "Contestée", classe: "bg-[#C79A6B]/20 text-[#C79A6B]" },
+  annulee: { label: "Annulée", classe: "bg-[#344440] text-[#A7B7A8]" },
 };
 
 const money = (v: unknown) => `${Number(v ?? 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MAD`;
@@ -213,14 +213,14 @@ export function AchatsComplementsModule() {
 
   return (
     <>
-      {erreur && <p role="alert" className="mb-4 rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{erreur}</p>}
-      {infoMigration && <p role="status" className="mb-4 rounded-lg bg-[#d6b66f]/15 px-4 py-3 text-sm text-[#e9d998]">{infoMigration}</p>}
-      {notice && <p role="status" className="mb-4 rounded-lg bg-[#90a0b0]/10 px-4 py-3 text-sm text-[#90a0b0]">{notice}</p>}
+      {erreur && <p role="alert" className="mb-4 rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{erreur}</p>}
+      {infoMigration && <p role="status" className="mb-4 rounded-lg bg-[#8FB59B]/15 px-4 py-3 text-sm text-[#D0C6AE]">{infoMigration}</p>}
+      {notice && <p role="status" className="mb-4 rounded-lg bg-[#8DA298]/10 px-4 py-3 text-sm text-[#8DA298]">{notice}</p>}
 
       <div className="grid gap-5 lg:grid-cols-2">
         {/* Retours */}
         <section className="carte p-5">
-          <h2 className="font-bold text-[#f8ecc9]">Retour fournisseur (sortie de stock tracée)</h2>
+          <h2 className="font-bold text-[#E8ECE8]">Retour fournisseur (sortie de stock tracée)</h2>
           <form onSubmit={creerRetour} className="mt-4 grid gap-3">
             <select required className="champ min-h-11" value={formRetour.supplier_id} onChange={(e) => setFormRetour({ ...formRetour, supplier_id: e.target.value })}>
               <option value="">Fournisseur (optionnel)…</option>
@@ -241,26 +241,26 @@ export function AchatsComplementsModule() {
             <button type="submit" disabled={saving} className="btn-or min-h-11 text-sm">{saving ? "Enregistrement…" : "Créer le retour"}</button>
           </form>
 
-          <ul className="mt-4 max-h-64 divide-y divide-[#d6b66f]/10 overflow-y-auto">
+          <ul className="mt-4 max-h-64 divide-y divide-[#8FB59B]/10 overflow-y-auto">
             {retours.map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-2 py-3 text-sm">
                 <div>
-                  <p className="font-semibold text-[#f8ecc9]">{r.reference}</p>
-                  <p className="text-xs text-[#a8bb87]">{r.suppliers?.name ?? "—"} · {r.reason} · {date(r.created_at)}</p>
+                  <p className="font-semibold text-[#E8ECE8]">{r.reference}</p>
+                  <p className="text-xs text-[#A7B7A8]">{r.suppliers?.name ?? "—"} · {r.reason} · {date(r.created_at)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-[#e9d998]">{money(r.total_amount)}</p>
+                  <p className="font-bold text-[#D0C6AE]">{money(r.total_amount)}</p>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] ${STATUTS_RETOUR[r.status]?.classe ?? ""}`}>{STATUTS_RETOUR[r.status]?.label ?? r.status}</span>
                 </div>
               </li>
             ))}
           </ul>
-          {!loading && !retours.length && !infoMigration && <p className="py-6 text-center text-sm text-[#a8bb87]">Aucun retour enregistré.</p>}
+          {!loading && !retours.length && !infoMigration && <p className="py-6 text-center text-sm text-[#A7B7A8]">Aucun retour enregistré.</p>}
         </section>
 
         {/* Factures */}
         <section className="carte p-5">
-          <h2 className="font-bold text-[#f8ecc9]">Factures fournisseurs</h2>
+          <h2 className="font-bold text-[#E8ECE8]">Factures fournisseurs</h2>
           <form onSubmit={creerFacture} className="mt-4 grid gap-3">
             <select required className="champ min-h-11" value={formFacture.supplier_id} onChange={(e) => setFormFacture({ ...formFacture, supplier_id: e.target.value })}>
               <option value="">Fournisseur…</option>
@@ -269,34 +269,34 @@ export function AchatsComplementsModule() {
             <div className="grid grid-cols-2 gap-3">
               <input required className="champ min-h-11" placeholder="N° de facture" value={formFacture.number} onChange={(e) => setFormFacture({ ...formFacture, number: e.target.value })} />
               <input required min="0.01" step="0.01" type="number" className="champ min-h-11" placeholder="Montant total" value={formFacture.total} onChange={(e) => setFormFacture({ ...formFacture, total: e.target.value })} />
-              <label className="text-xs text-[#a8bb87]">Date<input type="date" className="champ mt-1 min-h-11" value={formFacture.invoice_date} onChange={(e) => setFormFacture({ ...formFacture, invoice_date: e.target.value })} /></label>
-              <label className="text-xs text-[#d6b66f]">Échéance<input type="date" className="champ mt-1 min-h-11" value={formFacture.due_date} onChange={(e) => setFormFacture({ ...formFacture, due_date: e.target.value })} /></label>
+              <label className="text-xs text-[#A7B7A8]">Date<input type="date" className="champ mt-1 min-h-11" value={formFacture.invoice_date} onChange={(e) => setFormFacture({ ...formFacture, invoice_date: e.target.value })} /></label>
+              <label className="text-xs text-[#8FB59B]">Échéance<input type="date" className="champ mt-1 min-h-11" value={formFacture.due_date} onChange={(e) => setFormFacture({ ...formFacture, due_date: e.target.value })} /></label>
             </div>
             <button type="submit" disabled={saving} className="btn-or min-h-11 text-sm">{saving ? "Enregistrement…" : "Enregistrer la facture"}</button>
           </form>
 
-          <ul className="mt-4 max-h-64 divide-y divide-[#d6b66f]/10 overflow-y-auto">
+          <ul className="mt-4 max-h-64 divide-y divide-[#8FB59B]/10 overflow-y-auto">
             {factures.map((f) => (
               <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
                 <div>
-                  <p className="font-semibold text-[#f8ecc9]">{f.number} · {f.suppliers?.name ?? "—"}</p>
-                  <p className="text-xs text-[#a8bb87]">émise le {date(f.invoice_date)}{f.due_date ? ` · échéance ${date(f.due_date)}` : " · échéance non renseignée"} · payé {money(f.paid_amount)}</p>
+                  <p className="font-semibold text-[#E8ECE8]">{f.number} · {f.suppliers?.name ?? "—"}</p>
+                  <p className="text-xs text-[#A7B7A8]">émise le {date(f.invoice_date)}{f.due_date ? ` · échéance ${date(f.due_date)}` : " · échéance non renseignée"} · payé {money(f.paid_amount)}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-[#e9d998]">{money(f.total)}</span>
+                  <span className="font-bold text-[#D0C6AE]">{money(f.total)}</span>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] ${STATUTS_FACTURE[f.status]?.classe ?? ""}`}>{STATUTS_FACTURE[f.status]?.label ?? f.status}</span>
                   {f.status !== "payee" && f.status !== "annulee" && (
-                    <button type="button" onClick={() => void majStatutFacture(f, "payee")} className="rounded-lg border border-[#d6b66f]/30 px-2 py-1 text-[11px] text-[#e9d998]">Marquer payée</button>
+                    <button type="button" onClick={() => void majStatutFacture(f, "payee")} className="rounded-lg border border-[#8FB59B]/30 px-2 py-1 text-[11px] text-[#D0C6AE]">Marquer payée</button>
                   )}
                 </div>
               </li>
             ))}
           </ul>
-          {!loading && !factures.length && !infoMigration && <p className="py-6 text-center text-sm text-[#a8bb87]">Aucune facture fournisseur.</p>}
+          {!loading && !factures.length && !infoMigration && <p className="py-6 text-center text-sm text-[#A7B7A8]">Aucune facture fournisseur.</p>}
         </section>
       </div>
 
-      <p className="mt-4 text-[11px] text-[#a8bb87]">
+      <p className="mt-4 text-[11px] text-[#A7B7A8]">
         Aucune ligne n’est supprimée : un retour crée un mouvement de stock <code>out</code> tracé, une facture se marque payée.
         Échéances affichées uniquement si renseignées.
       </p>

@@ -132,34 +132,34 @@ export default function ReservationPage() {
   };
 
   if (loading) {
-    return <p className="text-center text-[#a8bb87]">Chargement des services...</p>;
+    return <p className="text-center text-[#A7B7A8]">Chargement des services...</p>;
   }
 
   return (
     <section className="max-w-2xl mx-auto p-6">
       <h1 className="titre-or mb-6 text-2xl font-extrabold">Réservation en ligne</h1>
 
-      <p className="text-[#a8bb87] mb-4">
+      <p className="text-[#A7B7A8] mb-4">
         Prenez rendez-vous directement depuis votre navigateur. Remplissez le formulaire ci-dessous.
       </p>
 
       {error && <p className="mb-4 text-red-600">{error}</p>}
 
       {success ? (
-        <div className="mb-6 p-4 bg-[#21464b]/50 rounded-lg">
-          <p className="text-[#a8bb87]">Réservation confirmée !</p>
+        <div className="mb-6 p-4 bg-[#344440]/50 rounded-lg">
+          <p className="text-[#A7B7A8]">Réservation confirmée !</p>
           <p className="mt-2">Vous recevrez une confirmation par email.</p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-[#a8bb87] mb-1">Service</label>
+              <label className="block text-sm text-[#A7B7A8] mb-1">Service</label>
               <select
                 name="service_id"
                 required
                 onChange={handleServiceChange}
-                className="champ w-full min-h-11 rounded border border-[#d6b66f]/15 bg-[#193a40] text-[#f8ecc9] placeholder-[#a8bb87]"
+                className="champ w-full min-h-11 rounded border border-[#8FB59B]/15 bg-[#2C3735] text-[#E8ECE8] placeholder-[#A7B7A8]"
               >
                 <option value="">Sélectionner un service</option>
                 {services.map((s) => (
@@ -170,11 +170,11 @@ export default function ReservationPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm text-[#a8bb87] mb-1">Véhicule</label>
+              <label className="block text-sm text-[#A7B7A8] mb-1">Véhicule</label>
               <select
                 name="vehicle_id"
                 onChange={(e) => setForm({ ...form, vehicle_id: e.target.value })}
-                className="champ w-full min-h-11 rounded border border-[#d6b66f]/15 bg-[#193a40] text-[#f8ecc9] placeholder-[#a8bb87]"
+                className="champ w-full min-h-11 rounded border border-[#8FB59B]/15 bg-[#2C3735] text-[#E8ECE8] placeholder-[#A7B7A8]"
               >
                 <option value="">Aucun véhicule</option>
               </select>
@@ -182,7 +182,7 @@ export default function ReservationPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-[#a8bb87] mb-1">Coordonnées du client</label>
+            <label className="block text-sm text-[#A7B7A8] mb-1">Coordonnées du client</label>
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="text"
@@ -191,7 +191,7 @@ export default function ReservationPage() {
                 value={form.client_name}
                 onChange={handleInputChange}
                 placeholder="Nom complet"
-                className="champ w-full min-h-11 rounded border border-[#d6b66f]/15 bg-[#193a40] text-[#f8ecc9] placeholder-[#a8bb87]"
+                className="champ w-full min-h-11 rounded border border-[#8FB59B]/15 bg-[#2C3735] text-[#E8ECE8] placeholder-[#A7B7A8]"
               />
               <input
                 type="tel"
@@ -199,7 +199,7 @@ export default function ReservationPage() {
                 value={form.client_phone}
                 onChange={handleInputChange}
                 placeholder="Téléphone"
-                className="champ w-full min-h-11 rounded border border-[#d6b66f]/15 bg-[#193a40] text-[#f8ecc9] placeholder-[#a8bb87]"
+                className="champ w-full min-h-11 rounded border border-[#8FB59B]/15 bg-[#2C3735] text-[#E8ECE8] placeholder-[#A7B7A8]"
               />
             </div>
             <input
@@ -209,7 +209,7 @@ export default function ReservationPage() {
               value={form.client_email}
               onChange={handleInputChange}
               placeholder="Email"
-              className="champ w-full min-h-11 rounded border border-[#d6b66f]/15 bg-[#193a40] text-[#f8ecc9] placeholder-[#a8bb87]"
+              className="champ w-full min-h-11 rounded border border-[#8FB59B]/15 bg-[#2C3735] text-[#E8ECE8] placeholder-[#A7B7A8]"
             />
             <input
               type="text"
@@ -217,12 +217,12 @@ export default function ReservationPage() {
               value={form.client_address}
               onChange={handleInputChange}
               placeholder="Adresse"
-              className="champ w-full min-h-11 rounded border border-[#d6b66f]/15 bg-[#193a40] text-[#f8ecc9] placeholder-[#a8bb87]"
+              className="champ w-full min-h-11 rounded border border-[#8FB59B]/15 bg-[#2C3735] text-[#E8ECE8] placeholder-[#A7B7A8]"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-[#a8bb87] mb-1">Date et heure</label>
+            <label className="block text-sm text-[#A7B7A8] mb-1">Date et heure</label>
             <div>
               <input
                 type="date"
@@ -230,7 +230,7 @@ export default function ReservationPage() {
                 required
                 value={form.slot_start}
                 onChange={(e) => setForm({ ...form, slot_start: e.target.value })}
-                className="champ w-full min-h-11 rounded border border-[#d6b66f]/15 bg-[#193a40] text-[#f8ecc9] placeholder-[#a8bb87]"
+                className="champ w-full min-h-11 rounded border border-[#8FB59B]/15 bg-[#2C3735] text-[#E8ECE8] placeholder-[#A7B7A8]"
               />
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <input
@@ -238,26 +238,26 @@ export default function ReservationPage() {
                   name="slot_end"
                   value={form.slot_end}
                   onChange={(e) => setForm({ ...form, slot_end: e.target.value })}
-                  className="champ min-h-11 rounded border border-[#d6b66f]/15 bg-[#193a40] text-[#f8ecc9] placeholder-[#a8bb87]"
+                  className="champ min-h-11 rounded border border-[#8FB59B]/15 bg-[#2C3735] text-[#E8ECE8] placeholder-[#A7B7A8]"
                 />
-                <span className="text-xs text-[#a8bb87]">
+                <span className="text-xs text-[#A7B7A8]">
                   Durée : {form.duration_min} min
                 </span>
               </div>
             </div>
-            <small className="text-xs text-[#a8bb87]">
+            <small className="text-xs text-[#A7B7A8]">
               Veuillez sélectionner une date et heure disponible. Le garage vous contactera pour confirmation.
             </small>
           </div>
 
           <div>
-            <label className="block text-sm text-[#a8bb87] mb-1">Notes supplémentaires</label>
+            <label className="block text-sm text-[#A7B7A8] mb-1">Notes supplémentaires</label>
             <textarea
               name="notes"
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               rows={3}
-              className="champ w-full rounded border border-[#d6b66f]/15 bg-[#193a40] text-[#f8ecc9] placeholder-[#a8bb87]"
+              className="champ w-full rounded border border-[#8FB59B]/15 bg-[#2C3735] text-[#E8ECE8] placeholder-[#A7B7A8]"
               ></textarea>
           </div>
 

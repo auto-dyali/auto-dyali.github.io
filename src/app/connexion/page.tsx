@@ -70,7 +70,7 @@ export default function ConnexionPage() {
   return (
     <main className="relative flex min-h-screen items-stretch overflow-hidden bg-[#102b32]">
       {/* Colonne formulaire (gauche) */}
-      <section className="relative z-10 flex w-full flex-col justify-center px-8 py-12 sm:px-14 lg:w-[52%] lg:px-20 apparaitre">
+      <section className="panneau-connexion relative z-10 flex w-full flex-col justify-center px-8 py-12 sm:px-14 lg:w-[52%] lg:px-20 apparaitre">
         <Logo className="mb-10 items-start" />
 
         <h1 className="titre-or text-2xl font-extrabold sm:text-3xl">
@@ -83,12 +83,12 @@ export default function ConnexionPage() {
         <form className="formulaire-3d mt-8 flex max-w-md flex-col gap-4" onSubmit={soumettre} noValidate>
           <div className="relative">
             <svg aria-hidden viewBox="0 0 20 20" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2">
-              <rect x="2.5" y="4.5" width="15" height="11" rx="2" fill="none" stroke="#d6b66f" strokeWidth="1.6" />
-              <path d="M3 6l7 5 7-5" fill="none" stroke="#d6b66f" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              <rect x="2.5" y="4.5" width="15" height="11" rx="2" fill="none" stroke="#8FB59B" strokeWidth="1.6" />
+              <path d="M3 6l7 5 7-5" fill="none" stroke="#8FB59B" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <input
               style={{ paddingLeft: "2.6rem" }}
-              className="champ champ-3d"
+              className="champ champ-3d text-base"
               type="email"
               autoComplete="username"
               placeholder="Email ou identifiant"
@@ -99,12 +99,12 @@ export default function ConnexionPage() {
 
           <div className="relative">
             <svg aria-hidden viewBox="0 0 20 20" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2">
-              <rect x="4.5" y="9" width="11" height="7" rx="1.5" fill="none" stroke="#d6b66f" strokeWidth="1.6" />
-              <path d="M7 9V7a3 3 0 0 1 6 0v2" fill="none" stroke="#d6b66f" strokeWidth="1.6" strokeLinecap="round" />
+              <rect x="4.5" y="9" width="11" height="7" rx="1.5" fill="none" stroke="#8FB59B" strokeWidth="1.6" />
+              <path d="M7 9V7a3 3 0 0 1 6 0v2" fill="none" stroke="#8FB59B" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
             <input
               style={{ paddingLeft: "2.6rem", paddingRight: "2.8rem" }}
-              className="champ champ-3d"
+              className="champ champ-3d text-base"
               type={motPasseVisible ? "text" : "password"}
               autoComplete="current-password"
               placeholder="Mot de passe"
@@ -116,7 +116,7 @@ export default function ConnexionPage() {
               aria-label={motPasseVisible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
               aria-pressed={motPasseVisible}
               onClick={() => setMotPasseVisible((visible) => !visible)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-[#d6b66f] hover:bg-[#21464b]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-[#8FB59B] hover:bg-[#344440]"
             >
               <svg viewBox="0 0 20 20" width="19" height="19" aria-hidden>
                 {motPasseVisible ? <path d="M3 3l14 14M8.5 5.1A8.7 8.7 0 0 1 10 5c4.7 0 7.2 5 7.2 5a13 13 0 0 1-2.1 2.7M5.1 7.1C3.7 8.2 2.8 10 2.8 10s2.5 5 7.2 5c.8 0 1.5-.1 2.1-.4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /> : <><path d="M2.8 10s2.5-4 7.2-4 7.2 4 7.2 4-2.5 4-7.2 4-7.2-4-7.2-4Z" fill="none" stroke="currentColor" strokeWidth="1.5" /><circle cx="10" cy="10" r="1.8" fill="none" stroke="currentColor" strokeWidth="1.5" /></>}
@@ -125,7 +125,7 @@ export default function ConnexionPage() {
           </div>
 
           {erreur && (
-            <p role="alert" className="rounded-lg bg-[#d66868]/15 px-3 py-2 text-sm text-[#d66868]">
+            <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-3 py-2 text-sm text-[#C5716B]">
               {erreur}
             </p>
           )}
@@ -136,11 +136,11 @@ export default function ConnexionPage() {
                 type="checkbox"
                 checked={seSouvenir}
                 onChange={(e) => setSeSouvenir(e.target.checked)}
-                className="h-4 w-4 accent-[#d6b66f]"
+                className="h-4 w-4 accent-[#8FB59B]"
               />
               Se souvenir de moi
             </label>
-            <a href="#" className="text-[#d6b66f] underline-offset-2 hover:underline">
+            <a href="#" className="text-[#8FB59B] underline underline-offset-2">
               Mot de passe oublié ?
             </a>
           </div>
@@ -156,11 +156,11 @@ export default function ConnexionPage() {
 
         {/* Connexion via réseaux (TODO PHASE 6 — OAuth réel) */}
         <div className="mt-7 max-w-md text-center">
-          <p className="text-xs text-[#f8ecc9]/60">Ou se connecter avec</p>
+          <p className="text-xs text-[#E8ECE8]/60">Ou se connecter avec</p>
           <div className="mt-3 flex justify-center gap-3">
             {[
               { r: "Google", fond: "bg-white text-black" },
-              { r: "Microsoft", fond: "bg-[#2f70c9] text-white" },
+              { r: "Microsoft", fond: "bg-[#5B7FC7] text-white" },
               { r: "Apple", fond: "bg-black text-white" },
             ].map((s) => (
               <button
@@ -177,9 +177,9 @@ export default function ConnexionPage() {
               </button>
             ))}
           </div>
-          <p className="mt-6 text-xs text-[#f8ecc9]/60">
+          <p className="mt-6 text-xs text-[#E8ECE8]/60">
             Pas encore de compte ?{" "}
-            <a href="#" className="text-[#d6b66f] underline-offset-2 hover:underline">
+            <a href="#" className="text-[#8FB59B] underline underline-offset-2">
               Contactez le support
             </a>
           </p>

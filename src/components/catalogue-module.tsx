@@ -217,15 +217,15 @@ export function CatalogueModule() {
 
   return (
     <section className="space-y-6">
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       {/* Recherche par véhicule */}
       <section className="carte p-5">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Étape 1 — Rechercher par véhicule</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Étape 1 — Rechercher par véhicule</p>
         <h2 className="titre-or mt-1 text-xl font-extrabold">Catalogue véhicules</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <label className="text-xs text-[#a8bb87]">Marque
+          <label className="text-xs text-[#A7B7A8]">Marque
             <select
               className="champ mt-1 min-h-11"
               value={marque}
@@ -235,7 +235,7 @@ export function CatalogueModule() {
               {marques.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </label>
-          <label className="text-xs text-[#a8bb87]">Modèle
+          <label className="text-xs text-[#A7B7A8]">Modèle
             <select
               className="champ mt-1 min-h-11"
               value={modele}
@@ -246,7 +246,7 @@ export function CatalogueModule() {
               {modeles.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </label>
-          <label className="text-xs text-[#a8bb87]">Motorisation
+          <label className="text-xs text-[#A7B7A8]">Motorisation
             <select className="champ mt-1 min-h-11" value={moteur} disabled={!modele} onChange={(e) => setMoteur(e.target.value)}>
               <option value="">Toutes</option>
               {moteurs.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -263,8 +263,8 @@ export function CatalogueModule() {
                 onClick={() => selectionnerVehicule(v)}
                 className={`rounded-lg border px-3 py-2 text-xs transition ${
                   vehiculeSelectionne?.id === v.id
-                    ? "border-[#d6b66f] bg-[#d6b66f] font-bold text-[#102b32]"
-                    : "border-[#d6b66f]/30 text-[#e9d998] hover:bg-[#21464b]"
+                    ? "border-[#8FB59B] bg-[#8FB59B] font-bold text-[#252D2D]"
+                    : "border-[#8FB59B]/30 text-[#D0C6AE] hover:bg-[#344440]"
                 }`}
               >
                 {v.brand} {v.model} · {v.generation ?? "—"} · {v.engine_code ?? "—"} {v.year_from ? `(${v.year_from}${v.year_to ? `–${v.year_to}` : ""})` : ""}
@@ -273,20 +273,20 @@ export function CatalogueModule() {
           </div>
         )}
         {marque && modele && !vehiculesFiltres.length && !loading && (
-          <p className="mt-4 text-sm text-[#a8bb87]">Aucune motorisation pour ce modèle. Exécutez la migration 0016 pour le catalogue de référence.</p>
+          <p className="mt-4 text-sm text-[#A7B7A8]">Aucune motorisation pour ce modèle. Exécutez la migration 0016 pour le catalogue de référence.</p>
         )}
-        {loading && <p className="mt-4 text-sm text-[#a8bb87]">Chargement du catalogue…</p>}
+        {loading && <p className="mt-4 text-sm text-[#A7B7A8]">Chargement du catalogue…</p>}
       </section>
 
       {vehiculeSelectionne && (
         <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
           {/* Compatibilités déclarées */}
           <section className="carte overflow-hidden">
-            <div className="border-b border-[#d6b66f]/10 p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Étape 2 — Pièces compatibles</p>
+            <div className="border-b border-[#8FB59B]/10 p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Étape 2 — Pièces compatibles</p>
               <h2 className="titre-or mt-1 text-xl font-extrabold">
                 {vehiculeSelectionne.brand} {vehiculeSelectionne.model}
-                <span className="ml-2 text-sm font-normal text-[#a8bb87]">
+                <span className="ml-2 text-sm font-normal text-[#A7B7A8]">
                   {TYPE_LABEL[vehiculeSelectionne.vehicle_type] ?? vehiculeSelectionne.vehicle_type}
                   {vehiculeSelectionne.fuel ? ` · ${FUEL_LABEL[vehiculeSelectionne.fuel] ?? vehiculeSelectionne.fuel}` : ""}
                   {vehiculeSelectionne.displacement ? ` · ${vehiculeSelectionne.displacement} cm³` : ""}
@@ -296,7 +296,7 @@ export function CatalogueModule() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+                <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                   <tr>
                     <th className="px-5 py-3">Pièce</th>
                     <th className="px-5 py-3">Position</th>
@@ -305,22 +305,22 @@ export function CatalogueModule() {
                     <th className="px-5 py-3 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#d6b66f]/10">
+                <tbody className="divide-y divide-[#8FB59B]/10">
                   {compat.map((c) => (
                     <tr key={c.id}>
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-[#f8ecc9]">{c.product_nom ?? "Produit supprimé"}</p>
-                        <p className="text-[11px] text-[#a8bb87]">{c.product_sku}</p>
+                        <p className="font-semibold text-[#E8ECE8]">{c.product_nom ?? "Produit supprimé"}</p>
+                        <p className="text-[11px] text-[#A7B7A8]">{c.product_sku}</p>
                       </td>
-                      <td className="px-5 py-4 text-[#a8bb87]">{c.position ?? "—"}</td>
-                      <td className="px-5 py-4 text-[#a8bb87]">{c.source}</td>
+                      <td className="px-5 py-4 text-[#A7B7A8]">{c.position ?? "—"}</td>
+                      <td className="px-5 py-4 text-[#A7B7A8]">{c.source}</td>
                       <td className="px-5 py-4">
-                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${c.verified ? "bg-[#38a987]/20 text-[#69d3a8]" : "bg-[#d6b66f]/15 text-[#e9d998]"}`}>
+                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${c.verified ? "bg-[#5D9E7F]/20 text-[#7FBF9E]" : "bg-[#8FB59B]/15 text-[#D0C6AE]"}`}>
                           {c.verified ? "✓ Validée" : "Non confirmée"}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button type="button" onClick={() => void supprimerCompat(c)} className="rounded-lg border border-[#d66868]/40 px-2.5 py-1.5 text-xs text-[#d66868]">
+                        <button type="button" onClick={() => void supprimerCompat(c)} className="rounded-lg border border-[#C5716B]/40 px-2.5 py-1.5 text-xs text-[#C5716B]">
                           Retirer
                         </button>
                       </td>
@@ -329,7 +329,7 @@ export function CatalogueModule() {
                 </tbody>
               </table>
               {!compat.length && (
-                <p className="p-8 text-center text-sm text-[#a8bb87]">
+                <p className="p-8 text-center text-sm text-[#A7B7A8]">
                   Aucune compatibilité déclarée. Ajoutez une pièce à droite — source et validation obligatoires.
                 </p>
               )}
@@ -338,10 +338,10 @@ export function CatalogueModule() {
 
           {/* Déclaration */}
           <aside className="carte h-fit p-5">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Déclarer une compatibilité</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Déclarer une compatibilité</p>
 
             <div className="mt-3">
-              <label className="text-xs text-[#a8bb87]">Pièce
+              <label className="text-xs text-[#A7B7A8]">Pièce
                 <input
                   type="search"
                   value={rechercheProduit}
@@ -354,30 +354,30 @@ export function CatalogueModule() {
                 <ScanChamp onCode={scannerPiece} placeholder="Scanner la pièce (EAN-13)…" />
               </div>
               {produitsFiltres.length > 0 && !produitSelectionne && (
-                <ul className="mt-1 max-h-44 divide-y divide-[#d6b66f]/10 overflow-y-auto rounded-lg bg-[#193a40]">
+                <ul className="mt-1 max-h-44 divide-y divide-[#8FB59B]/10 overflow-y-auto rounded-lg bg-[#2C3735]">
                   {produitsFiltres.map((p) => (
                     <li key={p.id}>
-                      <button type="button" onClick={() => { setProduitSelectionne(p); setRechercheProduit(p.name); }} className="w-full px-3 py-2 text-left text-sm hover:bg-[#21464b]">
-                        <span className="block truncate text-[#f8ecc9]">{p.name}</span>
-                        <span className="text-[11px] text-[#a8bb87]">{p.sku} · {formatMad(p.sale_price)}</span>
+                      <button type="button" onClick={() => { setProduitSelectionne(p); setRechercheProduit(p.name); }} className="w-full px-3 py-2 text-left text-sm hover:bg-[#344440]">
+                        <span className="block truncate text-[#E8ECE8]">{p.name}</span>
+                        <span className="text-[11px] text-[#A7B7A8]">{p.sku} · {formatMad(p.sale_price)}</span>
                       </button>
                     </li>
                   ))}
                 </ul>
               )}
               {produitSelectionne && (
-                <p className="mt-2 rounded-lg bg-[#21464b] px-3 py-2 text-xs text-[#e9d998]">
-                  ✓ {produitSelectionne.name} <span className="text-[#a8bb87]">({produitSelectionne.sku})</span>
+                <p className="mt-2 rounded-lg bg-[#344440] px-3 py-2 text-xs text-[#D0C6AE]">
+                  ✓ {produitSelectionne.name} <span className="text-[#A7B7A8]">({produitSelectionne.sku})</span>
                 </p>
               )}
             </div>
 
-            <label className="mt-3 block text-xs text-[#a8bb87]">
+            <label className="mt-3 block text-xs text-[#A7B7A8]">
               Position (optionnel)
               <input value={position} onChange={(e) => setPosition(e.target.value)} placeholder="essieu avant, avant…" className="champ mt-1 min-h-10" />
             </label>
 
-            <label className="mt-3 block text-xs text-[#d6b66f]">
+            <label className="mt-3 block text-xs text-[#8FB59B]">
               Source * (obligatoire)
               <input
                 value={source}
@@ -387,16 +387,16 @@ export function CatalogueModule() {
               />
             </label>
 
-            <label className="mt-3 block text-xs text-[#a8bb87]">
+            <label className="mt-3 block text-xs text-[#A7B7A8]">
               Notes
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="champ mt-1 py-2 text-sm" />
             </label>
 
-            <label className="mt-3 flex items-center gap-2 text-xs text-[#f8ecc9]">
-              <input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} className="h-4 w-4 accent-[#d6b66f]" />
+            <label className="mt-3 flex items-center gap-2 text-xs text-[#E8ECE8]">
+              <input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} className="h-4 w-4 accent-[#8FB59B]" />
               Validée par un technicien
             </label>
-            <p className="mt-2 text-[11px] leading-4 text-[#a8bb87]">
+            <p className="mt-2 text-[11px] leading-4 text-[#A7B7A8]">
               Une compatibilité non validée est affichée comme « non confirmée » — jamais présentée comme certaine.
             </p>
 
@@ -413,7 +413,7 @@ export function CatalogueModule() {
       )}
 
       {!vehiculeSelectionne && (
-        <p className="carte p-6 text-sm text-[#a8bb87]">
+        <p className="carte p-6 text-sm text-[#A7B7A8]">
           Sélectionnez un véhicule ci-dessus pour voir et déclarer les pièces compatibles. Le catalogue de référence
           (marques, motorisations) est alimenté par la migration <code>0016</code> — les compatibilités sont
           déclarées par vos soins, avec source et validation.

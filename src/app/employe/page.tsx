@@ -14,12 +14,12 @@ import { supabase } from "@/lib/supabase-browser";
 export default function EmployePage() {
   const router = useRouter();
   const statutStyle: Record<string, string> = {
-    pending: "bg-[#5b8a8f]/25 text-[#a8bb87]",
-    in_progress: "bg-[#d6b66f]/20 text-[#e9d998]",
-    waiting_parts: "bg-[#d6b66f]/15 text-[#e9d998]",
-    done: "bg-[#90a0b0]/20 text-[#90a0b0]",
-    delivered: "bg-[#90a0b0]/25 text-[#90a0b0]",
-    cancelled: "bg-[#d66868]/15 text-[#d66868]",
+    pending: "bg-[#64867B]/25 text-[#A7B7A8]",
+    in_progress: "bg-[#8FB59B]/20 text-[#D0C6AE]",
+    waiting_parts: "bg-[#8FB59B]/15 text-[#D0C6AE]",
+    done: "bg-[#8DA298]/20 text-[#8DA298]",
+    delivered: "bg-[#8DA298]/25 text-[#8DA298]",
+    cancelled: "bg-[#C5716B]/15 text-[#C5716B]",
   };
   const statutLabel: Record<string, string> = {
     pending: "À faire",
@@ -44,18 +44,18 @@ export default function EmployePage() {
   ];
 
   if (accesRefuse) return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#102b32] p-6 text-center text-[#f8ecc9]">
-      <p className="text-sm text-[#d66868]">Accès refusé : cet espace est réservé aux employés.</p>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#252D2D] p-6 text-center text-[#E8ECE8]">
+      <p className="text-sm text-[#C5716B]">Accès refusé : cet espace est réservé aux employés.</p>
       <button type="button" onClick={() => router.replace("/connexion/")} className="btn-or px-5 py-2 text-sm">Revenir à la connexion</button>
     </main>
   );
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-[#102b32] pb-24">
+    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-[#252D2D] pb-24">
       {/* En-tête */}
-      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#d6b66f]/15 bg-[#102b32]/95 px-4 py-3 backdrop-blur">
+      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#8FB59B]/15 bg-[#252D2D]/95 px-4 py-3 backdrop-blur">
         <Logo compact className="flex-1 items-center" />
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#21464b] text-[10px] font-bold text-[#e9d998]">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#344440] text-[10px] font-bold text-[#D0C6AE]">
           {(employee?.full_name ?? "Employé")
             .split(" ")
             .map((mot) => mot[0])
@@ -67,8 +67,8 @@ export default function EmployePage() {
 
       <div className="flex flex-col gap-4 p-4">
         <div>
-          <p className="text-sm font-bold text-[#f8ecc9]">Bonjour {employee?.full_name ?? "Employé"}</p>
-          <p className="text-xs text-[#a8bb87]">Voici vos tâches du jour</p>
+          <p className="text-sm font-bold text-[#E8ECE8]">Bonjour {employee?.full_name ?? "Employé"}</p>
+          <p className="text-xs text-[#A7B7A8]">Voici vos tâches du jour</p>
         </div>
 
         {/* Tuiles rapides */}
@@ -77,25 +77,25 @@ export default function EmployePage() {
             <div key={t.label} className="carte-2 flex flex-col items-center gap-1.5 rounded-xl p-3 text-center">
               <Icone nom={t.icone} taille={20} />
               <span className="titre-or text-base font-extrabold">{t.valeur}</span>
-              <span className="text-[9px] leading-tight text-[#a8bb87]">{t.label}</span>
+              <span className="text-[9px] leading-tight text-[#A7B7A8]">{t.label}</span>
             </div>
           ))}
         </section>
 
         {/* Interventions */}
         <section aria-label="Mes interventions">
-          <h2 className="mb-2 text-sm font-bold text-[#f8ecc9]">Mes interventions</h2>
-          <ul className="flex flex-col gap-2">{!orders.length && <li className="carte p-4 text-center text-xs text-[#a8bb87]">Aucune intervention assignée.</li>}
+          <h2 className="mb-2 text-sm font-bold text-[#E8ECE8]">Mes interventions</h2>
+          <ul className="flex flex-col gap-2">{!orders.length && <li className="carte p-4 text-center text-xs text-[#A7B7A8]">Aucune intervention assignée.</li>}
             {(orders.length ? orders : []).map((i) => (
               <li key={i.id} className="carte flex items-center gap-3 p-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#21464b]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#344440]">
                   <Icone nom="voiture" taille={20} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-[#f8ecc9]">{i.reference} — <span className="font-medium">{i.diagnosis ?? "Intervention atelier"}</span></p>
-                  <p className="mt-0.5 text-[11px] text-[#a8bb87]">Ordre de réparation</p>
+                  <p className="text-xs font-bold text-[#E8ECE8]">{i.reference} — <span className="font-medium">{i.diagnosis ?? "Intervention atelier"}</span></p>
+                  <p className="mt-0.5 text-[11px] text-[#A7B7A8]">Ordre de réparation</p>
                 </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${statutStyle[i.status] ?? "bg-[#90a0b0]/20 text-[#90a0b0]"}`}>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${statutStyle[i.status] ?? "bg-[#8DA298]/20 text-[#8DA298]"}`}>
                   {statutLabel[i.status] ?? i.status}
                 </span>
               </li>
@@ -110,16 +110,16 @@ export default function EmployePage() {
             { label: "Pointage", icone: "pointage" as NomIcone, href: "/employe/plus" },
             { label: "Historique", icone: "historique" as NomIcone, href: "/employe/plus" },
           ].map((r) => (
-            <Link key={r.label} href={r.href} className="carte-2 flex flex-col items-center gap-2 rounded-xl p-4 transition hover:border-[#d6b66f]/40">
+            <Link key={r.label} href={r.href} className="carte-2 flex flex-col items-center gap-2 rounded-xl p-4 transition hover:border-[#8FB59B]/40">
               <Icone nom={r.icone} taille={22} />
-              <span className="text-center text-[10px] font-semibold text-[#f8ecc9]">{r.label}</span>
+              <span className="text-center text-[10px] font-semibold text-[#E8ECE8]">{r.label}</span>
             </Link>
           ))}
         </section>
       </div>
 
       {/* Barre de navigation basse */}
-      <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-stretch justify-between border-t border-[#d6b66f]/20 bg-[#193a40] px-4 py-2">
+      <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-stretch justify-between border-t border-[#8FB59B]/20 bg-[#2C3735] px-4 py-2">
         {[
           { label: "Accueil", icone: "pos" as NomIcone, href: "/employe", actif: true },
           { label: "Interventions", icone: "cle" as NomIcone, href: "/employe#interventions" },
@@ -128,7 +128,7 @@ export default function EmployePage() {
         ].map((n) => (
           <Link key={n.label} href={n.href}
             className={`flex flex-1 flex-col items-center gap-1 py-1 text-[10px] ${
-              n.actif ? "font-bold text-[#e9d998]" : "text-[#a8bb87]"
+              n.actif ? "font-bold text-[#D0C6AE]" : "text-[#A7B7A8]"
             }`}>
             <Icone nom={n.icone} taille={18} />
             {n.label}

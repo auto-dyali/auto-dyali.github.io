@@ -86,15 +86,15 @@ export function ScannerCamera({ onCode, fermer }: { onCode: (code: string) => vo
       <div className="carte w-full max-w-md p-5">
         <div className="flex items-center justify-between">
           <h2 className="titre-or text-lg font-extrabold">Scanner caméra</h2>
-          <button type="button" onClick={fermer} className="text-2xl text-[#a8bb87]" aria-label="Fermer le scanner">×</button>
+          <button type="button" onClick={fermer} className="text-2xl text-[#A7B7A8]" aria-label="Fermer le scanner">×</button>
         </div>
         {erreur ? (
-          <p role="alert" className="mt-4 rounded-lg bg-[#d66868]/15 px-3 py-2 text-sm text-[#d66868]">{erreur}</p>
+          <p role="alert" className="mt-4 rounded-lg bg-[#C5716B]/15 px-3 py-2 text-sm text-[#C5716B]">{erreur}</p>
         ) : (
           /* Hauteur EXPLICITE obligatoire : sans elle, vidéo à 0 px = rien ne se lit. */
           <div id="zone-scan-camera" ref={zoneRef} className="mt-4 h-72 w-full overflow-hidden rounded-xl bg-black" />
         )}
-        <p className="mt-3 text-center text-xs text-[#a8bb87]">
+        <p className="mt-3 text-center text-xs text-[#A7B7A8]">
           Codes-barres (EAN-13, UPC, Code 128…) et QR — cadrage du code, lecture automatique puis fermeture.
         </p>
       </div>

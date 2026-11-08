@@ -66,12 +66,12 @@ const STATUTS: { cle: string; label: string }[] = [
 ];
 
 const STATUT_COULEUR: Record<string, string> = {
-  pending: "bg-[#d6b66f]/15 text-[#e9d998]",
-  in_progress: "bg-[#90a0b0]/15 text-[#90a0b0]",
-  waiting_parts: "bg-[#d6b66f]/15 text-[#e9d998]",
-  done: "bg-[#90a0b0]/20 text-[#90a0b0]",
-  delivered: "bg-[#90a0b0]/25 text-[#90a0b0]",
-  cancelled: "bg-[#d66868]/15 text-[#d66868]",
+  pending: "bg-[#8FB59B]/15 text-[#D0C6AE]",
+  in_progress: "bg-[#8DA298]/15 text-[#8DA298]",
+  waiting_parts: "bg-[#8FB59B]/15 text-[#D0C6AE]",
+  done: "bg-[#8DA298]/20 text-[#8DA298]",
+  delivered: "bg-[#8DA298]/25 text-[#8DA298]",
+  cancelled: "bg-[#C5716B]/15 text-[#C5716B]",
 };
 
 export function AtelierModule() {
@@ -404,7 +404,7 @@ export function AtelierModule() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
           <article key={k.label} className="carte p-5">
-            <p className="text-xs text-[#a8bb87]">{k.label}</p>
+            <p className="text-xs text-[#A7B7A8]">{k.label}</p>
             <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : k.value}</p>
           </article>
         ))}
@@ -412,18 +412,18 @@ export function AtelierModule() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Production Supabase</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Production Supabase</p>
           <h1 className="titre-or mt-1 text-2xl font-extrabold">Ordres de réparation</h1>
-          <p className="mt-1 text-sm text-[#a8bb87]">Statuts, techniciens affectés et validation client.</p>
+          <p className="mt-1 text-sm text-[#A7B7A8]">Statuts, techniciens affectés et validation client.</p>
         </div>
         <button type="button" onClick={() => setOpen(true)} className="btn-or min-h-11 px-5 text-sm">+ Nouvel ordre</button>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#90a0b0]/10 px-4 py-3 text-sm text-[#90a0b0]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#8DA298]/10 px-4 py-3 text-sm text-[#8DA298]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <section className="carte overflow-hidden">
-        <div className="flex flex-wrap gap-2 border-b border-[#d6b66f]/10 p-4">
+        <div className="flex flex-wrap gap-2 border-b border-[#8FB59B]/10 p-4">
           {[
             { cle: "actifs", label: "Interventions actives" },
             { cle: "tous", label: "Tous" },
@@ -434,7 +434,7 @@ export function AtelierModule() {
               type="button"
               onClick={() => setFiltreStatut(f.cle)}
               className={`rounded-lg px-3 py-1.5 text-xs transition ${
-                filtreStatut === f.cle ? "bg-[#d6b66f] font-bold text-[#102b32]" : "bg-[#21464b] text-[#d6b66f]"
+                filtreStatut === f.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "bg-[#344440] text-[#8FB59B]"
               }`}
             >
               {f.label}
@@ -443,11 +443,11 @@ export function AtelierModule() {
         </div>
 
         {loading ? (
-          <p className="p-8 text-center text-sm text-[#a8bb87]">Chargement des ordres…</p>
+          <p className="p-8 text-center text-sm text-[#A7B7A8]">Chargement des ordres…</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] text-left text-sm">
-              <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+              <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                 <tr>
                   <th className="px-4 py-3">Référence</th>
                   <th className="px-4 py-3">Client / véhicule</th>
@@ -457,24 +457,24 @@ export function AtelierModule() {
                   <th className="px-4 py-3">Statut</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#d6b66f]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {ordersFiltres.map((order) => (
                   <tr key={order.id}>
-                    <td className="px-4 py-4 font-semibold text-[#e9d998]">
+                    <td className="px-4 py-4 font-semibold text-[#D0C6AE]">
                       <button type="button" onClick={() => void ouvrirDetail(order)} className="text-left hover:underline">
                         {order.reference}
                       </button>
-                      <span className="block text-[11px] font-normal text-[#a8bb87]">
+                      <span className="block text-[11px] font-normal text-[#A7B7A8]">
                         {new Date(order.created_at).toLocaleDateString("fr-FR")}
                       </span>
                     </td>
                     <td className="px-4 py-4">
-                      <p className="text-[#f8ecc9]">{order.clients?.full_name ?? "Client non lié"}</p>
-                      <p className="text-xs text-[#a8bb87]">
+                      <p className="text-[#E8ECE8]">{order.clients?.full_name ?? "Client non lié"}</p>
+                      <p className="text-xs text-[#A7B7A8]">
                         {order.vehicles ? `${order.vehicles.brand} ${order.vehicles.model} · ${order.vehicles.plate}` : "Véhicule non lié"}
                       </p>
                     </td>
-                    <td className="max-w-52 px-4 py-4 text-[#f8ecc9]/80">{order.diagnosis ?? "—"}</td>
+                    <td className="max-w-52 px-4 py-4 text-[#E8ECE8]/80">{order.diagnosis ?? "—"}</td>
                     <td className="px-4 py-4">
                       <select
                         aria-label={`Technicien affecté à ${order.reference}`}
@@ -493,7 +493,7 @@ export function AtelierModule() {
                         disabled={traitement === order.id}
                         onClick={() => void basculerValidation(order)}
                         className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold disabled:opacity-40 ${
-                          order.approved_by_client ? "bg-[#90a0b0]/20 text-[#90a0b0]" : "border border-[#d6b66f]/30 text-[#a8bb87]"
+                          order.approved_by_client ? "bg-[#8DA298]/20 text-[#8DA298]" : "border border-[#8FB59B]/30 text-[#A7B7A8]"
                         }`}
                       >
                         {order.approved_by_client ? "✓ Validé client" : "En attente client"}
@@ -501,7 +501,7 @@ export function AtelierModule() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-1.5">
-                        <span className={`w-fit rounded-full px-3 py-1 text-[11px] font-semibold ${STATUT_COULEUR[order.status] ?? "bg-[#21464b] text-[#e9d998]"}`}>
+                        <span className={`w-fit rounded-full px-3 py-1 text-[11px] font-semibold ${STATUT_COULEUR[order.status] ?? "bg-[#344440] text-[#D0C6AE]"}`}>
                           {STATUTS.find((s) => s.cle === order.status)?.label ?? order.status}
                         </span>
                         <select
@@ -520,7 +520,7 @@ export function AtelierModule() {
                             disabled={traitement === order.id}
                             onClick={() => void imprimerBon(order, "80mm")}
                             title="Bon d'intervention thermique (80 mm par défaut, ou format de l'imprimante configurée)"
-                            className="min-h-9 flex-1 touch-manipulation rounded-lg border border-[#d6b66f]/40 px-2 py-1 text-[11px] text-[#e9d998] disabled:opacity-40"
+                            className="min-h-9 flex-1 touch-manipulation rounded-lg border border-[#8FB59B]/40 px-2 py-1 text-[11px] text-[#D0C6AE] disabled:opacity-40"
                           >
                             Bon
                           </button>
@@ -529,7 +529,7 @@ export function AtelierModule() {
                             disabled={traitement === order.id}
                             onClick={() => void imprimerBon(order, "A4")}
                             title="Bon d'intervention A4 / PDF (avec zone de signature client)"
-                            className="min-h-9 flex-1 touch-manipulation rounded-lg border border-[#d6b66f]/40 px-2 py-1 text-[11px] text-[#e9d998] disabled:opacity-40"
+                            className="min-h-9 flex-1 touch-manipulation rounded-lg border border-[#8FB59B]/40 px-2 py-1 text-[11px] text-[#D0C6AE] disabled:opacity-40"
                           >
                             A4
                           </button>
@@ -540,7 +540,7 @@ export function AtelierModule() {
                 ))}
               </tbody>
             </table>
-            {!ordersFiltres.length && <p className="p-8 text-center text-sm text-[#a8bb87]">Aucun ordre dans cette vue.</p>}
+            {!ordersFiltres.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucun ordre dans cette vue.</p>}
           </div>
         )}
       </section>
@@ -577,7 +577,7 @@ export function AtelierModule() {
               />
             </div>
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button>
+              <button type="button" onClick={() => setOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>
               <button disabled={saving} type="submit" className="btn-or px-4 py-2 text-sm">{saving ? "Enregistrement…" : "Enregistrer"}</button>
             </div>
           </form>
@@ -592,23 +592,23 @@ export function AtelierModule() {
           <div className="carte my-4 w-full max-w-4xl p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Ordre de réparation</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Ordre de réparation</p>
                 <h2 className="titre-or mt-1 text-xl font-extrabold">{selection.reference}</h2>
-                <p className="mt-1 text-sm text-[#a8bb87]">
+                <p className="mt-1 text-sm text-[#A7B7A8]">
                   {selection.clients?.full_name ?? "Client non lié"}
                   {selection.vehicles ? ` · ${selection.vehicles.brand} ${selection.vehicles.model} · ${selection.vehicles.plate}` : ""}
                 </p>
               </div>
-              <button type="button" onClick={() => setSelection(null)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button>
+              <button type="button" onClick={() => setSelection(null)} className="text-2xl text-[#A7B7A8]" aria-label="Fermer">×</button>
             </div>
 
             {chargementDetail ? (
-              <p className="py-8 text-center text-sm text-[#a8bb87]">Chargement du détail…</p>
+              <p className="py-8 text-center text-sm text-[#A7B7A8]">Chargement du détail…</p>
             ) : (
               <div className="mt-5 grid gap-6 lg:grid-cols-2">
                 {/* Tâches */}
                 <section>
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">Tâches d’intervention ({taches.length})</p>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Tâches d’intervention ({taches.length})</p>
 
                   <form onSubmit={(e) => void ajouterTache(e)} className="mt-2 flex flex-wrap gap-2">
                     <input
@@ -633,10 +633,10 @@ export function AtelierModule() {
 
                   <ul className="mt-3 space-y-2">
                     {taches.map((t) => (
-                      <li key={t.id} className="rounded-lg border border-[#d6b66f]/10 bg-[#21464b]/40 p-3">
+                      <li key={t.id} className="rounded-lg border border-[#8FB59B]/10 bg-[#344440]/40 p-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-sm font-semibold text-[#f8ecc9]">{t.label}</p>
-                          <span className="text-xs font-bold text-[#e9d998]">{Number(t.price) > 0 ? formatMad(Number(t.price)) : "—"}</span>
+                          <p className="text-sm font-semibold text-[#E8ECE8]">{t.label}</p>
+                          <span className="text-xs font-bold text-[#D0C6AE]">{Number(t.price) > 0 ? formatMad(Number(t.price)) : "—"}</span>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           <select
@@ -654,7 +654,7 @@ export function AtelierModule() {
                             type="button"
                             onClick={() => void basculerControleQualite(t)}
                             className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold ${
-                              t.quality_checked ? "bg-[#90a0b0]/20 text-[#90a0b0]" : "border border-[#d6b66f]/30 text-[#a8bb87]"
+                              t.quality_checked ? "bg-[#8DA298]/20 text-[#8DA298]" : "border border-[#8FB59B]/30 text-[#A7B7A8]"
                             }`}
                           >
                             {t.quality_checked ? "✓ Contrôle qualité" : "Contrôle qualité"}
@@ -662,7 +662,7 @@ export function AtelierModule() {
                           <button
                             type="button"
                             onClick={() => void supprimerTache(t)}
-                            className="ml-auto rounded-lg border border-[#d66868]/40 px-2.5 py-1.5 text-[11px] text-[#d66868]"
+                            className="ml-auto rounded-lg border border-[#C5716B]/40 px-2.5 py-1.5 text-[11px] text-[#C5716B]"
                           >
                             Supprimer
                           </button>
@@ -670,7 +670,7 @@ export function AtelierModule() {
                       </li>
                     ))}
                     {!taches.length && (
-                      <li className="py-4 text-center text-sm text-[#a8bb87]">
+                      <li className="py-4 text-center text-sm text-[#A7B7A8]">
                         Aucune tâche — décomposez l’intervention pour suivi et contrôle qualité.
                       </li>
                     )}
@@ -679,28 +679,28 @@ export function AtelierModule() {
 
                 {/* Historique entretien du véhicule */}
                 <section>
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">
                     Historique d’entretien du véhicule ({historique.length})
                   </p>
                   <ul className="mt-2 space-y-2">
                     {historique.map((h) => (
-                      <li key={h.id} className="rounded-lg bg-[#21464b]/40 px-3 py-2.5 text-sm">
+                      <li key={h.id} className="rounded-lg bg-[#344440]/40 px-3 py-2.5 text-sm">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold text-[#e9d998]">{h.reference}</span>
-                          <span className="text-[11px] text-[#a8bb87]">{new Date(h.created_at).toLocaleDateString("fr-FR")}</span>
+                          <span className="text-xs font-semibold text-[#D0C6AE]">{h.reference}</span>
+                          <span className="text-[11px] text-[#A7B7A8]">{new Date(h.created_at).toLocaleDateString("fr-FR")}</span>
                         </div>
-                        <p className="mt-1 truncate text-[11px] text-[#a8bb87]">
+                        <p className="mt-1 truncate text-[11px] text-[#A7B7A8]">
                           {h.diagnosis ?? "Sans diagnostic"} · {formatMad(Number(h.total_amount))}
                         </p>
                       </li>
                     ))}
                     {!historique.length && (
-                      <li className="py-4 text-center text-sm text-[#a8bb87]">
+                      <li className="py-4 text-center text-sm text-[#A7B7A8]">
                         Première intervention de ce véhicule — l’historique se construit ici.
                       </li>
                     )}
                   </ul>
-                  <p className="mt-3 text-[11px] leading-4 text-[#a8bb87]">
+                  <p className="mt-3 text-[11px] leading-4 text-[#A7B7A8]">
                     Kilométrage déclaré : voir la fiche Véhicules. Les prochaines interventions s’ajouteront automatiquement.
                   </p>
                 </section>

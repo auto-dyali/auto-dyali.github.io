@@ -215,35 +215,35 @@ export function ExcelModule() {
       {/* KPI réels */}
       <div className="grid gap-4 sm:grid-cols-3">
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Produits exportables</p>
+          <p className="text-xs text-[#A7B7A8]">Produits exportables</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : produits.length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Clients exportables</p>
+          <p className="text-xs text-[#A7B7A8]">Clients exportables</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : clients.length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Dernier import</p>
+          <p className="text-xs text-[#A7B7A8]">Dernier import</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{rapport ? `${rapport.crees} créés` : "—"}</p>
         </article>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Export */}
         <section className="carte p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Export</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Export</p>
           <h2 className="titre-or mt-1 text-xl font-extrabold">Télécharger des fichiers Excel</h2>
-          <p className="mt-2 text-sm leading-6 text-[#a8bb87]">
+          <p className="mt-2 text-sm leading-6 text-[#A7B7A8]">
             Données réelles de votre base Supabase — aucun échantillon fictif.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <button type="button" onClick={exporterProduits} disabled={loading || !produits.length} className="btn-or px-4 py-2.5 text-sm disabled:opacity-40">
               Exporter les produits (.xlsx)
             </button>
-            <button type="button" onClick={exporterClients} disabled={loading || !clients.length} className="rounded-lg border border-[#d6b66f]/40 px-4 py-2.5 text-sm text-[#e9d998] disabled:opacity-40">
+            <button type="button" onClick={exporterClients} disabled={loading || !clients.length} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2.5 text-sm text-[#D0C6AE] disabled:opacity-40">
               Exporter les clients (.xlsx)
             </button>
           </div>
@@ -251,10 +251,10 @@ export function ExcelModule() {
 
         {/* Import */}
         <section className="carte p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Import</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Import</p>
           <h2 className="titre-or mt-1 text-xl font-extrabold">Importer un catalogue</h2>
-          <p className="mt-2 text-sm leading-6 text-[#a8bb87]">
-            Colonnes attendues : <strong className="text-[#e9d988]">SKU, Nom, Categorie, Prix achat, Prix vente, Stock</strong>.
+          <p className="mt-2 text-sm leading-6 text-[#A7B7A8]">
+            Colonnes attendues : <strong className="text-[#D0C6AE]">SKU, Nom, Categorie, Prix achat, Prix vente, Stock</strong>.
             Les doublons (SKU déjà présent) sont ignorés — aucun doublon n’est créé.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -272,7 +272,7 @@ export function ExcelModule() {
                 }}
               />
             </label>
-            <button type="button" onClick={modeleProduits} className="rounded-lg border border-[#d6b66f]/40 px-4 py-2.5 text-sm text-[#e9d998]">
+            <button type="button" onClick={modeleProduits} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2.5 text-sm text-[#D0C6AE]">
               Télécharger le modèle
             </button>
           </div>
@@ -282,30 +282,30 @@ export function ExcelModule() {
       {/* Rapport d’erreurs */}
       {rapport && (
         <section className="carte overflow-hidden">
-          <div className="border-b border-[#d6b66f]/10 p-5">
+          <div className="border-b border-[#8FB59B]/10 p-5">
             <h2 className="font-bold">Rapport d’import</h2>
-            <p className="mt-1 text-xs text-[#a8bb87]">
+            <p className="mt-1 text-xs text-[#A7B7A8]">
               {rapport.total} ligne(s) lue(s) — {rapport.crees} créée(s), {rapport.doublons} doublon(s) ignoré(s), {rapport.erreurs.length} erreur(s).
             </p>
           </div>
           {rapport.erreurs.length ? (
             <div className="max-h-72 overflow-y-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+                <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                   <tr><th className="px-5 py-3">Ligne</th><th className="px-5 py-3">Motif</th></tr>
                 </thead>
-                <tbody className="divide-y divide-[#d6b66f]/10">
+                <tbody className="divide-y divide-[#8FB59B]/10">
                   {rapport.erreurs.map((err, index) => (
                     <tr key={`${err.ligne}-${index}`}>
-                      <td className="px-5 py-3 font-mono text-[#e9d998]">{err.ligne}</td>
-                      <td className="px-5 py-3 text-[#d66868]">{err.motif}</td>
+                      <td className="px-5 py-3 font-mono text-[#D0C6AE]">{err.ligne}</td>
+                      <td className="px-5 py-3 text-[#C5716B]">{err.motif}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <p className="p-6 text-sm text-[#38a987]">Aucune erreur — toutes les lignes valides ont été traitées.</p>
+            <p className="p-6 text-sm text-[#5D9E7F]">Aucune erreur — toutes les lignes valides ont été traitées.</p>
           )}
         </section>
       )}

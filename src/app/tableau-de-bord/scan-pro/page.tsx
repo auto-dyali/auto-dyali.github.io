@@ -11,9 +11,9 @@ export default function ScanProPage() {
     >
       <div className="apparaitre">
         <div className="mb-6">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Commerce</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Commerce</p>
           <h1 className="titre-or mt-1 text-2xl font-extrabold">Scan Pro — administration des codes</h1>
-          <p className="mt-1 text-sm text-[#a8bb87]">
+          <p className="mt-1 text-sm text-[#A7B7A8]">
             Génération EAN-13 avec clé de contrôle vérifiée, association multi-codes par produit
             (variante, lot, référence OEM) — migration 0023.
           </p>

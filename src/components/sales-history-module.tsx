@@ -41,11 +41,11 @@ type Vente = {
 type Facture = { id: string; number: string; total: number; issued_at: string; sale_id: string };
 
 const STATUTS: Record<string, { label: string; classe: string }> = {
-  open: { label: "À encaisser", classe: "bg-[#d6b66f]/15 text-[#e9d998]" },
-  partial: { label: "Partiel", classe: "bg-[#d6b66f]/20 text-[#e9d998]" },
-  paid: { label: "Payée", classe: "bg-[#38a987]/20 text-[#69d3a8]" },
-  refunded: { label: "Remboursée", classe: "bg-[#d66868]/15 text-[#d66868]" },
-  cancelled: { label: "Annulée", classe: "bg-[#21464b] text-[#a8bb87]" },
+  open: { label: "À encaisser", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
+  partial: { label: "Partiel", classe: "bg-[#8FB59B]/20 text-[#D0C6AE]" },
+  paid: { label: "Payée", classe: "bg-[#5D9E7F]/20 text-[#7FBF9E]" },
+  refunded: { label: "Remboursée", classe: "bg-[#C5716B]/15 text-[#C5716B]" },
+  cancelled: { label: "Annulée", classe: "bg-[#344440] text-[#A7B7A8]" },
 };
 
 const METHODES: { cle: string; label: string }[] = [
@@ -422,33 +422,33 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
       {/* KPI réels */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Ventes</p>
+          <p className="text-xs text-[#A7B7A8]">Ventes</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : ventes.length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Reste à encaisser</p>
+          <p className="text-xs text-[#A7B7A8]">Reste à encaisser</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : formatMad(totalDu)}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Factures générées</p>
+          <p className="text-xs text-[#A7B7A8]">Factures générées</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : factures.length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Remboursées</p>
+          <p className="text-xs text-[#A7B7A8]">Remboursées</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : ventes.filter((v) => v.status === "refunded").length}</p>
         </article>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="carte overflow-hidden">
-        <div className="border-b border-[#d6b66f]/10 p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Caisse & documents</p>
+        <div className="border-b border-[#8FB59B]/10 p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Caisse & documents</p>
           <h2 className="titre-or mt-1 text-xl font-extrabold">Historique des ventes</h2>
         </div>
 
-        <div className="flex flex-wrap gap-2 border-b border-[#d6b66f]/10 p-4">
+        <div className="flex flex-wrap gap-2 border-b border-[#8FB59B]/10 p-4">
           <input
             type="search"
             value={recherche}
@@ -467,11 +467,11 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
         </div>
 
         {loading ? (
-          <p className="p-6 text-sm text-[#a8bb87]">Chargement des ventes…</p>
+          <p className="p-6 text-sm text-[#A7B7A8]">Chargement des ventes…</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-sm">
-              <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+              <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                 <tr>
                   <th className="px-5 py-3">Vente</th>
                   <th className="px-5 py-3">Client</th>
@@ -482,7 +482,7 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#d6b66f]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {ventesFiltrees.map((v) => {
                   const info = STATUTS[v.status] ?? STATUTS.open;
                   const reste = Math.max(0, Number(v.total) - Number(v.paid_total));
@@ -491,18 +491,18 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
                   const retournable = v.status !== "refunded" && v.status !== "cancelled";
                   return (
                     <tr key={v.id}>
-                      <td className="px-5 py-4 font-semibold text-[#e9d998]">
+                      <td className="px-5 py-4 font-semibold text-[#D0C6AE]">
                         {v.reference}
-                        <span className="block text-[11px] font-normal text-[#a8bb87]">{new Date(v.created_at).toLocaleString("fr-FR")}</span>
+                        <span className="block text-[11px] font-normal text-[#A7B7A8]">{new Date(v.created_at).toLocaleString("fr-FR")}</span>
                       </td>
-                      <td className="px-5 py-4 text-[#f8ecc9]">{v.client_nom ?? "Comptoir"}</td>
+                      <td className="px-5 py-4 text-[#E8ECE8]">{v.client_nom ?? "Comptoir"}</td>
                       <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${info.classe}`}>{info.label}</span></td>
-                      <td className="px-5 py-4 text-right font-bold text-[#e9d998]">{formatMad(Number(v.total))}</td>
+                      <td className="px-5 py-4 text-right font-bold text-[#D0C6AE]">{formatMad(Number(v.total))}</td>
                       <td className="px-5 py-4 text-right">
-                        <span className={reste > 0.001 ? "font-bold text-[#d66868]" : "text-[#38a987]"}>{formatMad(Number(v.paid_total))}</span>
-                        {reste > 0.001 && <span className="block text-[11px] text-[#d6b66f]">reste {formatMad(reste)}</span>}
+                        <span className={reste > 0.001 ? "font-bold text-[#C5716B]" : "text-[#5D9E7F]"}>{formatMad(Number(v.paid_total))}</span>
+                        {reste > 0.001 && <span className="block text-[11px] text-[#8FB59B]">reste {formatMad(reste)}</span>}
                       </td>
-                      <td className="px-5 py-4 text-[#a8bb87]">{numero ?? "—"}</td>
+                      <td className="px-5 py-4 text-[#A7B7A8]">{numero ?? "—"}</td>
                       <td className="px-5 py-4">
                         <div className="flex flex-wrap justify-end gap-1.5">
                           {encaissable && (
@@ -519,22 +519,22 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
                               type="button"
                               disabled={traitement === v.id}
                               onClick={() => void genererFacture(v)}
-                              className="rounded-lg border border-[#d6b66f]/40 px-2.5 py-1.5 text-xs text-[#e9d998] disabled:opacity-40"
+                              className="rounded-lg border border-[#8FB59B]/40 px-2.5 py-1.5 text-xs text-[#D0C6AE] disabled:opacity-40"
                             >
                               Facture
                             </button>
                           )}
-                          <button type="button" onClick={() => void imprimerTicketVente(v)} disabled={traitement === v.id} className="rounded-lg border border-[#d6b66f]/40 px-2.5 py-1.5 text-xs text-[#e9d998] disabled:opacity-40">
+                          <button type="button" onClick={() => void imprimerTicketVente(v)} disabled={traitement === v.id} className="rounded-lg border border-[#8FB59B]/40 px-2.5 py-1.5 text-xs text-[#D0C6AE] disabled:opacity-40">
                             Ticket
                           </button>
-                          <button type="button" onClick={() => void imprimerFacture(v)} className="rounded-lg border border-[#d6b66f]/40 px-2.5 py-1.5 text-xs text-[#e9d998]">
+                          <button type="button" onClick={() => void imprimerFacture(v)} className="rounded-lg border border-[#8FB59B]/40 px-2.5 py-1.5 text-xs text-[#D0C6AE]">
                             Imprimer
                           </button>
                           {retournable && peutRembourser && (
                             <button
                               type="button"
                               onClick={() => { setRetour(v); setMotifRetour(""); setError(null); }}
-                              className="rounded-lg border border-[#d66868]/40 px-2.5 py-1.5 text-xs text-[#d66868]"
+                              className="rounded-lg border border-[#C5716B]/40 px-2.5 py-1.5 text-xs text-[#C5716B]"
                             >
                               Retour
                             </button>
@@ -546,7 +546,7 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
                 })}
               </tbody>
             </table>
-            {!ventesFiltrees.length && <p className="p-8 text-center text-sm text-[#a8bb87]">Aucune vente — encaissez depuis le POS.</p>}
+            {!ventesFiltrees.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucune vente — encaissez depuis le POS.</p>}
           </div>
         )}
       </div>
@@ -555,23 +555,23 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
       {encaissement && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5">
           <div className="carte w-full max-w-sm p-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Encaissement différé</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Encaissement différé</p>
             <h2 className="titre-or mt-1 text-xl font-extrabold">{encaissement.reference}</h2>
-            <p className="mt-2 text-sm text-[#a8bb87]">
-              Reste dû : <strong className="text-[#e9d998]">{formatMad(Math.max(0, Number(encaissement.total) - Number(encaissement.paid_total)))}</strong>
+            <p className="mt-2 text-sm text-[#A7B7A8]">
+              Reste dû : <strong className="text-[#D0C6AE]">{formatMad(Math.max(0, Number(encaissement.total) - Number(encaissement.paid_total)))}</strong>
             </p>
 
-            <label className="mt-4 block text-xs text-[#a8bb87]">Mode de paiement
+            <label className="mt-4 block text-xs text-[#A7B7A8]">Mode de paiement
               <select className="champ mt-1 min-h-11" value={methode} onChange={(e) => setMethode(e.target.value)}>
                 {METHODES.map((m) => <option key={m.cle} value={m.cle}>{m.label}</option>)}
               </select>
             </label>
-            <label className="mt-3 block text-xs text-[#a8bb87]">Montant encaissé (MAD)
+            <label className="mt-3 block text-xs text-[#A7B7A8]">Montant encaissé (MAD)
               <input type="number" min="0.01" step="0.01" className="champ mt-1 min-h-11" value={montantRecu} onChange={(e) => setMontantRecu(e.target.value)} />
             </label>
 
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setEncaissement(null)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button>
+              <button type="button" onClick={() => setEncaissement(null)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>
               <button type="button" onClick={() => void encaisserVente()} disabled={traitement === encaissement.id} className="btn-or px-4 py-2 text-sm disabled:opacity-40">
                 {traitement === encaissement.id ? "Enregistrement…" : "Encaisser"}
               </button>
@@ -584,18 +584,18 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
       {retour && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5">
           <div className="carte w-full max-w-md p-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#d66868]">Retour & avoir</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-[#C5716B]">Retour & avoir</p>
             <h2 className="titre-or mt-1 text-xl font-extrabold">Rembourser {retour.reference}</h2>
-            <p className="mt-3 text-sm leading-6 text-[#a8bb87]">
-              La vente sera marquée <strong className="text-[#f8ecc9]">remboursée</strong>, les articles retournés en stock
+            <p className="mt-3 text-sm leading-6 text-[#A7B7A8]">
+              La vente sera marquée <strong className="text-[#E8ECE8]">remboursée</strong>, les articles retournés en stock
               et le montant payé ({formatMad(Number(retour.paid_total))}) tracé comme remboursement de caisse.
             </p>
-            <label className="mt-4 block text-xs text-[#a8bb87]">Motif (optionnel)
+            <label className="mt-4 block text-xs text-[#A7B7A8]">Motif (optionnel)
               <input className="champ mt-1 min-h-11" value={motifRetour} onChange={(e) => setMotifRetour(e.target.value)} placeholder="Produit défectueux, erreur de caisse…" />
             </label>
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setRetour(null)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button>
-              <button type="button" onClick={() => void retournerVente()} disabled={traitement === retour.id} className="rounded-lg bg-[#d66868] px-4 py-2 text-sm font-bold text-white disabled:opacity-40">
+              <button type="button" onClick={() => setRetour(null)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>
+              <button type="button" onClick={() => void retournerVente()} disabled={traitement === retour.id} className="rounded-lg bg-[#C5716B] px-4 py-2 text-sm font-bold text-white disabled:opacity-40">
                 {traitement === retour.id ? "Traitement…" : "Confirmer le remboursement"}
               </button>
             </div>

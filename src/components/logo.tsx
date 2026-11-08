@@ -18,7 +18,7 @@ export function Logo({
       <img src={`${basePath}/images/branding/logo.webp`} alt="AUTO DYALI" className={cn("object-contain", compact ? "h-10 w-10" : "h-32 w-32")} />
 
       {!compact && (
-        <span className="text-[9px] tracking-[0.42em] uppercase text-[#f8ecc9]/70 mt-1">
+        <span className="text-[9px] tracking-[0.42em] uppercase text-[#E8ECE8]/70 mt-1">
           Automotive Management
         </span>
       )}

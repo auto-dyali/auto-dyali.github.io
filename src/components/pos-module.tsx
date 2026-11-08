@@ -1323,13 +1323,13 @@ export function PosModule() {
        * familles présentes au catalogue sont affichées.
        * ------------------------------------------------------------ */}
       <aside className="carte h-fit p-4">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Catégories</p>
+        <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Catégories</p>
         <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 xl:flex-col xl:overflow-visible xl:pb-0">
           <button
             type="button"
             onClick={() => setCategorie("Toutes")}
             className={`shrink-0 rounded-lg px-3 py-2 text-left text-sm transition ${
-              categorie === "Toutes" ? "bg-[#d6b66f] font-bold text-[#102b32]" : "text-[#f8ecc9]/80 hover:bg-[#21464b]"
+              categorie === "Toutes" ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440]"
             }`}
           >
             Toutes
@@ -1340,17 +1340,17 @@ export function PosModule() {
               type="button"
               onClick={() => setCategorie(cat.cle)}
               className={`shrink-0 rounded-lg px-3 py-2 text-left text-sm transition ${
-                categorie === cat.cle ? "bg-[#d6b66f] font-bold text-[#102b32]" : "text-[#f8ecc9]/80 hover:bg-[#21464b]"
+                categorie === cat.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440]"
               }`}
             >
               {cat.libelle}
             </button>
           ))}
         </div>
-        <div className="mt-5 hidden border-t border-[#d6b66f]/10 pt-4 xl:block">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Scan</p>
-          <p className="mt-2 text-xs leading-5 text-[#a8bb87]">
-            <strong className="text-[#e9d998]">Douchette USB/Bluetooth</strong> : scannez n&apos;importe où sur la
+        <div className="mt-5 hidden border-t border-[#8FB59B]/10 pt-4 xl:block">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Scan</p>
+          <p className="mt-2 text-xs leading-5 text-[#A7B7A8]">
+            <strong className="text-[#D0C6AE]">Douchette USB/Bluetooth</strong> : scannez n&apos;importe où sur la
             page — le code s&apos;affiche dans la case EAN au centre. Caméra : bouton 📷.
           </p>
         </div>
@@ -1361,9 +1361,9 @@ export function PosModule() {
        * ------------------------------------------------------------ */}
       <div className="carte min-w-0 p-4 sm:p-5">
         <div className="mb-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Vente tactile</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Vente tactile</p>
           <h2 className="titre-or mt-1 text-xl font-extrabold">Catalogue automobile</h2>
-          <p className="mt-1 text-xs text-[#a8bb87]">
+          <p className="mt-1 text-xs text-[#A7B7A8]">
             {loading
               ? "Chargement du catalogue Supabase…"
               : categorie === CAT_SERVICES
@@ -1373,27 +1373,27 @@ export function PosModule() {
         </div>
 
         {/* Sélecteur véhicule facultatif : Marque → Modèle → Année → Motorisation → Version */}
-        <div className="rounded-xl border border-[#d6b66f]/15 bg-[#21464b]/40 p-3">
+        <div className="rounded-xl border border-[#8FB59B]/15 bg-[#344440]/40 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => setVehOuvert(!vehOuvert)}
-              className="min-h-9 rounded-lg border border-[#d6b66f]/40 px-3 text-xs font-semibold text-[#e9d998]"
+              className="min-h-9 rounded-lg border border-[#8FB59B]/40 px-3 text-xs font-semibold text-[#D0C6AE]"
               aria-expanded={vehOuvert}
             >
               🚗 Sélecteur véhicule (facultatif) {vehOuvert ? "▲" : "▼"}
             </button>
             {vehiculeActif && (
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-[#e9d998]">{vehiculeLibelle}</span>
-                <button type="button" onClick={reinitVehicule} className="min-h-7 min-w-7 rounded bg-[#21464b] text-xs text-[#d66868]" aria-label="Réinitialiser le véhicule">✕</button>
+                <span className="text-xs font-semibold text-[#D0C6AE]">{vehiculeLibelle}</span>
+                <button type="button" onClick={reinitVehicule} className="min-h-7 min-w-7 rounded bg-[#344440] text-xs text-[#C5716B]" aria-label="Réinitialiser le véhicule">✕</button>
               </div>
             )}
           </div>
 
           {vehOuvert && (
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-              <label className="text-[10px] uppercase tracking-wide text-[#a8bb87]">
+              <label className="text-[10px] uppercase tracking-wide text-[#A7B7A8]">
                 Marque
                 <select
                   value={vehMarque}
@@ -1404,7 +1404,7 @@ export function PosModule() {
                   {marques.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </label>
-              <label className="text-[10px] uppercase tracking-wide text-[#a8bb87]">
+              <label className="text-[10px] uppercase tracking-wide text-[#A7B7A8]">
                 Modèle
                 <select
                   value={vehModele}
@@ -1416,7 +1416,7 @@ export function PosModule() {
                   {modeles.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </label>
-              <label className="text-[10px] uppercase tracking-wide text-[#a8bb87]">
+              <label className="text-[10px] uppercase tracking-wide text-[#A7B7A8]">
                 Année
                 <select
                   value={vehAnnee}
@@ -1428,7 +1428,7 @@ export function PosModule() {
                   {annees.map((a) => <option key={a} value={a}>{a}</option>)}
                 </select>
               </label>
-              <label className="text-[10px] uppercase tracking-wide text-[#a8bb87]">
+              <label className="text-[10px] uppercase tracking-wide text-[#A7B7A8]">
                 Motorisation
                 <select
                   value={vehMoteur}
@@ -1440,7 +1440,7 @@ export function PosModule() {
                   {moteurs.filter((m) => m !== "").map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </label>
-              <label className="text-[10px] uppercase tracking-wide text-[#a8bb87]">
+              <label className="text-[10px] uppercase tracking-wide text-[#A7B7A8]">
                 Version
                 <select
                   value={vehVersion}
@@ -1456,17 +1456,17 @@ export function PosModule() {
           )}
 
           {vehiculeActif && (
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#d6b66f]/10 pt-2">
-              <p className="text-xs text-[#a8bb87]">
-                <strong className="text-[#69d3a8]">{nbCompatibles}</strong> pièce(s) avec compatibilité{" "}
-                <strong className="text-[#69d3a8]">vérifiée</strong> pour ce véhicule.
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#8FB59B]/10 pt-2">
+              <p className="text-xs text-[#A7B7A8]">
+                <strong className="text-[#7FBF9E]">{nbCompatibles}</strong> pièce(s) avec compatibilité{" "}
+                <strong className="text-[#7FBF9E]">vérifiée</strong> pour ce véhicule.
               </p>
-              <label className="flex items-center gap-1.5 text-[11px] text-[#a8bb87]">
+              <label className="flex items-center gap-1.5 text-[11px] text-[#A7B7A8]">
                 <input
                   type="checkbox"
                   checked={afficherTous}
                   onChange={(e) => setAfficherTous(e.target.checked)}
-                  className="accent-[#d6b66f]"
+                  className="accent-[#8FB59B]"
                 />
                 Afficher aussi les pièces sans compatibilité vérifiée
               </label>
@@ -1476,7 +1476,7 @@ export function PosModule() {
 
         {/* Scan douchette / caméra */}
         <div className="mt-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Scan douchette / caméra</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Scan douchette / caméra</p>
           <div className="mt-1.5">
             <ScanChamp onCode={traiterCode} placeholder="EAN-13, QR, code-barres…" />
           </div>
@@ -1492,8 +1492,8 @@ export function PosModule() {
           aria-label="Rechercher un produit ou une prestation"
         />
 
-        {message && <p role="status" className="mt-3 rounded-lg bg-[#38a987]/10 px-3 py-2 text-xs text-[#69d3a8]">{message}</p>}
-        {erreur && <p role="alert" className="mt-3 rounded-lg bg-[#d66868]/15 px-3 py-2 text-xs text-[#d66868]">{erreur}</p>}
+        {message && <p role="status" className="mt-3 rounded-lg bg-[#5D9E7F]/10 px-3 py-2 text-xs text-[#7FBF9E]">{message}</p>}
+        {erreur && <p role="alert" className="mt-3 rounded-lg bg-[#C5716B]/15 px-3 py-2 text-xs text-[#C5716B]">{erreur}</p>}
 
         {/* Grille : prestations (main-d'œuvre) ou produits */}
         {categorie === CAT_SERVICES ? (
@@ -1501,17 +1501,17 @@ export function PosModule() {
             {prestationsFiltre.map((s) => (
               <article
                 key={s.id}
-                className="flex min-h-32 flex-col rounded-xl border border-[#d6b66f]/15 bg-[#21464b]/60 p-3"
+                className="flex min-h-32 flex-col rounded-xl border border-[#8FB59B]/15 bg-[#344440]/60 p-3"
               >
-                <span className="text-[10px] uppercase text-[#a8bb87]">{libelleService(s.categorie)}</span>
-                <strong className="mt-1 text-sm leading-4 text-[#f8ecc9]">{s.nom}</strong>
-                <span className="mt-1 text-[10px] text-[#90a0b0]">{s.duree > 0 ? `${s.duree} min` : "Durée libre"}</span>
+                <span className="text-[10px] uppercase text-[#A7B7A8]">{libelleService(s.categorie)}</span>
+                <strong className="mt-1 text-sm leading-4 text-[#E8ECE8]">{s.nom}</strong>
+                <span className="mt-1 text-[10px] text-[#8DA298]">{s.duree > 0 ? `${s.duree} min` : "Durée libre"}</span>
                 <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-                  <span className="text-sm font-bold text-[#e9d998]">{formatMad(s.prix)}</span>
+                  <span className="text-sm font-bold text-[#D0C6AE]">{formatMad(s.prix)}</span>
                   <button
                     type="button"
                     onClick={() => ajouterPrestation(s)}
-                    className="min-h-9 rounded-lg bg-[#d6b66f] px-3 text-xs font-bold text-[#102b32]"
+                    className="min-h-9 rounded-lg bg-[#8FB59B] px-3 text-xs font-bold text-[#252D2D]"
                   >
                     Ajouter
                   </button>
@@ -1519,7 +1519,7 @@ export function PosModule() {
               </article>
             ))}
             {!prestationsFiltre.length && !loading && (
-              <p className="col-span-full py-6 text-center text-sm text-[#a8bb87]">
+              <p className="col-span-full py-6 text-center text-sm text-[#A7B7A8]">
                 Aucune prestation enregistrée — utilisez « Prestation libre » dans le panier.
               </p>
             )}
@@ -1527,7 +1527,7 @@ export function PosModule() {
               <button
                 type="button"
                 onClick={ajouterPrestationLibre}
-                className="min-h-10 w-full rounded-lg border border-dashed border-[#d6b66f]/40 px-3 text-xs text-[#e9d998]"
+                className="min-h-10 w-full rounded-lg border border-dashed border-[#8FB59B]/40 px-3 text-xs text-[#D0C6AE]"
               >
                 + Prestation personnalisée (prix à définir)
               </button>
@@ -1542,45 +1542,45 @@ export function PosModule() {
               return (
                 <article
                   key={p.id || p.sku}
-                  className="flex min-h-40 flex-col rounded-xl border border-[#d6b66f]/15 bg-[#21464b]/60 p-3"
+                  className="flex min-h-40 flex-col rounded-xl border border-[#8FB59B]/15 bg-[#344440]/60 p-3"
                 >
                   {p.image ? (
                     /* eslint-disable-next-line @next/next/no-img-element -- photo produit externe (URL libre), non optimisable à l'avance */
                     <img src={p.image} alt="" loading="lazy" className="mb-2 h-16 w-16 rounded-lg object-cover" />
                   ) : (
-                    <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-lg bg-[#102b32] text-xl font-extrabold text-[#d6b66f]">
+                    <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-lg bg-[#252D2D] text-xl font-extrabold text-[#8FB59B]">
                       {p.nom.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="text-[10px] uppercase text-[#a8bb87]">{p.categorieLibelle}</span>
-                  <strong className="mt-0.5 text-sm text-[#f8ecc9]">{p.marque}</strong>
-                  <span className="text-xs leading-4 text-[#f8ecc9]/80">{p.nom}</span>
-                  <span className="mt-1 text-[10px] text-[#90a0b0]">
+                  <span className="text-[10px] uppercase text-[#A7B7A8]">{p.categorieLibelle}</span>
+                  <strong className="mt-0.5 text-sm text-[#E8ECE8]">{p.marque}</strong>
+                  <span className="text-xs leading-4 text-[#E8ECE8]/80">{p.nom}</span>
+                  <span className="mt-1 text-[10px] text-[#8DA298]">
                     Réf {p.refFab ?? p.sku}{p.refOem ? ` · OEM ${p.refOem}` : ""}
                   </span>
-                  {dims && <span className="text-[10px] font-semibold text-[#e9d998]">{dims}</span>}
+                  {dims && <span className="text-[10px] font-semibold text-[#D0C6AE]">{dims}</span>}
                   {vehiculeActif ? (
                     compatOk === true ? (
-                      <span className="mt-1 text-[10px] font-semibold text-[#69d3a8]">✓ Compatibilité vérifiée</span>
+                      <span className="mt-1 text-[10px] font-semibold text-[#7FBF9E]">✓ Compatibilité vérifiée</span>
                     ) : compatOk === false ? (
-                      <span className="mt-1 text-[10px] text-[#d6b66f]">Compatibilité non vérifiée</span>
+                      <span className="mt-1 text-[10px] text-[#8FB59B]">Compatibilité non vérifiée</span>
                     ) : (
-                      <span className="mt-1 text-[10px] text-[#90a0b0]">Aucune compatibilité vérifiée pour ce véhicule</span>
+                      <span className="mt-1 text-[10px] text-[#8DA298]">Aucune compatibilité vérifiée pour ce véhicule</span>
                     )
                   ) : compatDeclar ? (
-                    <span className="mt-1 truncate text-[10px] text-[#90a0b0]">Compat. : {compatDeclar}</span>
+                    <span className="mt-1 truncate text-[10px] text-[#8DA298]">Compat. : {compatDeclar}</span>
                   ) : null}
                   <div className="mt-auto flex items-end justify-between gap-2 pt-2">
                     <span>
-                      <span className="block text-sm font-bold text-[#e9d998]">{formatMad(p.prix)}</span>
-                      <span className={`text-[10px] ${p.stock > 0 ? "text-[#90a0b0]" : "text-[#d66868]"}`}>
+                      <span className="block text-sm font-bold text-[#D0C6AE]">{formatMad(p.prix)}</span>
+                      <span className={`text-[10px] ${p.stock > 0 ? "text-[#8DA298]" : "text-[#C5716B]"}`}>
                         {p.stock > 0 ? `stock ${p.stock}` : "rupture"}
                       </span>
                     </span>
                     <button
                       type="button"
                       onClick={() => ajouterProduit(p)}
-                      className="min-h-9 rounded-lg bg-[#d6b66f] px-3 text-xs font-bold text-[#102b32]"
+                      className="min-h-9 rounded-lg bg-[#8FB59B] px-3 text-xs font-bold text-[#252D2D]"
                     >
                       Ajouter
                     </button>
@@ -1589,7 +1589,7 @@ export function PosModule() {
               );
             })}
             {!catalogueVehicule.length && !loading && (
-              <p className="col-span-full py-8 text-center text-sm text-[#a8bb87]">
+              <p className="col-span-full py-8 text-center text-sm text-[#A7B7A8]">
                 Aucun produit ne correspond — vérifiez la recherche ou décochez le filtre véhicule.
               </p>
             )}
@@ -1607,16 +1607,16 @@ export function PosModule() {
         } carte flex-col p-4 sm:p-5 xl:sticky xl:top-24 xl:inset-auto xl:z-auto xl:h-fit`}
       >
         <div className="flex items-center justify-between gap-2">
-          <h2 className="font-bold text-[#f8ecc9]">Panier</h2>
+          <h2 className="font-bold text-[#E8ECE8]">Panier</h2>
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-[#21464b] px-2 py-1 text-xs text-[#a8bb87]">
+            <span className="rounded-full bg-[#344440] px-2 py-1 text-xs text-[#A7B7A8]">
               {lignes.length} article{lignes.length > 1 ? "s" : ""}
             </span>
             {lignes.length > 0 && (
               <button
                 type="button"
                 onClick={() => { setLignes([]); setErreur(null); }}
-                className="text-[11px] text-[#d66868] underline"
+                className="text-[11px] text-[#C5716B] underline"
               >
                 Vider
               </button>
@@ -1624,7 +1624,7 @@ export function PosModule() {
             <button
               type="button"
               onClick={() => setPanierMobile(false)}
-              className="min-h-8 min-w-8 rounded-lg bg-[#21464b] text-sm text-[#e9d998] xl:hidden"
+              className="min-h-8 min-w-8 rounded-lg bg-[#344440] text-sm text-[#D0C6AE] xl:hidden"
               aria-label="Fermer le panier"
             >
               ✕
@@ -1633,8 +1633,8 @@ export function PosModule() {
         </div>
 
         {/* Client optionnel (obligatoire au crédit) + historique */}
-        <label className="mt-3 block text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">
-          Client {modePaiement === "credit" && <span className="text-[#d66868]">(obligatoire au crédit)</span>}
+        <label className="mt-3 block text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">
+          Client {modePaiement === "credit" && <span className="text-[#C5716B]">(obligatoire au crédit)</span>}
           <span className="mt-1 flex gap-1">
             <select
               value={clientId}
@@ -1649,20 +1649,20 @@ export function PosModule() {
               onClick={() => setModalClient(true)}
               disabled={!peutCreerClient}
               title={peutCreerClient ? "Créer un nouveau client" : "Permission requise : création de client"}
-              className="min-h-10 shrink-0 rounded-lg border border-[#d6b66f]/40 px-2.5 text-xs text-[#e9d998] disabled:cursor-not-allowed disabled:opacity-40"
+              className="min-h-10 shrink-0 rounded-lg border border-[#8FB59B]/40 px-2.5 text-xs text-[#D0C6AE] disabled:cursor-not-allowed disabled:opacity-40"
             >
               + Client
             </button>
           </span>
         </label>
         {peutVoirHistClient && histClient !== null && histClient > 0 && (
-          <p className="mt-1 text-[10px] text-[#90a0b0]">{histClient} vente(s) précédente(s) pour ce client</p>
+          <p className="mt-1 text-[10px] text-[#8DA298]">{histClient} vente(s) précédente(s) pour ce client</p>
         )}
 
         {/* Véhicule optionnel (vente magasin sans véhicule possible) */}
         {clientId && (
           <>
-            <label className="mt-2 block text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">
+            <label className="mt-2 block text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">
               Véhicule (optionnel)
               <span className="mt-1 flex gap-1">
                 <select
@@ -1680,17 +1680,17 @@ export function PosModule() {
                   onClick={() => setModalVehicule(true)}
                   disabled={!peutCreerVehicule}
                   title={peutCreerVehicule ? "Ajouter un véhicule à ce client" : "Permission requise : création de véhicule"}
-                  className="min-h-10 shrink-0 rounded-lg border border-[#d6b66f]/40 px-2.5 text-xs text-[#e9d998] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="min-h-10 shrink-0 rounded-lg border border-[#8FB59B]/40 px-2.5 text-xs text-[#D0C6AE] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   + Véhicule
                 </button>
               </span>
             </label>
             {vehiculeId && peutVoirInterventions && histVehicule !== null && histVehicule > 0 && (
-              <p className="mt-1 text-[10px] text-[#90a0b0]">{histVehicule} intervention(s) précédente(s) sur ce véhicule</p>
+              <p className="mt-1 text-[10px] text-[#8DA298]">{histVehicule} intervention(s) précédente(s) sur ce véhicule</p>
             )}
             {vehiculeId && peutVoirInterventions && ordresOuverts.length > 0 && (
-              <label className="mt-2 block text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">
+              <label className="mt-2 block text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">
                 Ordre de réparation (optionnel)
                 <select
                   value={workOrderId}
@@ -1708,21 +1708,21 @@ export function PosModule() {
         {/* Lignes : produits ET prestations, remise + TVA par ligne */}
         <div className="mt-3 flex max-h-56 flex-col gap-2 overflow-y-auto">
           {lignes.length === 0 ? (
-            <p className="py-6 text-center text-sm text-[#a8bb87]">Aucun article sélectionné.</p>
+            <p className="py-6 text-center text-sm text-[#A7B7A8]">Aucun article sélectionné.</p>
           ) : (
             lignes.map((l) => (
-              <div key={l.cle} className="border-b border-[#d6b66f]/10 pb-2">
+              <div key={l.cle} className="border-b border-[#8FB59B]/10 pb-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#f8ecc9]">
+                    <p className="truncate text-sm font-semibold text-[#E8ECE8]">
                       {l.type === "service" ? "🔧 " : l.type === "libre" ? "🛠 " : ""}{l.nom}
                     </p>
-                    {l.detail && <p className="truncate text-[10px] text-[#a8bb87]">{l.detail}</p>}
+                    {l.detail && <p className="truncate text-[10px] text-[#A7B7A8]">{l.detail}</p>}
                   </div>
                   <button
                     type="button"
                     onClick={() => supprimerLigne(l.cle)}
-                    className="min-h-10 min-w-10 touch-manipulation rounded bg-[#d66868]/15 text-sm text-[#d66868]"
+                    className="min-h-10 min-w-10 touch-manipulation rounded bg-[#C5716B]/15 text-sm text-[#C5716B]"
                     aria-label={`Supprimer ${l.nom}`}
                   >
                     ✕
@@ -1732,16 +1732,16 @@ export function PosModule() {
                   <button
                     type="button"
                     onClick={() => retirerLigne(l.cle)}
-                    className="min-h-10 min-w-10 touch-manipulation rounded-lg bg-[#21464b] text-base text-[#d6b66f]"
+                    className="min-h-10 min-w-10 touch-manipulation rounded-lg bg-[#344440] text-base text-[#8FB59B]"
                     aria-label={`Retirer une unité de ${l.nom}`}
                   >
                     −
                   </button>
-                  <span className="w-7 text-center text-sm text-[#f8ecc9]">{l.quantite}</span>
+                  <span className="w-7 text-center text-sm text-[#E8ECE8]">{l.quantite}</span>
                   <button
                     type="button"
                     onClick={() => augmenterLigne(l)}
-                    className="min-h-10 min-w-10 touch-manipulation rounded-lg bg-[#21464b] text-base text-[#d6b66f]"
+                    className="min-h-10 min-w-10 touch-manipulation rounded-lg bg-[#344440] text-base text-[#8FB59B]"
                     aria-label={`Ajouter une unité de ${l.nom}`}
                   >
                     +
@@ -1757,7 +1757,7 @@ export function PosModule() {
                     aria-label={`Prix unitaire de ${l.nom}`}
                     title={posEdit ? "Prix unitaire" : "Permission requise pour modifier le prix"}
                   />
-                  <span className="ml-auto text-sm font-bold text-[#e9d998]">
+                  <span className="ml-auto text-sm font-bold text-[#D0C6AE]">
                     {formatMad(round2(l.prix * l.quantite * (1 - l.remisePct / 100)))}
                   </span>
                 </div>
@@ -1774,7 +1774,7 @@ export function PosModule() {
                     aria-label={`Remise en % de ${l.nom}`}
                     title={posEdit ? "Remise de la ligne (%)" : "Permission requise pour la remise"}
                   />
-                  <span className="text-[10px] text-[#a8bb87]">% remise</span>
+                  <span className="text-[10px] text-[#A7B7A8]">% remise</span>
                   <select
                     value={l.tva}
                     onChange={(e) => majLigne(l.cle, { tva: Number(e.target.value) })}
@@ -1800,16 +1800,16 @@ export function PosModule() {
         <button
           type="button"
           onClick={ajouterPrestationLibre}
-          className="mt-2 min-h-9 w-full rounded-lg border border-dashed border-[#d6b66f]/40 text-xs text-[#e9d998]"
+          className="mt-2 min-h-9 w-full rounded-lg border border-dashed border-[#8FB59B]/40 text-xs text-[#D0C6AE]"
         >
           + Prestation libre (montage, main-d&apos;œuvre…)
         </button>
 
         {/* Remise ticket (permission) */}
-        <div className="mt-3 space-y-2 border-t border-[#d6b66f]/20 pt-3">
+        <div className="mt-3 space-y-2 border-t border-[#8FB59B]/20 pt-3">
           <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="text-[#a8bb87]">
-              Remise ticket {!posEdit && <span className="text-[#d66868]">(permission requise)</span>}
+            <span className="text-[#A7B7A8]">
+              Remise ticket {!posEdit && <span className="text-[#C5716B]">(permission requise)</span>}
             </span>
             <div className="flex gap-1">
               {REMISE_OPTIONS.map((pct) => (
@@ -1819,7 +1819,7 @@ export function PosModule() {
                   disabled={!posEdit}
                   onClick={() => { setPourcentageRemise(pct); setRemiseMontant(0); }}
                   className={`rounded px-2 py-1 text-xs disabled:opacity-40 ${
-                    pourcentageRemise === pct ? "bg-[#d6b66f] font-bold text-[#102b32]" : "bg-[#21464b] text-[#d6b66f]"
+                    pourcentageRemise === pct ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "bg-[#344440] text-[#8FB59B]"
                   }`}
                 >
                   {pct}%
@@ -1828,7 +1828,7 @@ export function PosModule() {
             </div>
           </div>
           <label className="flex items-center justify-between gap-2 text-xs">
-            <span className="text-[#a8bb87]">Remise (MAD)</span>
+            <span className="text-[#A7B7A8]">Remise (MAD)</span>
             <input
               type="number"
               min="0"
@@ -1842,12 +1842,12 @@ export function PosModule() {
         </div>
 
         {/* Récapitulatif */}
-        <div className="mt-3 grid grid-cols-2 gap-1 border-t border-[#d6b66f]/20 pt-3 text-xs">
-          <span className="text-[#a8bb87]">Sous-total HT</span><span className="text-right">{formatMad(sousTotal)}</span>
-          {totalRemise > 0 && (<><span className="text-[#a8bb87]">Remises</span><span className="text-right text-[#d6b66f]">− {formatMad(totalRemise)}</span></>)}
-          <span className="text-[#a8bb87]">TVA (par ligne)</span><span className="text-right">{formatMad(montantTVA)}</span>
-          <span className="text-sm font-bold text-[#f8ecc9]">Total TTC</span>
-          <span className="text-right text-lg font-extrabold text-[#e9d998]">{formatMad(totalTTC)}</span>
+        <div className="mt-3 grid grid-cols-2 gap-1 border-t border-[#8FB59B]/20 pt-3 text-xs">
+          <span className="text-[#A7B7A8]">Sous-total HT</span><span className="text-right">{formatMad(sousTotal)}</span>
+          {totalRemise > 0 && (<><span className="text-[#A7B7A8]">Remises</span><span className="text-right text-[#8FB59B]">− {formatMad(totalRemise)}</span></>)}
+          <span className="text-[#A7B7A8]">TVA (par ligne)</span><span className="text-right">{formatMad(montantTVA)}</span>
+          <span className="text-sm font-bold text-[#E8ECE8]">Total TTC</span>
+          <span className="text-right text-lg font-extrabold text-[#D0C6AE]">{formatMad(totalTTC)}</span>
         </div>
 
         {/* Actions secondaires */}
@@ -1856,7 +1856,7 @@ export function PosModule() {
             type="button"
             onClick={imprimerTicket}
             disabled={!lignes.length}
-            className="min-h-11 flex-1 rounded-lg border border-[#d6b66f]/40 px-3 text-sm text-[#e9d998] disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-11 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#D0C6AE] disabled:cursor-not-allowed disabled:opacity-40"
           >
             Imprimer
           </button>
@@ -1864,7 +1864,7 @@ export function PosModule() {
             type="button"
             onClick={() => void creerDevisDepuisTicket()}
             disabled={saving || !lignes.length}
-            className="min-h-11 flex-1 rounded-lg border border-[#d6b66f]/40 px-3 text-sm text-[#e9d998] disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-11 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#D0C6AE] disabled:cursor-not-allowed disabled:opacity-40"
           >
             Devis
           </button>
@@ -1882,16 +1882,16 @@ export function PosModule() {
           </button>
         </div>
 
-        {message && <p role="status" className="mt-2 text-xs text-[#90a0b0]">{message}</p>}
-        {erreur && <p role="alert" className="mt-2 text-xs text-[#d66868]">{erreur}</p>}
+        {message && <p role="status" className="mt-2 text-xs text-[#8DA298]">{message}</p>}
+        {erreur && <p role="alert" className="mt-2 text-xs text-[#C5716B]">{erreur}</p>}
       </aside>
 
       {/* Barre fixe smartphone : panier + paiement toujours accessibles */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-2 border-t border-[#d6b66f]/20 bg-[#0d1b21]/95 p-3 backdrop-blur xl:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-2 border-t border-[#8FB59B]/20 bg-[#1D2424]/95 p-3 backdrop-blur xl:hidden">
         <button
           type="button"
           onClick={() => setPanierMobile(true)}
-          className="min-h-12 flex-1 rounded-lg border border-[#d6b66f]/40 px-3 text-sm font-semibold text-[#e9d998]"
+          className="min-h-12 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm font-semibold text-[#D0C6AE]"
         >
           🛒 Panier · {lignes.length} · {formatMad(totalTTC)}
         </button>
@@ -1916,28 +1916,28 @@ export function PosModule() {
             <div className="carte max-h-[90vh] w-full max-w-md overflow-y-auto p-5">
               <div className="flex items-center justify-between">
                 <h2 className="titre-or text-lg font-extrabold">Vente enregistrée</h2>
-                <button type="button" onClick={fermerRecu} className="text-2xl text-[#a8bb87]" aria-label="Fermer le reçu">×</button>
+                <button type="button" onClick={fermerRecu} className="text-2xl text-[#A7B7A8]" aria-label="Fermer le reçu">×</button>
               </div>
-              <p className="mt-1 text-xs text-[#a8bb87]">{derniereVente.reference} — {derniereVente.date}</p>
-              {derniereVente.client && <p className="mt-1 text-xs text-[#f8ecc9]/80">Client : {derniereVente.client}</p>}
-              {derniereVente.vehicule && <p className="text-xs text-[#f8ecc9]/80">Véhicule : {derniereVente.vehicule}</p>}
+              <p className="mt-1 text-xs text-[#A7B7A8]">{derniereVente.reference} — {derniereVente.date}</p>
+              {derniereVente.client && <p className="mt-1 text-xs text-[#E8ECE8]/80">Client : {derniereVente.client}</p>}
+              {derniereVente.vehicule && <p className="text-xs text-[#E8ECE8]/80">Véhicule : {derniereVente.vehicule}</p>}
               <div className="mt-3 grid grid-cols-2 gap-1 text-xs">
-                <span className="text-[#a8bb87]">Total TTC</span>
-                <span className="text-right font-extrabold text-[#e9d998]">{formatMad(derniereVente.total)}</span>
-                <span className="text-[#a8bb87]">Payé</span>
+                <span className="text-[#A7B7A8]">Total TTC</span>
+                <span className="text-right font-extrabold text-[#D0C6AE]">{formatMad(derniereVente.total)}</span>
+                <span className="text-[#A7B7A8]">Payé</span>
                 <span className="text-right">{formatMad(derniereVente.paye)}</span>
                 {derniereVente.reste > 0 && (
-                  <><span className="text-[#a8bb87]">Reste à payer</span><span className="text-right text-[#d6b66f]">{formatMad(derniereVente.reste)}</span></>
+                  <><span className="text-[#A7B7A8]">Reste à payer</span><span className="text-right text-[#8FB59B]">{formatMad(derniereVente.reste)}</span></>
                 )}
                 {derniereVente.monnaie > 0 && (
-                  <><span className="text-[#a8bb87]">Monnaie rendue</span><span className="text-right text-[#69d3a8]">{formatMad(derniereVente.monnaie)}</span></>
+                  <><span className="text-[#A7B7A8]">Monnaie rendue</span><span className="text-right text-[#7FBF9E]">{formatMad(derniereVente.monnaie)}</span></>
                 )}
               </div>
               <div className="mt-3 flex max-h-40 flex-col gap-1 overflow-y-auto">
                 {derniereVente.lignes.map((l, i) => (
                   <div key={`${l.nom}-${i}`} className="flex justify-between gap-2 text-xs">
-                    <span className="truncate text-[#f8ecc9]/80">{l.quantite} × {l.nom}</span>
-                    <span className="shrink-0 text-[#e9d998]">{formatMad(round2(l.prix * l.quantite))}</span>
+                    <span className="truncate text-[#E8ECE8]/80">{l.quantite} × {l.nom}</span>
+                    <span className="shrink-0 text-[#D0C6AE]">{formatMad(round2(l.prix * l.quantite))}</span>
                   </div>
                 ))}
               </div>
@@ -1946,7 +1946,7 @@ export function PosModule() {
                   type="button"
                   onClick={() => void imprimerRecuEnrichi(derniereVente)}
                   disabled={impressionEnCours}
-                  className="min-h-11 flex-1 rounded-lg border border-[#d6b66f]/40 px-3 text-sm text-[#e9d998] disabled:opacity-40"
+                  className="min-h-11 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#D0C6AE] disabled:opacity-40"
                 >
                   {impressionEnCours ? "Impression…" : "Imprimer le ticket"}
                 </button>
@@ -1960,20 +1960,20 @@ export function PosModule() {
             <div className="carte max-h-[90vh] w-full max-w-lg overflow-y-auto p-5">
               <div className="flex items-center justify-between">
                 <h2 className="titre-or text-lg font-extrabold">Encaissement</h2>
-                <button type="button" onClick={fermerPaiement} className="text-2xl text-[#a8bb87]" aria-label="Fermer l'encaissement">×</button>
+                <button type="button" onClick={fermerPaiement} className="text-2xl text-[#A7B7A8]" aria-label="Fermer l'encaissement">×</button>
               </div>
 
               {/* Récapitulatif */}
               <div className="mt-3 grid grid-cols-2 gap-1 text-xs">
-                <span className="text-[#a8bb87]">Sous-total HT</span><span className="text-right">{formatMad(sousTotal)}</span>
-                {totalRemise > 0 && (<><span className="text-[#a8bb87]">Remises</span><span className="text-right text-[#d6b66f]">− {formatMad(totalRemise)}</span></>)}
-                <span className="text-[#a8bb87]">TVA</span><span className="text-right">{formatMad(montantTVA)}</span>
-                <span className="text-sm font-bold text-[#f8ecc9]">Total TTC</span>
-                <span className="text-right text-lg font-extrabold text-[#e9d998]">{formatMad(totalTTC)}</span>
+                <span className="text-[#A7B7A8]">Sous-total HT</span><span className="text-right">{formatMad(sousTotal)}</span>
+                {totalRemise > 0 && (<><span className="text-[#A7B7A8]">Remises</span><span className="text-right text-[#8FB59B]">− {formatMad(totalRemise)}</span></>)}
+                <span className="text-[#A7B7A8]">TVA</span><span className="text-right">{formatMad(montantTVA)}</span>
+                <span className="text-sm font-bold text-[#E8ECE8]">Total TTC</span>
+                <span className="text-right text-lg font-extrabold text-[#D0C6AE]">{formatMad(totalTTC)}</span>
               </div>
 
               {/* Modes */}
-              <p className="mt-4 text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">Mode de paiement</p>
+              <p className="mt-4 text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Mode de paiement</p>
               <div className="mt-2 grid grid-cols-4 gap-1.5">
                 {MODES.map((m) => (
                   <button
@@ -1981,7 +1981,7 @@ export function PosModule() {
                     type="button"
                     onClick={() => choisirMode(m.cle)}
                     className={`min-h-11 touch-manipulation rounded-lg px-1 py-2 text-[11px] transition ${
-                      modePaiement === m.cle ? "bg-[#d6b66f] font-bold text-[#102b32]" : "bg-[#21464b] text-[#d6b66f] hover:bg-[#2a555b]"
+                      modePaiement === m.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "bg-[#344440] text-[#8FB59B] hover:bg-[#41524E]"
                     }`}
                   >
                     {m.label}
@@ -1993,10 +1993,10 @@ export function PosModule() {
               {modePaiement !== "credit" && (
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">
+                    <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">
                       Règlements{reglements.length > 1 ? " · mixtes" : ""}
                     </p>
-                    <button type="button" onClick={ajouterReglement} className="text-[11px] text-[#e9d998] underline">
+                    <button type="button" onClick={ajouterReglement} className="text-[11px] text-[#D0C6AE] underline">
                       + Autre mode
                     </button>
                   </div>
@@ -2032,7 +2032,7 @@ export function PosModule() {
                           <button
                             type="button"
                             onClick={() => supprimerReglement(i)}
-                            className="min-h-10 min-w-10 touch-manipulation rounded bg-[#d66868]/15 text-sm text-[#d66868]"
+                            className="min-h-10 min-w-10 touch-manipulation rounded bg-[#C5716B]/15 text-sm text-[#C5716B]"
                             aria-label="Retirer ce règlement"
                           >
                             ✕
@@ -2045,14 +2045,14 @@ export function PosModule() {
               )}
 
               {/* Montants : reçu, monnaie, reste */}
-              <div className="mt-3 space-y-1.5 rounded-lg bg-[#21464b]/40 p-2.5 text-xs">
+              <div className="mt-3 space-y-1.5 rounded-lg bg-[#344440]/40 p-2.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-[#a8bb87]">Montant réglé</span>
-                  <span className="font-bold text-[#e9d998]">{formatMad(montantRegle)}</span>
+                  <span className="text-[#A7B7A8]">Montant réglé</span>
+                  <span className="font-bold text-[#D0C6AE]">{formatMad(montantRegle)}</span>
                 </div>
                 {estEspeces && (
                   <label className="flex items-center justify-between gap-2">
-                    <span className="text-[#a8bb87]">Montant reçu (MAD)</span>
+                    <span className="text-[#A7B7A8]">Montant reçu (MAD)</span>
                     <span className="flex gap-1">
                       <input
                         type="number"
@@ -2068,7 +2068,7 @@ export function PosModule() {
                         type="button"
                         onClick={() => setPaveOuvert(!paveOuvert)}
                         aria-label={paveOuvert ? "Masquer le pavé numérique" : "Ouvrir le pavé numérique tactile"}
-                        className={`min-h-10 min-w-10 touch-manipulation rounded-lg border border-[#d6b66f]/40 text-lg ${paveOuvert ? "bg-[#d6b66f]/25 text-[#e9d998]" : "bg-[#21464b] text-[#d6b66f]"}`}
+                        className={`min-h-10 min-w-10 touch-manipulation rounded-lg border border-[#8FB59B]/40 text-lg ${paveOuvert ? "bg-[#8FB59B]/25 text-[#D0C6AE]" : "bg-[#344440] text-[#8FB59B]"}`}
                       >
                         ⌨
                       </button>
@@ -2084,32 +2084,32 @@ export function PosModule() {
                 )}
                 {estEspeces && montantRecuNum > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-[#a8bb87]">Monnaie à rendre</span>
-                    <span className="font-bold text-[#69d3a8]">{formatMad(monnaieRendue)}</span>
+                    <span className="text-[#A7B7A8]">Monnaie à rendre</span>
+                    <span className="font-bold text-[#7FBF9E]">{formatMad(monnaieRendue)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-[#a8bb87]">Reste dû</span>
-                  <span className="font-bold text-[#d6b66f]">{formatMad(resteDu)}</span>
+                  <span className="text-[#A7B7A8]">Reste dû</span>
+                  <span className="font-bold text-[#8FB59B]">{formatMad(resteDu)}</span>
                 </div>
                 {modePaiement === "credit" && (
-                  <p className="leading-4 text-[#e9d998]">
+                  <p className="leading-4 text-[#D0C6AE]">
                     Crédit client : aucun encaissement maintenant — encaissement ultérieur depuis l&apos;historique des ventes.
                   </p>
                 )}
                 {modePaiement === "partiel" && (
-                  <p className="leading-4 text-[#a8bb87]">Paiement partiel : le reste restera dû sur la vente.</p>
+                  <p className="leading-4 text-[#A7B7A8]">Paiement partiel : le reste restera dû sur la vente.</p>
                 )}
               </div>
 
-              {erreur && <p role="alert" className="mt-3 rounded-lg bg-[#d66868]/15 px-3 py-2 text-xs text-[#d66868]">{erreur}</p>}
+              {erreur && <p role="alert" className="mt-3 rounded-lg bg-[#C5716B]/15 px-3 py-2 text-xs text-[#C5716B]">{erreur}</p>}
 
               {/* Actions */}
               <div className="mt-4 flex gap-2">
                 <button
                   type="button"
                   onClick={fermerPaiement}
-                  className="min-h-11 flex-1 rounded-lg border border-[#d6b66f]/40 px-3 text-sm text-[#e9d998]"
+                  className="min-h-11 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#D0C6AE]"
                 >
                   Retour au ticket
                 </button>
@@ -2159,7 +2159,7 @@ export function PosModule() {
               />
             </div>
             <div className="mt-5 flex justify-end gap-3">
-              <button type="button" onClick={() => setModalClient(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">
+              <button type="button" onClick={() => setModalClient(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">
                 Annuler
               </button>
               <button disabled={savingModal} type="submit" className="btn-or px-4 py-2 text-sm">
@@ -2215,7 +2215,7 @@ export function PosModule() {
               />
             </div>
             <div className="mt-5 flex justify-end gap-3">
-              <button type="button" onClick={() => setModalVehicule(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">
+              <button type="button" onClick={() => setModalVehicule(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">
                 Annuler
               </button>
               <button disabled={savingModal} type="submit" className="btn-or px-4 py-2 text-sm">

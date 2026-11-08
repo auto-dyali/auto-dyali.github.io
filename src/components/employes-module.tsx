@@ -134,27 +134,27 @@ export function EmployesModule() {
       {/* KPI réels */}
       <div className="grid gap-4 sm:grid-cols-3">
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Employés actifs</p>
+          <p className="text-xs text-[#A7B7A8]">Employés actifs</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : employees.filter((e) => e.active_permanent).length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Heures contractuelles / semaine</p>
+          <p className="text-xs text-[#A7B7A8]">Heures contractuelles / semaine</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : `${totalHeures} h`}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Interventions assignées</p>
+          <p className="text-xs text-[#A7B7A8]">Interventions assignées</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : interventions.filter((i) => i.assigned_to).length}</p>
         </article>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Ressources humaines</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Ressources humaines</p>
           <h1 className="titre-or mt-1 text-2xl font-extrabold">Équipe & performances</h1>
-          <p className="mt-1 text-sm text-[#a8bb87]">Effectif, interventions assignées et charges horaires.</p>
+          <p className="mt-1 text-sm text-[#A7B7A8]">Effectif, interventions assignées et charges horaires.</p>
         </div>
         <button type="button" onClick={() => { setOuvert(true); setError(null); setNotice(null); }} className="btn-or px-5 py-2.5 text-sm">
           + Nouvel employé
@@ -172,7 +172,7 @@ export function EmployesModule() {
             type="button"
             onClick={() => setFiltre(f.cle)}
             className={`rounded-lg px-3 py-1.5 text-xs transition ${
-              filtre === f.cle ? "bg-[#d6b66f] font-bold text-[#102b32]" : "bg-[#21464b] text-[#d6b66f]"
+              filtre === f.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "bg-[#344440] text-[#8FB59B]"
             }`}
           >
             {f.label}
@@ -182,11 +182,11 @@ export function EmployesModule() {
 
       <section className="carte overflow-hidden">
         {loading ? (
-          <p className="p-8 text-center text-sm text-[#a8bb87]">Chargement de l’équipe…</p>
+          <p className="p-8 text-center text-sm text-[#A7B7A8]">Chargement de l’équipe…</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] text-left text-sm">
-              <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+              <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                 <tr>
                   <th className="px-5 py-3">Employé</th>
                   <th className="px-5 py-3">Poste</th>
@@ -197,30 +197,30 @@ export function EmployesModule() {
                   <th className="px-5 py-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#d6b66f]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {visibles.map((e) => {
                   const s = stats.get(e.id) ?? { total: 0, termines: 0, ca: 0 };
                   return (
                     <tr key={e.id}>
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-[#f8ecc9]">{e.full_name}</p>
-                        <p className="text-[11px] text-[#a8bb87]">
+                        <p className="font-semibold text-[#E8ECE8]">{e.full_name}</p>
+                        <p className="text-[11px] text-[#A7B7A8]">
                           {e.code}{e.hired_at ? ` · depuis le ${new Date(e.hired_at).toLocaleDateString("fr-FR")}` : ""}
                         </p>
                       </td>
-                      <td className="px-5 py-4 text-[#f8ecc9]/80">{e.job_title}</td>
-                      <td className="px-5 py-4 text-right text-[#a8bb87]">{Number(e.weekly_hours)} h</td>
-                      <td className="px-5 py-4 text-right text-[#e9d998]">{s.total}</td>
-                      <td className="px-5 py-4 text-right text-[#38a987]">{s.termines}</td>
-                      <td className="px-5 py-4 text-right font-bold text-[#e9d998]">{formatMad(s.ca)}</td>
+                      <td className="px-5 py-4 text-[#E8ECE8]/80">{e.job_title}</td>
+                      <td className="px-5 py-4 text-right text-[#A7B7A8]">{Number(e.weekly_hours)} h</td>
+                      <td className="px-5 py-4 text-right text-[#D0C6AE]">{s.total}</td>
+                      <td className="px-5 py-4 text-right text-[#5D9E7F]">{s.termines}</td>
+                      <td className="px-5 py-4 text-right font-bold text-[#D0C6AE]">{formatMad(s.ca)}</td>
                       <td className="px-5 py-4 text-right">
                         <button
                           type="button"
                           onClick={() => void basculerActif(e)}
                           className={`rounded-lg px-3 py-1.5 text-xs ${
                             e.active_permanent
-                              ? "border border-[#d66868]/40 text-[#d66868]"
-                              : "border border-[#38a987]/40 text-[#69d3a8]"
+                              ? "border border-[#C5716B]/40 text-[#C5716B]"
+                              : "border border-[#5D9E7F]/40 text-[#7FBF9E]"
                           }`}
                         >
                           {e.active_permanent ? "Archiver" : "Réactiver"}
@@ -231,7 +231,7 @@ export function EmployesModule() {
                 })}
               </tbody>
             </table>
-            {!visibles.length && <p className="p-8 text-center text-sm text-[#a8bb87]">Aucun employé dans cette vue.</p>}
+            {!visibles.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucun employé dans cette vue.</p>}
           </div>
         )}
       </section>
@@ -252,13 +252,13 @@ export function EmployesModule() {
                 <option>Caissier</option>
                 <option>Manager</option>
               </select>
-              <label className="text-xs text-[#a8bb87]">
+              <label className="text-xs text-[#A7B7A8]">
                 Heures par semaine
                 <input type="number" min="1" max="60" step="0.5" className="champ mt-1 min-h-11" value={form.weeklyHours} onChange={(e) => setForm({ ...form, weeklyHours: e.target.value })} />
               </label>
             </div>
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button>
+              <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>
               <button disabled={saving} type="submit" className="btn-or px-4 py-2 text-sm">{saving ? "Enregistrement…" : "Enregistrer"}</button>
             </div>
           </form>

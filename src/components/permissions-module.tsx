@@ -151,15 +151,15 @@ export function PermissionsModule() {
   return (
     <>
       <div className="mb-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Sécurité</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Sécurité</p>
         <h1 className="titre-or mt-1 text-2xl font-extrabold">Permissions avancées</h1>
-        <p className="mt-1 text-sm text-[#a8bb87]">
+        <p className="mt-1 text-sm text-[#A7B7A8]">
           Droits par rôle et par module — enregistrés dans Supabase (<code>permissions</code>) et journalisés dans <code>audit_log</code>.
         </p>
       </div>
 
-      {erreur && <p role="alert" className="mb-4 rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{erreur}</p>}
-      {notice && <p role="status" className="mb-4 rounded-lg bg-[#90a0b0]/10 px-4 py-3 text-sm text-[#90a0b0]">{notice}</p>}
+      {erreur && <p role="alert" className="mb-4 rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{erreur}</p>}
+      {notice && <p role="status" className="mb-4 rounded-lg bg-[#8DA298]/10 px-4 py-3 text-sm text-[#8DA298]">{notice}</p>}
 
       {/* Sélecteur de rôle */}
       <div className="mb-5 flex flex-wrap gap-2">
@@ -169,7 +169,7 @@ export function PermissionsModule() {
             type="button"
             onClick={() => setFiltreRole(r.code)}
             className={`rounded-lg border px-4 py-2 text-sm transition ${
-              filtreRole === r.code ? "border-[#d6b66f]/60 bg-[#d6b66f]/15 font-bold text-[#e9d998]" : "border-[#d6b66f]/20 text-[#a8bb87]"
+              filtreRole === r.code ? "border-[#8FB59B]/60 bg-[#8FB59B]/15 font-bold text-[#D0C6AE]" : "border-[#8FB59B]/20 text-[#A7B7A8]"
             }`}
           >
             {r.label}
@@ -181,20 +181,20 @@ export function PermissionsModule() {
       <section className="carte overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+            <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
               <tr>
                 <th className="px-4 py-3">Module</th>
                 {ACTIONS.map((a) => <th key={a.cle} className="px-4 py-3 text-center">{a.label}</th>)}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#d6b66f]/10">
+            <tbody className="divide-y divide-[#8FB59B]/10">
               {lignes.map((m) => {
                 const cle = `${filtreRole}|${m.code}`;
                 const d = cellules[cle] ?? { id: null, can_view: false, can_create: false, can_edit: false, can_delete: false };
                 const verrou = filtreRole === "saas_admin";
                 return (
                   <tr key={m.code}>
-                    <td className="px-4 py-3 font-semibold text-[#f8ecc9]">{m.label}</td>
+                    <td className="px-4 py-3 font-semibold text-[#E8ECE8]">{m.label}</td>
                     {ACTIONS.map((a) => (
                       <td key={a.cle} className="px-4 py-3 text-center">
                         <button
@@ -205,8 +205,8 @@ export function PermissionsModule() {
                           aria-label={`${a.label} — ${m.label}`}
                           className={`h-9 w-9 rounded-lg border text-xs font-bold transition disabled:opacity-30 ${
                             d[a.cle]
-                              ? "border-[#d6b66f]/60 bg-[#d6b66f]/25 text-[#e9d998]"
-                              : "border-[#d6b66f]/15 text-[#a8bb87]/50"
+                              ? "border-[#8FB59B]/60 bg-[#8FB59B]/25 text-[#D0C6AE]"
+                              : "border-[#8FB59B]/15 text-[#A7B7A8]/50"
                           }`}
                         >
                           {d[a.cle] ? "✓" : a.court}
@@ -219,7 +219,7 @@ export function PermissionsModule() {
             </tbody>
           </table>
         </div>
-        <p className="border-t border-[#d6b66f]/10 px-4 py-3 text-xs text-[#a8bb87]">
+        <p className="border-t border-[#8FB59B]/10 px-4 py-3 text-xs text-[#A7B7A8]">
           {filtreRole === "saas_admin"
             ? "Le rôle Super Admin dispose de tous les droits par conception : non modifiable."
             : "V = voir · C = créer · M = modifier · S = supprimer. Un droit d’écriture active automatiquement la vue. Les rôles employé par défaut restent en place tant qu’aucune ligne n’est enregistrée."}

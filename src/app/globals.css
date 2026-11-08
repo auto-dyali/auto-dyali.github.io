@@ -1,21 +1,39 @@
 @import "tailwindcss";
 
 /* =====================================================================
-   AUTO DYALI — Design system officiel (palette de la maquette)
+   AUTO DYALI — Design system premium « graphite & vert doux »
+   Identité issue de la référence visuelle sélectionnée :
+   graphite #252D2D · gris-vert profond #344440 · vert émeraude doux
+   #49675B · vert sauge #A7B7A8 · champagne discret #D0C6AE ·
+   gris clair #E8ECE8. Les noms de classes sont préservés (rénovation
+   sans régression). L'arrière-plan de la page de connexion est protégé
+   par des styles dédiés au niveau de la page, jamais ici.
    ===================================================================== */
 @theme {
-  --color-fond: #102b32;          /* Fond principal */
-  --color-carte: #193a40;         /* Cartes */
-  --color-carte-2: #21464b;       /* Cartes secondaires */
-  --color-or: #d6b66f;            /* Or / Champagne — actions, titres */
-  --color-or-clair: #e9d998;      /* Or clair — dégradés, survols */
-  --color-ivoire: #f8ecc9;        /* Texte principal clair */
-  --color-texte2: #a8bb87;        /* Texte secondaire */
-  --color-succes: #38a987;
-  --color-alerte: #d69b6a;
-  --color-erreur: #d66868;
+  --color-fond: #252d2d;          /* Graphite — fond principal */
+  --color-fond2: #1f2626;         /* Graphite profond — splash, ombres */
+  --color-carte: #2c3735;         /* Cartes */
+  --color-carte-2: #344440;       /* Cartes secondaires / champs */
+  --color-emeraude: #49675b;      /* Vert émeraude doux — actions */
+  --color-emeraude-clair: #55776a;/* Survol actions */
+  --color-sauge: #a7b7a8;         /* Vert sauge — texte secondaire */
+  --color-champagne: #d0c6ae;     /* Champagne discret — titres, relief */
+  --color-or: #8fb59b;            /* Accent clair — bordures, sélection */
+  --color-or-clair: #d0c6ae;      /* Ancien nom conservé (compat.) */
+  --color-ivoire: #e8ece8;        /* Texte principal — gris clair */
+  --color-texte2: #a7b7a8;        /* Texte secondaire */
+  --color-muted: #8da298;         /* Texte atténué */
+  --color-succes: #5d9e7f;        /* Succès doux */
+  --color-succes2: #7fbf9e;       /* Succès clair (textes) */
+  --color-alerte: #c79a6b;
+  --color-erreur: #c5716b;        /* Rouge adouci */
+  --color-info: #5b7fc7;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-carte: 1rem;
+  --ombre-1: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 24px rgba(0, 0, 0, 0.18);
+  --ombre-2: 0 2px 6px rgba(0, 0, 0, 0.30), 0 18px 40px rgba(0, 0, 0, 0.22);
 }
 
 html,
@@ -23,6 +41,12 @@ body {
   background: var(--color-fond);
   color: var(--color-ivoire);
   font-family: var(--font-sans);
+}
+
+/* Listes déroulantes natives lisibles sur fond sombre */
+select,
+option {
+  color-scheme: dark;
 }
 
 .splash-bg {
@@ -37,94 +61,205 @@ body {
   image-rendering: auto;
 }
 
-/* Titres dorés type maquette */
+/* ---------------------------------------------------------------------
+ * TITRES — champagne → sauge (lisible, discret, pas de doré dominant)
+ * ------------------------------------------------------------------- */
 .titre-or {
-  background: linear-gradient(120deg, #f5e6c4 0%, #d6b66f 55%, #a8833e 100%);
+  background: linear-gradient(120deg, #ece4d1 0%, #d0c6ae 45%, #a7b7a8 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* Carte standard */
+/* ---------------------------------------------------------------------
+ * CARTES premium — relief satiné discret, bordure doucereuse
+ * ------------------------------------------------------------------- */
 .carte {
-  background: var(--color-carte);
-  border: 1px solid rgba(214, 182, 111, 0.12);
-  border-radius: 0.9rem;
+  background: linear-gradient(168deg, #2e3a38 0%, #2a3533 60%, #27302f 100%);
+  border: 1px solid rgba(167, 183, 168, 0.14);
+  border-radius: var(--radius-carte);
+  box-shadow: var(--ombre-1), inset 0 1px 0 rgba(232, 236, 232, 0.06);
 }
 .carte-2 {
-  background: var(--color-carte-2);
-  border: 1px solid rgba(214, 182, 111, 0.1);
+  background: linear-gradient(168deg, #37453f 0%, #313f3b 100%);
+  border: 1px solid rgba(167, 183, 168, 0.12);
+  border-radius: var(--radius-carte);
+  box-shadow: inset 0 1px 0 rgba(232, 236, 232, 0.05);
 }
 
-/* Boutons or */
+/* ---------------------------------------------------------------------
+ * BOUTONS 3D — émeraude satiné, relief et enfoncement au toucher
+ * (le nom historique .btn-or est conservé dans toute l'application)
+ * ------------------------------------------------------------------- */
 .btn-or {
-  background: linear-gradient(120deg, #e9d998 0%, #d6b66f 100%);
-  color: #102b32;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 38%),
+    linear-gradient(180deg, #5d7d6e 0%, #49675b 52%, #3e5a4e 100%);
+  color: #f4f8f5;
   font-weight: 700;
-  border-radius: 9999px;
-  transition: filter 0.15s ease;
+  border: 1px solid rgba(232, 236, 232, 0.16);
+  border-radius: 0.8rem;
+  box-shadow:
+    0 4px 0 #33493f,
+    0 12px 26px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.14);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+  transition: filter 0.16s ease, transform 0.12s ease, box-shadow 0.12s ease;
+  touch-action: manipulation;
 }
 .btn-or:hover {
-  filter: brightness(1.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0) 38%),
+    linear-gradient(180deg, #678a7a 0%, #537368 52%, #466257 100%);
+}
+.btn-or:focus-visible {
+  outline: none;
+  box-shadow:
+    0 4px 0 #33493f,
+    0 12px 26px rgba(0, 0, 0, 0.34),
+    0 0 0 3px rgba(167, 183, 168, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 .btn-or-3d {
-  box-shadow: 0 5px 0 #987534, 0 10px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 5px 0 #33493f,
+    0 14px 30px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.16);
   transform: translateY(0);
 }
 .btn-or-3d:hover {
   transform: translateY(-2px);
-  box-shadow: 0 7px 0 #987534, 0 14px 28px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 7px 0 #33493f,
+    0 18px 34px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.16);
 }
-.btn-or-3d:active {
-  transform: translateY(4px);
-  box-shadow: 0 1px 0 #987534, 0 4px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+.btn-or-3d:active,
+.btn-or:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 #33493f,
+    0 4px 10px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 3px 8px rgba(0, 0, 0, 0.22);
 }
 .btn-or:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: translateY(0);
 }
 
-/* Champ de saisie */
+/* Bouton secondaire — graphite à relief discret (à appliquer au cas
+   par cas en complément des bordures existantes, non destructif) */
+.btn-sec {
+  background: linear-gradient(180deg, #3d4a47 0%, #344340 100%);
+  color: var(--color-champagne);
+  font-weight: 600;
+  border: 1px solid rgba(167, 183, 168, 0.2);
+  border-radius: 0.8rem;
+  box-shadow: 0 3px 0 #26302e, inset 0 1px 0 rgba(232, 236, 232, 0.1);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.16s ease;
+  touch-action: manipulation;
+}
+.btn-sec:hover {
+  filter: brightness(1.1);
+}
+.btn-sec:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #26302e, inset 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ---------------------------------------------------------------------
+ * CHAMPS — lisibles, cible tactile ≥ 44 px, focus visible
+ * ------------------------------------------------------------------- */
 .champ {
-  background: rgba(33, 70, 75, 0.55);
-  border: 1px solid rgba(214, 182, 111, 0.25);
+  background: rgba(52, 68, 64, 0.55);
+  border: 1px solid rgba(208, 198, 174, 0.22);
   border-radius: 0.75rem;
   color: var(--color-ivoire);
   width: 100%;
-  padding: 0.6rem 0.9rem;
+  min-height: 2.75rem;                    /* 44 px : zone tactile */
+  padding: 0.65rem 0.9rem;
   outline: none;
+  touch-action: manipulation;
 }
 .champ:focus {
   border-color: var(--color-or);
+  box-shadow: 0 0 0 3px rgba(143, 181, 156, 0.28);
 }
 .formulaire-3d {
   padding: 1.35rem;
-  border: 1px solid rgba(214, 182, 111, 0.2);
+  border: 1px solid rgba(167, 183, 168, 0.22);
   border-radius: 1.25rem;
-  background: linear-gradient(145deg, rgba(25, 58, 64, 0.92), rgba(16, 43, 50, 0.72));
-  box-shadow: 12px 14px 0 rgba(8, 25, 30, 0.28), 0 20px 45px rgba(0, 0, 0, 0.26), inset 1px 1px 0 rgba(233, 217, 152, 0.08);
-  transform: perspective(900px) rotateX(1deg);
+  background: linear-gradient(150deg, rgba(44, 55, 53, 0.94), rgba(31, 38, 38, 0.78));
+  box-shadow: 12px 14px 0 rgba(21, 27, 27, 0.28), 0 20px 45px rgba(0, 0, 0, 0.30), inset 1px 1px 0 rgba(208, 198, 174, 0.08);
 }
 .champ-3d {
-  box-shadow: inset 3px 3px 8px rgba(8, 25, 30, 0.34), 0 3px 0 rgba(214, 182, 111, 0.08);
+  box-shadow: inset 3px 3px 8px rgba(21, 27, 27, 0.36), 0 3px 0 rgba(167, 183, 168, 0.08);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 .champ-3d:focus {
   transform: translateY(-1px);
-  box-shadow: inset 2px 2px 6px rgba(8, 25, 30, 0.28), 0 0 0 3px rgba(214, 182, 111, 0.1), 0 4px 0 rgba(214, 182, 111, 0.12);
+  box-shadow: inset 2px 2px 6px rgba(21, 27, 27, 0.30), 0 0 0 3px rgba(167, 183, 168, 0.16), 0 4px 0 rgba(167, 183, 168, 0.12);
 }
 .champ::placeholder {
-  color: rgba(248, 236, 201, 0.45);
+  color: rgba(232, 236, 232, 0.42);
 }
 
-/* Barre de défilement discrète, style sombre */
+/* Concentration clavier globale accessible (liens, contrôles bruts) */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid rgba(167, 183, 168, 0.7);
+  outline-offset: 2px;
+  border-radius: 0.4rem;
+}
+
+/* Barre de défilement discrète */
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(214, 182, 111, 0.25);
+  background: rgba(167, 183, 168, 0.25);
   border-radius: 4px;
+}
+
+/* Zones tactiles : jamais de zoom accidentel au double-tap */
+button,
+a,
+[role="button"],
+input,
+select,
+textarea,
+label {
+  touch-action: manipulation;
+}
+
+/* Marge d'assistance pour la navigation mobile (encoche / barre iOS) */
+.safe-bas {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}
+
+/* ---------------------------------------------------------------------
+ * PANNEAU CONNEXION — colonne du formulaire en graphite texturé satiné.
+ * L'IMAGE D'ARRIÈRE-PLAN de la page reste intacte (scène protégée) :
+ * cette classe habille UNIQUEMENT la colonne formulaire.
+ * ------------------------------------------------------------------- */
+.panneau-connexion {
+  background:
+    repeating-linear-gradient(145deg, rgba(232, 236, 232, 0.025) 0 2px, transparent 2px 6px),
+    linear-gradient(160deg, rgba(44, 55, 53, 0.97) 0%, rgba(37, 45, 45, 0.95) 55%, rgba(31, 38, 38, 0.97) 100%);
+  border-right: 1px solid rgba(167, 183, 168, 0.12);
+  box-shadow: inset 0 1px 0 rgba(232, 236, 232, 0.06), 8px 0 30px rgba(0, 0, 0, 0.28);
+}
+@media (max-width: 1023px) {
+  .panneau-connexion {
+    border-right: none;
+  }
 }
 
 /* Flash d'apparition des écrans */
@@ -152,4 +287,15 @@ body {
 }
 .clignote {
   animation: clignote 1.4s ease-in-out infinite;
+}
+
+/* Respecter la préférence « réduire les animations » */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

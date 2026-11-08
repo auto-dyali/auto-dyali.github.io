@@ -239,29 +239,29 @@ export function ClientsModule() {
       {/* KPI réels */}
       <div className="grid gap-4 sm:grid-cols-3">
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Clients</p>
+          <p className="text-xs text-[#A7B7A8]">Clients</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : clients.length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Créances clients (solde dû)</p>
+          <p className="text-xs text-[#A7B7A8]">Créances clients (solde dû)</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : formatMad(totalCreances)}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Avec véhicule suivi</p>
+          <p className="text-xs text-[#A7B7A8]">Avec véhicule suivi</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">
             {loading ? "…" : clients.filter((c) => (c.vehicles?.length ?? 0) > 0).length}
           </p>
         </article>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">CRM garage</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">CRM garage</p>
           <h1 className="titre-or mt-1 text-2xl font-extrabold">Clients</h1>
-          <p className="mt-1 text-sm text-[#a8bb87]">Fiches complètes : véhicules, ventes, interventions et crédit.</p>
+          <p className="mt-1 text-sm text-[#A7B7A8]">Fiches complètes : véhicules, ventes, interventions et crédit.</p>
         </div>
         <button type="button" onClick={() => { setFormOpen(true); setError(null); setNotice(null); }} className="btn-or px-5 py-2.5 text-sm">
           + Nouveau client
@@ -269,7 +269,7 @@ export function ClientsModule() {
       </div>
 
       <section className="carte overflow-hidden">
-        <div className="border-b border-[#d6b66f]/10 p-4">
+        <div className="border-b border-[#8FB59B]/10 p-4">
           <input
             type="search"
             value={recherche}
@@ -281,11 +281,11 @@ export function ClientsModule() {
         </div>
 
         {loading ? (
-          <p className="p-8 text-center text-sm text-[#a8bb87]">Chargement des clients…</p>
+          <p className="p-8 text-center text-sm text-[#A7B7A8]">Chargement des clients…</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+              <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                 <tr>
                   <th className="px-5 py-3">Client</th>
                   <th className="px-5 py-3">Contact</th>
@@ -294,25 +294,25 @@ export function ClientsModule() {
                   <th className="px-5 py-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#d6b66f]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {clientsFiltres.map((c) => {
                   const solde = Number(c.balance_due ?? 0);
                   return (
                     <tr key={c.id}>
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-[#f8ecc9]">{c.full_name}</p>
-                        <p className="text-[11px] text-[#a8bb87]">{c.code}</p>
+                        <p className="font-semibold text-[#E8ECE8]">{c.full_name}</p>
+                        <p className="text-[11px] text-[#A7B7A8]">{c.code}</p>
                       </td>
-                      <td className="px-5 py-4 text-[#a8bb87]">
+                      <td className="px-5 py-4 text-[#A7B7A8]">
                         {c.phone ?? "—"}
                         {c.email && <span className="block text-[11px]">{c.email}</span>}
                       </td>
-                      <td className="px-5 py-4 text-right text-[#e9d998]">{c.vehicles?.length ?? 0}</td>
-                      <td className={`px-5 py-4 text-right font-bold ${solde > 0.001 ? "text-[#d6b66f]" : "text-[#38a987]"}`}>
+                      <td className="px-5 py-4 text-right text-[#D0C6AE]">{c.vehicles?.length ?? 0}</td>
+                      <td className={`px-5 py-4 text-right font-bold ${solde > 0.001 ? "text-[#8FB59B]" : "text-[#5D9E7F]"}`}>
                         {formatMad(solde)}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button type="button" onClick={() => void ouvrirFiche(c)} className="rounded-lg border border-[#d6b66f]/40 px-3 py-1.5 text-xs text-[#e9d998]">
+                        <button type="button" onClick={() => void ouvrirFiche(c)} className="rounded-lg border border-[#8FB59B]/40 px-3 py-1.5 text-xs text-[#D0C6AE]">
                           Ouvrir la fiche
                         </button>
                       </td>
@@ -322,7 +322,7 @@ export function ClientsModule() {
               </tbody>
             </table>
             {!clientsFiltres.length && (
-              <p className="p-8 text-center text-sm text-[#a8bb87]">Aucun client ne correspond — créez-le avec « + Nouveau client ».</p>
+              <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucun client ne correspond — créez-le avec « + Nouveau client ».</p>
             )}
           </div>
         )}
@@ -336,9 +336,9 @@ export function ClientsModule() {
           <div className="carte my-4 w-full max-w-4xl p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Fiche client</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Fiche client</p>
                 <h2 className="titre-or mt-1 text-xl font-extrabold">{selection.full_name}</h2>
-                <p className="mt-1 text-sm text-[#a8bb87]">
+                <p className="mt-1 text-sm text-[#A7B7A8]">
                   {selection.code} · {selection.phone ?? "téléphone non renseigné"}
                   {selection.email ? ` · ${selection.email}` : ""}
                 </p>
@@ -347,20 +347,20 @@ export function ClientsModule() {
                     href={`https://wa.me/${selection.phone.replace(/\D/g, "").replace(/^0/, "212")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 inline-block rounded-lg border border-[#90a0b0]/40 px-3 py-1.5 text-xs text-[#90a0b0]"
+                    className="mt-2 inline-block rounded-lg border border-[#8DA298]/40 px-3 py-1.5 text-xs text-[#8DA298]"
                   >
                     Ouvrir WhatsApp (conversation réelle)
                   </a>
                 )}
               </div>
-              <button type="button" onClick={() => setSelection(null)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button>
+              <button type="button" onClick={() => setSelection(null)} className="text-2xl text-[#A7B7A8]" aria-label="Fermer">×</button>
             </div>
 
             {/* Solde */}
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#d6b66f]/20 bg-[#21464b]/40 p-4">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#8FB59B]/20 bg-[#344440]/40 p-4">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">Solde client</p>
-                <p className={`titre-or mt-1 text-2xl font-extrabold ${Number(selection.balance_due) > 0.001 ? "text-[#d6b66f]" : "text-[#38a987]"}`}>
+                <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Solde client</p>
+                <p className={`titre-or mt-1 text-2xl font-extrabold ${Number(selection.balance_due) > 0.001 ? "text-[#8FB59B]" : "text-[#5D9E7F]"}`}>
                   {formatMad(Number(selection.balance_due ?? 0))}
                 </p>
               </div>
@@ -372,80 +372,80 @@ export function ClientsModule() {
             </div>
 
             {encaissement && (
-              <div className="mt-3 flex flex-wrap items-end gap-3 rounded-xl border border-[#38a987]/30 bg-[#38a987]/10 p-4">
-                <label className="text-xs text-[#a8bb87]">
+              <div className="mt-3 flex flex-wrap items-end gap-3 rounded-xl border border-[#5D9E7F]/30 bg-[#5D9E7F]/10 p-4">
+                <label className="text-xs text-[#A7B7A8]">
                   Montant reçu (MAD)
                   <input type="number" min="0.01" step="0.01" className="champ mt-1 min-h-10 w-40" value={montantRecu} onChange={(e) => setMontantRecu(e.target.value)} />
                 </label>
                 <button type="button" onClick={() => void encaisserSolde()} disabled={saving} className="btn-or px-4 py-2 text-sm disabled:opacity-40">
                   {saving ? "Enregistrement…" : "Valider l’encaissement"}
                 </button>
-                <button type="button" onClick={() => setEncaissement(false)} className="px-3 py-2 text-sm text-[#a8bb87]">Annuler</button>
-                <p className="w-full text-[11px] text-[#a8bb87]">
+                <button type="button" onClick={() => setEncaissement(false)} className="px-3 py-2 text-sm text-[#A7B7A8]">Annuler</button>
+                <p className="w-full text-[11px] text-[#A7B7A8]">
                   Le paiement est enregistré sur la vente à crédit la plus ancienne et le solde est recalculé.
                 </p>
               </div>
             )}
 
             {chargementFiche ? (
-              <p className="py-8 text-center text-sm text-[#a8bb87]">Chargement de la fiche…</p>
+              <p className="py-8 text-center text-sm text-[#A7B7A8]">Chargement de la fiche…</p>
             ) : (
               <div className="mt-5 grid gap-5 lg:grid-cols-3">
                 {/* Véhicules */}
                 <section>
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">Véhicules ({vehicules.length})</p>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Véhicules ({vehicules.length})</p>
                   <ul className="mt-2 space-y-2">
                     {vehicules.map((v) => (
-                      <li key={v.id} className="flex items-center justify-between gap-2 rounded-lg bg-[#21464b]/50 px-3 py-2 text-sm">
-                        <span className="text-[#f8ecc9]">{v.brand} {v.model}</span>
-                        <span className="font-mono text-xs text-[#e9d998]">{v.plate}</span>
+                      <li key={v.id} className="flex items-center justify-between gap-2 rounded-lg bg-[#344440]/50 px-3 py-2 text-sm">
+                        <span className="text-[#E8ECE8]">{v.brand} {v.model}</span>
+                        <span className="font-mono text-xs text-[#D0C6AE]">{v.plate}</span>
                       </li>
                     ))}
-                    {!vehicules.length && <li className="text-xs text-[#a8bb87]">Aucun véhicule.</li>}
+                    {!vehicules.length && <li className="text-xs text-[#A7B7A8]">Aucun véhicule.</li>}
                   </ul>
                 </section>
 
                 {/* Ventes */}
                 <section>
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">Ventes ({ventes.length})</p>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Ventes ({ventes.length})</p>
                   <ul className="mt-2 max-h-64 space-y-2 overflow-y-auto pr-1">
                     {ventes.map((v) => {
                       const reste = Math.max(0, Number(v.total) - Number(v.paid_total));
                       return (
-                        <li key={v.id} className="rounded-lg bg-[#21464b]/50 px-3 py-2 text-sm">
+                        <li key={v.id} className="rounded-lg bg-[#344440]/50 px-3 py-2 text-sm">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-semibold text-[#e9d998]">{v.reference}</span>
-                            <span className="text-xs font-bold text-[#f8ecc9]">{formatMad(Number(v.total))}</span>
+                            <span className="text-xs font-semibold text-[#D0C6AE]">{v.reference}</span>
+                            <span className="text-xs font-bold text-[#E8ECE8]">{formatMad(Number(v.total))}</span>
                           </div>
-                          <p className="mt-1 text-[11px] text-[#a8bb87]">
+                          <p className="mt-1 text-[11px] text-[#A7B7A8]">
                             {new Date(v.created_at).toLocaleDateString("fr-FR")}
                             {reste > 0.001 ? ` · reste ${formatMad(reste)}` : " · soldée"}
                           </p>
                         </li>
                       );
                     })}
-                    {!ventes.length && <li className="text-xs text-[#a8bb87]">Aucune vente.</li>}
+                    {!ventes.length && <li className="text-xs text-[#A7B7A8]">Aucune vente.</li>}
                   </ul>
                 </section>
 
                 {/* Interventions */}
                 <section>
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">Interventions ({interventions.length})</p>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Interventions ({interventions.length})</p>
                   <ul className="mt-2 max-h-64 space-y-2 overflow-y-auto pr-1">
                     {interventions.map((i) => (
-                      <li key={i.id} className="rounded-lg bg-[#21464b]/50 px-3 py-2 text-sm">
+                      <li key={i.id} className="rounded-lg bg-[#344440]/50 px-3 py-2 text-sm">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold text-[#e9d998]">{i.reference}</span>
-                          <span className="rounded-full bg-[#21464b] px-2 py-0.5 text-[10px] text-[#f8ecc9]">
+                          <span className="text-xs font-semibold text-[#D0C6AE]">{i.reference}</span>
+                          <span className="rounded-full bg-[#344440] px-2 py-0.5 text-[10px] text-[#E8ECE8]">
                             {STATUTS_INTERVENTION[i.status] ?? i.status}
                           </span>
                         </div>
-                        <p className="mt-1 truncate text-[11px] text-[#a8bb87]">
+                        <p className="mt-1 truncate text-[11px] text-[#A7B7A8]">
                           {i.diagnosis ?? new Date(i.created_at).toLocaleDateString("fr-FR")}
                         </p>
                       </li>
                     ))}
-                    {!interventions.length && <li className="text-xs text-[#a8bb87]">Aucune intervention.</li>}
+                    {!interventions.length && <li className="text-xs text-[#A7B7A8]">Aucune intervention.</li>}
                   </ul>
                 </section>
               </div>
@@ -468,7 +468,7 @@ export function ClientsModule() {
               <input className="champ" type="email" placeholder="Email (facultatif)" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
             </div>
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setFormOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button>
+              <button type="button" onClick={() => setFormOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>
               <button disabled={saving} type="submit" className="btn-or px-4 py-2 text-sm">{saving ? "Enregistrement…" : "Enregistrer"}</button>
             </div>
           </form>

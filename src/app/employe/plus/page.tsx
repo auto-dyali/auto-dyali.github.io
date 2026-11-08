@@ -106,40 +106,40 @@ export default function PlusPage() {
   }, 0);
 
   return (
-    <main className="min-h-screen bg-[#102b32] p-5 text-[#f8ecc9]">
+    <main className="min-h-screen bg-[#252D2D] p-5 text-[#E8ECE8]">
       <div className="mx-auto max-w-md">
         <div className="flex items-center justify-between">
-          <button type="button" onClick={() => router.replace("/employe/")} className="text-sm text-[#d6b66f]">
+          <button type="button" onClick={() => router.replace("/employe/")} className="text-sm text-[#8FB59B]">
             ← Retour
           </button>
           <Logo compact />
         </div>
 
         <h1 className="titre-or mt-6 text-2xl font-extrabold">Pointage</h1>
-        <p className="mt-1 text-sm text-[#a8bb87]">Entrées et sorties réelles de la journée.</p>
+        <p className="mt-1 text-sm text-[#A7B7A8]">Entrées et sorties réelles de la journée.</p>
 
-        {erreur && <p role="alert" className="mt-4 rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{erreur}</p>}
-        {notice && <p role="status" className="mt-4 rounded-lg bg-[#90a0b0]/10 px-4 py-3 text-sm text-[#90a0b0]">{notice}</p>}
+        {erreur && <p role="alert" className="mt-4 rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{erreur}</p>}
+        {notice && <p role="status" className="mt-4 rounded-lg bg-[#8DA298]/10 px-4 py-3 text-sm text-[#8DA298]">{notice}</p>}
 
         <section className="carte mt-5 p-5 text-center">
           {chargement ? (
-            <p className="py-6 text-sm text-[#a8bb87]">Chargement…</p>
+            <p className="py-6 text-sm text-[#A7B7A8]">Chargement…</p>
           ) : sessionOuverte ? (
             <>
-              <p className="text-xs text-[#a8bb87]">Session en cours depuis</p>
+              <p className="text-xs text-[#A7B7A8]">Session en cours depuis</p>
               <p className="titre-or mt-2 text-4xl font-extrabold">{heure(sessionOuverte.clock_in)}</p>
               <button
                 type="button"
                 onClick={() => void pointer(false)}
                 disabled={traitement}
-                className="mt-5 min-h-12 w-full rounded-lg bg-[#d66868] px-5 text-sm font-bold text-white disabled:opacity-40"
+                className="mt-5 min-h-12 w-full rounded-lg bg-[#C5716B] px-5 text-sm font-bold text-white disabled:opacity-40"
               >
                 {traitement ? "Enregistrement…" : "Pointer la sortie"}
               </button>
             </>
           ) : (
             <>
-              <p className="text-xs text-[#a8bb87]">Aucune session ouverte aujourd’hui</p>
+              <p className="text-xs text-[#A7B7A8]">Aucune session ouverte aujourd’hui</p>
               <button
                 type="button"
                 onClick={() => void pointer(true)}
@@ -155,22 +155,22 @@ export default function PlusPage() {
         <section className="carte mt-5 p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold">Sessions du jour</h2>
-            <span className="text-xs text-[#a8bb87]">{heuresDuJour.toFixed(1)} h cumulées</span>
+            <span className="text-xs text-[#A7B7A8]">{heuresDuJour.toFixed(1)} h cumulées</span>
           </div>
-          <ul className="mt-3 divide-y divide-[#d6b66f]/10">
+          <ul className="mt-3 divide-y divide-[#8FB59B]/10">
             {pointages.map((p) => (
               <li key={p.id} className="flex items-center justify-between py-2.5 text-sm">
-                <span className="text-[#e9d998]">
+                <span className="text-[#D0C6AE]">
                   {heure(p.clock_in)} → {p.clock_out ? heure(p.clock_out) : "en cours"}
                 </span>
-                <span className="text-xs text-[#a8bb87]">
+                <span className="text-xs text-[#A7B7A8]">
                   {p.clock_out
                     ? `${(((new Date(p.clock_out).getTime() - new Date(p.clock_in).getTime()) / 3_600_000)).toFixed(1)} h`
                     : "…"}
                 </span>
               </li>
             ))}
-            {!pointages.length && <li className="py-4 text-center text-sm text-[#a8bb87]">Aucun pointage aujourd’hui.</li>}
+            {!pointages.length && <li className="py-4 text-center text-sm text-[#A7B7A8]">Aucun pointage aujourd’hui.</li>}
           </ul>
         </section>
       </div>

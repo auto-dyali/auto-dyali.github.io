@@ -131,7 +131,7 @@ export function ScanChamp({
           type="button"
           onClick={() => traiter(champRef.current?.value ?? "")}
           title="Scanner le code saisi, ou ouvrir la caméra si aucun code n'est saisi"
-          className="min-h-11 shrink-0 rounded-lg bg-[#d6b66f] px-4 text-sm font-bold text-[#102b32]"
+          className="min-h-11 shrink-0 rounded-lg bg-[#8FB59B] px-4 text-sm font-bold text-[#252D2D]"
         >
           Scanner
         </button>
@@ -140,13 +140,13 @@ export function ScanChamp({
           onClick={() => setCamOuverte(true)}
           title="Lire un code-barres ou un QR avec la caméra"
           aria-label="Scanner avec la caméra"
-          className="min-h-11 shrink-0 rounded-lg border border-[#d6b66f]/40 px-3 text-sm text-[#e9d998]"
+          className="min-h-11 shrink-0 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#D0C6AE]"
         >
           📷
         </button>
       </div>
-      {erreur && <p role="alert" className="mt-1 text-xs text-[#d66868]">{erreur}</p>}
-      {info && <p role="status" className="mt-1 text-xs text-[#90a0b0]">{info}</p>}
+      {erreur && <p role="alert" className="mt-1 text-xs text-[#C5716B]">{erreur}</p>}
+      {info && <p role="status" className="mt-1 text-xs text-[#8DA298]">{info}</p>}
 
       {camOuverte && (
         <ScannerCamera onCode={codeCamera} fermer={() => { setCamOuverte(false); champRef.current?.focus(); }} />

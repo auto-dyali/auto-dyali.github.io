@@ -103,71 +103,71 @@ export function EcheancesModule() {
   return (
     <>
       <div className="mb-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Finance</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Finance</p>
         <h1 className="titre-or mt-1 text-2xl font-extrabold">Créances &amp; dettes</h1>
-        <p className="mt-1 text-sm text-[#a8bb87]">Encours clients, dettes fournisseurs et reste à encaisser — données réelles Supabase.</p>
+        <p className="mt-1 text-sm text-[#A7B7A8]">Encours clients, dettes fournisseurs et reste à encaisser — données réelles Supabase.</p>
       </div>
 
-      {erreur && <p role="alert" className="mb-4 rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{erreur}</p>}
+      {erreur && <p role="alert" className="mb-4 rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{erreur}</p>}
 
       {/* KPI */}
       <div className="mb-5 grid gap-4 sm:grid-cols-3">
         <div className="carte p-5">
-          <p className="text-xs uppercase tracking-[0.15em] text-[#a8bb87]">À encaisser</p>
-          <p className="titre-or mt-2 text-2xl font-extrabold text-[#d6b66f]">{money(totalCreances)}</p>
-          <p className="mt-1 text-xs text-[#a8bb87]">{creances.length} ligne(s) · solde fiches {money(totalClients)}</p>
+          <p className="text-xs uppercase tracking-[0.15em] text-[#A7B7A8]">À encaisser</p>
+          <p className="titre-or mt-2 text-2xl font-extrabold text-[#8FB59B]">{money(totalCreances)}</p>
+          <p className="mt-1 text-xs text-[#A7B7A8]">{creances.length} ligne(s) · solde fiches {money(totalClients)}</p>
         </div>
         <div className="carte p-5">
-          <p className="text-xs uppercase tracking-[0.15em] text-[#a8bb87]">À payer</p>
-          <p className="titre-or mt-2 text-2xl font-extrabold text-[#d66868]">{money(totalDettes)}</p>
-          <p className="mt-1 text-xs text-[#a8bb87]">{dettes.length} ligne(s) · solde fiches {money(totalFournisseurs)}</p>
+          <p className="text-xs uppercase tracking-[0.15em] text-[#A7B7A8]">À payer</p>
+          <p className="titre-or mt-2 text-2xl font-extrabold text-[#C5716B]">{money(totalDettes)}</p>
+          <p className="mt-1 text-xs text-[#A7B7A8]">{dettes.length} ligne(s) · solde fiches {money(totalFournisseurs)}</p>
         </div>
         <div className="carte p-5">
-          <p className="text-xs uppercase tracking-[0.15em] text-[#a8bb87]">Solde net</p>
-          <p className={`titre-or mt-2 text-2xl font-extrabold ${solde >= 0 ? "text-[#e9d998]" : "text-[#d66868]"}`}>{money(solde)}</p>
-          <p className="mt-1 text-xs text-[#a8bb87]">créances − dettes</p>
+          <p className="text-xs uppercase tracking-[0.15em] text-[#A7B7A8]">Solde net</p>
+          <p className={`titre-or mt-2 text-2xl font-extrabold ${solde >= 0 ? "text-[#D0C6AE]" : "text-[#C5716B]"}`}>{money(solde)}</p>
+          <p className="mt-1 text-xs text-[#A7B7A8]">créances − dettes</p>
         </div>
       </div>
 
-      {loading && <p className="carte p-8 text-center text-sm text-[#a8bb87]">Chargement des encours…</p>}
+      {loading && <p className="carte p-8 text-center text-sm text-[#A7B7A8]">Chargement des encours…</p>}
 
       <div className="grid gap-5 lg:grid-cols-2">
         {/* Créances clients */}
         <section className="carte overflow-hidden">
-          <h2 className="border-b border-[#d6b66f]/10 p-5 font-bold text-[#f8ecc9]">Créances clients ({creances.length})</h2>
-          <ul className="max-h-96 divide-y divide-[#d6b66f]/10 overflow-y-auto">
+          <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold text-[#E8ECE8]">Créances clients ({creances.length})</h2>
+          <ul className="max-h-96 divide-y divide-[#8FB59B]/10 overflow-y-auto">
             {creances.map((l) => (
               <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
                 <div>
-                  <p className="font-semibold text-[#f8ecc9]">{l.tiers}</p>
-                  <p className="text-xs text-[#a8bb87]">{l.reference} · {l.info}</p>
+                  <p className="font-semibold text-[#E8ECE8]">{l.tiers}</p>
+                  <p className="text-xs text-[#A7B7A8]">{l.reference} · {l.info}</p>
                 </div>
-                <span className="font-bold text-[#d6b66f]">{money(l.montant)}</span>
+                <span className="font-bold text-[#8FB59B]">{money(l.montant)}</span>
               </li>
             ))}
           </ul>
-          {!loading && !creances.length && <p className="p-8 text-center text-sm text-[#a8bb87]">Aucune créance : tous les clients sont soldés. ✅</p>}
+          {!loading && !creances.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucune créance : tous les clients sont soldés. ✅</p>}
         </section>
 
         {/* Dettes fournisseurs */}
         <section className="carte overflow-hidden">
-          <h2 className="border-b border-[#d6b66f]/10 p-5 font-bold text-[#f8ecc9]">Dettes fournisseurs ({dettes.length})</h2>
-          <ul className="max-h-96 divide-y divide-[#d6b66f]/10 overflow-y-auto">
+          <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold text-[#E8ECE8]">Dettes fournisseurs ({dettes.length})</h2>
+          <ul className="max-h-96 divide-y divide-[#8FB59B]/10 overflow-y-auto">
             {dettes.map((l) => (
               <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
                 <div>
-                  <p className="font-semibold text-[#f8ecc9]">{l.tiers}</p>
-                  <p className="text-xs text-[#a8bb87]">{l.reference} · {l.info}</p>
+                  <p className="font-semibold text-[#E8ECE8]">{l.tiers}</p>
+                  <p className="text-xs text-[#A7B7A8]">{l.reference} · {l.info}</p>
                 </div>
-                <span className="font-bold text-[#d66868]">{money(l.montant)}</span>
+                <span className="font-bold text-[#C5716B]">{money(l.montant)}</span>
               </li>
             ))}
           </ul>
-          {!loading && !dettes.length && <p className="p-8 text-center text-sm text-[#a8bb87]">Aucune dette fournisseur. ✅</p>}
+          {!loading && !dettes.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucune dette fournisseur. ✅</p>}
         </section>
       </div>
 
-      <p className="mt-4 text-[11px] text-[#a8bb87]">
+      <p className="mt-4 text-[11px] text-[#A7B7A8]">
         Transparence : aucune date d’échéance n’est inventée — elle n’apparaît que si elle est renseignée en base
         (commandes fournisseurs : date d’attente). Les encaissements se font depuis les fiches Clients et le module Chèques.
       </p>

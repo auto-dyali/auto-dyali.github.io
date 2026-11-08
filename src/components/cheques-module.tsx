@@ -25,18 +25,18 @@ type Cheque = {
 };
 
 const STATUTS: Record<string, { label: string; classe: string }> = {
-  en_attente: { label: "En attente", classe: "bg-[#d6b66f]/15 text-[#e9d998]" },
-  encaisse: { label: "Encaissé", classe: "bg-[#90a0b0]/20 text-[#90a0b0]" },
-  rejete: { label: "Rejeté", classe: "bg-[#d66868]/15 text-[#d66868]" },
-  annule: { label: "Annulé", classe: "bg-[#21464b] text-[#a8bb87]" },
+  en_attente: { label: "En attente", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
+  encaisse: { label: "Encaissé", classe: "bg-[#8DA298]/20 text-[#8DA298]" },
+  rejete: { label: "Rejeté", classe: "bg-[#C5716B]/15 text-[#C5716B]" },
+  annule: { label: "Annulé", classe: "bg-[#344440] text-[#A7B7A8]" },
 };
 
 const URGENCES: Record<string, string> = {
-  "EN RETARD": "bg-[#d66868]/20 text-[#d66868]",
-  "J-1": "bg-[#d69b6a]/25 text-[#d69b6a]",
-  "J-3": "bg-[#d69b6a]/15 text-[#d69b6a]",
-  "J-7": "bg-[#d6b66f]/15 text-[#e9d998]",
-  OK: "bg-[#90a0b0]/15 text-[#90a0b0]",
+  "EN RETARD": "bg-[#C5716B]/20 text-[#C5716B]",
+  "J-1": "bg-[#C79A6B]/25 text-[#C79A6B]",
+  "J-3": "bg-[#C79A6B]/15 text-[#C79A6B]",
+  "J-7": "bg-[#8FB59B]/15 text-[#D0C6AE]",
+  OK: "bg-[#8DA298]/15 text-[#8DA298]",
 };
 
 const money = (v: unknown) => `${Number(v ?? 0).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} MAD`;
@@ -120,24 +120,24 @@ export function ChequesModule() {
   return (
     <>
       <div className="mb-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Finance</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Finance</p>
         <h1 className="titre-or mt-1 text-2xl font-extrabold">Chèques</h1>
-        <p className="mt-1 text-sm text-[#a8bb87]">Capture, échéances et alertes J-7 / J-3 / J-1 — validation humaine avant comptabilisation.</p>
+        <p className="mt-1 text-sm text-[#A7B7A8]">Capture, échéances et alertes J-7 / J-3 / J-1 — validation humaine avant comptabilisation.</p>
       </div>
 
-      {erreur && <p role="alert" className="mb-4 rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{erreur}</p>}
-      {message && <p role="status" className="mb-4 rounded-lg bg-[#90a0b0]/10 px-4 py-3 text-sm text-[#90a0b0]">{message}</p>}
+      {erreur && <p role="alert" className="mb-4 rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{erreur}</p>}
+      {message && <p role="status" className="mb-4 rounded-lg bg-[#8DA298]/10 px-4 py-3 text-sm text-[#8DA298]">{message}</p>}
 
       {/* Alertes échéances */}
       {alertes.length > 0 && (
         <section className="carte mb-5 overflow-hidden">
-          <h2 className="border-b border-[#d6b66f]/10 p-5 font-bold">Échéances proches (J-7 et moins)</h2>
-          <ul className="divide-y divide-[#d6b66f]/10">
+          <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold">Échéances proches (J-7 et moins)</h2>
+          <ul className="divide-y divide-[#8FB59B]/10">
             {alertes.map((a) => (
               <li key={a.cheque_id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
-                <span className="font-semibold text-[#f8ecc9]">{a.bank} · {a.number}</span>
-                <span className="text-[#a8bb87]">{a.beneficiary} — échéance {date(a.due_date)}</span>
-                <span className="font-bold text-[#e9d998]">{money(a.amount)}</span>
+                <span className="font-semibold text-[#E8ECE8]">{a.bank} · {a.number}</span>
+                <span className="text-[#A7B7A8]">{a.beneficiary} — échéance {date(a.due_date)}</span>
+                <span className="font-bold text-[#D0C6AE]">{money(a.amount)}</span>
                 <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${URGENCES[a.urgence] ?? URGENCES.OK}`}>{a.urgence}</span>
               </li>
             ))}
@@ -153,9 +153,9 @@ export function ChequesModule() {
           <input required className="champ" placeholder="Numéro du chèque" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} />
           <input required className="champ" placeholder="Bénéficiaire" value={form.beneficiary} onChange={(e) => setForm({ ...form, beneficiary: e.target.value })} />
           <input required type="number" min="0.01" step="0.01" className="champ" placeholder="Montant MAD" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-          <label className="text-xs text-[#a8bb87]">Date d’émission<input type="date" className="champ mt-1" value={form.issue_date} onChange={(e) => setForm({ ...form, issue_date: e.target.value })} /></label>
-          <label className="text-xs text-[#a8bb87]">Date de réception<input type="date" className="champ mt-1" value={form.received_date} onChange={(e) => setForm({ ...form, received_date: e.target.value })} /></label>
-          <label className="text-xs text-[#a8bb87]">Date d’échéance<input type="date" className="champ mt-1" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></label>
+          <label className="text-xs text-[#A7B7A8]">Date d’émission<input type="date" className="champ mt-1" value={form.issue_date} onChange={(e) => setForm({ ...form, issue_date: e.target.value })} /></label>
+          <label className="text-xs text-[#A7B7A8]">Date de réception<input type="date" className="champ mt-1" value={form.received_date} onChange={(e) => setForm({ ...form, received_date: e.target.value })} /></label>
+          <label className="text-xs text-[#A7B7A8]">Date d’échéance<input type="date" className="champ mt-1" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></label>
           <input className="champ" placeholder="URL image du chèque (capture)" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
           <input className="champ sm:col-span-2 lg:col-span-4" placeholder="Notes / champs OCR à corriger manuellement" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
         </div>
@@ -166,11 +166,11 @@ export function ChequesModule() {
 
       {/* Liste */}
       <section className="carte overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d6b66f]/10 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#8FB59B]/10 p-5">
           <h2 className="font-bold">{visibles.length} chèque{visibles.length > 1 ? "s" : ""}</h2>
           <div className="flex flex-wrap gap-2">
             {["tous", "en_attente", "encaisse", "rejete", "annule"].map((s) => (
-              <button key={s} type="button" onClick={() => setFiltre(s)} className={`rounded-lg border px-3 py-1.5 text-xs ${filtre === s ? "border-[#d6b66f]/50 bg-[#d6b66f]/15 text-[#e9d998]" : "border-[#d6b66f]/20 text-[#a8bb87]"}`}>
+              <button key={s} type="button" onClick={() => setFiltre(s)} className={`rounded-lg border px-3 py-1.5 text-xs ${filtre === s ? "border-[#8FB59B]/50 bg-[#8FB59B]/15 text-[#D0C6AE]" : "border-[#8FB59B]/20 text-[#A7B7A8]"}`}>
                 {s === "tous" ? "Tous" : STATUTS[s]?.label ?? s}
               </button>
             ))}
@@ -178,32 +178,32 @@ export function ChequesModule() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-left text-sm">
-            <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+            <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
               <tr><th className="px-4 py-3">Banque / N°</th><th className="px-4 py-3">Bénéficiaire</th><th className="px-4 py-3">Montant</th><th className="px-4 py-3">Échéance</th><th className="px-4 py-3">Statut</th><th className="px-4 py-3">Actions</th></tr>
             </thead>
-            <tbody className="divide-y divide-[#d6b66f]/10">
+            <tbody className="divide-y divide-[#8FB59B]/10">
               {visibles.map((c) => (
                 <tr key={c.id}>
-                  <td className="px-4 py-4 font-semibold text-[#e9d998]">{c.bank}<p className="text-xs font-normal text-[#a8bb87]">{c.number}</p></td>
+                  <td className="px-4 py-4 font-semibold text-[#D0C6AE]">{c.bank}<p className="text-xs font-normal text-[#A7B7A8]">{c.number}</p></td>
                   <td className="px-4 py-4">{c.beneficiary}</td>
-                  <td className="px-4 py-4 font-bold text-[#e9d998]">{money(c.amount)}</td>
-                  <td className="px-4 py-4 text-[#a8bb87]">{date(c.due_date)}</td>
+                  <td className="px-4 py-4 font-bold text-[#D0C6AE]">{money(c.amount)}</td>
+                  <td className="px-4 py-4 text-[#A7B7A8]">{date(c.due_date)}</td>
                   <td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUTS[c.status]?.classe ?? ""}`}>{STATUTS[c.status]?.label ?? c.status}</span></td>
                   <td className="px-4 py-4">
                     {c.status === "en_attente" ? (
                       <div className="flex gap-2">
-                        <button type="button" disabled={saving} onClick={() => void changerStatut(c, "encaisse")} className="rounded-lg border border-[#d6b66f]/30 px-2.5 py-1.5 text-xs text-[#e9d998]">Encaisser</button>
-                        <button type="button" disabled={saving} onClick={() => void changerStatut(c, "rejete")} className="rounded-lg border border-[#d66868]/30 px-2.5 py-1.5 text-xs text-[#d66868]">Rejeter</button>
+                        <button type="button" disabled={saving} onClick={() => void changerStatut(c, "encaisse")} className="rounded-lg border border-[#8FB59B]/30 px-2.5 py-1.5 text-xs text-[#D0C6AE]">Encaisser</button>
+                        <button type="button" disabled={saving} onClick={() => void changerStatut(c, "rejete")} className="rounded-lg border border-[#C5716B]/30 px-2.5 py-1.5 text-xs text-[#C5716B]">Rejeter</button>
                       </div>
                     ) : (
-                      <span className="text-xs text-[#a8bb87]">—</span>
+                      <span className="text-xs text-[#A7B7A8]">—</span>
                     )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {!loading && !visibles.length && <p className="p-8 text-center text-sm text-[#a8bb87]">Aucun chèque enregistré.</p>}
+          {!loading && !visibles.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucun chèque enregistré.</p>}
         </div>
       </section>
     </>

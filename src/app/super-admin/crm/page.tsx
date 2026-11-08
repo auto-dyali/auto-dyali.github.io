@@ -29,15 +29,15 @@ export default function CrmPage() {
 
   if (etat === "refuse") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#102b32] p-6 text-center">
-        <p className="text-sm text-[#d66868]">Accès refusé : le CRM est réservé à l’administrateur de la plateforme.</p>
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#252D2D] p-6 text-center">
+        <p className="text-sm text-[#C5716B]">Accès refusé : le CRM est réservé à l’administrateur de la plateforme.</p>
         <button type="button" onClick={() => router.replace("/connexion/")} className="btn-or px-5 py-2 text-sm">Revenir à la connexion</button>
       </main>
     );
   }
 
   if (etat === "chargement") {
-    return <main className="flex min-h-screen items-center justify-center bg-[#102b32] text-sm text-[#a8bb87]">Vérification de la session…</main>;
+    return <main className="flex min-h-screen items-center justify-center bg-[#252D2D] text-sm text-[#A7B7A8]">Vérification de la session…</main>;
   }
 
   return (

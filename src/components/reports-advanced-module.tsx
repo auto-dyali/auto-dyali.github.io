@@ -215,9 +215,9 @@ export function ReportsAdvancedModule() {
       {/* Période + export */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Pilotage Supabase</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Pilotage Supabase</p>
           <h1 className="titre-or mt-1 text-2xl font-extrabold">Rapports avancés</h1>
-          <p className="mt-1 text-sm text-[#a8bb87]">Indicateurs recalculés depuis vos ventes réelles.</p>
+          <p className="mt-1 text-sm text-[#A7B7A8]">Indicateurs recalculés depuis vos ventes réelles.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <select value={periode} onChange={(e) => setPeriode(e.target.value)} className="champ min-h-11 w-56" aria-label="Période du rapport">
@@ -229,29 +229,29 @@ export function ReportsAdvancedModule() {
         </div>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       {/* KPI */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
           <article key={k.label} className="carte p-5">
-            <p className="text-xs text-[#a8bb87]">{k.label}</p>
+            <p className="text-xs text-[#A7B7A8]">{k.label}</p>
             <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : k.valeur}</p>
           </article>
         ))}
       </div>
 
       {loading ? (
-        <p className="carte p-8 text-center text-sm text-[#a8bb87]">Calcul des rapports…</p>
+        <p className="carte p-8 text-center text-sm text-[#A7B7A8]">Calcul des rapports…</p>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Top produits */}
           <section className="carte overflow-hidden">
-            <h2 className="border-b border-[#d6b66f]/10 p-5 font-bold">Top 10 produits (CA)</h2>
+            <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold">Top 10 produits (CA)</h2>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[480px] text-left text-sm">
-                <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+                <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                   <tr>
                     <th className="px-4 py-3">#</th>
                     <th className="px-4 py-3">Produit</th>
@@ -259,38 +259,38 @@ export function ReportsAdvancedModule() {
                     <th className="px-4 py-3 text-right">CA</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#d6b66f]/10">
+                <tbody className="divide-y divide-[#8FB59B]/10">
                   {topProduits.map((p, index) => (
                     <tr key={`${p.nom}-${index}`}>
-                      <td className="px-4 py-3 text-[#a8bb87]">{index + 1}</td>
-                      <td className="max-w-56 truncate px-4 py-3 text-[#f8ecc9]">{p.nom}</td>
-                      <td className="px-4 py-3 text-right text-[#a8bb87]">{p.qte}</td>
-                      <td className="px-4 py-3 text-right font-bold text-[#e9d998]">{formatMad(p.ca)}</td>
+                      <td className="px-4 py-3 text-[#A7B7A8]">{index + 1}</td>
+                      <td className="max-w-56 truncate px-4 py-3 text-[#E8ECE8]">{p.nom}</td>
+                      <td className="px-4 py-3 text-right text-[#A7B7A8]">{p.qte}</td>
+                      <td className="px-4 py-3 text-right font-bold text-[#D0C6AE]">{formatMad(p.ca)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {!topProduits.length && <p className="p-8 text-center text-sm text-[#a8bb87]">Aucune vente détaillée sur la période.</p>}
+              {!topProduits.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucune vente détaillée sur la période.</p>}
             </div>
           </section>
 
           {/* CA par catégorie */}
           <section className="carte overflow-hidden">
-            <h2 className="border-b border-[#d6b66f]/10 p-5 font-bold">CA par catégorie</h2>
-            <ul className="divide-y divide-[#d6b66f]/10">
+            <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold">CA par catégorie</h2>
+            <ul className="divide-y divide-[#8FB59B]/10">
               {caParCategorie.map((c) => (
                 <li key={c.cat} className="px-5 py-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#f8ecc9]">{CAT_LABEL[c.cat] ?? c.cat}</span>
-                    <span className="font-bold text-[#e9d998]">{formatMad(c.montant)}</span>
+                    <span className="text-[#E8ECE8]">{CAT_LABEL[c.cat] ?? c.cat}</span>
+                    <span className="font-bold text-[#D0C6AE]">{formatMad(c.montant)}</span>
                   </div>
-                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#21464b]">
-                    <div className="h-full rounded-full bg-[#d6b66f]" style={{ width: `${Math.min(100, c.part)}%` }} />
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#344440]">
+                    <div className="h-full rounded-full bg-[#8FB59B]" style={{ width: `${Math.min(100, c.part)}%` }} />
                   </div>
-                  <p className="mt-1 text-[11px] text-[#a8bb87]">{Math.round(c.part)} % du CA détaillé</p>
+                  <p className="mt-1 text-[11px] text-[#A7B7A8]">{Math.round(c.part)} % du CA détaillé</p>
                 </li>
               ))}
-              {!caParCategorie.length && <li className="p-8 text-center text-sm text-[#a8bb87]">Aucune donnée sur la période.</li>}
+              {!caParCategorie.length && <li className="p-8 text-center text-sm text-[#A7B7A8]">Aucune donnée sur la période.</li>}
             </ul>
           </section>
         </div>

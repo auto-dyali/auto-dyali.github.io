@@ -162,30 +162,30 @@ export function NotificationsModule() {
       {/* KPI réels */}
       <div className="grid gap-4 sm:grid-cols-3">
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Notifications envoyées</p>
+          <p className="text-xs text-[#A7B7A8]">Notifications envoyées</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : notifications.length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Non lues</p>
+          <p className="text-xs text-[#A7B7A8]">Non lues</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : nonLues}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Clients joignables</p>
+          <p className="text-xs text-[#A7B7A8]">Clients joignables</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : clients.filter((c) => c.phone || c.email).length}</p>
         </article>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="grid gap-6 lg:grid-cols-[24rem_1fr]">
         {/* Envoi */}
         <section className="carte h-fit p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Nouvelle notification</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Nouvelle notification</p>
           <h2 className="titre-or mt-1 text-xl font-extrabold">Contacter un client</h2>
 
           <form onSubmit={(e) => void envoyer(e)} className="mt-4 space-y-3">
-            <label className="block text-xs text-[#a8bb87]">Destinataire *
+            <label className="block text-xs text-[#A7B7A8]">Destinataire *
               <select required className="champ mt-1 min-h-11" value={clientId} onChange={(e) => setClientId(e.target.value)}>
                 <option value="">Choisir un client…</option>
                 {clients.map((c) => (
@@ -197,13 +197,13 @@ export function NotificationsModule() {
             </label>
 
             <div>
-              <p className="text-xs text-[#a8bb87]">Canal</p>
+              <p className="text-xs text-[#A7B7A8]">Canal</p>
               <div className="mt-1.5 grid gap-1.5">
                 {CANAUX.map((c) => (
                   <label
                     key={c.cle}
                     className={`flex cursor-pointer items-start gap-2 rounded-lg border p-2.5 text-xs transition ${
-                      canal === c.cle ? "border-[#d6b66f] bg-[#21464b]" : "border-[#d6b66f]/15 text-[#f8ecc9]/80"
+                      canal === c.cle ? "border-[#8FB59B] bg-[#344440]" : "border-[#8FB59B]/15 text-[#E8ECE8]/80"
                     }`}
                   >
                     <input
@@ -212,26 +212,26 @@ export function NotificationsModule() {
                       value={c.cle}
                       checked={canal === c.cle}
                       onChange={() => setCanal(c.cle)}
-                      className="mt-0.5 h-4 w-4 accent-[#d6b66f]"
+                      className="mt-0.5 h-4 w-4 accent-[#8FB59B]"
                     />
                     <span>
-                      <strong className="block text-[#f8ecc9]">{c.label}</strong>
-                      <span className="text-[#a8bb87]">{c.note}</span>
+                      <strong className="block text-[#E8ECE8]">{c.label}</strong>
+                      <span className="text-[#A7B7A8]">{c.note}</span>
                     </span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <label className="block text-xs text-[#a8bb87]">Objet *
+            <label className="block text-xs text-[#A7B7A8]">Objet *
               <input required className="champ mt-1 min-h-11" placeholder="Rappel d’entretien, devis prêt…" value={titre} onChange={(e) => setTitre(e.target.value)} />
             </label>
-            <label className="block text-xs text-[#a8bb87]">Message *
+            <label className="block text-xs text-[#A7B7A8]">Message *
               <textarea required rows={4} className="champ mt-1 py-2 text-sm" placeholder="Votre message…" value={message} onChange={(e) => setMessage(e.target.value)} />
             </label>
 
             {canal === "whatsapp" && !clientSelectionne?.phone && (
-              <p className="rounded-lg bg-[#d6b66f]/10 px-3 py-2 text-xs text-[#e9d998]">
+              <p className="rounded-lg bg-[#8FB59B]/10 px-3 py-2 text-xs text-[#D0C6AE]">
                 Ce client n’a pas de numéro : ajoutez-le dans la fiche Client avant d’utiliser WhatsApp.
               </p>
             )}
@@ -244,9 +244,9 @@ export function NotificationsModule() {
 
         {/* Historique */}
         <section className="carte overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d6b66f]/10 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#8FB59B]/10 p-5">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Historique</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Historique</p>
               <h2 className="titre-or mt-1 text-xl font-extrabold">Notifications</h2>
             </div>
             <select value={filtre} onChange={(e) => setFiltre(e.target.value)} className="champ min-h-10 w-44 text-xs" aria-label="Filtrer les notifications">
@@ -259,35 +259,35 @@ export function NotificationsModule() {
           </div>
 
           {loading ? (
-            <p className="p-6 text-sm text-[#a8bb87]">Chargement…</p>
+            <p className="p-6 text-sm text-[#A7B7A8]">Chargement…</p>
           ) : (
-            <ul className="divide-y divide-[#d6b66f]/10">
+            <ul className="divide-y divide-[#8FB59B]/10">
               {filtres.map((n) => (
                 <li key={n.id} className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#f8ecc9]">
+                    <p className="font-semibold text-[#E8ECE8]">
                       {n.title}
-                      {!n.is_read && <span className="ml-2 rounded-full bg-[#d6b66f]/20 px-2 py-0.5 text-[10px] text-[#e9d998]">non lue</span>}
+                      {!n.is_read && <span className="ml-2 rounded-full bg-[#8FB59B]/20 px-2 py-0.5 text-[10px] text-[#D0C6AE]">non lue</span>}
                     </p>
-                    <p className="mt-1 text-sm leading-5 text-[#a8bb87]">{n.body}</p>
-                    <p className="mt-1.5 text-[11px] text-[#a8bb87]">
+                    <p className="mt-1 text-sm leading-5 text-[#A7B7A8]">{n.body}</p>
+                    <p className="mt-1.5 text-[11px] text-[#A7B7A8]">
                       {n.client_nom ?? "Client"} · {n.channel === "whatsapp" ? "WhatsApp" : n.channel === "email" ? "Email" : "Espace client"} ·{" "}
                       {new Date(n.created_at).toLocaleString("fr-FR")}
                     </p>
                   </div>
                   <div className="flex gap-1.5">
                     {!n.is_read && (
-                      <button type="button" onClick={() => void marquerLue(n)} className="rounded-lg border border-[#38a987]/40 px-2.5 py-1.5 text-xs text-[#69d3a8]">
+                      <button type="button" onClick={() => void marquerLue(n)} className="rounded-lg border border-[#5D9E7F]/40 px-2.5 py-1.5 text-xs text-[#7FBF9E]">
                         Marquer lue
                       </button>
                     )}
-                    <button type="button" onClick={() => void supprimer(n)} className="rounded-lg border border-[#d66868]/40 px-2.5 py-1.5 text-xs text-[#d66868]">
+                    <button type="button" onClick={() => void supprimer(n)} className="rounded-lg border border-[#C5716B]/40 px-2.5 py-1.5 text-xs text-[#C5716B]">
                       Supprimer
                     </button>
                   </div>
                 </li>
               ))}
-              {!filtres.length && <li className="p-8 text-center text-sm text-[#a8bb87]">Aucune notification.</li>}
+              {!filtres.length && <li className="p-8 text-center text-sm text-[#A7B7A8]">Aucune notification.</li>}
             </ul>
           )}
         </section>

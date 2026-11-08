@@ -313,35 +313,35 @@ export default function SuperAdminPage() {
   }
 
   if (accesRefuse) return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#102b32] p-6 text-center">
-      <p className="text-sm text-[#d66868]">Accès refusé : l’espace Super Admin est réservé à l’administrateur de la plateforme.</p>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#252D2D] p-6 text-center">
+      <p className="text-sm text-[#C5716B]">Accès refusé : l’espace Super Admin est réservé à l’administrateur de la plateforme.</p>
       <button type="button" onClick={() => router.replace("/connexion/")} className="btn-or px-5 py-2 text-sm">Revenir à la connexion</button>
     </main>
   );
 
-  if (!estConnecte) return <main className="flex min-h-screen items-center justify-center bg-[#102b32] text-sm text-[#a8bb87]">Vérification de la session…</main>;
+  if (!estConnecte) return <main className="flex min-h-screen items-center justify-center bg-[#252D2D] text-sm text-[#A7B7A8]">Vérification de la session…</main>;
 
   return (
-    <main className="min-h-screen bg-[#102b32] text-[#f8ecc9]">
-      <header className="flex items-center justify-between border-b border-[#d6b66f]/15 bg-[#193a40] px-5 py-4 lg:px-10">
+    <main className="min-h-screen bg-[#252D2D] text-[#E8ECE8]">
+      <header className="flex items-center justify-between border-b border-[#8FB59B]/15 bg-[#2C3735] px-5 py-4 lg:px-10">
         <Logo compact />
-        <div className="flex items-center gap-4"><span className="hidden text-sm text-[#a8bb87] sm:block">Super Admin · AUTO DYALI</span><button onClick={() => void logout()} className="text-sm text-[#d6b66f] hover:underline">Déconnexion</button></div>
+        <div className="flex items-center gap-4"><span className="hidden text-sm text-[#A7B7A8] sm:block">Super Admin · AUTO DYALI</span><button onClick={() => void logout()} className="text-sm text-[#8FB59B] hover:underline">Déconnexion</button></div>
       </header>
       <div className="mx-auto max-w-7xl p-5 lg:p-10">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Administration centrale</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Administration centrale</p>
         <h1 className="titre-or mt-2 text-3xl font-extrabold">Pilotage de la plateforme</h1>
-        <p className="mt-2 text-sm text-[#a8bb87]">Entreprises, forfaits, droits et journal d’audit AUTO DYALI.</p>
+        <p className="mt-2 text-sm text-[#A7B7A8]">Entreprises, forfaits, droits et journal d’audit AUTO DYALI.</p>
 
-        {notice && <p role="status" className="mt-5 rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-        {error && <p role="alert" className="mt-5 rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+        {notice && <p role="status" className="mt-5 rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+        {error && <p role="alert" className="mt-5 rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
         {/* KPI réels */}
         <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {kpis.map((card) => (
             <article key={card.label} className="carte flex items-center gap-4 p-5">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#21464b]"><Icone nom={card.icon} taille={24} /></span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#344440]"><Icone nom={card.icon} taille={24} /></span>
               <div>
-                <p className="text-xs text-[#a8bb87]">{card.label}</p>
+                <p className="text-xs text-[#A7B7A8]">{card.label}</p>
                 <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : card.value}</p>
               </div>
             </article>
@@ -350,19 +350,19 @@ export default function SuperAdminPage() {
 
         {/* Entreprises */}
         <section className="carte mt-6 overflow-hidden">
-          <div className="flex flex-col gap-3 border-b border-[#d6b66f]/10 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div><h2 className="font-bold">Entreprises et établissements</h2><p className="mt-1 text-xs text-[#a8bb87]">Données Supabase — toute action sensible est journalisée.</p></div>
+          <div className="flex flex-col gap-3 border-b border-[#8FB59B]/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div><h2 className="font-bold">Entreprises et établissements</h2><p className="mt-1 text-xs text-[#A7B7A8]">Données Supabase — toute action sensible est journalisée.</p></div>
             <div className="flex flex-wrap gap-2">
-              <Link href="/super-admin/crm" className="rounded-lg border border-[#d6b66f]/40 px-4 py-2 text-sm text-[#e9d998]">CRM commercial</Link>
+              <Link href="/super-admin/crm" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#D0C6AE]">CRM commercial</Link>
               <button type="button" onClick={() => { setNotice(null); setError(null); setEtabOpen(true); }} className="btn-or px-4 py-2 text-sm">+ Nouvel établissement</button>
-              <button type="button" onClick={() => { setNotice(null); setError(null); setEmployeeOpen(true); }} className="rounded-lg border border-[#d6b66f]/40 px-4 py-2 text-sm text-[#e9d998]">+ Nouvel Employé</button>
-              <button type="button" onClick={() => { setNotice(null); setError(null); setClientOpen(true); }} className="rounded-lg border border-[#d6b66f]/40 px-4 py-2 text-sm text-[#e9d998]">+ Nouveau Client</button>
+              <button type="button" onClick={() => { setNotice(null); setError(null); setEmployeeOpen(true); }} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#D0C6AE]">+ Nouvel Employé</button>
+              <button type="button" onClick={() => { setNotice(null); setError(null); setClientOpen(true); }} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#D0C6AE]">+ Nouveau Client</button>
             </div>
           </div>
-          {loading && <p className="p-6 text-sm text-[#a8bb87]">Chargement…</p>}
+          {loading && <p className="p-6 text-sm text-[#A7B7A8]">Chargement…</p>}
           {!loading && <div className="overflow-x-auto">
             <table className="w-full min-w-[840px] text-left text-sm">
-              <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+              <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                 <tr>
                   <th className="px-5 py-3">Établissement</th>
                   <th className="px-5 py-3">Ville</th>
@@ -372,12 +372,12 @@ export default function SuperAdminPage() {
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#d6b66f]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {establishments.map((establishment) => (
                   <tr key={establishment.id}>
                     <td className="px-5 py-4 font-semibold">{establishment.name}</td>
-                    <td className="px-5 py-4 text-[#a8bb87]">{establishment.city ?? "—"}</td>
-                    <td className="px-5 py-4 text-[#a8bb87]">{dateCourte(establishment.created_at)}</td>
+                    <td className="px-5 py-4 text-[#A7B7A8]">{establishment.city ?? "—"}</td>
+                    <td className="px-5 py-4 text-[#A7B7A8]">{dateCourte(establishment.created_at)}</td>
                     <td className="px-5 py-4">
                       <select
                         aria-label={`Forfait de ${establishment.name}`}
@@ -391,7 +391,7 @@ export default function SuperAdminPage() {
                         <option value="gold">GOLD</option>
                       </select>
                     </td>
-                    <td className={`px-5 py-4 font-semibold ${establishment.is_active ? "text-[#38a987]" : "text-[#d66868]"}`}>
+                    <td className={`px-5 py-4 font-semibold ${establishment.is_active ? "text-[#5D9E7F]" : "text-[#C5716B]"}`}>
                       {establishment.is_active ? "Actif" : "Suspendu"}
                     </td>
                     <td className="px-5 py-4 text-right">
@@ -399,7 +399,7 @@ export default function SuperAdminPage() {
                         type="button"
                         disabled={traitement === establishment.id}
                         onClick={() => void basculerEtat(establishment)}
-                        className={`rounded-lg border px-3 py-1.5 text-xs ${establishment.is_active ? "border-[#d66868]/40 text-[#d66868] hover:bg-[#d66868]/10" : "border-[#38a987]/40 text-[#38a987] hover:bg-[#38a987]/10"} disabled:opacity-40`}
+                        className={`rounded-lg border px-3 py-1.5 text-xs ${establishment.is_active ? "border-[#C5716B]/40 text-[#C5716B] hover:bg-[#C5716B]/10" : "border-[#5D9E7F]/40 text-[#5D9E7F] hover:bg-[#5D9E7F]/10"} disabled:opacity-40`}
                       >
                         {traitement === establishment.id ? "…" : establishment.is_active ? "Suspendre" : "Réactiver"}
                       </button>
@@ -408,7 +408,7 @@ export default function SuperAdminPage() {
                 ))}
               </tbody>
             </table>
-            {!establishments.length && <p className="p-8 text-center text-sm text-[#a8bb87]">Aucun établissement enregistré.</p>}
+            {!establishments.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucun établissement enregistré.</p>}
           </div>}
         </section>
 
@@ -418,27 +418,27 @@ export default function SuperAdminPage() {
             <article key={plan.code} className="carte p-5">
               <div className="flex items-center justify-between">
                 <h2 className="titre-or text-lg font-extrabold">{plan.label}</h2>
-                <span className="rounded-full bg-[#21464b] px-2 py-1 text-[10px] uppercase text-[#e9d998]">{plan.code}</span>
+                <span className="rounded-full bg-[#344440] px-2 py-1 text-[10px] uppercase text-[#D0C6AE]">{plan.code}</span>
               </div>
-              <p className="mt-2 text-xs leading-5 text-[#a8bb87]">{plan.description}</p>
+              <p className="mt-2 text-xs leading-5 text-[#A7B7A8]">{plan.description}</p>
 
               <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                <label className="text-[#a8bb87]">Prix mensuel (MAD)
+                <label className="text-[#A7B7A8]">Prix mensuel (MAD)
                   <input id={`price-m-${plan.code}`} type="number" min="0" step="0.01" defaultValue={plan.price_monthly ?? ""} placeholder="non défini" className="champ mt-1 min-h-9 py-1" />
                 </label>
-                <label className="text-[#a8bb87]">Prix annuel (MAD)
+                <label className="text-[#A7B7A8]">Prix annuel (MAD)
                   <input id={`price-y-${plan.code}`} type="number" min="0" step="0.01" defaultValue={plan.price_yearly ?? ""} placeholder="non défini" className="champ mt-1 min-h-9 py-1" />
                 </label>
-                <label className="text-[#a8bb87]">Essai (jours)
+                <label className="text-[#A7B7A8]">Essai (jours)
                   <input id={`trial-${plan.code}`} type="number" min="0" defaultValue={plan.trial_days} className="champ mt-1 min-h-9 py-1" />
                 </label>
-                <label className="text-[#a8bb87]">Utilisateurs max
+                <label className="text-[#A7B7A8]">Utilisateurs max
                   <input id={`users-${plan.code}`} type="number" min="1" defaultValue={plan.max_users} className="champ mt-1 min-h-9 py-1" />
                 </label>
-                <label className="text-[#a8bb87]">Sites max
+                <label className="text-[#A7B7A8]">Sites max
                   <input id={`sites-${plan.code}`} type="number" min="1" defaultValue={plan.max_sites} className="champ mt-1 min-h-9 py-1" />
                 </label>
-                <label className="text-[#a8bb87]">Stockage (Mo)
+                <label className="text-[#A7B7A8]">Stockage (Mo)
                   <input id={`storage-${plan.code}`} type="number" min="1" defaultValue={plan.storage_mb} className="champ mt-1 min-h-9 py-1" />
                 </label>
               </div>
@@ -452,19 +452,19 @@ export default function SuperAdminPage() {
                 {traitement === `plan-${plan.code}` ? "Enregistrement…" : "Enregistrer l’offre"}
               </button>
 
-              <div className="mt-4 border-t border-[#d6b66f]/10 pt-3">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Modules inclus</p>
+              <div className="mt-4 border-t border-[#8FB59B]/10 pt-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Modules inclus</p>
                 <div className="mt-2 grid grid-cols-1 gap-1.5 max-h-56 overflow-y-auto pr-1">
                   {FEATURES_PILOTEES.map((feature) => {
                     const actif = estActive(plan.code, feature);
                     return (
-                      <label key={feature} className="flex items-center justify-between gap-2 text-xs text-[#f8ecc9]/85">
+                      <label key={feature} className="flex items-center justify-between gap-2 text-xs text-[#E8ECE8]/85">
                         <span>{FEATURE_LABEL[feature] ?? feature}</span>
                         <input
                           type="checkbox"
                           checked={actif}
                           onChange={(e) => void basculerFeature(plan.code, feature, e.target.checked)}
-                          className="h-4 w-4 accent-[#d6b66f]"
+                          className="h-4 w-4 accent-[#8FB59B]"
                         />
                       </label>
                     );
@@ -474,7 +474,7 @@ export default function SuperAdminPage() {
             </article>
           ))}
           {!plans.length && !loading && (
-            <p className="carte p-6 text-sm text-[#a8bb87] lg:col-span-3">
+            <p className="carte p-6 text-sm text-[#A7B7A8] lg:col-span-3">
               Offres indisponibles — exécutez la migration <code>0009_plans_features_subscriptions.sql</code> dans Supabase.
             </p>
           )}
@@ -482,16 +482,16 @@ export default function SuperAdminPage() {
 
         {/* Journal d'audit */}
         <section className="carte mt-6 overflow-hidden">
-          <div className="border-b border-[#d6b66f]/10 p-5"><h2 className="font-bold">Journal d’audit</h2><p className="mt-1 text-xs text-[#a8bb87]">Dernières actions sensibles (créations, changements de forfait, suspensions).</p></div>
+          <div className="border-b border-[#8FB59B]/10 p-5"><h2 className="font-bold">Journal d’audit</h2><p className="mt-1 text-xs text-[#A7B7A8]">Dernières actions sensibles (créations, changements de forfait, suspensions).</p></div>
           {audit.length === 0 ? (
-            <p className="p-6 text-sm text-[#a8bb87]">Aucune action journalisée pour l’instant.</p>
+            <p className="p-6 text-sm text-[#A7B7A8]">Aucune action journalisée pour l’instant.</p>
           ) : (
-            <ul className="divide-y divide-[#d6b66f]/10 text-sm">
+            <ul className="divide-y divide-[#8FB59B]/10 text-sm">
               {audit.map((ligne) => (
                 <li key={ligne.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
-                  <span className="font-semibold text-[#e9d998]">{ligne.action}</span>
-                  <span className="text-[#a8bb87]">{ligne.entity}</span>
-                  <span className="text-xs text-[#a8bb87]">{new Date(ligne.created_at).toLocaleString("fr-FR")}</span>
+                  <span className="font-semibold text-[#D0C6AE]">{ligne.action}</span>
+                  <span className="text-[#A7B7A8]">{ligne.entity}</span>
+                  <span className="text-xs text-[#A7B7A8]">{new Date(ligne.created_at).toLocaleString("fr-FR")}</span>
                 </li>
               ))}
             </ul>
@@ -504,8 +504,8 @@ export default function SuperAdminPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5">
           <form onSubmit={(e) => void creerEtablissement(e)} className="carte max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
             <div className="flex items-start justify-between gap-4">
-              <div><p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Multi-tenant</p><h2 className="titre-or mt-1 text-xl font-extrabold">Nouvel établissement</h2></div>
-              <button type="button" onClick={() => setEtabOpen(false)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button>
+              <div><p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Multi-tenant</p><h2 className="titre-or mt-1 text-xl font-extrabold">Nouvel établissement</h2></div>
+              <button type="button" onClick={() => setEtabOpen(false)} className="text-2xl text-[#A7B7A8]" aria-label="Fermer">×</button>
             </div>
             <div className="mt-5 grid gap-3">
               <input required className="champ min-h-11" placeholder="Nom de l’entreprise" value={etabForm.name} onChange={(e) => setEtabForm({ ...etabForm, name: e.target.value })} />
@@ -515,7 +515,7 @@ export default function SuperAdminPage() {
                 <input className="champ min-h-11" placeholder="Téléphone" value={etabForm.phone} onChange={(e) => setEtabForm({ ...etabForm, phone: e.target.value })} />
               </div>
               <input type="email" className="champ min-h-11" placeholder="Email" value={etabForm.email} onChange={(e) => setEtabForm({ ...etabForm, email: e.target.value })} />
-              <label className="text-xs text-[#a8bb87]">Offre d’entrée
+              <label className="text-xs text-[#A7B7A8]">Offre d’entrée
                 <select className="champ mt-1 min-h-11" value={etabForm.plan} onChange={(e) => setEtabForm({ ...etabForm, plan: e.target.value })}>
                   <option value="standard">STANDARD</option>
                   <option value="silver">SILVER</option>
@@ -524,7 +524,7 @@ export default function SuperAdminPage() {
               </label>
             </div>
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setEtabOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button>
+              <button type="button" onClick={() => setEtabOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>
               <button disabled={etabSaving} type="submit" className="btn-or px-4 py-2 text-sm">{etabSaving ? "Création…" : "Créer l’établissement"}</button>
             </div>
           </form>
@@ -532,10 +532,10 @@ export default function SuperAdminPage() {
       )}
 
       {/* Modale employé */}
-      {employeeOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5"><form onSubmit={(e) => void createEmployee(e)} className="carte w-full max-w-lg p-6"><div className="flex justify-between"><div><p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Équipe atelier</p><h2 className="titre-or mt-1 text-xl font-extrabold">Créer un compte Employé</h2></div><button type="button" onClick={() => setEmployeeOpen(false)} className="text-2xl text-[#a8bb87]">×</button></div><div className="mt-5 grid gap-3"><input required className="champ" placeholder="Nom complet" value={employeeForm.fullName} onChange={(e) => setEmployeeForm({ ...employeeForm, fullName: e.target.value })} /><input required type="email" className="champ" placeholder="Email" value={employeeForm.email} onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })} /><input className="champ" placeholder="Téléphone" value={employeeForm.phone} onChange={(e) => setEmployeeForm({ ...employeeForm, phone: e.target.value })} /><input required className="champ" placeholder="Poste" value={employeeForm.jobTitle} onChange={(e) => setEmployeeForm({ ...employeeForm, jobTitle: e.target.value })} /><input required minLength={6} type="password" className="champ" placeholder="Mot de passe temporaire" value={employeeForm.password} onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })} /></div><div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setEmployeeOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button><button disabled={employeeSaving} type="submit" className="btn-or px-4 py-2 text-sm">{employeeSaving ? "Création…" : "Créer le compte"}</button></div></form></div>}
+      {employeeOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5"><form onSubmit={(e) => void createEmployee(e)} className="carte w-full max-w-lg p-6"><div className="flex justify-between"><div><p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Équipe atelier</p><h2 className="titre-or mt-1 text-xl font-extrabold">Créer un compte Employé</h2></div><button type="button" onClick={() => setEmployeeOpen(false)} className="text-2xl text-[#A7B7A8]">×</button></div><div className="mt-5 grid gap-3"><input required className="champ" placeholder="Nom complet" value={employeeForm.fullName} onChange={(e) => setEmployeeForm({ ...employeeForm, fullName: e.target.value })} /><input required type="email" className="champ" placeholder="Email" value={employeeForm.email} onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })} /><input className="champ" placeholder="Téléphone" value={employeeForm.phone} onChange={(e) => setEmployeeForm({ ...employeeForm, phone: e.target.value })} /><input required className="champ" placeholder="Poste" value={employeeForm.jobTitle} onChange={(e) => setEmployeeForm({ ...employeeForm, jobTitle: e.target.value })} /><input required minLength={6} type="password" className="champ" placeholder="Mot de passe temporaire" value={employeeForm.password} onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })} /></div><div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setEmployeeOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button><button disabled={employeeSaving} type="submit" className="btn-or px-4 py-2 text-sm">{employeeSaving ? "Création…" : "Créer le compte"}</button></div></form></div>}
 
       {/* Modale client */}
-      {clientOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5"><form onSubmit={(e) => void createClient(e)} className="carte w-full max-w-lg p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Accès immédiat</p><h2 className="titre-or mt-1 text-xl font-extrabold">Créer un compte Client</h2></div><button type="button" onClick={() => setClientOpen(false)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button></div><div className="mt-5 grid gap-3"><input required className="champ min-h-11" placeholder="Nom complet" value={clientForm.fullName} onChange={(event) => setClientForm({ ...clientForm, fullName: event.target.value })} /><input required type="email" className="champ min-h-11" placeholder="Email de connexion" value={clientForm.email} onChange={(event) => setClientForm({ ...clientForm, email: event.target.value })} /><input className="champ min-h-11" placeholder="Téléphone" value={clientForm.phone} onChange={(event) => setClientForm({ ...clientForm, phone: event.target.value })} /><input required minLength={6} type="password" className="champ min-h-11" placeholder="Mot de passe temporaire (6 caractères minimum)" value={clientForm.password} onChange={(event) => setClientForm({ ...clientForm, password: event.target.value })} /></div><div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setClientOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button><button disabled={savingClient} type="submit" className="btn-or px-4 py-2 text-sm">{savingClient ? "Création…" : "Créer le compte"}</button></div></form></div>}
+      {clientOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5"><form onSubmit={(e) => void createClient(e)} className="carte w-full max-w-lg p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Accès immédiat</p><h2 className="titre-or mt-1 text-xl font-extrabold">Créer un compte Client</h2></div><button type="button" onClick={() => setClientOpen(false)} className="text-2xl text-[#A7B7A8]" aria-label="Fermer">×</button></div><div className="mt-5 grid gap-3"><input required className="champ min-h-11" placeholder="Nom complet" value={clientForm.fullName} onChange={(event) => setClientForm({ ...clientForm, fullName: event.target.value })} /><input required type="email" className="champ min-h-11" placeholder="Email de connexion" value={clientForm.email} onChange={(event) => setClientForm({ ...clientForm, email: event.target.value })} /><input className="champ min-h-11" placeholder="Téléphone" value={clientForm.phone} onChange={(event) => setClientForm({ ...clientForm, phone: event.target.value })} /><input required minLength={6} type="password" className="champ min-h-11" placeholder="Mot de passe temporaire (6 caractères minimum)" value={clientForm.password} onChange={(event) => setClientForm({ ...clientForm, password: event.target.value })} /></div><div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setClientOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button><button disabled={savingClient} type="submit" className="btn-or px-4 py-2 text-sm">{savingClient ? "Création…" : "Créer le compte"}</button></div></form></div>}
     </main>
   );
 }

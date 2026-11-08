@@ -20,12 +20,12 @@ export function CourbeCA({ donnees }: { donnees: readonly number[] }) {
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img" aria-label="Évolution du chiffre d'affaires">
       <defs>
         <linearGradient id="aireCA" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#d6b66f" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#d6b66f" stopOpacity="0" />
+          <stop offset="0%" stopColor="#8FB59B" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#8FB59B" stopOpacity="0" />
         </linearGradient>
         <linearGradient id="ligneCA" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#e9d998" />
-          <stop offset="100%" stopColor="#d6b66f" />
+          <stop offset="0%" stopColor="#D0C6AE" />
+          <stop offset="100%" stopColor="#8FB59B" />
         </linearGradient>
       </defs>
 
@@ -37,7 +37,7 @@ export function CourbeCA({ donnees }: { donnees: readonly number[] }) {
           x2={w - padX}
           y1={h - padH - r * (h - padH * 2)}
           y2={h - padH - r * (h - padH * 2)}
-          stroke="#21464b"
+          stroke="#344440"
           strokeDasharray="4 6"
         />
       ))}
@@ -47,13 +47,13 @@ export function CourbeCA({ donnees }: { donnees: readonly number[] }) {
 
       {pts.map((p, i) => (
         <g key={i}>
-          <circle cx={p[0]} cy={p[1]} r="4.5" fill="#102b32" stroke="#e9d998" strokeWidth="2.5" />
+          <circle cx={p[0]} cy={p[1]} r="4.5" fill="#252D2D" stroke="#D0C6AE" strokeWidth="2.5" />
           <text
             x={p[0]}
             y={h - 5}
             textAnchor="middle"
             fontSize="10"
-            fill="#a8bb87"
+            fill="#A7B7A8"
           >
             {nomMois[i]}
           </text>
@@ -79,7 +79,7 @@ export function DonutServices({
   return (
     <div className="flex items-center gap-5">
       <svg viewBox="0 0 140 140" className="h-36 w-36 shrink-0" role="img" aria-label="CA par service">
-        <circle cx="70" cy="70" r={r} fill="none" stroke="#21464b" strokeWidth="17" />
+        <circle cx="70" cy="70" r={r} fill="none" stroke="#344440" strokeWidth="17" />
         {segments.map(({ part: p, offset }) => {
           const long = (p.pourcent / 100) * c;
           const el = (
@@ -103,10 +103,10 @@ export function DonutServices({
 
       <ul className="flex flex-col gap-1.5 text-xs">
         {parts.map((p) => (
-          <li key={p.label} className="flex items-center gap-2 text-[#f8ecc9]/85">
+          <li key={p.label} className="flex items-center gap-2 text-[#E8ECE8]/85">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: p.couleur }} />
             <span className="min-w-24">{p.label}</span>
-            <span className="font-semibold text-[#d6b66f]">{p.pourcent}%</span>
+            <span className="font-semibold text-[#8FB59B]">{p.pourcent}%</span>
           </li>
         ))}
       </ul>

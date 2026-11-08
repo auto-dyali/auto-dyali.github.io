@@ -230,21 +230,21 @@ export function TireModule() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
           <article key={k.label} className="carte p-5">
-            <p className="text-xs text-[#a8bb87]">{k.label}</p>
+            <p className="text-xs text-[#A7B7A8]">{k.label}</p>
             <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : k.value}</p>
           </article>
         ))}
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_18rem]">
         {/* Catalogue pneus */}
         <div className="carte min-w-0 p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Catalogue pneumatiques</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Catalogue pneumatiques</p>
               <h2 className="titre-or mt-1 text-xl font-extrabold">Pneus en stock</h2>
             </div>
             <button type="button" onClick={() => setOuvert(true)} className="btn-or px-4 py-2 text-sm">+ Nouveau pneu</button>
@@ -265,11 +265,11 @@ export function TireModule() {
           </div>
 
           {loading ? (
-            <p className="py-8 text-center text-sm text-[#a8bb87]">Chargement…</p>
+            <p className="py-8 text-center text-sm text-[#A7B7A8]">Chargement…</p>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[680px] text-left text-sm">
-                <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+                <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                   <tr>
                     <th className="px-4 py-3">Pneu</th>
                     <th className="px-4 py-3">Dimension</th>
@@ -279,30 +279,30 @@ export function TireModule() {
                     <th className="px-4 py-3 text-right">Prix</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#d6b66f]/10">
+                <tbody className="divide-y divide-[#8FB59B]/10">
                   {filtres.map((p) => (
                     <tr key={p.id}>
                       <td className="px-4 py-3">
-                        <span className="font-semibold text-[#f8ecc9]">{p.spec?.fabricant ?? p.name}</span>
-                        {p.spec?.modele && <span className="ml-2 text-xs text-[#a8bb87]">{p.spec.modele}</span>}
-                        <span className="block text-[11px] text-[#a8bb87]">{p.sku}</span>
+                        <span className="font-semibold text-[#E8ECE8]">{p.spec?.fabricant ?? p.name}</span>
+                        {p.spec?.modele && <span className="ml-2 text-xs text-[#A7B7A8]">{p.spec.modele}</span>}
+                        <span className="block text-[11px] text-[#A7B7A8]">{p.sku}</span>
                       </td>
-                      <td className="px-4 py-3 font-mono text-[#e9d998]">
+                      <td className="px-4 py-3 font-mono text-[#D0C6AE]">
                         {p.spec ? `${p.spec.largeur}/${p.spec.hauteur}R${p.spec.diametre}` : "—"}
                       </td>
-                      <td className="px-4 py-3 text-[#a8bb87]">
+                      <td className="px-4 py-3 text-[#A7B7A8]">
                         {p.spec?.indice_charge ?? "—"}{p.spec?.indice_vitesse ?? ""}
                       </td>
-                      <td className="px-4 py-3 text-[#a8bb87]">{p.spec ? SAISON_LABEL[p.spec.saison] ?? p.spec.saison : "—"}</td>
-                      <td className={`px-4 py-3 text-right font-bold ${Number(p.stock) > 0 ? "text-[#38a987]" : "text-[#d66868]"}`}>
+                      <td className="px-4 py-3 text-[#A7B7A8]">{p.spec ? SAISON_LABEL[p.spec.saison] ?? p.spec.saison : "—"}</td>
+                      <td className={`px-4 py-3 text-right font-bold ${Number(p.stock) > 0 ? "text-[#5D9E7F]" : "text-[#C5716B]"}`}>
                         {Number(p.stock) || 0}
                       </td>
-                      <td className="px-4 py-3 text-right font-bold text-[#e9d998]">{formatMad(Number(p.sale_price))}</td>
+                      <td className="px-4 py-3 text-right font-bold text-[#D0C6AE]">{formatMad(Number(p.sale_price))}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {!filtres.length && <p className="py-8 text-center text-sm text-[#a8bb87]">Aucun pneu ne correspond. Créez une fiche avec « + Nouveau pneu ».</p>}
+              {!filtres.length && <p className="py-8 text-center text-sm text-[#A7B7A8]">Aucun pneu ne correspond. Créez une fiche avec « + Nouveau pneu ».</p>}
             </div>
           )}
         </div>
@@ -310,15 +310,15 @@ export function TireModule() {
         {/* Dimensions populaires + prestations */}
         <aside className="space-y-6">
           <div className="carte p-5">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Dimensions populaires</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Dimensions populaires</p>
             {dimensionsPopulaires.length === 0 ? (
-              <p className="mt-3 text-sm text-[#a8bb87]">Aucune donnée de stock pour l’instant.</p>
+              <p className="mt-3 text-sm text-[#A7B7A8]">Aucune donnée de stock pour l’instant.</p>
             ) : (
               <ul className="mt-3 space-y-2">
                 {dimensionsPopulaires.map(([dim, stats]) => (
                   <li key={dim} className="flex items-center justify-between text-sm">
-                    <span className="font-mono text-[#e9d998]">{dim}</span>
-                    <span className="text-[#a8bb87]">{stats.qte} u. · {formatMad(stats.valeur)}</span>
+                    <span className="font-mono text-[#D0C6AE]">{dim}</span>
+                    <span className="text-[#A7B7A8]">{stats.qte} u. · {formatMad(stats.valeur)}</span>
                   </li>
                 ))}
               </ul>
@@ -326,17 +326,17 @@ export function TireModule() {
           </div>
 
           <div className="carte p-5">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Prestations pneus</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Prestations pneus</p>
             <ul className="mt-3 space-y-2 text-sm">
               {prestations.map((p) => (
                 <li key={p.id} className="flex items-center justify-between gap-2">
-                  <span className={p.is_active ? "text-[#f8ecc9]" : "text-[#a8bb87] line-through"}>{p.name}</span>
-                  <span className="font-bold text-[#e9d998]">{p.price > 0 ? formatMad(p.price) : "Gratuit"}</span>
+                  <span className={p.is_active ? "text-[#E8ECE8]" : "text-[#A7B7A8] line-through"}>{p.name}</span>
+                  <span className="font-bold text-[#D0C6AE]">{p.price > 0 ? formatMad(p.price) : "Gratuit"}</span>
                 </li>
               ))}
-              {!prestations.length && <li className="text-[#a8bb87]">Aucune prestation — exécutez la migration 0013.</li>}
+              {!prestations.length && <li className="text-[#A7B7A8]">Aucune prestation — exécutez la migration 0013.</li>}
             </ul>
-            <p className="mt-3 text-[11px] leading-4 text-[#a8bb87]">
+            <p className="mt-3 text-[11px] leading-4 text-[#A7B7A8]">
               Ajoutez des pneus au ticket depuis le POS (catégorie Pneumatique) pour cumuler ventes et montages.
             </p>
           </div>
@@ -349,47 +349,47 @@ export function TireModule() {
           <form onSubmit={(e) => void creerPneu(e)} className="carte max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Catalogue pneumatique</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Catalogue pneumatique</p>
                 <h2 className="titre-or mt-1 text-xl font-extrabold">Nouvelle fiche pneu</h2>
               </div>
-              <button type="button" onClick={() => setOuvert(false)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button>
+              <button type="button" onClick={() => setOuvert(false)} className="text-2xl text-[#A7B7A8]" aria-label="Fermer">×</button>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <label className="text-xs text-[#a8bb87] sm:col-span-2">Fabricant *
+              <label className="text-xs text-[#A7B7A8] sm:col-span-2">Fabricant *
                 <input required className="champ mt-1 min-h-11" placeholder="Michelin, Continental, Pirelli…" value={form.fabricant} onChange={(e) => setForm({ ...form, fabricant: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Modèle
+              <label className="text-xs text-[#A7B7A8]">Modèle
                 <input className="champ mt-1 min-h-11" placeholder="Primacy 4" value={form.modele} onChange={(e) => setForm({ ...form, modele: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Référence fabricant
+              <label className="text-xs text-[#A7B7A8]">Référence fabricant
                 <input className="champ mt-1 min-h-11" placeholder="Ex. 1234567" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Largeur (mm) *
+              <label className="text-xs text-[#A7B7A8]">Largeur (mm) *
                 <input required type="number" min="100" max="450" className="champ mt-1 min-h-11" value={form.largeur} onChange={(e) => setForm({ ...form, largeur: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Hauteur (%) *
+              <label className="text-xs text-[#A7B7A8]">Hauteur (%) *
                 <input required type="number" min="25" max="95" className="champ mt-1 min-h-11" value={form.hauteur} onChange={(e) => setForm({ ...form, hauteur: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Diamètre (pouces) *
+              <label className="text-xs text-[#A7B7A8]">Diamètre (pouces) *
                 <input required type="number" min="10" max="26" className="champ mt-1 min-h-11" value={form.diametre} onChange={(e) => setForm({ ...form, diametre: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Indice de charge
+              <label className="text-xs text-[#A7B7A8]">Indice de charge
                 <input type="number" min="0" className="champ mt-1 min-h-11" value={form.indiceCharge} onChange={(e) => setForm({ ...form, indiceCharge: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Indice de vitesse
+              <label className="text-xs text-[#A7B7A8]">Indice de vitesse
                 <select className="champ mt-1 min-h-11" value={form.indiceVitesse} onChange={(e) => setForm({ ...form, indiceVitesse: e.target.value })}>
                   {["N", "P", "Q", "R", "S", "T", "U", "H", "V", "W", "Y"].map((v) => <option key={v} value={v}>{v}</option>)}
                 </select>
               </label>
-              <label className="text-xs text-[#a8bb87]">Saison
+              <label className="text-xs text-[#A7B7A8]">Saison
                 <select className="champ mt-1 min-h-11" value={form.saison} onChange={(e) => setForm({ ...form, saison: e.target.value })}>
                   <option value="4saisons">4 saisons</option>
                   <option value="ete">Été</option>
                   <option value="hiver">Hiver</option>
                 </select>
               </label>
-              <label className="text-xs text-[#a8bb87]">Type
+              <label className="text-xs text-[#A7B7A8]">Type
                 <select className="champ mt-1 min-h-11" value={form.typePneu} onChange={(e) => setForm({ ...form, typePneu: e.target.value })}>
                   <option value="tourisme">Tourisme</option>
                   <option value="utilitaire">Utilitaire</option>
@@ -399,23 +399,23 @@ export function TireModule() {
                   <option value="engin">Engin de chantier</option>
                 </select>
               </label>
-              <label className="text-xs text-[#a8bb87]">Prix d’achat (MAD)
+              <label className="text-xs text-[#A7B7A8]">Prix d’achat (MAD)
                 <input type="number" min="0" step="0.01" className="champ mt-1 min-h-11" value={form.prixAchat} onChange={(e) => setForm({ ...form, prixAchat: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Prix de vente (MAD) *
+              <label className="text-xs text-[#A7B7A8]">Prix de vente (MAD) *
                 <input required type="number" min="0" step="0.01" className="champ mt-1 min-h-11" value={form.prixVente} onChange={(e) => setForm({ ...form, prixVente: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Stock initial
+              <label className="text-xs text-[#A7B7A8]">Stock initial
                 <input type="number" min="0" className="champ mt-1 min-h-11" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
               </label>
             </div>
 
-            <p className="mt-3 text-[11px] leading-4 text-[#a8bb87]">
+            <p className="mt-3 text-[11px] leading-4 text-[#A7B7A8]">
               Exemple de dimension : 205 / 55 R16 — la fiche est rattachée au stock réel du POS.
             </p>
 
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button>
+              <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>
               <button type="submit" disabled={saving} className="btn-or px-4 py-2 text-sm disabled:opacity-40">{saving ? "Création…" : "Créer la fiche pneu"}</button>
             </div>
           </form>

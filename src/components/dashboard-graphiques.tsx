@@ -52,10 +52,10 @@ export function CourbeCAReelle() {
     return () => { vivant = false; window.clearTimeout(timer); };
   }, []);
 
-  if (erreur) return <p className="text-xs text-[#d66868]">{erreur}</p>;
-  if (!donnees) return <p className="py-8 text-center text-xs text-[#a8bb87]">Chargement des ventes…</p>;
+  if (erreur) return <p className="text-xs text-[#C5716B]">{erreur}</p>;
+  if (!donnees) return <p className="py-8 text-center text-xs text-[#A7B7A8]">Chargement des ventes…</p>;
   if (!donnees.some((v) => v > 0)) {
-    return <p className="py-8 text-center text-xs text-[#a8bb87]">Aucune vente enregistrée sur les 6 derniers mois — la courbe s’affichera dès la première vente.</p>;
+    return <p className="py-8 text-center text-xs text-[#A7B7A8]">Aucune vente enregistrée sur les 6 derniers mois — la courbe s’affichera dès la première vente.</p>;
   }
   return <CourbeCA donnees={donnees} />;
 }
@@ -103,8 +103,8 @@ export function DonutCAReel() {
     return () => { vivant = false; window.clearTimeout(timer); };
   }, []);
 
-  if (erreur) return <p className="text-xs text-[#d66868]">{erreur}</p>;
-  if (parts === null) return <p className="py-8 text-center text-xs text-[#a8bb87]">Chargement des ventes…</p>;
-  if (!parts.length) return <p className="py-8 text-center text-xs text-[#a8bb87]">Aucune vente détaillée — la répartition apparaîtra après les premières ventes.</p>;
+  if (erreur) return <p className="text-xs text-[#C5716B]">{erreur}</p>;
+  if (parts === null) return <p className="py-8 text-center text-xs text-[#A7B7A8]">Chargement des ventes…</p>;
+  if (!parts.length) return <p className="py-8 text-center text-xs text-[#A7B7A8]">Aucune vente détaillée — la répartition apparaîtra après les premières ventes.</p>;
   return <DonutServices parts={parts} />;
 }

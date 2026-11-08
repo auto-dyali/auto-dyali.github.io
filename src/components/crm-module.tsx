@@ -188,36 +188,36 @@ export function CrmModule() {
       {/* KPI réels */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Prospects au total</p>
+          <p className="text-xs text-[#A7B7A8]">Prospects au total</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : leads.length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">En essai / négociation</p>
+          <p className="text-xs text-[#A7B7A8]">En essai / négociation</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">
             {loading ? "…" : leads.filter((l) => l.stage === "trial" || l.stage === "negotiation").length}
           </p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Convertis (gagnés)</p>
+          <p className="text-xs text-[#A7B7A8]">Convertis (gagnés)</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : leads.filter((l) => l.stage === "won").length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#d6b66f]">Relances dues aujourd’hui</p>
+          <p className="text-xs text-[#8FB59B]">Relances dues aujourd’hui</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : aRelancer.length}</p>
         </article>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Pipeline commercial</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Pipeline commercial</p>
           <h1 className="titre-or mt-1 text-2xl font-extrabold">CRM Super Admin</h1>
-          <p className="mt-1 text-sm text-[#a8bb87]">Prospects, démonstrations, essais et relances.</p>
+          <p className="mt-1 text-sm text-[#A7B7A8]">Prospects, démonstrations, essais et relances.</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/super-admin" className="rounded-lg border border-[#d6b66f]/40 px-4 py-2 text-sm text-[#e9d998]">← Pilotage</Link>
+          <Link href="/super-admin" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#D0C6AE]">← Pilotage</Link>
           <button type="button" onClick={() => { setOuvert(true); setError(null); setNotice(null); }} className="btn-or px-4 py-2 text-sm">
             + Nouveau prospect
           </button>
@@ -232,7 +232,7 @@ export function CrmModule() {
             <section key={etape.cle} className="carte p-4">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-bold uppercase tracking-wide" style={{ color: etape.couleur }}>{etape.label}</p>
-                <span className="rounded-full bg-[#21464b] px-2 py-0.5 text-[11px] text-[#e9d998]">{liste.length}</span>
+                <span className="rounded-full bg-[#344440] px-2 py-0.5 text-[11px] text-[#D0C6AE]">{liste.length}</span>
               </div>
               <ul className="mt-3 space-y-2">
                 {liste.map((lead) => (
@@ -240,21 +240,21 @@ export function CrmModule() {
                     <button
                       type="button"
                       onClick={() => setSelection(lead)}
-                      className={`w-full rounded-lg border p-2.5 text-left transition hover:border-[#d6b66f]/50 ${
-                        selection?.id === lead.id ? "border-[#d6b66f] bg-[#21464b]" : "border-[#d6b66f]/15 bg-[#193a40]"
+                      className={`w-full rounded-lg border p-2.5 text-left transition hover:border-[#8FB59B]/50 ${
+                        selection?.id === lead.id ? "border-[#8FB59B] bg-[#344440]" : "border-[#8FB59B]/15 bg-[#2C3735]"
                       }`}
                     >
-                      <p className="truncate text-xs font-semibold text-[#f8ecc9]">{lead.company}</p>
-                      <p className="mt-0.5 truncate text-[11px] text-[#a8bb87]">
+                      <p className="truncate text-xs font-semibold text-[#E8ECE8]">{lead.company}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-[#A7B7A8]">
                         {lead.city ?? "—"} · {lead.plan_interest ? lead.plan_interest.toUpperCase() : "forfait ?"}
                       </p>
                       {lead.next_action_at && (
-                        <p className="mt-1 text-[10px] text-[#d6b66f]">Relance {dateFr(lead.next_action_at)}</p>
+                        <p className="mt-1 text-[10px] text-[#8FB59B]">Relance {dateFr(lead.next_action_at)}</p>
                       )}
                     </button>
                   </li>
                 ))}
-                {!liste.length && <li className="py-3 text-center text-[11px] text-[#a8bb87]">Vide</li>}
+                {!liste.length && <li className="py-3 text-center text-[11px] text-[#A7B7A8]">Vide</li>}
               </ul>
             </section>
           );
@@ -267,22 +267,22 @@ export function CrmModule() {
           <div className="carte p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Fiche prospect</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Fiche prospect</p>
                 <h2 className="titre-or mt-1 text-xl font-extrabold">{selection.company}</h2>
-                <p className="mt-1 text-sm text-[#a8bb87]">
+                <p className="mt-1 text-sm text-[#A7B7A8]">
                   {selection.contact_name ?? "Contact —"} {selection.city ? `· ${selection.city}` : ""} {selection.activity ? `· ${selection.activity}` : ""}
                 </p>
               </div>
-              <button type="button" onClick={() => setSelection(null)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button>
+              <button type="button" onClick={() => setSelection(null)} className="text-2xl text-[#A7B7A8]" aria-label="Fermer">×</button>
             </div>
 
             <div className="mt-4 grid gap-2 text-sm sm:grid-cols-3">
-              {selection.email && <p className="text-[#f8ecc9]">✉ {selection.email}</p>}
-              {selection.phone && <p className="text-[#f8ecc9]">☎ {selection.phone}</p>}
-              <p className="text-[#a8bb87]">Inscrit le {dateFr(selection.created_at)}</p>
+              {selection.email && <p className="text-[#E8ECE8]">✉ {selection.email}</p>}
+              {selection.phone && <p className="text-[#E8ECE8]">☎ {selection.phone}</p>}
+              <p className="text-[#A7B7A8]">Inscrit le {dateFr(selection.created_at)}</p>
             </div>
 
-            <label className="mt-4 block text-xs text-[#a8bb87]">Étape du pipeline
+            <label className="mt-4 block text-xs text-[#A7B7A8]">Étape du pipeline
               <select
                 className="champ mt-1 min-h-11"
                 value={selection.stage}
@@ -294,19 +294,19 @@ export function CrmModule() {
             </label>
 
             {/* Journal */}
-            <div className="mt-5 border-t border-[#d6b66f]/10 pt-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#a8bb87]">Historique des contacts</p>
+            <div className="mt-5 border-t border-[#8FB59B]/10 pt-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Historique des contacts</p>
               <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
                 {eventsLead.map((ev) => (
-                  <li key={ev.id} className="rounded-lg bg-[#21464b]/50 px-3 py-2 text-sm">
-                    <p className="text-[10px] uppercase text-[#a8bb87]">
+                  <li key={ev.id} className="rounded-lg bg-[#344440]/50 px-3 py-2 text-sm">
+                    <p className="text-[10px] uppercase text-[#A7B7A8]">
                       {ev.event_type === "stage_change" ? "Changement d’étape" : ev.event_type === "call" ? "Appel" : ev.event_type === "demo" ? "Démonstration" : "Note"} ·{" "}
                       {new Date(ev.created_at).toLocaleString("fr-FR")}
                     </p>
-                    <p className="mt-1 leading-5 text-[#f8ecc9]">{ev.body}</p>
+                    <p className="mt-1 leading-5 text-[#E8ECE8]">{ev.body}</p>
                   </li>
                 ))}
-                {!eventsLead.length && <li className="text-xs text-[#a8bb87]">Aucun échange enregistré.</li>}
+                {!eventsLead.length && <li className="text-xs text-[#A7B7A8]">Aucun échange enregistré.</li>}
               </ul>
 
               <form onSubmit={(e) => void ajouterNote(e)} className="mt-3 flex flex-wrap gap-2">
@@ -330,37 +330,37 @@ export function CrmModule() {
           <form onSubmit={(e) => void creerLead(e)} className="carte my-4 w-full max-w-lg p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">CRM plateforme</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">CRM plateforme</p>
                 <h2 className="titre-or mt-1 text-xl font-extrabold">Nouveau prospect</h2>
               </div>
-              <button type="button" onClick={() => setOuvert(false)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button>
+              <button type="button" onClick={() => setOuvert(false)} className="text-2xl text-[#A7B7A8]" aria-label="Fermer">×</button>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <label className="text-xs text-[#a8bb87] sm:col-span-2">Entreprise *
+              <label className="text-xs text-[#A7B7A8] sm:col-span-2">Entreprise *
                 <input required className="champ mt-1 min-h-11" placeholder="Garage El Mansouri" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Contact
+              <label className="text-xs text-[#A7B7A8]">Contact
                 <input className="champ mt-1 min-h-11" placeholder="Nom complet" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Téléphone
+              <label className="text-xs text-[#A7B7A8]">Téléphone
                 <input className="champ mt-1 min-h-11" placeholder="+212…" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Email
+              <label className="text-xs text-[#A7B7A8]">Email
                 <input type="email" className="champ mt-1 min-h-11" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Ville
+              <label className="text-xs text-[#A7B7A8]">Ville
                 <input className="champ mt-1 min-h-11" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Activité
+              <label className="text-xs text-[#A7B7A8]">Activité
                 <input className="champ mt-1 min-h-11" placeholder="Garage, magasin, centre pneus…" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87]">Étape
+              <label className="text-xs text-[#A7B7A8]">Étape
                 <select className="champ mt-1 min-h-11" value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })}>
                   {ETAPES.map((e) => <option key={e.cle} value={e.cle}>{e.label}</option>)}
                 </select>
               </label>
-              <label className="text-xs text-[#a8bb87]">Forfait intéressé
+              <label className="text-xs text-[#A7B7A8]">Forfait intéressé
                 <select className="champ mt-1 min-h-11" value={form.plan} onChange={(e) => setForm({ ...form, plan: e.target.value })}>
                   <option value="">À déterminer</option>
                   <option value="standard">STANDARD</option>
@@ -368,16 +368,16 @@ export function CrmModule() {
                   <option value="gold">GOLD</option>
                 </select>
               </label>
-              <label className="text-xs text-[#a8bb87]">Prochaine relance
+              <label className="text-xs text-[#A7B7A8]">Prochaine relance
                 <input type="date" className="champ mt-1 min-h-11" value={form.nextAction} onChange={(e) => setForm({ ...form, nextAction: e.target.value })} />
               </label>
-              <label className="text-xs text-[#a8bb87] sm:col-span-2">Notes
+              <label className="text-xs text-[#A7B7A8] sm:col-span-2">Notes
                 <textarea rows={3} className="champ mt-1 py-2 text-sm" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </label>
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button>
+              <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>
               <button type="submit" disabled={saving} className="btn-or px-4 py-2 text-sm disabled:opacity-40">{saving ? "Ajout…" : "Ajouter au pipeline"}</button>
             </div>
           </form>
@@ -391,12 +391,12 @@ export function CrmModule() {
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   return (
-    <main className="min-h-screen bg-[#102b32] text-[#f8ecc9]">
-      <header className="flex items-center justify-between border-b border-[#d6b66f]/15 bg-[#193a40] px-5 py-4 lg:px-10">
+    <main className="min-h-screen bg-[#252D2D] text-[#E8ECE8]">
+      <header className="flex items-center justify-between border-b border-[#8FB59B]/15 bg-[#2C3735] px-5 py-4 lg:px-10">
         <Logo compact />
         <div className="flex items-center gap-4">
-          <span className="hidden text-sm text-[#a8bb87] sm:block">Super Admin · {FEATURE_LABEL.crm ?? "CRM"}</span>
-          <button type="button" onClick={() => router.replace("/super-admin/")} className="text-sm text-[#d6b66f] hover:underline">Pilotage</button>
+          <span className="hidden text-sm text-[#A7B7A8] sm:block">Super Admin · {FEATURE_LABEL.crm ?? "CRM"}</span>
+          <button type="button" onClick={() => router.replace("/super-admin/")} className="text-sm text-[#8FB59B] hover:underline">Pilotage</button>
         </div>
       </header>
       <div className="mx-auto max-w-7xl p-5 lg:p-10">{children}</div>

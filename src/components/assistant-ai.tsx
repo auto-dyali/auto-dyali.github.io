@@ -316,9 +316,9 @@ export function AssistantAI() {
   return (
     <>
       <div className="mb-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Assistant</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Assistant</p>
         <h1 className="titre-or mt-1 text-2xl font-extrabold">AUTO DYALI AI</h1>
-        <p className="mt-1 text-sm text-[#a8bb87]">
+        <p className="mt-1 text-sm text-[#A7B7A8]">
           Questions en langage naturel sur vos données réelles — aucune action destructive, confirmation humaine requise partout.
         </p>
       </div>
@@ -331,7 +331,7 @@ export function AssistantAI() {
             type="button"
             onClick={() => void poser(a)}
             disabled={attente}
-            className="rounded-full border border-[#d6b66f]/30 px-3 py-1.5 text-xs text-[#e9d998] transition hover:bg-[#d6b66f]/15 disabled:opacity-40"
+            className="rounded-full border border-[#8FB59B]/30 px-3 py-1.5 text-xs text-[#D0C6AE] transition hover:bg-[#8FB59B]/15 disabled:opacity-40"
           >
             {a}
           </button>
@@ -344,21 +344,21 @@ export function AssistantAI() {
           {messages.map((m) => (
             <li key={m.id} className={m.role === "user" ? "text-right" : ""}>
               <div className={`inline-block max-w-3xl rounded-2xl px-4 py-3 text-left ${
-                m.role === "user" ? "bg-[#d6b66f]/20 text-[#f8ecc9]" : "bg-[#21464b]/70 text-[#f8ecc9]"
+                m.role === "user" ? "bg-[#8FB59B]/20 text-[#E8ECE8]" : "bg-[#344440]/70 text-[#E8ECE8]"
               }`}>
                 <p className="text-sm leading-6">{m.texte}</p>
                 {m.lignes && m.lignes.length > 0 && (
-                  <ul className="mt-3 divide-y divide-[#d6b66f]/10 border-t border-[#d6b66f]/10">
+                  <ul className="mt-3 divide-y divide-[#8FB59B]/10 border-t border-[#8FB59B]/10">
                     {m.lignes.map((l, i) => (
                       <li key={i} className="flex flex-wrap justify-between gap-2 py-2 text-xs">
-                        <span className="text-[#f8ecc9]">{l.gauche}</span>
-                        <span className="font-semibold text-[#e9d998]">{l.droite}</span>
+                        <span className="text-[#E8ECE8]">{l.gauche}</span>
+                        <span className="font-semibold text-[#D0C6AE]">{l.droite}</span>
                       </li>
                     ))}
                   </ul>
                 )}
                 {m.lien && (
-                  <a href={m.lien.href} className="mt-3 inline-block rounded-lg border border-[#90a0b0]/40 px-3 py-1.5 text-xs text-[#90a0b0]">
+                  <a href={m.lien.href} className="mt-3 inline-block rounded-lg border border-[#8DA298]/40 px-3 py-1.5 text-xs text-[#8DA298]">
                     {m.lien.label} →
                   </a>
                 )}
@@ -366,7 +366,7 @@ export function AssistantAI() {
             </li>
           ))}
           {attente && (
-            <li className="text-sm italic text-[#a8bb87]">Lecture de vos données en cours…</li>
+            <li className="text-sm italic text-[#A7B7A8]">Lecture de vos données en cours…</li>
           )}
         </ul>
         <div ref={basDePage} />
@@ -385,7 +385,7 @@ export function AssistantAI() {
           {attente ? "Analyse…" : "Envoyer"}
         </button>
       </form>
-      <p className="mt-2 text-[11px] text-[#a8bb87]">
+      <p className="mt-2 text-[11px] text-[#A7B7A8]">
         Transparence : cet assistant interroge directement Supabase (moteur de requêtes, pas de modèle de langage distant).
         Aucune donnée n’est modifiée par ses réponses.
       </p>

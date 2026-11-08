@@ -162,13 +162,13 @@ export function ScanProModule() {
 
   return (
     <div className="space-y-6">
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {loading && <p className="text-sm text-[#a8bb87]">Chargement…</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {loading && <p className="text-sm text-[#A7B7A8]">Chargement…</p>}
 
       {/* 1 — Génération EAN-13 */}
       <section className="carte p-5">
-        <p className="text-xs uppercase tracking-[0.15em] text-[#a8bb87]">1 · Générer un code EAN-13</p>
+        <p className="text-xs uppercase tracking-[0.15em] text-[#A7B7A8]">1 · Générer un code EAN-13</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
           <input
             type="text"
@@ -190,11 +190,11 @@ export function ScanProModule() {
         </div>
 
         {genResult && (
-          <div className="mt-4 rounded-lg border border-[#d6b66f]/20 bg-[#21464b]/30 p-4">
+          <div className="mt-4 rounded-lg border border-[#8FB59B]/20 bg-[#344440]/30 p-4">
             <div className="text-center">
-              <div className="text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">Code généré</div>
-              <div className="mt-1 font-mono text-lg font-bold text-[#f8ecc9]">{genResult.code}</div>
-              {genResult.test && <div className="mt-1 text-[10px] font-semibold uppercase text-[#d66868]">Code de test — ne pas imprimer</div>}
+              <div className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Code généré</div>
+              <div className="mt-1 font-mono text-lg font-bold text-[#E8ECE8]">{genResult.code}</div>
+              {genResult.test && <div className="mt-1 text-[10px] font-semibold uppercase text-[#C5716B]">Code de test — ne pas imprimer</div>}
             </div>
             <div className="mt-3 flex justify-center rounded bg-white p-2">
               <svg ref={svgRef} />
@@ -212,7 +212,7 @@ export function ScanProModule() {
 
       {/* 2 — Produit */}
       <section className="carte p-5">
-        <p className="text-xs uppercase tracking-[0.15em] text-[#a8bb87]">2 · Produit concerné</p>
+        <p className="text-xs uppercase tracking-[0.15em] text-[#A7B7A8]">2 · Produit concerné</p>
         <select
           value={selectedId ?? ""}
           onChange={(e) => setSelectedId(e.target.value || null)}
@@ -229,14 +229,14 @@ export function ScanProModule() {
 
       {/* 3 — Codes associés */}
       <section className="carte p-5">
-        <p className="text-xs uppercase tracking-[0.15em] text-[#a8bb87]">3 · Codes associés au produit</p>
+        <p className="text-xs uppercase tracking-[0.15em] text-[#A7B7A8]">3 · Codes associés au produit</p>
         {selectedId ? (
           codesDuProduit.length > 0 ? (
             <ul className="mt-3 space-y-2">
               {codesDuProduit.map((b) => (
-                <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 rounded bg-[#21464b]/30 px-3 py-2">
-                  <span className="font-mono text-sm text-[#f8ecc9]">{b.barcode}</span>
-                  <span className="text-xs text-[#a8bb87]">
+                <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 rounded bg-[#344440]/30 px-3 py-2">
+                  <span className="font-mono text-sm text-[#E8ECE8]">{b.barcode}</span>
+                  <span className="text-xs text-[#A7B7A8]">
                     {b.type}
                     {b.variant ? ` · variante ${b.variant}` : ""}
                     {b.is_primary ? " · code principal" : ""}
@@ -245,10 +245,10 @@ export function ScanProModule() {
               ))}
             </ul>
           ) : (
-            <p className="mt-3 text-sm text-[#a8bb87]">Aucun code associé — générez puis enregistrez un code ci-dessus.</p>
+            <p className="mt-3 text-sm text-[#A7B7A8]">Aucun code associé — générez puis enregistrez un code ci-dessus.</p>
           )
         ) : (
-          <p className="mt-3 text-sm text-[#a8bb87]">Sélectionnez un produit pour voir ses codes.</p>
+          <p className="mt-3 text-sm text-[#A7B7A8]">Sélectionnez un produit pour voir ses codes.</p>
         )}
       </section>
     </div>

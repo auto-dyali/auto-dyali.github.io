@@ -117,9 +117,9 @@ export function PaveNumerique({
               onClick={(e) => { e.preventDefault(); pousser(t.l); }}
               className={[
                 "min-h-12 min-w-12 touch-manipulation select-none rounded-xl border text-lg font-semibold transition-colors",
-                "border-[#d6b66f]/30 bg-[#21464b] text-[#f8ecc9] active:bg-[#d6b66f]/25",
-                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d6b66f]",
-                estValider ? "bg-[#d6b66f]/20 text-[#e9d998]" : "",
+                "border-[#8FB59B]/30 bg-[#344440] text-[#E8ECE8] active:bg-[#8FB59B]/25",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#8FB59B]",
+                estValider ? "bg-[#8FB59B]/20 text-[#D0C6AE]" : "",
                 desactive ? "cursor-not-allowed opacity-40" : "",
               ].join(" ")}
             >
@@ -131,7 +131,7 @@ export function PaveNumerique({
       <button
         type="button"
         onClick={() => setVisible(false)}
-        className="mt-1 min-h-10 w-full touch-manipulation rounded-lg px-2 py-1 text-[10px] uppercase tracking-[0.15em] text-[#90a0b0] hover:bg-[#21464b]"
+        className="mt-1 min-h-10 w-full touch-manipulation rounded-lg px-2 py-1 text-[10px] uppercase tracking-[0.15em] text-[#8DA298] hover:bg-[#344440]"
       >
         Masquer le pavé
       </button>

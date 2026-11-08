@@ -38,12 +38,12 @@ type Client = { id: string; full_name: string };
 type Produit = ProduitTest & { id: string };
 
 const STATUTS: Record<string, { label: string; classe: string }> = {
-  draft: { label: "Brouillon", classe: "bg-[#21464b] text-[#e9d998]" },
-  sent: { label: "Envoyé", classe: "bg-[#d6b66f]/15 text-[#e9d998]" },
-  accepted: { label: "Accepté", classe: "bg-[#38a987]/15 text-[#69d3a8]" },
-  converted: { label: "Converti en vente", classe: "bg-[#38a987]/20 text-[#69d3a8]" },
-  expired: { label: "Expiré", classe: "bg-[#d66868]/15 text-[#d66868]" },
-  cancelled: { label: "Annulé", classe: "bg-[#d66868]/15 text-[#d66868]" },
+  draft: { label: "Brouillon", classe: "bg-[#344440] text-[#D0C6AE]" },
+  sent: { label: "Envoyé", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
+  accepted: { label: "Accepté", classe: "bg-[#5D9E7F]/15 text-[#7FBF9E]" },
+  converted: { label: "Converti en vente", classe: "bg-[#5D9E7F]/20 text-[#7FBF9E]" },
+  expired: { label: "Expiré", classe: "bg-[#C5716B]/15 text-[#C5716B]" },
+  cancelled: { label: "Annulé", classe: "bg-[#C5716B]/15 text-[#C5716B]" },
 };
 
 let compteurLignes = 0;
@@ -363,34 +363,34 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
       {/* KPI réels */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Devis au total</p>
+          <p className="text-xs text-[#A7B7A8]">Devis au total</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : devis.length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">En attente (brouillon + envoyé)</p>
+          <p className="text-xs text-[#A7B7A8]">En attente (brouillon + envoyé)</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">
             {loading ? "…" : devis.filter((d) => d.status === "draft" || d.status === "sent").length}
           </p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Acceptés / convertis</p>
+          <p className="text-xs text-[#A7B7A8]">Acceptés / convertis</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">
             {loading ? "…" : devis.filter((d) => d.status === "accepted" || d.status === "converted").length}
           </p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#a8bb87]">Valeur affichée</p>
+          <p className="text-xs text-[#A7B7A8]">Valeur affichée</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : formatMad(totalEnCours)}</p>
         </article>
       </div>
 
-      {notice && <p role="status" className="rounded-lg bg-[#38a987]/10 px-4 py-3 text-sm text-[#69d3a8]">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-[#d66868]/15 px-4 py-3 text-sm text-[#d66868]">{error}</p>}
+      {notice && <p role="status" className="rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="carte overflow-hidden">
-        <div className="flex flex-col gap-3 border-b border-[#d6b66f]/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-[#8FB59B]/10 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Gestion commerciale</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Gestion commerciale</p>
             <h2 className="titre-or mt-1 text-xl font-extrabold">Devis</h2>
           </div>
           <button type="button" onClick={() => { setOuvert(true); setError(null); setNotice(null); }} className="btn-or px-4 py-2 text-sm">
@@ -398,7 +398,7 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 border-b border-[#d6b66f]/10 p-4">
+        <div className="flex flex-wrap gap-2 border-b border-[#8FB59B]/10 p-4">
           <input
             type="search"
             value={recherche}
@@ -414,11 +414,11 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
         </div>
 
         {loading ? (
-          <p className="p-6 text-sm text-[#a8bb87]">Chargement des devis…</p>
+          <p className="p-6 text-sm text-[#A7B7A8]">Chargement des devis…</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] text-left text-sm">
-              <thead className="bg-[#21464b]/50 text-xs uppercase text-[#a8bb87]">
+              <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                 <tr>
                   <th className="px-5 py-3">Référence</th>
                   <th className="px-5 py-3">Client</th>
@@ -428,18 +428,18 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#d6b66f]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {devisFiltres.map((d) => {
                   const info = STATUTS[d.status] ?? STATUTS.draft;
                   const actions = (
                     <div className="flex flex-wrap justify-end gap-1.5">
-                      <button type="button" onClick={() => void imprimerDevis(d)} className="rounded-lg border border-[#d6b66f]/40 px-2.5 py-1.5 text-xs text-[#e9d998]">Imprimer</button>
+                      <button type="button" onClick={() => void imprimerDevis(d)} className="rounded-lg border border-[#8FB59B]/40 px-2.5 py-1.5 text-xs text-[#D0C6AE]">Imprimer</button>
                       {d.status === "draft" && (
-                        <button type="button" onClick={() => void changerStatut(d, "sent")} className="rounded-lg border border-[#d6b66f]/40 px-2.5 py-1.5 text-xs text-[#e9d998]">Envoyer</button>
+                        <button type="button" onClick={() => void changerStatut(d, "sent")} className="rounded-lg border border-[#8FB59B]/40 px-2.5 py-1.5 text-xs text-[#D0C6AE]">Envoyer</button>
                       )}
                       {(d.status === "draft" || d.status === "sent") && (
                         <>
-                          <button type="button" onClick={() => void changerStatut(d, "accepted")} className="rounded-lg bg-[#38a987]/15 px-2.5 py-1.5 text-xs text-[#69d3a8]">Accepter</button>
+                          <button type="button" onClick={() => void changerStatut(d, "accepted")} className="rounded-lg bg-[#5D9E7F]/15 px-2.5 py-1.5 text-xs text-[#7FBF9E]">Accepter</button>
                           <button type="button" onClick={() => void convertirEnVente(d)} className="btn-or px-2.5 py-1.5 text-xs">Convertir en vente</button>
                         </>
                       )}
@@ -447,17 +447,17 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
                         <button type="button" onClick={() => void convertirEnVente(d)} className="btn-or px-2.5 py-1.5 text-xs">Convertir en vente</button>
                       )}
                       {d.status === "draft" && (
-                        <button type="button" onClick={() => void changerStatut(d, "cancelled")} className="rounded-lg border border-[#d66868]/40 px-2.5 py-1.5 text-xs text-[#d66868]">Annuler</button>
+                        <button type="button" onClick={() => void changerStatut(d, "cancelled")} className="rounded-lg border border-[#C5716B]/40 px-2.5 py-1.5 text-xs text-[#C5716B]">Annuler</button>
                       )}
                     </div>
                   );
                   return (
                     <tr key={d.id}>
-                      <td className="px-5 py-4 font-semibold text-[#e9d998]">{d.reference}</td>
-                      <td className="px-5 py-4 text-[#f8ecc9]">{d.client_nom ?? "Comptoir"}</td>
-                      <td className="px-5 py-4 text-[#a8bb87]">{new Date(d.created_at).toLocaleDateString("fr-FR")}</td>
+                      <td className="px-5 py-4 font-semibold text-[#D0C6AE]">{d.reference}</td>
+                      <td className="px-5 py-4 text-[#E8ECE8]">{d.client_nom ?? "Comptoir"}</td>
+                      <td className="px-5 py-4 text-[#A7B7A8]">{new Date(d.created_at).toLocaleDateString("fr-FR")}</td>
                       <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${info.classe}`}>{info.label}</span></td>
-                      <td className="px-5 py-4 text-right font-bold text-[#e9d998]">{formatMad(Number(d.total))}</td>
+                      <td className="px-5 py-4 text-right font-bold text-[#D0C6AE]">{formatMad(Number(d.total))}</td>
                       <td className="px-5 py-4">{actions}</td>
                     </tr>
                   );
@@ -465,7 +465,7 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
               </tbody>
             </table>
             {!devisFiltres.length && (
-              <p className="p-8 text-center text-sm text-[#a8bb87]">
+              <p className="p-8 text-center text-sm text-[#A7B7A8]">
                 Aucun devis. Créez le premier avec « + Nouveau devis » (tables quotes — migration 0013).
               </p>
             )}
@@ -479,27 +479,27 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
           <form onSubmit={(e) => void creerDevis(e)} className="carte my-4 w-full max-w-3xl p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[#a8bb87]">Offre STANDARD</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Offre STANDARD</p>
                 <h2 className="titre-or mt-1 text-xl font-extrabold">Nouveau devis</h2>
               </div>
-              <button type="button" onClick={() => setOuvert(false)} className="text-2xl text-[#a8bb87]" aria-label="Fermer">×</button>
+              <button type="button" onClick={() => setOuvert(false)} className="text-2xl text-[#A7B7A8]" aria-label="Fermer">×</button>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <label className="text-xs text-[#a8bb87] sm:col-span-2">Client
+              <label className="text-xs text-[#A7B7A8] sm:col-span-2">Client
                 <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="champ mt-1 min-h-11">
                   <option value="">Client comptoir (anonyme)</option>
                   {clients.map((c) => <option key={c.id} value={c.id}>{c.full_name}</option>)}
                 </select>
               </label>
-              <label className="text-xs text-[#a8bb87]">Valable jusqu’au
+              <label className="text-xs text-[#A7B7A8]">Valable jusqu’au
                 <input type="date" value={validite} onChange={(e) => setValidite(e.target.value)} className="champ mt-1 min-h-11" />
               </label>
             </div>
 
             {/* Ajout de lignes */}
-            <div className="mt-4 rounded-xl border border-[#d6b66f]/15 bg-[#21464b]/40 p-4">
-              <p className="text-[10px] uppercase tracking-[0.15em] text-[#a8bb87]">Ajouter une ligne</p>
+            <div className="mt-4 rounded-xl border border-[#8FB59B]/15 bg-[#344440]/40 p-4">
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Ajouter une ligne</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <input
                   type="search"
@@ -509,17 +509,17 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
                   className="champ min-h-10 min-w-48 flex-1"
                   aria-label="Rechercher une pièce pour le devis"
                 />
-                <button type="button" onClick={ajouterPrestation} className="rounded-lg border border-[#d6b66f]/40 px-3 py-2 text-xs text-[#e9d998]">
+                <button type="button" onClick={ajouterPrestation} className="rounded-lg border border-[#8FB59B]/40 px-3 py-2 text-xs text-[#D0C6AE]">
                   + Prestation
                 </button>
               </div>
               {produitsFiltres.length > 0 && (
-                <ul className="mt-2 divide-y divide-[#d6b66f]/10 rounded-lg bg-[#193a40]">
+                <ul className="mt-2 divide-y divide-[#8FB59B]/10 rounded-lg bg-[#2C3735]">
                   {produitsFiltres.map((p) => (
                     <li key={p.sku}>
-                      <button type="button" onClick={() => ajouterProduit(p)} className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-[#21464b]">
-                        <span className="truncate text-[#f8ecc9]">{p.nom}</span>
-                        <span className="shrink-0 font-bold text-[#e9d998]">{formatMad(p.prix)}</span>
+                      <button type="button" onClick={() => ajouterProduit(p)} className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-[#344440]">
+                        <span className="truncate text-[#E8ECE8]">{p.nom}</span>
+                        <span className="shrink-0 font-bold text-[#D0C6AE]">{formatMad(p.prix)}</span>
                       </button>
                     </li>
                   ))}
@@ -530,50 +530,50 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
             {/* Lignes */}
             <div className="mt-4 space-y-2">
               {lignes.map((l) => (
-                <div key={l.id} className="flex flex-wrap items-end gap-2 rounded-lg border border-[#d6b66f]/10 p-2">
-                  <label className="min-w-40 flex-1 text-[10px] uppercase text-[#a8bb87]">
+                <div key={l.id} className="flex flex-wrap items-end gap-2 rounded-lg border border-[#8FB59B]/10 p-2">
+                  <label className="min-w-40 flex-1 text-[10px] uppercase text-[#A7B7A8]">
                     Désignation
                     <input value={l.label} onChange={(e) => majLigne(l.id, "label", e.target.value)} className="champ mt-1 min-h-9 py-1 text-sm normal-case tracking-normal" />
                   </label>
-                  <label className="w-20 text-[10px] uppercase text-[#a8bb87]">
+                  <label className="w-20 text-[10px] uppercase text-[#A7B7A8]">
                     Qté
                     <input type="number" min="1" value={l.quantity} onChange={(e) => majLigne(l.id, "quantity", Math.max(1, Number(e.target.value) || 1))} className="champ mt-1 min-h-9 py-1 text-sm" />
                   </label>
-                  <label className="w-28 text-[10px] uppercase text-[#a8bb87]">
+                  <label className="w-28 text-[10px] uppercase text-[#A7B7A8]">
                     PU (MAD)
                     <input type="number" min="0" step="0.01" value={l.unit_price} onChange={(e) => majLigne(l.id, "unit_price", Math.max(0, Number(e.target.value) || 0))} className="champ mt-1 min-h-9 py-1 text-sm" />
                   </label>
-                  <span className="w-24 pb-2 text-right text-sm font-bold text-[#e9d998]">{formatMad(l.quantity * l.unit_price)}</span>
-                  <button type="button" onClick={() => supprimerLigne(l.id)} className="min-h-8 min-w-8 rounded bg-[#d66868]/15 text-xs text-[#d66868]" aria-label={`Supprimer la ligne ${l.label}`}>✕</button>
+                  <span className="w-24 pb-2 text-right text-sm font-bold text-[#D0C6AE]">{formatMad(l.quantity * l.unit_price)}</span>
+                  <button type="button" onClick={() => supprimerLigne(l.id)} className="min-h-8 min-w-8 rounded bg-[#C5716B]/15 text-xs text-[#C5716B]" aria-label={`Supprimer la ligne ${l.label}`}>✕</button>
                 </div>
               ))}
-              {!lignes.length && <p className="py-3 text-center text-sm text-[#a8bb87]">Aucune ligne — recherchez une pièce ou ajoutez une prestation.</p>}
+              {!lignes.length && <p className="py-3 text-center text-sm text-[#A7B7A8]">Aucune ligne — recherchez une pièce ou ajoutez une prestation.</p>}
             </div>
 
             {/* Totaux */}
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <label className="text-xs text-[#a8bb87]">Remise (MAD)
+              <label className="text-xs text-[#A7B7A8]">Remise (MAD)
                 <input type="number" min="0" step="1" value={remise} onChange={(e) => setRemise(Math.max(0, Number(e.target.value) || 0))} className="champ mt-1 min-h-11" />
               </label>
-              <label className="text-xs text-[#a8bb87]">TVA
+              <label className="text-xs text-[#A7B7A8]">TVA
                 <select value={tauxTVA} onChange={(e) => setTauxTVA(Number(e.target.value))} className="champ mt-1 min-h-11">
                   {[0, 7, 10, 14, 20].map((t) => <option key={t} value={t}>{t} %</option>)}
                 </select>
               </label>
               <div className="flex flex-col justify-end pb-1 text-sm">
-                <div className="flex justify-between"><span className="text-[#a8bb87]">HT</span><span>{formatMad(totalHT)}</span></div>
-                <div className="flex justify-between"><span className="text-[#a8bb87]">TVA</span><span>{formatMad(montantTVA)}</span></div>
-                <div className="flex justify-between font-extrabold text-[#e9d998]"><span>TTC</span><span>{formatMad(totalTTC)}</span></div>
+                <div className="flex justify-between"><span className="text-[#A7B7A8]">HT</span><span>{formatMad(totalHT)}</span></div>
+                <div className="flex justify-between"><span className="text-[#A7B7A8]">TVA</span><span>{formatMad(montantTVA)}</span></div>
+                <div className="flex justify-between font-extrabold text-[#D0C6AE]"><span>TTC</span><span>{formatMad(totalTTC)}</span></div>
               </div>
             </div>
 
-            <label className="mt-3 block text-xs text-[#a8bb87]">
+            <label className="mt-3 block text-xs text-[#A7B7A8]">
               Notes (optionnel)
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="champ mt-1 w-full py-2 text-sm" placeholder="Conditions, garanties…" />
             </label>
 
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-4 py-2 text-sm text-[#a8bb87]">Annuler</button>
+              <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>
               <button type="submit" disabled={saving || !lignes.length} className="btn-or px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">
                 {saving ? "Création…" : "Créer le devis"}
               </button>
