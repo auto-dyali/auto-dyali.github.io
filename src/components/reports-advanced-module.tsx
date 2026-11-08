@@ -248,7 +248,7 @@ export function ReportsAdvancedModule() {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Top produits */}
           <section className="carte overflow-hidden">
-            <h2 className="border-b border-[#3ECF6A]/10 p-5 font-bold">Top 10 produits (CA)</h2>
+            <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold">Top 10 produits (CA)</h2>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[480px] text-left text-sm">
                 <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
@@ -259,7 +259,7 @@ export function ReportsAdvancedModule() {
                     <th className="px-4 py-3 text-right">CA</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#3ECF6A]/10">
+                <tbody className="divide-y divide-[#8FB59B]/10">
                   {topProduits.map((p, index) => (
                     <tr key={`${p.nom}-${index}`}>
                       <td className="px-4 py-3 text-[#A7B7A8]">{index + 1}</td>
@@ -276,8 +276,8 @@ export function ReportsAdvancedModule() {
 
           {/* CA par catégorie */}
           <section className="carte overflow-hidden">
-            <h2 className="border-b border-[#3ECF6A]/10 p-5 font-bold">CA par catégorie</h2>
-            <ul className="divide-y divide-[#3ECF6A]/10">
+            <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold">CA par catégorie</h2>
+            <ul className="divide-y divide-[#8FB59B]/10">
               {caParCategorie.map((c) => (
                 <li key={c.cat} className="px-5 py-4">
                   <div className="flex items-center justify-between text-sm">
@@ -285,7 +285,7 @@ export function ReportsAdvancedModule() {
                     <span className="font-bold text-[#DFE7E2]">{formatMad(c.montant)}</span>
                   </div>
                   <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#344440]">
-                    <div className="h-full rounded-full bg-[#3ECF6A]" style={{ width: `${Math.min(100, c.part)}%` }} />
+                    <div className="h-full rounded-full bg-[#8FB59B]" style={{ width: `${Math.min(100, c.part)}%` }} />
                   </div>
                   <p className="mt-1 text-[11px] text-[#A7B7A8]">{Math.round(c.part)} % du CA détaillé</p>
                 </li>

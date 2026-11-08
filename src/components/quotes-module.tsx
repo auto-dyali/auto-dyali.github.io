@@ -39,7 +39,7 @@ type Produit = ProduitTest & { id: string };
 
 const STATUTS: Record<string, { label: string; classe: string }> = {
   draft: { label: "Brouillon", classe: "bg-[#344440] text-[#DFE7E2]" },
-  sent: { label: "Envoyé", classe: "bg-[#3ECF6A]/15 text-[#DFE7E2]" },
+  sent: { label: "Envoyé", classe: "bg-[#8FB59B]/15 text-[#DFE7E2]" },
   accepted: { label: "Accepté", classe: "bg-[#5D9E7F]/15 text-[#7FBF9E]" },
   converted: { label: "Converti en vente", classe: "bg-[#5D9E7F]/20 text-[#7FBF9E]" },
   expired: { label: "Expiré", classe: "bg-[#C5716B]/15 text-[#C5716B]" },
@@ -388,7 +388,7 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
       {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="carte overflow-hidden">
-        <div className="flex flex-col gap-3 border-b border-[#3ECF6A]/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-[#8FB59B]/10 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Gestion commerciale</p>
             <h2 className="titre-or mt-1 text-xl font-extrabold">Devis</h2>
@@ -398,7 +398,7 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 border-b border-[#3ECF6A]/10 p-4">
+        <div className="flex flex-wrap gap-2 border-b border-[#8FB59B]/10 p-4">
           <input
             type="search"
             value={recherche}
@@ -428,14 +428,14 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#3ECF6A]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {devisFiltres.map((d) => {
                   const info = STATUTS[d.status] ?? STATUTS.draft;
                   const actions = (
                     <div className="flex flex-wrap justify-end gap-1.5">
-                      <button type="button" onClick={() => void imprimerDevis(d)} className="rounded-lg border border-[#3ECF6A]/40 px-2.5 py-1.5 text-xs text-[#DFE7E2]">Imprimer</button>
+                      <button type="button" onClick={() => void imprimerDevis(d)} className="rounded-lg border border-[#8FB59B]/40 px-2.5 py-1.5 text-xs text-[#DFE7E2]">Imprimer</button>
                       {d.status === "draft" && (
-                        <button type="button" onClick={() => void changerStatut(d, "sent")} className="rounded-lg border border-[#3ECF6A]/40 px-2.5 py-1.5 text-xs text-[#DFE7E2]">Envoyer</button>
+                        <button type="button" onClick={() => void changerStatut(d, "sent")} className="rounded-lg border border-[#8FB59B]/40 px-2.5 py-1.5 text-xs text-[#DFE7E2]">Envoyer</button>
                       )}
                       {(d.status === "draft" || d.status === "sent") && (
                         <>
@@ -498,7 +498,7 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
             </div>
 
             {/* Ajout de lignes */}
-            <div className="mt-4 rounded-xl border border-[#3ECF6A]/15 bg-[#344440]/40 p-4">
+            <div className="mt-4 rounded-xl border border-[#8FB59B]/15 bg-[#344440]/40 p-4">
               <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Ajouter une ligne</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <input
@@ -509,12 +509,12 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
                   className="champ min-h-10 min-w-48 flex-1"
                   aria-label="Rechercher une pièce pour le devis"
                 />
-                <button type="button" onClick={ajouterPrestation} className="rounded-lg border border-[#3ECF6A]/40 px-3 py-2 text-xs text-[#DFE7E2]">
+                <button type="button" onClick={ajouterPrestation} className="rounded-lg border border-[#8FB59B]/40 px-3 py-2 text-xs text-[#DFE7E2]">
                   + Prestation
                 </button>
               </div>
               {produitsFiltres.length > 0 && (
-                <ul className="mt-2 divide-y divide-[#3ECF6A]/10 rounded-lg bg-[#2C3735]">
+                <ul className="mt-2 divide-y divide-[#8FB59B]/10 rounded-lg bg-[#2C3735]">
                   {produitsFiltres.map((p) => (
                     <li key={p.sku}>
                       <button type="button" onClick={() => ajouterProduit(p)} className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-[#344440]">
@@ -530,7 +530,7 @@ ${devisSel.notes ? `<p class="muted">Notes : ${devisSel.notes}</p>` : ""}
             {/* Lignes */}
             <div className="mt-4 space-y-2">
               {lignes.map((l) => (
-                <div key={l.id} className="flex flex-wrap items-end gap-2 rounded-lg border border-[#3ECF6A]/10 p-2">
+                <div key={l.id} className="flex flex-wrap items-end gap-2 rounded-lg border border-[#8FB59B]/10 p-2">
                   <label className="min-w-40 flex-1 text-[10px] uppercase text-[#A7B7A8]">
                     Désignation
                     <input value={l.label} onChange={(e) => majLigne(l.id, "label", e.target.value)} className="champ mt-1 min-h-9 py-1 text-sm normal-case tracking-normal" />

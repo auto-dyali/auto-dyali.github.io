@@ -263,8 +263,8 @@ export function CatalogueModule() {
                 onClick={() => selectionnerVehicule(v)}
                 className={`rounded-lg border px-3 py-2 text-xs transition ${
                   vehiculeSelectionne?.id === v.id
-                    ? "border-[#3ECF6A] bg-[#3ECF6A] font-bold text-[#252D2D]"
-                    : "border-[#3ECF6A]/30 text-[#DFE7E2] hover:bg-[#344440]"
+                    ? "border-[#8FB59B] bg-[#8FB59B] font-bold text-[#252D2D]"
+                    : "border-[#8FB59B]/30 text-[#DFE7E2] hover:bg-[#344440]"
                 }`}
               >
                 {v.brand} {v.model} · {v.generation ?? "—"} · {v.engine_code ?? "—"} {v.year_from ? `(${v.year_from}${v.year_to ? `–${v.year_to}` : ""})` : ""}
@@ -282,7 +282,7 @@ export function CatalogueModule() {
         <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
           {/* Compatibilités déclarées */}
           <section className="carte overflow-hidden">
-            <div className="border-b border-[#3ECF6A]/10 p-5">
+            <div className="border-b border-[#8FB59B]/10 p-5">
               <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Étape 2 — Pièces compatibles</p>
               <h2 className="titre-or mt-1 text-xl font-extrabold">
                 {vehiculeSelectionne.brand} {vehiculeSelectionne.model}
@@ -305,7 +305,7 @@ export function CatalogueModule() {
                     <th className="px-5 py-3 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#3ECF6A]/10">
+                <tbody className="divide-y divide-[#8FB59B]/10">
                   {compat.map((c) => (
                     <tr key={c.id}>
                       <td className="px-5 py-4">
@@ -315,7 +315,7 @@ export function CatalogueModule() {
                       <td className="px-5 py-4 text-[#A7B7A8]">{c.position ?? "—"}</td>
                       <td className="px-5 py-4 text-[#A7B7A8]">{c.source}</td>
                       <td className="px-5 py-4">
-                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${c.verified ? "bg-[#5D9E7F]/20 text-[#7FBF9E]" : "bg-[#3ECF6A]/15 text-[#DFE7E2]"}`}>
+                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${c.verified ? "bg-[#5D9E7F]/20 text-[#7FBF9E]" : "bg-[#8FB59B]/15 text-[#DFE7E2]"}`}>
                           {c.verified ? "✓ Validée" : "Non confirmée"}
                         </span>
                       </td>
@@ -354,7 +354,7 @@ export function CatalogueModule() {
                 <ScanChamp onCode={scannerPiece} placeholder="Scanner la pièce (EAN-13)…" />
               </div>
               {produitsFiltres.length > 0 && !produitSelectionne && (
-                <ul className="mt-1 max-h-44 divide-y divide-[#3ECF6A]/10 overflow-y-auto rounded-lg bg-[#2C3735]">
+                <ul className="mt-1 max-h-44 divide-y divide-[#8FB59B]/10 overflow-y-auto rounded-lg bg-[#2C3735]">
                   {produitsFiltres.map((p) => (
                     <li key={p.id}>
                       <button type="button" onClick={() => { setProduitSelectionne(p); setRechercheProduit(p.name); }} className="w-full px-3 py-2 text-left text-sm hover:bg-[#344440]">
@@ -377,7 +377,7 @@ export function CatalogueModule() {
               <input value={position} onChange={(e) => setPosition(e.target.value)} placeholder="essieu avant, avant…" className="champ mt-1 min-h-10" />
             </label>
 
-            <label className="mt-3 block text-xs text-[#3ECF6A]">
+            <label className="mt-3 block text-xs text-[#8FB59B]">
               Source * (obligatoire)
               <input
                 value={source}
@@ -393,7 +393,7 @@ export function CatalogueModule() {
             </label>
 
             <label className="mt-3 flex items-center gap-2 text-xs text-[#E8ECE8]">
-              <input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} className="h-4 w-4 accent-[#3ECF6A]" />
+              <input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} className="h-4 w-4 accent-[#8FB59B]" />
               Validée par un technicien
             </label>
             <p className="mt-2 text-[11px] leading-4 text-[#A7B7A8]">

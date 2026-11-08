@@ -34,8 +34,8 @@ type Commande = {
 
 const STATUTS_PO: Record<string, { label: string; classe: string }> = {
   draft: { label: "Brouillon", classe: "bg-[#344440] text-[#DFE7E2]" },
-  ordered: { label: "Commandée", classe: "bg-[#3ECF6A]/15 text-[#DFE7E2]" },
-  partial: { label: "Réception partielle", classe: "bg-[#3ECF6A]/20 text-[#DFE7E2]" },
+  ordered: { label: "Commandée", classe: "bg-[#8FB59B]/15 text-[#DFE7E2]" },
+  partial: { label: "Réception partielle", classe: "bg-[#8FB59B]/20 text-[#DFE7E2]" },
   received: { label: "Reçue", classe: "bg-[#5D9E7F]/15 text-[#7FBF9E]" },
   cancelled: { label: "Annulée", classe: "bg-[#C5716B]/15 text-[#C5716B]" },
 };
@@ -231,7 +231,7 @@ export function FournisseursModule() {
       </div>
 
       <section className="carte overflow-hidden">
-        <div className="border-b border-[#3ECF6A]/10 p-4">
+        <div className="border-b border-[#8FB59B]/10 p-4">
           <input
             type="search"
             value={recherche}
@@ -256,7 +256,7 @@ export function FournisseursModule() {
                   <th className="px-5 py-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#3ECF6A]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {filtres.map((f) => {
                   const solde = Number(f.balance_due ?? 0);
                   return (
@@ -264,11 +264,11 @@ export function FournisseursModule() {
                       <td className="px-5 py-4 font-semibold text-[#E8ECE8]">{f.name}</td>
                       <td className="px-5 py-4 text-[#A7B7A8]">{f.contact_name ?? "—"}</td>
                       <td className="px-5 py-4 text-[#A7B7A8]">{f.phone ?? "—"}</td>
-                      <td className={`px-5 py-4 text-right font-bold ${solde > 0.001 ? "text-[#3ECF6A]" : "text-[#5D9E7F]"}`}>
+                      <td className={`px-5 py-4 text-right font-bold ${solde > 0.001 ? "text-[#8FB59B]" : "text-[#5D9E7F]"}`}>
                         {formatMad(solde)}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button type="button" onClick={() => void ouvrirFiche(f)} className="rounded-lg border border-[#3ECF6A]/40 px-3 py-1.5 text-xs text-[#DFE7E2]">
+                        <button type="button" onClick={() => void ouvrirFiche(f)} className="rounded-lg border border-[#8FB59B]/40 px-3 py-1.5 text-xs text-[#DFE7E2]">
                           Ouvrir la fiche
                         </button>
                       </td>
@@ -300,10 +300,10 @@ export function FournisseursModule() {
               <button type="button" onClick={() => setSelection(null)} className="text-2xl text-[#A7B7A8]" aria-label="Fermer">×</button>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#3ECF6A]/20 bg-[#344440]/40 p-4">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#8FB59B]/20 bg-[#344440]/40 p-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Solde dû</p>
-                <p className={`titre-or mt-1 text-2xl font-extrabold ${Number(selection.balance_due) > 0.001 ? "text-[#3ECF6A]" : "text-[#5D9E7F]"}`}>
+                <p className={`titre-or mt-1 text-2xl font-extrabold ${Number(selection.balance_due) > 0.001 ? "text-[#8FB59B]" : "text-[#5D9E7F]"}`}>
                   {formatMad(Number(selection.balance_due ?? 0))}
                 </p>
               </div>
@@ -328,7 +328,7 @@ export function FournisseursModule() {
                       <th className="px-4 py-3 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#3ECF6A]/10">
+                  <tbody className="divide-y divide-[#8FB59B]/10">
                     {commandes.map((c) => {
                       const info = STATUTS_PO[c.status] ?? STATUTS_PO.draft;
                       return (

@@ -323,9 +323,9 @@ export default function SuperAdminPage() {
 
   return (
     <main className="min-h-screen bg-[#252D2D] text-[#E8ECE8]">
-      <header className="flex items-center justify-between border-b border-[#3ECF6A]/15 bg-[#2C3735] px-5 py-4 lg:px-10">
+      <header className="flex items-center justify-between border-b border-[#8FB59B]/15 bg-[#2C3735] px-5 py-4 lg:px-10">
         <Logo compact />
-        <div className="flex items-center gap-4"><span className="hidden text-sm text-[#A7B7A8] sm:block">Super Admin · AUTO DYALI</span><button onClick={() => void logout()} className="text-sm text-[#3ECF6A] hover:underline">Déconnexion</button></div>
+        <div className="flex items-center gap-4"><span className="hidden text-sm text-[#A7B7A8] sm:block">Super Admin · AUTO DYALI</span><button onClick={() => void logout()} className="text-sm text-[#8FB59B] hover:underline">Déconnexion</button></div>
       </header>
       <div className="mx-auto max-w-7xl p-5 lg:p-10">
         <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Administration centrale</p>
@@ -350,13 +350,13 @@ export default function SuperAdminPage() {
 
         {/* Entreprises */}
         <section className="carte mt-6 overflow-hidden">
-          <div className="flex flex-col gap-3 border-b border-[#3ECF6A]/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-b border-[#8FB59B]/10 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div><h2 className="font-bold">Entreprises et établissements</h2><p className="mt-1 text-xs text-[#A7B7A8]">Données Supabase — toute action sensible est journalisée.</p></div>
             <div className="flex flex-wrap gap-2">
-              <Link href="/super-admin/crm" className="rounded-lg border border-[#3ECF6A]/40 px-4 py-2 text-sm text-[#DFE7E2]">CRM commercial</Link>
+              <Link href="/super-admin/crm" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2]">CRM commercial</Link>
               <button type="button" onClick={() => { setNotice(null); setError(null); setEtabOpen(true); }} className="btn-or px-4 py-2 text-sm">+ Nouvel établissement</button>
-              <button type="button" onClick={() => { setNotice(null); setError(null); setEmployeeOpen(true); }} className="rounded-lg border border-[#3ECF6A]/40 px-4 py-2 text-sm text-[#DFE7E2]">+ Nouvel Employé</button>
-              <button type="button" onClick={() => { setNotice(null); setError(null); setClientOpen(true); }} className="rounded-lg border border-[#3ECF6A]/40 px-4 py-2 text-sm text-[#DFE7E2]">+ Nouveau Client</button>
+              <button type="button" onClick={() => { setNotice(null); setError(null); setEmployeeOpen(true); }} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2]">+ Nouvel Employé</button>
+              <button type="button" onClick={() => { setNotice(null); setError(null); setClientOpen(true); }} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2]">+ Nouveau Client</button>
             </div>
           </div>
           {loading && <p className="p-6 text-sm text-[#A7B7A8]">Chargement…</p>}
@@ -372,7 +372,7 @@ export default function SuperAdminPage() {
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#3ECF6A]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {establishments.map((establishment) => (
                   <tr key={establishment.id}>
                     <td className="px-5 py-4 font-semibold">{establishment.name}</td>
@@ -452,7 +452,7 @@ export default function SuperAdminPage() {
                 {traitement === `plan-${plan.code}` ? "Enregistrement…" : "Enregistrer l’offre"}
               </button>
 
-              <div className="mt-4 border-t border-[#3ECF6A]/10 pt-3">
+              <div className="mt-4 border-t border-[#8FB59B]/10 pt-3">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Modules inclus</p>
                 <div className="mt-2 grid grid-cols-1 gap-1.5 max-h-56 overflow-y-auto pr-1">
                   {FEATURES_PILOTEES.map((feature) => {
@@ -464,7 +464,7 @@ export default function SuperAdminPage() {
                           type="checkbox"
                           checked={actif}
                           onChange={(e) => void basculerFeature(plan.code, feature, e.target.checked)}
-                          className="h-4 w-4 accent-[#3ECF6A]"
+                          className="h-4 w-4 accent-[#8FB59B]"
                         />
                       </label>
                     );
@@ -482,11 +482,11 @@ export default function SuperAdminPage() {
 
         {/* Journal d'audit */}
         <section className="carte mt-6 overflow-hidden">
-          <div className="border-b border-[#3ECF6A]/10 p-5"><h2 className="font-bold">Journal d’audit</h2><p className="mt-1 text-xs text-[#A7B7A8]">Dernières actions sensibles (créations, changements de forfait, suspensions).</p></div>
+          <div className="border-b border-[#8FB59B]/10 p-5"><h2 className="font-bold">Journal d’audit</h2><p className="mt-1 text-xs text-[#A7B7A8]">Dernières actions sensibles (créations, changements de forfait, suspensions).</p></div>
           {audit.length === 0 ? (
             <p className="p-6 text-sm text-[#A7B7A8]">Aucune action journalisée pour l’instant.</p>
           ) : (
-            <ul className="divide-y divide-[#3ECF6A]/10 text-sm">
+            <ul className="divide-y divide-[#8FB59B]/10 text-sm">
               {audit.map((ligne) => (
                 <li key={ligne.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
                   <span className="font-semibold text-[#DFE7E2]">{ligne.action}</span>

@@ -202,7 +202,7 @@ export function CrmModule() {
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : leads.filter((l) => l.stage === "won").length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#3ECF6A]">Relances dues aujourd’hui</p>
+          <p className="text-xs text-[#8FB59B]">Relances dues aujourd’hui</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : aRelancer.length}</p>
         </article>
       </div>
@@ -217,7 +217,7 @@ export function CrmModule() {
           <p className="mt-1 text-sm text-[#A7B7A8]">Prospects, démonstrations, essais et relances.</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/super-admin" className="rounded-lg border border-[#3ECF6A]/40 px-4 py-2 text-sm text-[#DFE7E2]">← Pilotage</Link>
+          <Link href="/super-admin" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2]">← Pilotage</Link>
           <button type="button" onClick={() => { setOuvert(true); setError(null); setNotice(null); }} className="btn-or px-4 py-2 text-sm">
             + Nouveau prospect
           </button>
@@ -240,8 +240,8 @@ export function CrmModule() {
                     <button
                       type="button"
                       onClick={() => setSelection(lead)}
-                      className={`w-full rounded-lg border p-2.5 text-left transition hover:border-[#3ECF6A]/50 ${
-                        selection?.id === lead.id ? "border-[#3ECF6A] bg-[#344440]" : "border-[#3ECF6A]/15 bg-[#2C3735]"
+                      className={`w-full rounded-lg border p-2.5 text-left transition hover:border-[#8FB59B]/50 ${
+                        selection?.id === lead.id ? "border-[#8FB59B] bg-[#344440]" : "border-[#8FB59B]/15 bg-[#2C3735]"
                       }`}
                     >
                       <p className="truncate text-xs font-semibold text-[#E8ECE8]">{lead.company}</p>
@@ -249,7 +249,7 @@ export function CrmModule() {
                         {lead.city ?? "—"} · {lead.plan_interest ? lead.plan_interest.toUpperCase() : "forfait ?"}
                       </p>
                       {lead.next_action_at && (
-                        <p className="mt-1 text-[10px] text-[#3ECF6A]">Relance {dateFr(lead.next_action_at)}</p>
+                        <p className="mt-1 text-[10px] text-[#8FB59B]">Relance {dateFr(lead.next_action_at)}</p>
                       )}
                     </button>
                   </li>
@@ -294,7 +294,7 @@ export function CrmModule() {
             </label>
 
             {/* Journal */}
-            <div className="mt-5 border-t border-[#3ECF6A]/10 pt-4">
+            <div className="mt-5 border-t border-[#8FB59B]/10 pt-4">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Historique des contacts</p>
               <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
                 {eventsLead.map((ev) => (
@@ -392,11 +392,11 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   return (
     <main className="min-h-screen bg-[#252D2D] text-[#E8ECE8]">
-      <header className="flex items-center justify-between border-b border-[#3ECF6A]/15 bg-[#2C3735] px-5 py-4 lg:px-10">
+      <header className="flex items-center justify-between border-b border-[#8FB59B]/15 bg-[#2C3735] px-5 py-4 lg:px-10">
         <Logo compact />
         <div className="flex items-center gap-4">
           <span className="hidden text-sm text-[#A7B7A8] sm:block">Super Admin · {FEATURE_LABEL.crm ?? "CRM"}</span>
-          <button type="button" onClick={() => router.replace("/super-admin/")} className="text-sm text-[#3ECF6A] hover:underline">Pilotage</button>
+          <button type="button" onClick={() => router.replace("/super-admin/")} className="text-sm text-[#8FB59B] hover:underline">Pilotage</button>
         </div>
       </header>
       <div className="mx-auto max-w-7xl p-5 lg:p-10">{children}</div>

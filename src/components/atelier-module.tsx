@@ -66,9 +66,9 @@ const STATUTS: { cle: string; label: string }[] = [
 ];
 
 const STATUT_COULEUR: Record<string, string> = {
-  pending: "bg-[#3ECF6A]/15 text-[#DFE7E2]",
+  pending: "bg-[#8FB59B]/15 text-[#DFE7E2]",
   in_progress: "bg-[#8DA298]/15 text-[#8DA298]",
-  waiting_parts: "bg-[#3ECF6A]/15 text-[#DFE7E2]",
+  waiting_parts: "bg-[#8FB59B]/15 text-[#DFE7E2]",
   done: "bg-[#8DA298]/20 text-[#8DA298]",
   delivered: "bg-[#8DA298]/25 text-[#8DA298]",
   cancelled: "bg-[#C5716B]/15 text-[#C5716B]",
@@ -423,7 +423,7 @@ export function AtelierModule() {
       {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <section className="carte overflow-hidden">
-        <div className="flex flex-wrap gap-2 border-b border-[#3ECF6A]/10 p-4">
+        <div className="flex flex-wrap gap-2 border-b border-[#8FB59B]/10 p-4">
           {[
             { cle: "actifs", label: "Interventions actives" },
             { cle: "tous", label: "Tous" },
@@ -434,7 +434,7 @@ export function AtelierModule() {
               type="button"
               onClick={() => setFiltreStatut(f.cle)}
               className={`rounded-lg px-3 py-1.5 text-xs transition ${
-                filtreStatut === f.cle ? "bg-[#3ECF6A] font-bold text-[#252D2D]" : "bg-[#344440] text-[#3ECF6A]"
+                filtreStatut === f.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "bg-[#344440] text-[#8FB59B]"
               }`}
             >
               {f.label}
@@ -457,7 +457,7 @@ export function AtelierModule() {
                   <th className="px-4 py-3">Statut</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#3ECF6A]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {ordersFiltres.map((order) => (
                   <tr key={order.id}>
                     <td className="px-4 py-4 font-semibold text-[#DFE7E2]">
@@ -493,7 +493,7 @@ export function AtelierModule() {
                         disabled={traitement === order.id}
                         onClick={() => void basculerValidation(order)}
                         className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold disabled:opacity-40 ${
-                          order.approved_by_client ? "bg-[#8DA298]/20 text-[#8DA298]" : "border border-[#3ECF6A]/30 text-[#A7B7A8]"
+                          order.approved_by_client ? "bg-[#8DA298]/20 text-[#8DA298]" : "border border-[#8FB59B]/30 text-[#A7B7A8]"
                         }`}
                       >
                         {order.approved_by_client ? "✓ Validé client" : "En attente client"}
@@ -520,7 +520,7 @@ export function AtelierModule() {
                             disabled={traitement === order.id}
                             onClick={() => void imprimerBon(order, "80mm")}
                             title="Bon d'intervention thermique (80 mm par défaut, ou format de l'imprimante configurée)"
-                            className="min-h-9 flex-1 touch-manipulation rounded-lg border border-[#3ECF6A]/40 px-2 py-1 text-[11px] text-[#DFE7E2] disabled:opacity-40"
+                            className="min-h-9 flex-1 touch-manipulation rounded-lg border border-[#8FB59B]/40 px-2 py-1 text-[11px] text-[#DFE7E2] disabled:opacity-40"
                           >
                             Bon
                           </button>
@@ -529,7 +529,7 @@ export function AtelierModule() {
                             disabled={traitement === order.id}
                             onClick={() => void imprimerBon(order, "A4")}
                             title="Bon d'intervention A4 / PDF (avec zone de signature client)"
-                            className="min-h-9 flex-1 touch-manipulation rounded-lg border border-[#3ECF6A]/40 px-2 py-1 text-[11px] text-[#DFE7E2] disabled:opacity-40"
+                            className="min-h-9 flex-1 touch-manipulation rounded-lg border border-[#8FB59B]/40 px-2 py-1 text-[11px] text-[#DFE7E2] disabled:opacity-40"
                           >
                             A4
                           </button>
@@ -633,7 +633,7 @@ export function AtelierModule() {
 
                   <ul className="mt-3 space-y-2">
                     {taches.map((t) => (
-                      <li key={t.id} className="rounded-lg border border-[#3ECF6A]/10 bg-[#344440]/40 p-3">
+                      <li key={t.id} className="rounded-lg border border-[#8FB59B]/10 bg-[#344440]/40 p-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <p className="text-sm font-semibold text-[#E8ECE8]">{t.label}</p>
                           <span className="text-xs font-bold text-[#DFE7E2]">{Number(t.price) > 0 ? formatMad(Number(t.price)) : "—"}</span>
@@ -654,7 +654,7 @@ export function AtelierModule() {
                             type="button"
                             onClick={() => void basculerControleQualite(t)}
                             className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold ${
-                              t.quality_checked ? "bg-[#8DA298]/20 text-[#8DA298]" : "border border-[#3ECF6A]/30 text-[#A7B7A8]"
+                              t.quality_checked ? "bg-[#8DA298]/20 text-[#8DA298]" : "border border-[#8FB59B]/30 text-[#A7B7A8]"
                             }`}
                           >
                             {t.quality_checked ? "✓ Contrôle qualité" : "Contrôle qualité"}

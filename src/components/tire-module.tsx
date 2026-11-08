@@ -279,7 +279,7 @@ export function TireModule() {
                     <th className="px-4 py-3 text-right">Prix</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#3ECF6A]/10">
+                <tbody className="divide-y divide-[#8FB59B]/10">
                   {filtres.map((p) => (
                     <tr key={p.id}>
                       <td className="px-4 py-3">

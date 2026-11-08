@@ -243,7 +243,7 @@ export function ExcelModule() {
             <button type="button" onClick={exporterProduits} disabled={loading || !produits.length} className="btn-or px-4 py-2.5 text-sm disabled:opacity-40">
               Exporter les produits (.xlsx)
             </button>
-            <button type="button" onClick={exporterClients} disabled={loading || !clients.length} className="rounded-lg border border-[#3ECF6A]/40 px-4 py-2.5 text-sm text-[#DFE7E2] disabled:opacity-40">
+            <button type="button" onClick={exporterClients} disabled={loading || !clients.length} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2.5 text-sm text-[#DFE7E2] disabled:opacity-40">
               Exporter les clients (.xlsx)
             </button>
           </div>
@@ -272,7 +272,7 @@ export function ExcelModule() {
                 }}
               />
             </label>
-            <button type="button" onClick={modeleProduits} className="rounded-lg border border-[#3ECF6A]/40 px-4 py-2.5 text-sm text-[#DFE7E2]">
+            <button type="button" onClick={modeleProduits} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2.5 text-sm text-[#DFE7E2]">
               Télécharger le modèle
             </button>
           </div>
@@ -282,7 +282,7 @@ export function ExcelModule() {
       {/* Rapport d’erreurs */}
       {rapport && (
         <section className="carte overflow-hidden">
-          <div className="border-b border-[#3ECF6A]/10 p-5">
+          <div className="border-b border-[#8FB59B]/10 p-5">
             <h2 className="font-bold">Rapport d’import</h2>
             <p className="mt-1 text-xs text-[#A7B7A8]">
               {rapport.total} ligne(s) lue(s) — {rapport.crees} créée(s), {rapport.doublons} doublon(s) ignoré(s), {rapport.erreurs.length} erreur(s).
@@ -294,7 +294,7 @@ export function ExcelModule() {
                 <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                   <tr><th className="px-5 py-3">Ligne</th><th className="px-5 py-3">Motif</th></tr>
                 </thead>
-                <tbody className="divide-y divide-[#3ECF6A]/10">
+                <tbody className="divide-y divide-[#8FB59B]/10">
                   {rapport.erreurs.map((err, index) => (
                     <tr key={`${err.ligne}-${index}`}>
                       <td className="px-5 py-3 font-mono text-[#DFE7E2]">{err.ligne}</td>

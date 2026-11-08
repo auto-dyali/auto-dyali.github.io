@@ -131,7 +131,7 @@ export function ScanChamp({
           type="button"
           onClick={() => traiter(champRef.current?.value ?? "")}
           title="Scanner le code saisi, ou ouvrir la caméra si aucun code n'est saisi"
-          className="min-h-11 shrink-0 rounded-lg bg-[#3ECF6A] px-4 text-sm font-bold text-[#252D2D]"
+          className="min-h-11 shrink-0 rounded-lg bg-[#8FB59B] px-4 text-sm font-bold text-[#252D2D]"
         >
           Scanner
         </button>
@@ -140,7 +140,7 @@ export function ScanChamp({
           onClick={() => setCamOuverte(true)}
           title="Lire un code-barres ou un QR avec la caméra"
           aria-label="Scanner avec la caméra"
-          className="min-h-11 shrink-0 rounded-lg border border-[#3ECF6A]/40 px-3 text-sm text-[#DFE7E2]"
+          className="min-h-11 shrink-0 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#DFE7E2]"
         >
           📷
         </button>

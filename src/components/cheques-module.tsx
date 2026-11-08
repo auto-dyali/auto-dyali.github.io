@@ -25,7 +25,7 @@ type Cheque = {
 };
 
 const STATUTS: Record<string, { label: string; classe: string }> = {
-  en_attente: { label: "En attente", classe: "bg-[#3ECF6A]/15 text-[#DFE7E2]" },
+  en_attente: { label: "En attente", classe: "bg-[#8FB59B]/15 text-[#DFE7E2]" },
   encaisse: { label: "Encaissé", classe: "bg-[#8DA298]/20 text-[#8DA298]" },
   rejete: { label: "Rejeté", classe: "bg-[#C5716B]/15 text-[#C5716B]" },
   annule: { label: "Annulé", classe: "bg-[#344440] text-[#A7B7A8]" },
@@ -35,7 +35,7 @@ const URGENCES: Record<string, string> = {
   "EN RETARD": "bg-[#C5716B]/20 text-[#C5716B]",
   "J-1": "bg-[#C79A6B]/25 text-[#C79A6B]",
   "J-3": "bg-[#C79A6B]/15 text-[#C79A6B]",
-  "J-7": "bg-[#3ECF6A]/15 text-[#DFE7E2]",
+  "J-7": "bg-[#8FB59B]/15 text-[#DFE7E2]",
   OK: "bg-[#8DA298]/15 text-[#8DA298]",
 };
 
@@ -131,8 +131,8 @@ export function ChequesModule() {
       {/* Alertes échéances */}
       {alertes.length > 0 && (
         <section className="carte mb-5 overflow-hidden">
-          <h2 className="border-b border-[#3ECF6A]/10 p-5 font-bold">Échéances proches (J-7 et moins)</h2>
-          <ul className="divide-y divide-[#3ECF6A]/10">
+          <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold">Échéances proches (J-7 et moins)</h2>
+          <ul className="divide-y divide-[#8FB59B]/10">
             {alertes.map((a) => (
               <li key={a.cheque_id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
                 <span className="font-semibold text-[#E8ECE8]">{a.bank} · {a.number}</span>
@@ -166,11 +166,11 @@ export function ChequesModule() {
 
       {/* Liste */}
       <section className="carte overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#3ECF6A]/10 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#8FB59B]/10 p-5">
           <h2 className="font-bold">{visibles.length} chèque{visibles.length > 1 ? "s" : ""}</h2>
           <div className="flex flex-wrap gap-2">
             {["tous", "en_attente", "encaisse", "rejete", "annule"].map((s) => (
-              <button key={s} type="button" onClick={() => setFiltre(s)} className={`rounded-lg border px-3 py-1.5 text-xs ${filtre === s ? "border-[#3ECF6A]/50 bg-[#3ECF6A]/15 text-[#DFE7E2]" : "border-[#3ECF6A]/20 text-[#A7B7A8]"}`}>
+              <button key={s} type="button" onClick={() => setFiltre(s)} className={`rounded-lg border px-3 py-1.5 text-xs ${filtre === s ? "border-[#8FB59B]/50 bg-[#8FB59B]/15 text-[#DFE7E2]" : "border-[#8FB59B]/20 text-[#A7B7A8]"}`}>
                 {s === "tous" ? "Tous" : STATUTS[s]?.label ?? s}
               </button>
             ))}
@@ -181,7 +181,7 @@ export function ChequesModule() {
             <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
               <tr><th className="px-4 py-3">Banque / N°</th><th className="px-4 py-3">Bénéficiaire</th><th className="px-4 py-3">Montant</th><th className="px-4 py-3">Échéance</th><th className="px-4 py-3">Statut</th><th className="px-4 py-3">Actions</th></tr>
             </thead>
-            <tbody className="divide-y divide-[#3ECF6A]/10">
+            <tbody className="divide-y divide-[#8FB59B]/10">
               {visibles.map((c) => (
                 <tr key={c.id}>
                   <td className="px-4 py-4 font-semibold text-[#DFE7E2]">{c.bank}<p className="text-xs font-normal text-[#A7B7A8]">{c.number}</p></td>
@@ -192,7 +192,7 @@ export function ChequesModule() {
                   <td className="px-4 py-4">
                     {c.status === "en_attente" ? (
                       <div className="flex gap-2">
-                        <button type="button" disabled={saving} onClick={() => void changerStatut(c, "encaisse")} className="rounded-lg border border-[#3ECF6A]/30 px-2.5 py-1.5 text-xs text-[#DFE7E2]">Encaisser</button>
+                        <button type="button" disabled={saving} onClick={() => void changerStatut(c, "encaisse")} className="rounded-lg border border-[#8FB59B]/30 px-2.5 py-1.5 text-xs text-[#DFE7E2]">Encaisser</button>
                         <button type="button" disabled={saving} onClick={() => void changerStatut(c, "rejete")} className="rounded-lg border border-[#C5716B]/30 px-2.5 py-1.5 text-xs text-[#C5716B]">Rejeter</button>
                       </div>
                     ) : (

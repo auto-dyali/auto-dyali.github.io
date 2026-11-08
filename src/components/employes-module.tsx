@@ -172,7 +172,7 @@ export function EmployesModule() {
             type="button"
             onClick={() => setFiltre(f.cle)}
             className={`rounded-lg px-3 py-1.5 text-xs transition ${
-              filtre === f.cle ? "bg-[#3ECF6A] font-bold text-[#252D2D]" : "bg-[#344440] text-[#3ECF6A]"
+              filtre === f.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "bg-[#344440] text-[#8FB59B]"
             }`}
           >
             {f.label}
@@ -197,7 +197,7 @@ export function EmployesModule() {
                   <th className="px-5 py-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#3ECF6A]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {visibles.map((e) => {
                   const s = stats.get(e.id) ?? { total: 0, termines: 0, ca: 0 };
                   return (

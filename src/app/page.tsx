@@ -30,9 +30,15 @@ export default function SplashPage() {
       {/* Fond garage : scène CSS (photo à substituer plus tard) */}
       <SceneGarage />
       <div className="relative z-10 mt-auto mb-8 w-56 px-3 sm:mb-10 sm:w-72">
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-transparent">
-          <div className="h-full rounded-full bg-gradient-to-r from-[#DFE7E2] via-[#3ECF6A] to-[#C79A6B] transition-[width] duration-75" style={{ width: `${progress}%` }} />
+        <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-[0.35em] text-[#DFE7E2]/75">
+          Chargement AUTO DYALI
+        </p>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="h-full rounded-full bg-gradient-to-r from-[#DFE7E2] via-[#8FB59B] to-[#C79A6B] transition-[width] duration-75" style={{ width: `${progress}%` }} />
         </div>
+        <p role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label="Chargement" className="titre-or mt-2 text-center text-3xl font-extrabold tabular-nums">
+          {progress}%
+        </p>
       </div>
 
     </main>
@@ -58,7 +64,7 @@ function SceneGarage() {
       {/* halos dorés */}
       <div
         className="absolute -top-24 right-0 h-[32rem] w-[32rem] rounded-full blur-3xl opacity-25"
-        style={{ background: "radial-gradient(circle,#3ECF6A,transparent 65%)" }}
+        style={{ background: "radial-gradient(circle,#8FB59B,transparent 65%)" }}
       />
       <div
         className="absolute bottom-0 left-1/2 h-72 w-[36rem] -translate-x-1/2 blur-3xl opacity-15"

@@ -66,14 +66,19 @@ export default function ConnexionPage() {
     }
   }
 
+  const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
+
   return (
     <main className="relative flex min-h-screen items-stretch overflow-hidden bg-[#101f1a]">
-      {/* Scène garage plein écran (nouvelle image fournie) */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url('${process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? ""}/images/backgrounds/connexion.webp')` }}
-      />
+      {/* Scène garage plein écran (image ajustée : logo mural entier visible) */}
+      <picture className="absolute inset-0 block">
+        <source media="(max-width: 768px)" srcSet={`${basePath}/images/backgrounds/connexion-mobile.webp`} />
+        <img
+          src={`${basePath}/images/backgrounds/connexion.webp`}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-left-top"
+        />
+      </picture>
       {/* Voile discret pour la lisibilité de la carte */}
       <div
         aria-hidden
@@ -138,7 +143,7 @@ export default function ConnexionPage() {
                 aria-label={motPasseVisible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                 aria-pressed={motPasseVisible}
                 onClick={() => setMotPasseVisible((visible) => !visible)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-[#DFE7E2]/75 hover:bg-white/10 hover:text-[#3ECF6A]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-[#DFE7E2]/75 hover:bg-white/10 hover:text-[#8FB59B]"
               >
                 <svg viewBox="0 0 20 20" width="19" height="19" aria-hidden>
                   {motPasseVisible ? <path d="M3 3l14 14M8.5 5.1A8.7 8.7 0 0 1 10 5c4.7 0 7.2 5 7.2 5a13 13 0 0 1-2.1 2.7M5.1 7.1C3.7 8.2 2.8 10 2.8 10s2.5 5 7.2 5c.8 0 1.5-.1 2.1-.4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /> : <><path d="M2.8 10s2.5-4 7.2-4 7.2 4 7.2 4-2.5 4-7.2 4-7.2-4-7.2-4Z" fill="none" stroke="currentColor" strokeWidth="1.5" /><circle cx="10" cy="10" r="1.8" fill="none" stroke="currentColor" strokeWidth="1.5" /></>}
@@ -158,11 +163,11 @@ export default function ConnexionPage() {
                   type="checkbox"
                   checked={seSouvenir}
                   onChange={(e) => setSeSouvenir(e.target.checked)}
-                  className="h-4 w-4 accent-[#3ECF6A]"
+                  className="h-4 w-4 accent-[#8FB59B]"
                 />
                 Se souvenir de moi
               </label>
-              <a href="#" className="text-[#3ECF6A] underline underline-offset-2">
+              <a href="#" className="text-[#8FB59B] underline underline-offset-2">
                 Mot de passe oublié ?
               </a>
             </div>

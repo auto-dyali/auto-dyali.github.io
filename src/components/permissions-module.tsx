@@ -169,7 +169,7 @@ export function PermissionsModule() {
             type="button"
             onClick={() => setFiltreRole(r.code)}
             className={`rounded-lg border px-4 py-2 text-sm transition ${
-              filtreRole === r.code ? "border-[#3ECF6A]/60 bg-[#3ECF6A]/15 font-bold text-[#DFE7E2]" : "border-[#3ECF6A]/20 text-[#A7B7A8]"
+              filtreRole === r.code ? "border-[#8FB59B]/60 bg-[#8FB59B]/15 font-bold text-[#DFE7E2]" : "border-[#8FB59B]/20 text-[#A7B7A8]"
             }`}
           >
             {r.label}
@@ -187,7 +187,7 @@ export function PermissionsModule() {
                 {ACTIONS.map((a) => <th key={a.cle} className="px-4 py-3 text-center">{a.label}</th>)}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#3ECF6A]/10">
+            <tbody className="divide-y divide-[#8FB59B]/10">
               {lignes.map((m) => {
                 const cle = `${filtreRole}|${m.code}`;
                 const d = cellules[cle] ?? { id: null, can_view: false, can_create: false, can_edit: false, can_delete: false };
@@ -205,8 +205,8 @@ export function PermissionsModule() {
                           aria-label={`${a.label} — ${m.label}`}
                           className={`h-9 w-9 rounded-lg border text-xs font-bold transition disabled:opacity-30 ${
                             d[a.cle]
-                              ? "border-[#3ECF6A]/60 bg-[#3ECF6A]/25 text-[#DFE7E2]"
-                              : "border-[#3ECF6A]/15 text-[#A7B7A8]/50"
+                              ? "border-[#8FB59B]/60 bg-[#8FB59B]/25 text-[#DFE7E2]"
+                              : "border-[#8FB59B]/15 text-[#A7B7A8]/50"
                           }`}
                         >
                           {d[a.cle] ? "✓" : a.court}
@@ -219,7 +219,7 @@ export function PermissionsModule() {
             </tbody>
           </table>
         </div>
-        <p className="border-t border-[#3ECF6A]/10 px-4 py-3 text-xs text-[#A7B7A8]">
+        <p className="border-t border-[#8FB59B]/10 px-4 py-3 text-xs text-[#A7B7A8]">
           {filtreRole === "saas_admin"
             ? "Le rôle Super Admin dispose de tous les droits par conception : non modifiable."
             : "V = voir · C = créer · M = modifier · S = supprimer. Un droit d’écriture active automatiquement la vue. Les rôles employé par défaut restent en place tant qu’aucune ligne n’est enregistrée."}

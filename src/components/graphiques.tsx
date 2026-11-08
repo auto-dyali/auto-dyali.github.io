@@ -20,12 +20,12 @@ export function CourbeCA({ donnees }: { donnees: readonly number[] }) {
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img" aria-label="Évolution du chiffre d'affaires">
       <defs>
         <linearGradient id="aireCA" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3ECF6A" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#3ECF6A" stopOpacity="0" />
+          <stop offset="0%" stopColor="#8FB59B" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#8FB59B" stopOpacity="0" />
         </linearGradient>
         <linearGradient id="ligneCA" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor="#DFE7E2" />
-          <stop offset="100%" stopColor="#3ECF6A" />
+          <stop offset="100%" stopColor="#8FB59B" />
         </linearGradient>
       </defs>
 
@@ -106,7 +106,7 @@ export function DonutServices({
           <li key={p.label} className="flex items-center gap-2 text-[#E8ECE8]/85">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: p.couleur }} />
             <span className="min-w-24">{p.label}</span>
-            <span className="font-semibold text-[#3ECF6A]">{p.pourcent}%</span>
+            <span className="font-semibold text-[#8FB59B]">{p.pourcent}%</span>
           </li>
         ))}
       </ul>

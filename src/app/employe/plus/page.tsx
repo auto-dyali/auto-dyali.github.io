@@ -109,7 +109,7 @@ export default function PlusPage() {
     <main className="min-h-screen bg-[#252D2D] p-5 text-[#E8ECE8]">
       <div className="mx-auto max-w-md">
         <div className="flex items-center justify-between">
-          <button type="button" onClick={() => router.replace("/employe/")} className="text-sm text-[#3ECF6A]">
+          <button type="button" onClick={() => router.replace("/employe/")} className="text-sm text-[#8FB59B]">
             ← Retour
           </button>
           <Logo compact />
@@ -157,7 +157,7 @@ export default function PlusPage() {
             <h2 className="text-sm font-bold">Sessions du jour</h2>
             <span className="text-xs text-[#A7B7A8]">{heuresDuJour.toFixed(1)} h cumulées</span>
           </div>
-          <ul className="mt-3 divide-y divide-[#3ECF6A]/10">
+          <ul className="mt-3 divide-y divide-[#8FB59B]/10">
             {pointages.map((p) => (
               <li key={p.id} className="flex items-center justify-between py-2.5 text-sm">
                 <span className="text-[#DFE7E2]">

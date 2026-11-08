@@ -269,7 +269,7 @@ export function ClientsModule() {
       </div>
 
       <section className="carte overflow-hidden">
-        <div className="border-b border-[#3ECF6A]/10 p-4">
+        <div className="border-b border-[#8FB59B]/10 p-4">
           <input
             type="search"
             value={recherche}
@@ -294,7 +294,7 @@ export function ClientsModule() {
                   <th className="px-5 py-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#3ECF6A]/10">
+              <tbody className="divide-y divide-[#8FB59B]/10">
                 {clientsFiltres.map((c) => {
                   const solde = Number(c.balance_due ?? 0);
                   return (
@@ -308,11 +308,11 @@ export function ClientsModule() {
                         {c.email && <span className="block text-[11px]">{c.email}</span>}
                       </td>
                       <td className="px-5 py-4 text-right text-[#DFE7E2]">{c.vehicles?.length ?? 0}</td>
-                      <td className={`px-5 py-4 text-right font-bold ${solde > 0.001 ? "text-[#3ECF6A]" : "text-[#5D9E7F]"}`}>
+                      <td className={`px-5 py-4 text-right font-bold ${solde > 0.001 ? "text-[#8FB59B]" : "text-[#5D9E7F]"}`}>
                         {formatMad(solde)}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button type="button" onClick={() => void ouvrirFiche(c)} className="rounded-lg border border-[#3ECF6A]/40 px-3 py-1.5 text-xs text-[#DFE7E2]">
+                        <button type="button" onClick={() => void ouvrirFiche(c)} className="rounded-lg border border-[#8FB59B]/40 px-3 py-1.5 text-xs text-[#DFE7E2]">
                           Ouvrir la fiche
                         </button>
                       </td>
@@ -357,10 +357,10 @@ export function ClientsModule() {
             </div>
 
             {/* Solde */}
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#3ECF6A]/20 bg-[#344440]/40 p-4">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#8FB59B]/20 bg-[#344440]/40 p-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Solde client</p>
-                <p className={`titre-or mt-1 text-2xl font-extrabold ${Number(selection.balance_due) > 0.001 ? "text-[#3ECF6A]" : "text-[#5D9E7F]"}`}>
+                <p className={`titre-or mt-1 text-2xl font-extrabold ${Number(selection.balance_due) > 0.001 ? "text-[#8FB59B]" : "text-[#5D9E7F]"}`}>
                   {formatMad(Number(selection.balance_due ?? 0))}
                 </p>
               </div>

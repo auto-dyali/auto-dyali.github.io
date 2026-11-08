@@ -278,7 +278,7 @@ export function PrintProModule() {
         ) : (
           <ul className="mt-3 space-y-2">
             {imprimantes.map((p) => (
-              <li key={p.id} className={`rounded-lg border border-[#3ECF6A]/15 bg-[#344440]/30 p-3 ${p.actif ? "" : "opacity-50"}`}>
+              <li key={p.id} className={`rounded-lg border border-[#8FB59B]/15 bg-[#344440]/30 p-3 ${p.actif ? "" : "opacity-50"}`}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[#E8ECE8]">{p.label} {!p.actif && <span className="text-xs text-[#C5716B]">(désactivée)</span>}</p>
@@ -309,7 +309,7 @@ export function PrintProModule() {
                         });
                         setFormOuvert(true);
                       }}
-                      className="min-h-10 rounded-lg border border-[#3ECF6A]/40 px-3 py-1 text-xs text-[#DFE7E2]"
+                      className="min-h-10 rounded-lg border border-[#8FB59B]/40 px-3 py-1 text-xs text-[#DFE7E2]"
                     >
                       Modifier
                     </button>
@@ -361,8 +361,8 @@ export function PrintProModule() {
                   ["est_defaut_devis", "Devis"],
                   ["est_defaut_facture", "Factures"],
                 ] as const).map(([champ, libelle]) => (
-                  <label key={champ} className="flex min-h-11 items-center gap-2 rounded-lg border border-[#3ECF6A]/20 bg-[#344440]/30 px-3 text-sm text-[#E8ECE8]">
-                    <input type="checkbox" checked={edition[champ]} onChange={(e) => setEdition({ ...edition, [champ]: e.target.checked })} className="h-5 w-5 accent-[#3ECF6A]" />
+                  <label key={champ} className="flex min-h-11 items-center gap-2 rounded-lg border border-[#8FB59B]/20 bg-[#344440]/30 px-3 text-sm text-[#E8ECE8]">
+                    <input type="checkbox" checked={edition[champ]} onChange={(e) => setEdition({ ...edition, [champ]: e.target.checked })} className="h-5 w-5 accent-[#8FB59B]" />
                     {libelle}
                   </label>
                 ))}
@@ -371,7 +371,7 @@ export function PrintProModule() {
             <input type="text" placeholder="Notes (optionnel)" value={edition.notes} onChange={(e) => setEdition({ ...edition, notes: e.target.value })} className="champ min-h-11 sm:col-span-2" />
             <div className="flex gap-2 sm:col-span-2">
               <button type="submit" disabled={enregistre} className="btn-or min-h-11 flex-1 px-4 py-2 text-sm disabled:opacity-40">{enregistre ? "Enregistrement…" : "Enregistrer"}</button>
-              <button type="button" onClick={() => setFormOuvert(false)} className="min-h-11 rounded-lg border border-[#3ECF6A]/40 px-4 py-2 text-sm text-[#DFE7E2]">Annuler</button>
+              <button type="button" onClick={() => setFormOuvert(false)} className="min-h-11 rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2]">Annuler</button>
             </div>
           </form>
         </section>
@@ -394,7 +394,7 @@ export function PrintProModule() {
                 <span className="flex items-center gap-2">
                   <span className={`text-xs ${t.status === "ok" ? "text-[#7FBF9E]" : "text-[#C5716B]"}`}>{t.status === "ok" ? "OK" : "Erreur"}</span>
                   <span className="text-[10px] text-[#8DA298]">{new Date(t.created_at).toLocaleString("fr-FR")}</span>
-                  <button onClick={() => reimprimer(t)} className="min-h-10 rounded border border-[#3ECF6A]/40 px-2 py-0.5 text-xs text-[#DFE7E2]">Réimprimer</button>
+                  <button onClick={() => reimprimer(t)} className="min-h-10 rounded border border-[#8FB59B]/40 px-2 py-0.5 text-xs text-[#DFE7E2]">Réimprimer</button>
                 </span>
               </li>
             ))}

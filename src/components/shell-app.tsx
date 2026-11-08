@@ -59,7 +59,7 @@ function ModuleVerrouille({ feature, plan, onUpgrade }: { feature: FeatureKey; p
   return (
     <div className="mx-auto max-w-xl">
       <section className="carte p-8 text-center">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#3ECF6A]/15">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#8FB59B]/15">
           <Icone nom="cle" taille={26} />
         </span>
         <h1 className="titre-or mt-4 text-2xl font-extrabold">Module non inclus</h1>
@@ -73,7 +73,7 @@ function ModuleVerrouille({ feature, plan, onUpgrade }: { feature: FeatureKey; p
           Super Admin pour changer le forfait de l’établissement.
         </p>
         <div className="mt-6 flex justify-center gap-3">
-          <Link href="/tableau-de-bord" className="rounded-lg border border-[#3ECF6A]/40 px-4 py-2 text-sm text-[#DFE7E2]">
+          <Link href="/tableau-de-bord" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2]">
             Retour au tableau de bord
           </Link>
           <button type="button" onClick={onUpgrade} className="btn-or px-4 py-2 text-sm">
@@ -208,7 +208,7 @@ export function ShellApp({
           className={cn(
             "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm transition",
             actif === m.label
-              ? "bg-[#3ECF6A] font-bold text-[#252D2D]"
+              ? "bg-[#8FB59B] font-bold text-[#252D2D]"
               : "text-[#E8ECE8]/80 hover:bg-[#344440] hover:text-[#E8ECE8]"
           )}
         >
@@ -290,7 +290,7 @@ export function ShellApp({
             aria-expanded={ouvert}
           >
             <svg viewBox="0 0 20 20" width="18" height="18">
-              <path d="M3 5h14M3 10h11M3 15h14" stroke="#3ECF6A" strokeWidth="2" strokeLinecap="round" />
+              <path d="M3 5h14M3 10h11M3 15h14" stroke="#8FB59B" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
 
@@ -318,7 +318,7 @@ export function ShellApp({
         </header>
 
         {horsLigne && (
-          <p role="status" className="bg-[#3ECF6A]/20 px-4 py-2 text-center text-xs font-semibold text-[#DFE7E2] lg:px-7">
+          <p role="status" className="bg-[#8FB59B]/20 px-4 py-2 text-center text-xs font-semibold text-[#DFE7E2] lg:px-7">
             Hors connexion — les données affichées peuvent ne pas être à jour et les écritures seront impossibles jusqu’au retour du réseau.
           </p>
         )}

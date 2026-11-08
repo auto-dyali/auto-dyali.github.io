@@ -1329,7 +1329,7 @@ export function PosModule() {
             type="button"
             onClick={() => setCategorie("Toutes")}
             className={`shrink-0 rounded-lg px-3 py-2 text-left text-sm transition ${
-              categorie === "Toutes" ? "bg-[#3ECF6A] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440]"
+              categorie === "Toutes" ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440]"
             }`}
           >
             Toutes
@@ -1340,14 +1340,14 @@ export function PosModule() {
               type="button"
               onClick={() => setCategorie(cat.cle)}
               className={`shrink-0 rounded-lg px-3 py-2 text-left text-sm transition ${
-                categorie === cat.cle ? "bg-[#3ECF6A] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440]"
+                categorie === cat.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440]"
               }`}
             >
               {cat.libelle}
             </button>
           ))}
         </div>
-        <div className="mt-5 hidden border-t border-[#3ECF6A]/10 pt-4 xl:block">
+        <div className="mt-5 hidden border-t border-[#8FB59B]/10 pt-4 xl:block">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Scan</p>
           <p className="mt-2 text-xs leading-5 text-[#A7B7A8]">
             <strong className="text-[#DFE7E2]">Douchette USB/Bluetooth</strong> : scannez n&apos;importe où sur la
@@ -1373,12 +1373,12 @@ export function PosModule() {
         </div>
 
         {/* Sélecteur véhicule facultatif : Marque → Modèle → Année → Motorisation → Version */}
-        <div className="rounded-xl border border-[#3ECF6A]/15 bg-[#344440]/40 p-3">
+        <div className="rounded-xl border border-[#8FB59B]/15 bg-[#344440]/40 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => setVehOuvert(!vehOuvert)}
-              className="min-h-9 rounded-lg border border-[#3ECF6A]/40 px-3 text-xs font-semibold text-[#DFE7E2]"
+              className="min-h-9 rounded-lg border border-[#8FB59B]/40 px-3 text-xs font-semibold text-[#DFE7E2]"
               aria-expanded={vehOuvert}
             >
               🚗 Sélecteur véhicule (facultatif) {vehOuvert ? "▲" : "▼"}
@@ -1456,7 +1456,7 @@ export function PosModule() {
           )}
 
           {vehiculeActif && (
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#3ECF6A]/10 pt-2">
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#8FB59B]/10 pt-2">
               <p className="text-xs text-[#A7B7A8]">
                 <strong className="text-[#7FBF9E]">{nbCompatibles}</strong> pièce(s) avec compatibilité{" "}
                 <strong className="text-[#7FBF9E]">vérifiée</strong> pour ce véhicule.
@@ -1466,7 +1466,7 @@ export function PosModule() {
                   type="checkbox"
                   checked={afficherTous}
                   onChange={(e) => setAfficherTous(e.target.checked)}
-                  className="accent-[#3ECF6A]"
+                  className="accent-[#8FB59B]"
                 />
                 Afficher aussi les pièces sans compatibilité vérifiée
               </label>
@@ -1501,7 +1501,7 @@ export function PosModule() {
             {prestationsFiltre.map((s) => (
               <article
                 key={s.id}
-                className="flex min-h-32 flex-col rounded-xl border border-[#3ECF6A]/15 bg-[#344440]/60 p-3"
+                className="flex min-h-32 flex-col rounded-xl border border-[#8FB59B]/15 bg-[#344440]/60 p-3"
               >
                 <span className="text-[10px] uppercase text-[#A7B7A8]">{libelleService(s.categorie)}</span>
                 <strong className="mt-1 text-sm leading-4 text-[#E8ECE8]">{s.nom}</strong>
@@ -1511,7 +1511,7 @@ export function PosModule() {
                   <button
                     type="button"
                     onClick={() => ajouterPrestation(s)}
-                    className="min-h-9 rounded-lg bg-[#3ECF6A] px-3 text-xs font-bold text-[#252D2D]"
+                    className="min-h-9 rounded-lg bg-[#8FB59B] px-3 text-xs font-bold text-[#252D2D]"
                   >
                     Ajouter
                   </button>
@@ -1527,7 +1527,7 @@ export function PosModule() {
               <button
                 type="button"
                 onClick={ajouterPrestationLibre}
-                className="min-h-10 w-full rounded-lg border border-dashed border-[#3ECF6A]/40 px-3 text-xs text-[#DFE7E2]"
+                className="min-h-10 w-full rounded-lg border border-dashed border-[#8FB59B]/40 px-3 text-xs text-[#DFE7E2]"
               >
                 + Prestation personnalisée (prix à définir)
               </button>
@@ -1542,13 +1542,13 @@ export function PosModule() {
               return (
                 <article
                   key={p.id || p.sku}
-                  className="flex min-h-40 flex-col rounded-xl border border-[#3ECF6A]/15 bg-[#344440]/60 p-3"
+                  className="flex min-h-40 flex-col rounded-xl border border-[#8FB59B]/15 bg-[#344440]/60 p-3"
                 >
                   {p.image ? (
                     /* eslint-disable-next-line @next/next/no-img-element -- photo produit externe (URL libre), non optimisable à l'avance */
                     <img src={p.image} alt="" loading="lazy" className="mb-2 h-16 w-16 rounded-lg object-cover" />
                   ) : (
-                    <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-lg bg-[#252D2D] text-xl font-extrabold text-[#3ECF6A]">
+                    <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-lg bg-[#252D2D] text-xl font-extrabold text-[#8FB59B]">
                       {p.nom.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -1563,7 +1563,7 @@ export function PosModule() {
                     compatOk === true ? (
                       <span className="mt-1 text-[10px] font-semibold text-[#7FBF9E]">✓ Compatibilité vérifiée</span>
                     ) : compatOk === false ? (
-                      <span className="mt-1 text-[10px] text-[#3ECF6A]">Compatibilité non vérifiée</span>
+                      <span className="mt-1 text-[10px] text-[#8FB59B]">Compatibilité non vérifiée</span>
                     ) : (
                       <span className="mt-1 text-[10px] text-[#8DA298]">Aucune compatibilité vérifiée pour ce véhicule</span>
                     )
@@ -1580,7 +1580,7 @@ export function PosModule() {
                     <button
                       type="button"
                       onClick={() => ajouterProduit(p)}
-                      className="min-h-9 rounded-lg bg-[#3ECF6A] px-3 text-xs font-bold text-[#252D2D]"
+                      className="min-h-9 rounded-lg bg-[#8FB59B] px-3 text-xs font-bold text-[#252D2D]"
                     >
                       Ajouter
                     </button>
@@ -1649,7 +1649,7 @@ export function PosModule() {
               onClick={() => setModalClient(true)}
               disabled={!peutCreerClient}
               title={peutCreerClient ? "Créer un nouveau client" : "Permission requise : création de client"}
-              className="min-h-10 shrink-0 rounded-lg border border-[#3ECF6A]/40 px-2.5 text-xs text-[#DFE7E2] disabled:cursor-not-allowed disabled:opacity-40"
+              className="min-h-10 shrink-0 rounded-lg border border-[#8FB59B]/40 px-2.5 text-xs text-[#DFE7E2] disabled:cursor-not-allowed disabled:opacity-40"
             >
               + Client
             </button>
@@ -1680,7 +1680,7 @@ export function PosModule() {
                   onClick={() => setModalVehicule(true)}
                   disabled={!peutCreerVehicule}
                   title={peutCreerVehicule ? "Ajouter un véhicule à ce client" : "Permission requise : création de véhicule"}
-                  className="min-h-10 shrink-0 rounded-lg border border-[#3ECF6A]/40 px-2.5 text-xs text-[#DFE7E2] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="min-h-10 shrink-0 rounded-lg border border-[#8FB59B]/40 px-2.5 text-xs text-[#DFE7E2] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   + Véhicule
                 </button>
@@ -1711,7 +1711,7 @@ export function PosModule() {
             <p className="py-6 text-center text-sm text-[#A7B7A8]">Aucun article sélectionné.</p>
           ) : (
             lignes.map((l) => (
-              <div key={l.cle} className="border-b border-[#3ECF6A]/10 pb-2">
+              <div key={l.cle} className="border-b border-[#8FB59B]/10 pb-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-[#E8ECE8]">
@@ -1732,7 +1732,7 @@ export function PosModule() {
                   <button
                     type="button"
                     onClick={() => retirerLigne(l.cle)}
-                    className="min-h-10 min-w-10 touch-manipulation rounded-lg bg-[#344440] text-base text-[#3ECF6A]"
+                    className="min-h-10 min-w-10 touch-manipulation rounded-lg bg-[#344440] text-base text-[#8FB59B]"
                     aria-label={`Retirer une unité de ${l.nom}`}
                   >
                     −
@@ -1741,7 +1741,7 @@ export function PosModule() {
                   <button
                     type="button"
                     onClick={() => augmenterLigne(l)}
-                    className="min-h-10 min-w-10 touch-manipulation rounded-lg bg-[#344440] text-base text-[#3ECF6A]"
+                    className="min-h-10 min-w-10 touch-manipulation rounded-lg bg-[#344440] text-base text-[#8FB59B]"
                     aria-label={`Ajouter une unité de ${l.nom}`}
                   >
                     +
@@ -1800,13 +1800,13 @@ export function PosModule() {
         <button
           type="button"
           onClick={ajouterPrestationLibre}
-          className="mt-2 min-h-9 w-full rounded-lg border border-dashed border-[#3ECF6A]/40 text-xs text-[#DFE7E2]"
+          className="mt-2 min-h-9 w-full rounded-lg border border-dashed border-[#8FB59B]/40 text-xs text-[#DFE7E2]"
         >
           + Prestation libre (montage, main-d&apos;œuvre…)
         </button>
 
         {/* Remise ticket (permission) */}
-        <div className="mt-3 space-y-2 border-t border-[#3ECF6A]/20 pt-3">
+        <div className="mt-3 space-y-2 border-t border-[#8FB59B]/20 pt-3">
           <div className="flex items-center justify-between gap-2 text-xs">
             <span className="text-[#A7B7A8]">
               Remise ticket {!posEdit && <span className="text-[#C5716B]">(permission requise)</span>}
@@ -1819,7 +1819,7 @@ export function PosModule() {
                   disabled={!posEdit}
                   onClick={() => { setPourcentageRemise(pct); setRemiseMontant(0); }}
                   className={`rounded px-2 py-1 text-xs disabled:opacity-40 ${
-                    pourcentageRemise === pct ? "bg-[#3ECF6A] font-bold text-[#252D2D]" : "bg-[#344440] text-[#3ECF6A]"
+                    pourcentageRemise === pct ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "bg-[#344440] text-[#8FB59B]"
                   }`}
                 >
                   {pct}%
@@ -1842,9 +1842,9 @@ export function PosModule() {
         </div>
 
         {/* Récapitulatif */}
-        <div className="mt-3 grid grid-cols-2 gap-1 border-t border-[#3ECF6A]/20 pt-3 text-xs">
+        <div className="mt-3 grid grid-cols-2 gap-1 border-t border-[#8FB59B]/20 pt-3 text-xs">
           <span className="text-[#A7B7A8]">Sous-total HT</span><span className="text-right">{formatMad(sousTotal)}</span>
-          {totalRemise > 0 && (<><span className="text-[#A7B7A8]">Remises</span><span className="text-right text-[#3ECF6A]">− {formatMad(totalRemise)}</span></>)}
+          {totalRemise > 0 && (<><span className="text-[#A7B7A8]">Remises</span><span className="text-right text-[#8FB59B]">− {formatMad(totalRemise)}</span></>)}
           <span className="text-[#A7B7A8]">TVA (par ligne)</span><span className="text-right">{formatMad(montantTVA)}</span>
           <span className="text-sm font-bold text-[#E8ECE8]">Total TTC</span>
           <span className="text-right text-lg font-extrabold text-[#DFE7E2]">{formatMad(totalTTC)}</span>
@@ -1856,7 +1856,7 @@ export function PosModule() {
             type="button"
             onClick={imprimerTicket}
             disabled={!lignes.length}
-            className="min-h-11 flex-1 rounded-lg border border-[#3ECF6A]/40 px-3 text-sm text-[#DFE7E2] disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-11 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#DFE7E2] disabled:cursor-not-allowed disabled:opacity-40"
           >
             Imprimer
           </button>
@@ -1864,7 +1864,7 @@ export function PosModule() {
             type="button"
             onClick={() => void creerDevisDepuisTicket()}
             disabled={saving || !lignes.length}
-            className="min-h-11 flex-1 rounded-lg border border-[#3ECF6A]/40 px-3 text-sm text-[#DFE7E2] disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-11 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#DFE7E2] disabled:cursor-not-allowed disabled:opacity-40"
           >
             Devis
           </button>
@@ -1887,11 +1887,11 @@ export function PosModule() {
       </aside>
 
       {/* Barre fixe smartphone : panier + paiement toujours accessibles */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-2 border-t border-[#3ECF6A]/20 bg-[#1D2424]/95 p-3 backdrop-blur xl:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-2 border-t border-[#8FB59B]/20 bg-[#1D2424]/95 p-3 backdrop-blur xl:hidden">
         <button
           type="button"
           onClick={() => setPanierMobile(true)}
-          className="min-h-12 flex-1 rounded-lg border border-[#3ECF6A]/40 px-3 text-sm font-semibold text-[#DFE7E2]"
+          className="min-h-12 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm font-semibold text-[#DFE7E2]"
         >
           🛒 Panier · {lignes.length} · {formatMad(totalTTC)}
         </button>
@@ -1927,7 +1927,7 @@ export function PosModule() {
                 <span className="text-[#A7B7A8]">Payé</span>
                 <span className="text-right">{formatMad(derniereVente.paye)}</span>
                 {derniereVente.reste > 0 && (
-                  <><span className="text-[#A7B7A8]">Reste à payer</span><span className="text-right text-[#3ECF6A]">{formatMad(derniereVente.reste)}</span></>
+                  <><span className="text-[#A7B7A8]">Reste à payer</span><span className="text-right text-[#8FB59B]">{formatMad(derniereVente.reste)}</span></>
                 )}
                 {derniereVente.monnaie > 0 && (
                   <><span className="text-[#A7B7A8]">Monnaie rendue</span><span className="text-right text-[#7FBF9E]">{formatMad(derniereVente.monnaie)}</span></>
@@ -1946,7 +1946,7 @@ export function PosModule() {
                   type="button"
                   onClick={() => void imprimerRecuEnrichi(derniereVente)}
                   disabled={impressionEnCours}
-                  className="min-h-11 flex-1 rounded-lg border border-[#3ECF6A]/40 px-3 text-sm text-[#DFE7E2] disabled:opacity-40"
+                  className="min-h-11 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#DFE7E2] disabled:opacity-40"
                 >
                   {impressionEnCours ? "Impression…" : "Imprimer le ticket"}
                 </button>
@@ -1966,7 +1966,7 @@ export function PosModule() {
               {/* Récapitulatif */}
               <div className="mt-3 grid grid-cols-2 gap-1 text-xs">
                 <span className="text-[#A7B7A8]">Sous-total HT</span><span className="text-right">{formatMad(sousTotal)}</span>
-                {totalRemise > 0 && (<><span className="text-[#A7B7A8]">Remises</span><span className="text-right text-[#3ECF6A]">− {formatMad(totalRemise)}</span></>)}
+                {totalRemise > 0 && (<><span className="text-[#A7B7A8]">Remises</span><span className="text-right text-[#8FB59B]">− {formatMad(totalRemise)}</span></>)}
                 <span className="text-[#A7B7A8]">TVA</span><span className="text-right">{formatMad(montantTVA)}</span>
                 <span className="text-sm font-bold text-[#E8ECE8]">Total TTC</span>
                 <span className="text-right text-lg font-extrabold text-[#DFE7E2]">{formatMad(totalTTC)}</span>
@@ -1981,7 +1981,7 @@ export function PosModule() {
                     type="button"
                     onClick={() => choisirMode(m.cle)}
                     className={`min-h-11 touch-manipulation rounded-lg px-1 py-2 text-[11px] transition ${
-                      modePaiement === m.cle ? "bg-[#3ECF6A] font-bold text-[#252D2D]" : "bg-[#344440] text-[#3ECF6A] hover:bg-[#41524E]"
+                      modePaiement === m.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "bg-[#344440] text-[#8FB59B] hover:bg-[#41524E]"
                     }`}
                   >
                     {m.label}
@@ -2068,7 +2068,7 @@ export function PosModule() {
                         type="button"
                         onClick={() => setPaveOuvert(!paveOuvert)}
                         aria-label={paveOuvert ? "Masquer le pavé numérique" : "Ouvrir le pavé numérique tactile"}
-                        className={`min-h-10 min-w-10 touch-manipulation rounded-lg border border-[#3ECF6A]/40 text-lg ${paveOuvert ? "bg-[#3ECF6A]/25 text-[#DFE7E2]" : "bg-[#344440] text-[#3ECF6A]"}`}
+                        className={`min-h-10 min-w-10 touch-manipulation rounded-lg border border-[#8FB59B]/40 text-lg ${paveOuvert ? "bg-[#8FB59B]/25 text-[#DFE7E2]" : "bg-[#344440] text-[#8FB59B]"}`}
                       >
                         ⌨
                       </button>
@@ -2090,7 +2090,7 @@ export function PosModule() {
                 )}
                 <div className="flex justify-between">
                   <span className="text-[#A7B7A8]">Reste dû</span>
-                  <span className="font-bold text-[#3ECF6A]">{formatMad(resteDu)}</span>
+                  <span className="font-bold text-[#8FB59B]">{formatMad(resteDu)}</span>
                 </div>
                 {modePaiement === "credit" && (
                   <p className="leading-4 text-[#DFE7E2]">
@@ -2109,7 +2109,7 @@ export function PosModule() {
                 <button
                   type="button"
                   onClick={fermerPaiement}
-                  className="min-h-11 flex-1 rounded-lg border border-[#3ECF6A]/40 px-3 text-sm text-[#DFE7E2]"
+                  className="min-h-11 flex-1 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#DFE7E2]"
                 >
                   Retour au ticket
                 </button>

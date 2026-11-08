@@ -203,7 +203,7 @@ export function NotificationsModule() {
                   <label
                     key={c.cle}
                     className={`flex cursor-pointer items-start gap-2 rounded-lg border p-2.5 text-xs transition ${
-                      canal === c.cle ? "border-[#3ECF6A] bg-[#344440]" : "border-[#3ECF6A]/15 text-[#E8ECE8]/80"
+                      canal === c.cle ? "border-[#8FB59B] bg-[#344440]" : "border-[#8FB59B]/15 text-[#E8ECE8]/80"
                     }`}
                   >
                     <input
@@ -212,7 +212,7 @@ export function NotificationsModule() {
                       value={c.cle}
                       checked={canal === c.cle}
                       onChange={() => setCanal(c.cle)}
-                      className="mt-0.5 h-4 w-4 accent-[#3ECF6A]"
+                      className="mt-0.5 h-4 w-4 accent-[#8FB59B]"
                     />
                     <span>
                       <strong className="block text-[#E8ECE8]">{c.label}</strong>
@@ -231,7 +231,7 @@ export function NotificationsModule() {
             </label>
 
             {canal === "whatsapp" && !clientSelectionne?.phone && (
-              <p className="rounded-lg bg-[#3ECF6A]/10 px-3 py-2 text-xs text-[#DFE7E2]">
+              <p className="rounded-lg bg-[#8FB59B]/10 px-3 py-2 text-xs text-[#DFE7E2]">
                 Ce client n’a pas de numéro : ajoutez-le dans la fiche Client avant d’utiliser WhatsApp.
               </p>
             )}
@@ -244,7 +244,7 @@ export function NotificationsModule() {
 
         {/* Historique */}
         <section className="carte overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#3ECF6A]/10 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#8FB59B]/10 p-5">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Historique</p>
               <h2 className="titre-or mt-1 text-xl font-extrabold">Notifications</h2>
@@ -261,13 +261,13 @@ export function NotificationsModule() {
           {loading ? (
             <p className="p-6 text-sm text-[#A7B7A8]">Chargement…</p>
           ) : (
-            <ul className="divide-y divide-[#3ECF6A]/10">
+            <ul className="divide-y divide-[#8FB59B]/10">
               {filtres.map((n) => (
                 <li key={n.id} className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-[#E8ECE8]">
                       {n.title}
-                      {!n.is_read && <span className="ml-2 rounded-full bg-[#3ECF6A]/20 px-2 py-0.5 text-[10px] text-[#DFE7E2]">non lue</span>}
+                      {!n.is_read && <span className="ml-2 rounded-full bg-[#8FB59B]/20 px-2 py-0.5 text-[10px] text-[#DFE7E2]">non lue</span>}
                     </p>
                     <p className="mt-1 text-sm leading-5 text-[#A7B7A8]">{n.body}</p>
                     <p className="mt-1.5 text-[11px] text-[#A7B7A8]">
