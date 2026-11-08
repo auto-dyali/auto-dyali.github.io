@@ -217,6 +217,8 @@ export function ShellApp({
           href={m.href}
           onClick={() => setOuvert(false)}
           aria-current={actif === m.label ? "page" : undefined}
+          title={m.label}
+          aria-label={m.label}
           className={cn(
             "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm transition",
             actif === m.label

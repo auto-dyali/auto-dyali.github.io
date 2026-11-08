@@ -1380,9 +1380,9 @@ export function PosModule() {
   }
 
   return (
-    <section className="grid gap-5 xl:grid-cols-[13rem_1fr_23rem]">
-      {/* En-tête compacte mobile (cachée sur PC) */}
-      <div className="xl:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-[#8FB59B]/20 px-4 py-3 bg-[#252D2D]/90 backdrop-blur-md">
+    <section className="grid gap-5 lg:grid-cols-[auto_minmax(0,1fr)_23rem]">
+      {/* En-tête compacte mobile (cachée sur PC / tablette paysage) */}
+      <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-[#8FB59B]/20 px-4 py-3 bg-[#252D2D]/90 backdrop-blur-md">
         <button
           type="button"
           onClick={() => setPanierMobile(true)}
@@ -1408,7 +1408,7 @@ export function PosModule() {
        * Zone 1 — Barre latérale POS fixe (toujours visible sur PC)
        * ------------------------------------------------------------ */}
       <aside
-        className={`carte h-fit p-3 hidden xl:flex app-sidebar ${
+        className={`carte h-fit p-3 hidden lg:flex app-sidebar ${
           posSidebarCollapsed ? "is-collapsed" : ""
         }`}
       >
@@ -1434,8 +1434,10 @@ export function PosModule() {
                   actif ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "text-[#E8ECE8]/80 hover:bg-[#344440] hover:text-[#E8ECE8]"
                 }`}
                 aria-pressed={actif}
+                title={n.label}
+                aria-label={n.label}
               >
-                <span className="shrink-0 text-xl">{n.icone === "carton" ? "📦" : n.icone === "client" ? "👤" : n.icone === "voiture" ? "🚗" : n.icone === "historique" ? "🕒" : n.icone === "rapport" ? "📄" : n.icone === "ca" ? "💳" : n.icone === "imprimante" ? "🖨️" : n.icone === "cle" ? "🔧" : n.icone === "plus" ? "⚙️" : "📋"}</span>
+                <span className="shrink-0 text-xl" aria-hidden="true">{n.icone === "carton" ? "📦" : n.icone === "client" ? "👤" : n.icone === "voiture" ? "🚗" : n.icone === "historique" ? "🕒" : n.icone === "rapport" ? "📄" : n.icone === "ca" ? "💳" : n.icone === "imprimante" ? "🖨️" : n.icone === "cle" ? "🔧" : n.icone === "plus" ? "⚙️" : "📋"}</span>
                 <span className="menu-label">{n.label}</span>
               </button>
             );
@@ -1517,13 +1519,8 @@ export function PosModule() {
               </button>
             ))}
           </div>
-          <div className="mt-3 flex items-center gap-2 border-t border-[#8FB59B]/10 pt-3">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8] shrink-0">Scan</p>
-            <div className="flex-1">
-              <ScanChamp onCode={traiterCode} placeholder="EAN-13, QR, code-barres…" />
-            </div>
-            <p className="text-[10px] text-[#A7B7A8]">📷 caméra</p>
-          </div>
+          {/* Scan : un seul ScanChamp sur la page (écouteur HID global unique
+              — deux instances traiteraient chaque code en double). */}
         </div>
 
         {/* Sélecteur véhicule facultatif : Marque → Modèle → Année → Motorisation → Version */}
@@ -1532,7 +1529,7 @@ export function PosModule() {
             <button
               type="button"
               onClick={() => setVehOuvert(!vehOuvert)}
-              className="min-h-9 rounded-lg border border-[#8FB59B]/40 px-3 text-xs font-semibold text-[#DFE7E2]"
+              className="min-h-12 rounded-lg border border-[#8FB59B]/40 px-3 text-xs font-semibold text-[#DFE7E2]"
               aria-expanded={vehOuvert}
             >
               🚗 Sélecteur véhicule (facultatif) {vehOuvert ? "▲" : "▼"}
@@ -1734,7 +1731,7 @@ export function PosModule() {
                     <button
                       type="button"
                       onClick={() => ajouterProduit(p)}
-                      className="min-h-9 rounded-lg bg-[#8FB59B] px-3 text-xs font-bold text-[#252D2D]"
+                      className="min-h-12 rounded-lg bg-[#8FB59B] px-3 text-sm font-bold text-[#252D2D]"
                     >
                       Ajouter
                     </button>
@@ -1757,8 +1754,8 @@ export function PosModule() {
        * ------------------------------------------------------------ */}
       <aside
         className={`${
-          panierMobile ? "fixed inset-0 z-40 flex overflow-y-auto" : "hidden xl:flex"
-        } carte flex-col p-4 sm:p-5 xl:sticky xl:top-24 xl:inset-auto xl:z-auto xl:h-fit`}
+          panierMobile ? "fixed inset-0 z-40 flex overflow-y-auto" : "hidden lg:flex"
+        } carte flex-col p-4 sm:p-5 lg:sticky lg:top-24 lg:inset-auto lg:z-auto lg:h-fit`}
       >
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-bold text-[#E8ECE8]">Panier</h2>
@@ -1778,7 +1775,7 @@ export function PosModule() {
             <button
               type="button"
               onClick={() => setPanierMobile(false)}
-              className="min-h-8 min-w-8 rounded-lg bg-[#344440] text-sm text-[#DFE7E2] xl:hidden"
+              className="min-h-8 min-w-8 rounded-lg bg-[#344440] text-sm text-[#DFE7E2] lg:hidden"
               aria-label="Fermer le panier"
             >
               ✕
@@ -1907,7 +1904,7 @@ export function PosModule() {
                     value={l.prix}
                     disabled={!posEdit}
                     onChange={(e) => majLigne(l.cle, { prix: Math.max(0, Number(e.target.value) || 0) })}
-                    className="champ min-h-9 w-20 px-1 py-0.5 text-xs disabled:opacity-50"
+                    className="champ min-h-11 w-20 px-1 py-0.5 text-xs disabled:opacity-50"
                     aria-label={`Prix unitaire de ${l.nom}`}
                     title={posEdit ? "Prix unitaire" : "Permission requise pour modifier le prix"}
                   />
@@ -1924,7 +1921,7 @@ export function PosModule() {
                     value={l.remisePct}
                     disabled={!posEdit}
                     onChange={(e) => majLigne(l.cle, { remisePct: Math.min(100, Math.max(0, Number(e.target.value) || 0)) })}
-                    className="champ min-h-9 w-14 px-1 py-0.5 text-xs disabled:opacity-50"
+                    className="champ min-h-11 w-14 px-1 py-0.5 text-xs disabled:opacity-50"
                     aria-label={`Remise en % de ${l.nom}`}
                     title={posEdit ? "Remise de la ligne (%)" : "Permission requise pour la remise"}
                   />
@@ -1954,7 +1951,7 @@ export function PosModule() {
         <button
           type="button"
           onClick={ajouterPrestationLibre}
-          className="mt-2 min-h-9 w-full rounded-lg border border-dashed border-[#8FB59B]/40 text-xs text-[#DFE7E2]"
+          className="mt-2 min-h-12 w-full rounded-lg border border-dashed border-[#8FB59B]/40 text-xs text-[#DFE7E2]"
         >
           + Prestation libre (montage, main-d&apos;œuvre…)
         </button>
@@ -2041,7 +2038,7 @@ export function PosModule() {
       </aside>
 
       {/* Barre de navigation fixe smartphone — 5 accès métiers toujours accessibles */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-[#8FB59B]/20 bg-[#1D2424]/95 p-1 backdrop-blur-md xl:hidden safe-bas">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-[#8FB59B]/20 bg-[#1D2424]/95 p-1 backdrop-blur-md lg:hidden safe-bas">
         {[
           { label: "Catalogue", icone: "📦", onClick: () => { setPanierMobile(false); setPosSection("catalogue"); } },
           { label: "Panier", icone: "🛒", onClick: () => setPanierMobile(true) },
@@ -2066,7 +2063,7 @@ export function PosModule() {
           </button>
         ))}
       </nav>
-      <div className="h-24 xl:hidden" aria-hidden="true" />
+      <div className="h-24 lg:hidden" aria-hidden="true" />
 
       {/* ------------------------------------------------------------
        * Panneau de paiement compact (sans quitter le POS)
@@ -2170,7 +2167,7 @@ export function PosModule() {
                       type="button"
                       onClick={() => choisirMode(m.cle)}
                       aria-pressed={actif}
-                      className={`min-h-9 shrink-0 rounded-lg px-2.5 py-1.5 text-[10px] transition ${
+                      className={`min-h-10 shrink-0 rounded-lg px-2.5 py-1.5 text-[10px] transition ${
                         actif
                           ? "bg-[#8FB59B] font-bold text-[#252D2D]"
                           : "bg-[#344440] text-[#DFE7E2]/80 hover:bg-[#41524E]"

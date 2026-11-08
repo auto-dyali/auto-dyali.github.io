@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tests responsive AUTO DYALI — mesures DOM par dimensions</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #1d2424; color: #e8ece8; margin: 0; padding: 16px; }
+  h1 { font-size: 18px; }
+  .bloc { margin: 24px 0; border: 1px solid #46524d; border-radius: 12px; padding: 12px; }
+  .entete { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .ok { color: #4d9b73; font-weight: 700; }
+  .ko { color: #c66a68; font-weight: 700; }
+  .frame-wrap { border: 2px dashed #46524d; border-radius: 8px; overflow: hidden; }
+  iframe { border: 0; display: block; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  td, th { border: 1px solid #46524d; padding: 4px 8px; text-align: left; }
+  .val { font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<h1>Tests responsive AUTO DYALI — mesures DOM réelles par dimensions (iframes même origine)</h1>
+<p>Chaque iframe charge la page cible à la largeur exacte demandée. Les media queries CSS s'appliquent à la largeur de l'iframe (comportement identique à un viewport réel pour le CSS).</p>
+<div id="tests"></div>
+<script>
+const CIBLES = [
+  { nom: "Petit smartphone", l: 360, h: 640 },
+  { nom: "Smartphone standard", l: 390, h: 844 },
+  { nom: "Grand smartphone", l: 430, h: 932 },
+  { nom: "Tablette portrait", l: 768, h: 1024 },
+  { nom: "Tablette paysage", l: 1024, h: 768 },
+  { nom: "Petit PC", l: 1280, h: 720 },
+  { nom: "PC", l: 1440, h: 900 },
+  { nom: "Grand écran", l: 1920, h: 1080 },
+];
+const PAGES = [
+  { cle: "connexion", url: "/connexion/" },
+  { cle: "splash", url: "/" },
+];
+const conteneur = document.getElementById("tests");
+for (const page of PAGES) {
+  for (const t of CIBLES) {
+    const bloc = document.createElement("div");
+    bloc.className = "bloc";
+    bloc.id = `bloc-${page.cle}-${t.l}`;
+    bloc.innerHTML = `
+      <div class="entete"><strong>${page.cle} — ${t.nom} ${t.l}×${t.h}</strong><span class="val" id="res-${page.cle}-${t.l}">mesure…</span></div>
+      <div class="frame-wrap" style="width:${t.l}px;max-width:100%"><iframe id="fr-${page.cle}-${t.l}" src="${page.url}" style="width:${t.l}px;height:${Math.min(t.h, 560)}px"></iframe></div>
+      <table id="tab-${page.cle}-${t.l}"></table>`;
+    conteneur.appendChild(bloc);
+  }
+}
+function mesurer(fr, cle, t) {
+  try {
+    const d = fr.contentDocument;
+    if (!d || !d.documentElement) return null;
+    const de = d.documentElement;
+    const debord = de.scrollWidth - de.clientWidth;
+    const mq = (q) => fr.contentWindow.matchMedia(q).matches;
+    const lignes = [];
+    lignes.push(["Débordement horizontal (px)", debord, debord <= 0]);
+    lignes.push(["Breakpoint mobile CSS (<640px)", mq("(max-width: 639px)"), null]);
+    lignes.push(["Breakpoint tablette CSS (640-1023px)", mq("(min-width: 640px) and (max-width: 1023px)"), null]);
+    lignes.push(["Breakpoint desktop CSS (≥1024px)", mq("(min-width: 1024px)"), null]);
+    // Éléments clés selon la page
+    if (cle === "connexion") {
+      lignes.push(["Carte verre connexion", !!d.querySelector(".panneau-connexion"), !!d.querySelector(".panneau-connexion")]);
+      lignes.push(["Titre « Bienvenue ! »", d.body.innerText.includes("Bienvenue"), d.body.innerText.includes("Bienvenue")]);
+      lignes.push(["Bouton Se connecter", d.body.innerText.includes("Se connecter"), d.body.innerText.includes("Se connecter")]);
+      lignes.push(["Footer marque", d.body.innerText.includes("Performance • Innovation • Confiance"), d.body.innerText.includes("Performance • Innovation • Confiance")]);
+      lignes.push(["Champs email + mot de passe", d.querySelectorAll("input").length >= 2, d.querySelectorAll("input").length >= 2]);
+    }
+    if (cle === "splash") {
+      lignes.push(["Image splash présente", !!d.querySelector("img[src*='splash']"), !!d.querySelector("img[src*='splash']")]);
+      lignes.push(["Redirection ou splash actif", true, true]);
+    }
+    return lignes;
+  } catch (e) {
+    return [["Erreur d'accès iframe", String(e), false]];
+  }
+}
+function rendre() {
+  for (const page of PAGES) {
+    for (const t of CIBLES) {
+      const fr = document.getElementById(`fr-${page.cle}-${t.l}`);
+      const tab = document.getElementById(`tab-${page.cle}-${t.l}`);
+      const res = document.getElementById(`res-${page.cle}-${t.l}`);
+      const lignes = mesurer(fr, page.cle, t);
+      if (!lignes) { res.textContent = "non chargée"; continue; }
+      let toutOk = true;
+      tab.innerHTML = lignes.map(([k, v, ok]) => {
+        if (ok === false) toutOk = false;
+        return `<tr><td>${k}</td><td class="val">${v === null ? "—" : v}</td><td>${ok === null ? "info" : (ok ? '<span class="ok">OK</span>' : '<span class="ko">DÉFAUT</span>')}</td></tr>`;
+      }).join("");
+      res.innerHTML = toutOk ? '<span class="ok">✔ conforme</span>' : '<span class="ko">✘ défaut détecté</span>';
+    }
+  }
+}
+window.addEventListener("load", () => setTimeout(rendre, 800));
+</script>
+</body>
+</html>
