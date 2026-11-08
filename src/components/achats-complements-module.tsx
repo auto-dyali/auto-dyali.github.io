@@ -40,16 +40,16 @@ type Facture = {
 type Produit = { id: string; name: string; sku: string; stock: number };
 
 const STATUTS_RETOUR: Record<string, { label: string; classe: string }> = {
-  en_attente: { label: "En attente", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
+  en_attente: { label: "En attente", classe: "bg-[#3ECF6A]/15 text-[#DFE7E2]" },
   expedie: { label: "Expédié", classe: "bg-[#8DA298]/20 text-[#8DA298]" },
-  rembourse: { label: "Remboursé", classe: "bg-[#8DA298]/25 text-[#D0C6AE]" },
+  rembourse: { label: "Remboursé", classe: "bg-[#8DA298]/25 text-[#DFE7E2]" },
   annule: { label: "Annulé", classe: "bg-[#344440] text-[#A7B7A8]" },
 };
 
 const STATUTS_FACTURE: Record<string, { label: string; classe: string }> = {
   a_payer: { label: "À payer", classe: "bg-[#C5716B]/15 text-[#C5716B]" },
-  partiellement_payee: { label: "Partielle", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
-  payee: { label: "Payée", classe: "bg-[#8DA298]/20 text-[#D0C6AE]" },
+  partiellement_payee: { label: "Partielle", classe: "bg-[#3ECF6A]/15 text-[#DFE7E2]" },
+  payee: { label: "Payée", classe: "bg-[#8DA298]/20 text-[#DFE7E2]" },
   contestee: { label: "Contestée", classe: "bg-[#C79A6B]/20 text-[#C79A6B]" },
   annulee: { label: "Annulée", classe: "bg-[#344440] text-[#A7B7A8]" },
 };
@@ -214,7 +214,7 @@ export function AchatsComplementsModule() {
   return (
     <>
       {erreur && <p role="alert" className="mb-4 rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{erreur}</p>}
-      {infoMigration && <p role="status" className="mb-4 rounded-lg bg-[#8FB59B]/15 px-4 py-3 text-sm text-[#D0C6AE]">{infoMigration}</p>}
+      {infoMigration && <p role="status" className="mb-4 rounded-lg bg-[#3ECF6A]/15 px-4 py-3 text-sm text-[#DFE7E2]">{infoMigration}</p>}
       {notice && <p role="status" className="mb-4 rounded-lg bg-[#8DA298]/10 px-4 py-3 text-sm text-[#8DA298]">{notice}</p>}
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -241,7 +241,7 @@ export function AchatsComplementsModule() {
             <button type="submit" disabled={saving} className="btn-or min-h-11 text-sm">{saving ? "Enregistrement…" : "Créer le retour"}</button>
           </form>
 
-          <ul className="mt-4 max-h-64 divide-y divide-[#8FB59B]/10 overflow-y-auto">
+          <ul className="mt-4 max-h-64 divide-y divide-[#3ECF6A]/10 overflow-y-auto">
             {retours.map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-2 py-3 text-sm">
                 <div>
@@ -249,7 +249,7 @@ export function AchatsComplementsModule() {
                   <p className="text-xs text-[#A7B7A8]">{r.suppliers?.name ?? "—"} · {r.reason} · {date(r.created_at)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-[#D0C6AE]">{money(r.total_amount)}</p>
+                  <p className="font-bold text-[#DFE7E2]">{money(r.total_amount)}</p>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] ${STATUTS_RETOUR[r.status]?.classe ?? ""}`}>{STATUTS_RETOUR[r.status]?.label ?? r.status}</span>
                 </div>
               </li>
@@ -270,12 +270,12 @@ export function AchatsComplementsModule() {
               <input required className="champ min-h-11" placeholder="N° de facture" value={formFacture.number} onChange={(e) => setFormFacture({ ...formFacture, number: e.target.value })} />
               <input required min="0.01" step="0.01" type="number" className="champ min-h-11" placeholder="Montant total" value={formFacture.total} onChange={(e) => setFormFacture({ ...formFacture, total: e.target.value })} />
               <label className="text-xs text-[#A7B7A8]">Date<input type="date" className="champ mt-1 min-h-11" value={formFacture.invoice_date} onChange={(e) => setFormFacture({ ...formFacture, invoice_date: e.target.value })} /></label>
-              <label className="text-xs text-[#8FB59B]">Échéance<input type="date" className="champ mt-1 min-h-11" value={formFacture.due_date} onChange={(e) => setFormFacture({ ...formFacture, due_date: e.target.value })} /></label>
+              <label className="text-xs text-[#3ECF6A]">Échéance<input type="date" className="champ mt-1 min-h-11" value={formFacture.due_date} onChange={(e) => setFormFacture({ ...formFacture, due_date: e.target.value })} /></label>
             </div>
             <button type="submit" disabled={saving} className="btn-or min-h-11 text-sm">{saving ? "Enregistrement…" : "Enregistrer la facture"}</button>
           </form>
 
-          <ul className="mt-4 max-h-64 divide-y divide-[#8FB59B]/10 overflow-y-auto">
+          <ul className="mt-4 max-h-64 divide-y divide-[#3ECF6A]/10 overflow-y-auto">
             {factures.map((f) => (
               <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
                 <div>
@@ -283,10 +283,10 @@ export function AchatsComplementsModule() {
                   <p className="text-xs text-[#A7B7A8]">émise le {date(f.invoice_date)}{f.due_date ? ` · échéance ${date(f.due_date)}` : " · échéance non renseignée"} · payé {money(f.paid_amount)}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-[#D0C6AE]">{money(f.total)}</span>
+                  <span className="font-bold text-[#DFE7E2]">{money(f.total)}</span>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] ${STATUTS_FACTURE[f.status]?.classe ?? ""}`}>{STATUTS_FACTURE[f.status]?.label ?? f.status}</span>
                   {f.status !== "payee" && f.status !== "annulee" && (
-                    <button type="button" onClick={() => void majStatutFacture(f, "payee")} className="rounded-lg border border-[#8FB59B]/30 px-2 py-1 text-[11px] text-[#D0C6AE]">Marquer payée</button>
+                    <button type="button" onClick={() => void majStatutFacture(f, "payee")} className="rounded-lg border border-[#3ECF6A]/30 px-2 py-1 text-[11px] text-[#DFE7E2]">Marquer payée</button>
                   )}
                 </div>
               </li>

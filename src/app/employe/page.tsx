@@ -15,8 +15,8 @@ export default function EmployePage() {
   const router = useRouter();
   const statutStyle: Record<string, string> = {
     pending: "bg-[#64867B]/25 text-[#A7B7A8]",
-    in_progress: "bg-[#8FB59B]/20 text-[#D0C6AE]",
-    waiting_parts: "bg-[#8FB59B]/15 text-[#D0C6AE]",
+    in_progress: "bg-[#3ECF6A]/20 text-[#DFE7E2]",
+    waiting_parts: "bg-[#3ECF6A]/15 text-[#DFE7E2]",
     done: "bg-[#8DA298]/20 text-[#8DA298]",
     delivered: "bg-[#8DA298]/25 text-[#8DA298]",
     cancelled: "bg-[#C5716B]/15 text-[#C5716B]",
@@ -53,9 +53,9 @@ export default function EmployePage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-[#252D2D] pb-24">
       {/* En-tête */}
-      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#8FB59B]/15 bg-[#252D2D]/95 px-4 py-3 backdrop-blur">
+      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#3ECF6A]/15 bg-[#252D2D]/95 px-4 py-3 backdrop-blur">
         <Logo compact className="flex-1 items-center" />
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#344440] text-[10px] font-bold text-[#D0C6AE]">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#344440] text-[10px] font-bold text-[#DFE7E2]">
           {(employee?.full_name ?? "Employé")
             .split(" ")
             .map((mot) => mot[0])
@@ -110,7 +110,7 @@ export default function EmployePage() {
             { label: "Pointage", icone: "pointage" as NomIcone, href: "/employe/plus" },
             { label: "Historique", icone: "historique" as NomIcone, href: "/employe/plus" },
           ].map((r) => (
-            <Link key={r.label} href={r.href} className="carte-2 flex flex-col items-center gap-2 rounded-xl p-4 transition hover:border-[#8FB59B]/40">
+            <Link key={r.label} href={r.href} className="carte-2 flex flex-col items-center gap-2 rounded-xl p-4 transition hover:border-[#3ECF6A]/40">
               <Icone nom={r.icone} taille={22} />
               <span className="text-center text-[10px] font-semibold text-[#E8ECE8]">{r.label}</span>
             </Link>
@@ -119,7 +119,7 @@ export default function EmployePage() {
       </div>
 
       {/* Barre de navigation basse */}
-      <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-stretch justify-between border-t border-[#8FB59B]/20 bg-[#2C3735] px-4 py-2">
+      <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-stretch justify-between border-t border-[#3ECF6A]/20 bg-[#2C3735] px-4 py-2">
         {[
           { label: "Accueil", icone: "pos" as NomIcone, href: "/employe", actif: true },
           { label: "Interventions", icone: "cle" as NomIcone, href: "/employe#interventions" },
@@ -128,7 +128,7 @@ export default function EmployePage() {
         ].map((n) => (
           <Link key={n.label} href={n.href}
             className={`flex flex-1 flex-col items-center gap-1 py-1 text-[10px] ${
-              n.actif ? "font-bold text-[#D0C6AE]" : "text-[#A7B7A8]"
+              n.actif ? "font-bold text-[#DFE7E2]" : "text-[#A7B7A8]"
             }`}>
             <Icone nom={n.icone} taille={18} />
             {n.label}

@@ -31,7 +31,7 @@ export default function SplashPage() {
       <SceneGarage />
       <div className="relative z-10 mt-auto mb-8 w-56 px-3 sm:mb-10 sm:w-72">
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-transparent">
-          <div className="h-full rounded-full bg-gradient-to-r from-[#D0C6AE] via-[#8FB59B] to-[#C79A6B] transition-[width] duration-75" style={{ width: `${progress}%` }} />
+          <div className="h-full rounded-full bg-gradient-to-r from-[#DFE7E2] via-[#3ECF6A] to-[#C79A6B] transition-[width] duration-75" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
@@ -46,7 +46,7 @@ function SceneGarage() {
       <div aria-hidden className="splash-bg absolute inset-0 overflow-hidden bg-[#252D2D]">
       <picture className="absolute inset-0 block h-full w-full">
         <source media="(max-width: 768px)" srcSet={`${basePath}/images/backgrounds/splash-mobile.webp`} />
-        <img src={`${basePath}/images/backgrounds/splash.webp`} alt="" className="splash-art absolute inset-0 h-full w-full object-fill sm:object-cover" />
+        <img src={`${basePath}/images/backgrounds/splash.webp`} alt="" className="splash-art absolute inset-0 h-full w-full object-cover object-center" />
       </picture>
       <div
         className="absolute inset-0 bg-[#252D2D]/10"
@@ -58,11 +58,11 @@ function SceneGarage() {
       {/* halos dorés */}
       <div
         className="absolute -top-24 right-0 h-[32rem] w-[32rem] rounded-full blur-3xl opacity-25"
-        style={{ background: "radial-gradient(circle,#8FB59B,transparent 65%)" }}
+        style={{ background: "radial-gradient(circle,#3ECF6A,transparent 65%)" }}
       />
       <div
         className="absolute bottom-0 left-1/2 h-72 w-[36rem] -translate-x-1/2 blur-3xl opacity-15"
-        style={{ background: "radial-gradient(circle,#D0C6AE,transparent 70%)" }}
+        style={{ background: "radial-gradient(circle,#DFE7E2,transparent 70%)" }}
       />
       {/* reflets sol */}
       <div className="absolute bottom-0 h-1/3 w-full opacity-30"

@@ -18,7 +18,7 @@ import { raccourcisDashboard } from "@/lib/mock-data";
  */
 export default function TableauDeBordPage() {
   const couleurStatut: Record<string, string> = {
-    "En cours": "bg-[#8FB59B]/20 text-[#D0C6AE]",
+    "En cours": "bg-[#3ECF6A]/20 text-[#DFE7E2]",
     "En attente": "bg-[#64867B]/25 text-[#A7B7A8]",
     "Planifié": "bg-[#5D9E7F]/20 text-[#5D9E7F]",
   };
@@ -49,7 +49,7 @@ export default function TableauDeBordPage() {
         <div className="carte p-5 xl:col-span-2">
           <h2 className="mb-3 text-sm font-bold text-[#E8ECE8]">Véhicules en atelier</h2>
           <DashboardLive couleurStatut={couleurStatut} />
-          <Link href="/tableau-de-bord/atelier" className="mt-4 block text-center text-xs text-[#8FB59B] hover:underline">
+          <Link href="/tableau-de-bord/atelier" className="mt-4 block text-center text-xs text-[#3ECF6A] hover:underline">
             Voir l&apos;atelier →
           </Link>
         </div>
@@ -62,7 +62,7 @@ export default function TableauDeBordPage() {
             key={r.label}
             type="button"
             onClick={() => { const href = (r as { href?: string }).href; if (href) window.location.assign(href); }}
-            className="carte-2 group flex flex-col items-center gap-3 rounded-xl p-6 transition hover:border-[#8FB59B]/40 hover:-translate-y-0.5"
+            className="carte-2 group flex flex-col items-center gap-3 rounded-xl p-6 transition hover:border-[#3ECF6A]/40 hover:-translate-y-0.5"
           >
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#252D2D]">
               <Icone nom={r.icone as NomIcone} taille={28} />

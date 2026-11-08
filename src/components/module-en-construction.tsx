@@ -15,7 +15,7 @@ export function ModuleEnConstruction({
         <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Module Manager</p>
         <h1 className="titre-or mt-2 text-2xl font-extrabold">{titre}</h1>
         <p className="mx-auto mt-3 max-w-xl text-sm text-[#A7B7A8]">{description}</p>
-        <span className="mt-6 inline-flex rounded-full border border-[#8FB59B]/30 bg-[#344440] px-4 py-2 text-xs text-[#D0C6AE]">
+        <span className="mt-6 inline-flex rounded-full border border-[#3ECF6A]/30 bg-[#344440] px-4 py-2 text-xs text-[#DFE7E2]">
           Module en préparation
         </span>
       </section>

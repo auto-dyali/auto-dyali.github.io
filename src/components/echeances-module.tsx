@@ -114,7 +114,7 @@ export function EcheancesModule() {
       <div className="mb-5 grid gap-4 sm:grid-cols-3">
         <div className="carte p-5">
           <p className="text-xs uppercase tracking-[0.15em] text-[#A7B7A8]">À encaisser</p>
-          <p className="titre-or mt-2 text-2xl font-extrabold text-[#8FB59B]">{money(totalCreances)}</p>
+          <p className="titre-or mt-2 text-2xl font-extrabold text-[#3ECF6A]">{money(totalCreances)}</p>
           <p className="mt-1 text-xs text-[#A7B7A8]">{creances.length} ligne(s) · solde fiches {money(totalClients)}</p>
         </div>
         <div className="carte p-5">
@@ -124,7 +124,7 @@ export function EcheancesModule() {
         </div>
         <div className="carte p-5">
           <p className="text-xs uppercase tracking-[0.15em] text-[#A7B7A8]">Solde net</p>
-          <p className={`titre-or mt-2 text-2xl font-extrabold ${solde >= 0 ? "text-[#D0C6AE]" : "text-[#C5716B]"}`}>{money(solde)}</p>
+          <p className={`titre-or mt-2 text-2xl font-extrabold ${solde >= 0 ? "text-[#DFE7E2]" : "text-[#C5716B]"}`}>{money(solde)}</p>
           <p className="mt-1 text-xs text-[#A7B7A8]">créances − dettes</p>
         </div>
       </div>
@@ -134,15 +134,15 @@ export function EcheancesModule() {
       <div className="grid gap-5 lg:grid-cols-2">
         {/* Créances clients */}
         <section className="carte overflow-hidden">
-          <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold text-[#E8ECE8]">Créances clients ({creances.length})</h2>
-          <ul className="max-h-96 divide-y divide-[#8FB59B]/10 overflow-y-auto">
+          <h2 className="border-b border-[#3ECF6A]/10 p-5 font-bold text-[#E8ECE8]">Créances clients ({creances.length})</h2>
+          <ul className="max-h-96 divide-y divide-[#3ECF6A]/10 overflow-y-auto">
             {creances.map((l) => (
               <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
                 <div>
                   <p className="font-semibold text-[#E8ECE8]">{l.tiers}</p>
                   <p className="text-xs text-[#A7B7A8]">{l.reference} · {l.info}</p>
                 </div>
-                <span className="font-bold text-[#8FB59B]">{money(l.montant)}</span>
+                <span className="font-bold text-[#3ECF6A]">{money(l.montant)}</span>
               </li>
             ))}
           </ul>
@@ -151,8 +151,8 @@ export function EcheancesModule() {
 
         {/* Dettes fournisseurs */}
         <section className="carte overflow-hidden">
-          <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold text-[#E8ECE8]">Dettes fournisseurs ({dettes.length})</h2>
-          <ul className="max-h-96 divide-y divide-[#8FB59B]/10 overflow-y-auto">
+          <h2 className="border-b border-[#3ECF6A]/10 p-5 font-bold text-[#E8ECE8]">Dettes fournisseurs ({dettes.length})</h2>
+          <ul className="max-h-96 divide-y divide-[#3ECF6A]/10 overflow-y-auto">
             {dettes.map((l) => (
               <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
                 <div>

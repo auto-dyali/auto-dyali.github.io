@@ -15,8 +15,8 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     display_override: ["window-controls-overlay", "standalone"],
     orientation: "any",
-    background_color: "#102B32",
-    theme_color: "#102B32",
+    background_color: "#101F1A",
+    theme_color: "#101F1A",
     icons: [
       { src: `${basePath}/icons/auto-dyali-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
       { src: `${basePath}/icons/auto-dyali-192.png`, sizes: "192x192", type: "image/png", purpose: "maskable" },

@@ -117,9 +117,9 @@ export function PaveNumerique({
               onClick={(e) => { e.preventDefault(); pousser(t.l); }}
               className={[
                 "min-h-12 min-w-12 touch-manipulation select-none rounded-xl border text-lg font-semibold transition-colors",
-                "border-[#8FB59B]/30 bg-[#344440] text-[#E8ECE8] active:bg-[#8FB59B]/25",
-                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#8FB59B]",
-                estValider ? "bg-[#8FB59B]/20 text-[#D0C6AE]" : "",
+                "border-[#3ECF6A]/30 bg-[#344440] text-[#E8ECE8] active:bg-[#3ECF6A]/25",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ECF6A]",
+                estValider ? "bg-[#3ECF6A]/20 text-[#DFE7E2]" : "",
                 desactive ? "cursor-not-allowed opacity-40" : "",
               ].join(" ")}
             >

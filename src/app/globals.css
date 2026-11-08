@@ -1,30 +1,29 @@
 @import "tailwindcss";
 
 /* =====================================================================
-   AUTO DYALI — Design system premium « graphite & vert doux »
-   Identité issue de la référence visuelle sélectionnée :
-   graphite #252D2D · gris-vert profond #344440 · vert émeraude doux
-   #49675B · vert sauge #A7B7A8 · champagne discret #D0C6AE ·
-   gris clair #E8ECE8. Les noms de classes sont préservés (rénovation
-   sans régression). L'arrière-plan de la page de connexion est protégé
-   par des styles dédiés au niveau de la page, jamais ici.
+   AUTO DYALI — Design system premium « graphite & vert vif »
+   Identité issue de la nouvelle maquette connexion : graphite profond,
+   accents vert vif (bouton « Se connecter » #3ECF6A → #2FA04E), ivoire,
+   sauge pour les textes secondaires. Les noms de classes historiques
+   sont préservés (rénovation sans régression). L'arrière-plan de la
+   page de connexion est désormais la nouvelle scène fournie.
    ===================================================================== */
 @theme {
   --color-fond: #252d2d;          /* Graphite — fond principal */
   --color-fond2: #1f2626;         /* Graphite profond — splash, ombres */
   --color-carte: #2c3735;         /* Cartes */
   --color-carte-2: #344440;       /* Cartes secondaires / champs */
-  --color-emeraude: #49675b;      /* Vert émeraude doux — actions */
-  --color-emeraude-clair: #55776a;/* Survol actions */
+  --color-emeraude: #2fa04e;      /* Vert action — boutons, puces actives */
+  --color-emeraude-clair: #3ecf6a;/* Vert vif — survol, accents forts */
   --color-sauge: #a7b7a8;         /* Vert sauge — texte secondaire */
-  --color-champagne: #d0c6ae;     /* Champagne discret — titres, relief */
-  --color-or: #8fb59b;            /* Accent clair — bordures, sélection */
-  --color-or-clair: #d0c6ae;      /* Ancien nom conservé (compat.) */
+  --color-champagne: #dfe7e2;     /* Ivoire-vert lisible — titres, relief */
+  --color-or: #3ecf6a;            /* Accent vif — bordures, sélection, focus */
+  --color-or-clair: #dfe7e2;      /* Ancien nom conservé (compat.) */
   --color-ivoire: #e8ece8;        /* Texte principal — gris clair */
   --color-texte2: #a7b7a8;        /* Texte secondaire */
   --color-muted: #8da298;         /* Texte atténué */
-  --color-succes: #5d9e7f;        /* Succès doux */
-  --color-succes2: #7fbf9e;       /* Succès clair (textes) */
+  --color-succes: #3ecf6a;        /* Succès — vert vif de la marque */
+  --color-succes2: #7fe39d;       /* Succès clair (textes) */
   --color-alerte: #c79a6b;
   --color-erreur: #c5716b;        /* Rouge adouci */
   --color-info: #5b7fc7;
@@ -62,10 +61,10 @@ option {
 }
 
 /* ---------------------------------------------------------------------
- * TITRES — champagne → sauge (lisible, discret, pas de doré dominant)
+ * TITRES — ivoire → vert vif (signature de la nouvelle identité)
  * ------------------------------------------------------------------- */
 .titre-or {
-  background: linear-gradient(120deg, #ece4d1 0%, #d0c6ae 45%, #a7b7a8 100%);
+  background: linear-gradient(115deg, #f2f6f3 0%, #cfdad3 42%, #3ecf6a 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -88,63 +87,64 @@ option {
 }
 
 /* ---------------------------------------------------------------------
- * BOUTONS 3D — émeraude satiné, relief et enfoncement au toucher
+ * BOUTONS 3D — vert vif brillant de la maquette connexion, relief et
+ * enfoncement au toucher.
  * (le nom historique .btn-or est conservé dans toute l'application)
  * ------------------------------------------------------------------- */
 .btn-or {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 38%),
-    linear-gradient(180deg, #5d7d6e 0%, #49675b 52%, #3e5a4e 100%);
-  color: #f4f8f5;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, #4dd37a 0%, #2fa04e 55%, #1e7a3d 100%);
+  color: #f7fbf8;
   font-weight: 700;
-  border: 1px solid rgba(232, 236, 232, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 0.8rem;
   box-shadow:
-    0 4px 0 #33493f,
+    0 4px 0 #1d5f38,
     0 12px 26px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -6px 12px rgba(0, 0, 0, 0.14);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.16);
+  text-shadow: 0 1px 0 rgba(8, 40, 22, 0.28);
   transition: filter 0.16s ease, transform 0.12s ease, box-shadow 0.12s ease;
   touch-action: manipulation;
 }
 .btn-or:hover {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0) 38%),
-    linear-gradient(180deg, #678a7a 0%, #537368 52%, #466257 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, #5bdc88 0%, #3cb85f 55%, #2a8f4e 100%);
 }
 .btn-or:focus-visible {
   outline: none;
   box-shadow:
-    0 4px 0 #33493f,
+    0 4px 0 #1d5f38,
     0 12px 26px rgba(0, 0, 0, 0.34),
-    0 0 0 3px rgba(167, 183, 168, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    0 0 0 3px rgba(62, 207, 106, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 .btn-or-3d {
   box-shadow:
-    0 5px 0 #33493f,
+    0 5px 0 #1d5f38,
     0 14px 30px rgba(0, 0, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -8px 14px rgba(0, 0, 0, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.17);
   transform: translateY(0);
 }
 .btn-or-3d:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 7px 0 #33493f,
+    0 7px 0 #1d5f38,
     0 18px 34px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -8px 14px rgba(0, 0, 0, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.17);
 }
 .btn-or-3d:active,
 .btn-or:active {
   transform: translateY(3px);
   box-shadow:
-    0 1px 0 #33493f,
+    0 1px 0 #1d5f38,
     0 4px 10px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 3px 8px rgba(0, 0, 0, 0.22);
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 3px 8px rgba(0, 0, 0, 0.24);
 }
 .btn-or:disabled {
   opacity: 0.5;
@@ -176,8 +176,8 @@ option {
  * CHAMPS — lisibles, cible tactile ≥ 44 px, focus visible
  * ------------------------------------------------------------------- */
 .champ {
-  background: rgba(52, 68, 64, 0.55);
-  border: 1px solid rgba(208, 198, 174, 0.22);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 0.75rem;
   color: var(--color-ivoire);
   width: 100%;
@@ -188,22 +188,22 @@ option {
 }
 .champ:focus {
   border-color: var(--color-or);
-  box-shadow: 0 0 0 3px rgba(143, 181, 156, 0.28);
+  box-shadow: 0 0 0 3px rgba(62, 207, 106, 0.28);
 }
 .formulaire-3d {
   padding: 1.35rem;
-  border: 1px solid rgba(167, 183, 168, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1.25rem;
   background: linear-gradient(150deg, rgba(44, 55, 53, 0.94), rgba(31, 38, 38, 0.78));
-  box-shadow: 12px 14px 0 rgba(21, 27, 27, 0.28), 0 20px 45px rgba(0, 0, 0, 0.30), inset 1px 1px 0 rgba(208, 198, 174, 0.08);
+  box-shadow: 12px 14px 0 rgba(14, 22, 20, 0.28), 0 20px 45px rgba(0, 0, 0, 0.30), inset 1px 1px 0 rgba(255, 255, 255, 0.06);
 }
 .champ-3d {
-  box-shadow: inset 3px 3px 8px rgba(21, 27, 27, 0.36), 0 3px 0 rgba(167, 183, 168, 0.08);
+  box-shadow: inset 3px 3px 8px rgba(12, 22, 18, 0.28), 0 3px 0 rgba(255, 255, 255, 0.06);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 .champ-3d:focus {
   transform: translateY(-1px);
-  box-shadow: inset 2px 2px 6px rgba(21, 27, 27, 0.30), 0 0 0 3px rgba(167, 183, 168, 0.16), 0 4px 0 rgba(167, 183, 168, 0.12);
+  box-shadow: inset 2px 2px 6px rgba(12, 22, 18, 0.24), 0 0 0 3px rgba(62, 207, 106, 0.20), 0 4px 0 rgba(62, 207, 106, 0.14);
 }
 .champ::placeholder {
   color: rgba(232, 236, 232, 0.42);
@@ -213,7 +213,7 @@ option {
 a:focus-visible,
 button:focus-visible,
 [role="button"]:focus-visible {
-  outline: 2px solid rgba(167, 183, 168, 0.7);
+  outline: 2px solid rgba(62, 207, 106, 0.7);
   outline-offset: 2px;
   border-radius: 0.4rem;
 }
@@ -224,7 +224,7 @@ button:focus-visible,
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(167, 183, 168, 0.25);
+  background: rgba(62, 207, 106, 0.25);
   border-radius: 4px;
 }
 
@@ -245,20 +245,24 @@ label {
 }
 
 /* ---------------------------------------------------------------------
- * PANNEAU CONNEXION — colonne du formulaire en graphite texturé satiné.
- * L'IMAGE D'ARRIÈRE-PLAN de la page reste intacte (scène protégée) :
- * cette classe habille UNIQUEMENT la colonne formulaire.
+ * CARTE CONNEXION (verre dépoli) — la carte flottante de la maquette :
+ * translucide, floue, posée sur la scène garage plein écran.
+ * (l'arrière-plan photo est maintenant la nouvelle image fournie)
  * ------------------------------------------------------------------- */
 .panneau-connexion {
   background:
-    repeating-linear-gradient(145deg, rgba(232, 236, 232, 0.025) 0 2px, transparent 2px 6px),
-    linear-gradient(160deg, rgba(44, 55, 53, 0.97) 0%, rgba(37, 45, 45, 0.95) 55%, rgba(31, 38, 38, 0.97) 100%);
-  border-right: 1px solid rgba(167, 183, 168, 0.12);
-  box-shadow: inset 0 1px 0 rgba(232, 236, 232, 0.06), 8px 0 30px rgba(0, 0, 0, 0.28);
+    radial-gradient(120% 90% at 20% 0%, rgba(62, 207, 106, 0.10), transparent 55%),
+    linear-gradient(160deg, rgba(18, 40, 33, 0.62) 0%, rgba(12, 26, 22, 0.66) 55%, rgba(10, 22, 18, 0.72) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 30px 70px rgba(4, 12, 9, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
 }
-@media (max-width: 1023px) {
+@supports not (backdrop-filter: blur(1px)) {
   .panneau-connexion {
-    border-right: none;
+    background: linear-gradient(160deg, rgba(16, 32, 27, 0.94) 0%, rgba(11, 23, 19, 0.96) 100%);
   }
 }
 

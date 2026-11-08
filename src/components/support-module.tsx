@@ -32,9 +32,9 @@ type Message = {
 };
 
 const STATUTS: Record<string, { label: string; classe: string }> = {
-  open: { label: "Ouvert", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
+  open: { label: "Ouvert", classe: "bg-[#3ECF6A]/15 text-[#DFE7E2]" },
   in_progress: { label: "En cours", classe: "bg-[#5D9E7F]/15 text-[#7FBF9E]" },
-  waiting_reply: { label: "En attente de vous", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
+  waiting_reply: { label: "En attente de vous", classe: "bg-[#3ECF6A]/15 text-[#DFE7E2]" },
   resolved: { label: "Résolu", classe: "bg-[#5D9E7F]/20 text-[#7FBF9E]" },
   closed: { label: "Fermé", classe: "bg-[#344440] text-[#A7B7A8]" },
 };
@@ -247,13 +247,13 @@ export function SupportModule() {
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         {/* Liste */}
         <section className="carte overflow-hidden">
-          <div className="border-b border-[#8FB59B]/10 p-4">
+          <div className="border-b border-[#3ECF6A]/10 p-4">
             <p className="text-[10px] uppercase tracking-[0.2em] text-[#A7B7A8]">Mes tickets</p>
           </div>
           {loading ? (
             <p className="p-8 text-center text-sm text-[#A7B7A8]">Chargement…</p>
           ) : (
-            <ul className="divide-y divide-[#8FB59B]/10">
+            <ul className="divide-y divide-[#3ECF6A]/10">
               {tickets.map((t) => {
                 const info = STATUTS[t.status] ?? STATUTS.open;
                 return (
@@ -313,7 +313,7 @@ export function SupportModule() {
                   <p className="text-sm text-[#A7B7A8]">{ticketSelectionne.body}</p>
                 )}
                 {messages.map((m) => (
-                  <div key={m.id} className={`rounded-lg px-3 py-2 text-sm ${m.is_staff ? "bg-[#8FB59B]/10 text-[#D0C6AE]" : "bg-[#344440]/60 text-[#E8ECE8]"}`}>
+                  <div key={m.id} className={`rounded-lg px-3 py-2 text-sm ${m.is_staff ? "bg-[#3ECF6A]/10 text-[#DFE7E2]" : "bg-[#344440]/60 text-[#E8ECE8]"}`}>
                     <p className="mb-1 text-[10px] uppercase text-[#A7B7A8]">
                       {m.is_staff ? "Équipe AUTO DYALI" : "Vous"} · {new Date(m.created_at).toLocaleString("fr-FR")}
                     </p>

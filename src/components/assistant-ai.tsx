@@ -331,7 +331,7 @@ export function AssistantAI() {
             type="button"
             onClick={() => void poser(a)}
             disabled={attente}
-            className="rounded-full border border-[#8FB59B]/30 px-3 py-1.5 text-xs text-[#D0C6AE] transition hover:bg-[#8FB59B]/15 disabled:opacity-40"
+            className="rounded-full border border-[#3ECF6A]/30 px-3 py-1.5 text-xs text-[#DFE7E2] transition hover:bg-[#3ECF6A]/15 disabled:opacity-40"
           >
             {a}
           </button>
@@ -344,15 +344,15 @@ export function AssistantAI() {
           {messages.map((m) => (
             <li key={m.id} className={m.role === "user" ? "text-right" : ""}>
               <div className={`inline-block max-w-3xl rounded-2xl px-4 py-3 text-left ${
-                m.role === "user" ? "bg-[#8FB59B]/20 text-[#E8ECE8]" : "bg-[#344440]/70 text-[#E8ECE8]"
+                m.role === "user" ? "bg-[#3ECF6A]/20 text-[#E8ECE8]" : "bg-[#344440]/70 text-[#E8ECE8]"
               }`}>
                 <p className="text-sm leading-6">{m.texte}</p>
                 {m.lignes && m.lignes.length > 0 && (
-                  <ul className="mt-3 divide-y divide-[#8FB59B]/10 border-t border-[#8FB59B]/10">
+                  <ul className="mt-3 divide-y divide-[#3ECF6A]/10 border-t border-[#3ECF6A]/10">
                     {m.lignes.map((l, i) => (
                       <li key={i} className="flex flex-wrap justify-between gap-2 py-2 text-xs">
                         <span className="text-[#E8ECE8]">{l.gauche}</span>
-                        <span className="font-semibold text-[#D0C6AE]">{l.droite}</span>
+                        <span className="font-semibold text-[#DFE7E2]">{l.droite}</span>
                       </li>
                     ))}
                   </ul>

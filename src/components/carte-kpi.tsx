@@ -17,7 +17,7 @@ export function CarteKpi({
   image?: string;
 }) {
   return (
-    <article className="carte relative flex min-h-40 flex-col justify-between gap-4 overflow-hidden p-5 transition hover:border-[#8FB59B]/40">
+    <article className="carte relative flex min-h-40 flex-col justify-between gap-4 overflow-hidden p-5 transition hover:border-[#3ECF6A]/40">
       {image && <div aria-hidden className="absolute inset-0 bg-cover bg-center opacity-60" style={{ backgroundImage: `url('${image}')` }} />}
       <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-[#2C3735]/55 via-[#2C3735]/40 to-[#252D2D]/75" />
       <div className="relative z-10 flex h-full flex-col justify-between gap-4">

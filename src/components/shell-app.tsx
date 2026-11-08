@@ -59,21 +59,21 @@ function ModuleVerrouille({ feature, plan, onUpgrade }: { feature: FeatureKey; p
   return (
     <div className="mx-auto max-w-xl">
       <section className="carte p-8 text-center">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#8FB59B]/15">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#3ECF6A]/15">
           <Icone nom="cle" taille={26} />
         </span>
         <h1 className="titre-or mt-4 text-2xl font-extrabold">Module non inclus</h1>
         <p className="mt-3 text-sm leading-6 text-[#A7B7A8]">
           <strong className="text-[#E8ECE8]">{FEATURE_LABEL[feature] ?? feature}</strong> fait partie
           de l’offre {plan === "gold" ? "GOLD" : "SILVER"}. Votre forfait actuel est{" "}
-          <strong className="text-[#D0C6AE]">{plan ? PLAN_LABEL[plan as keyof typeof PLAN_LABEL] ?? plan : "STANDARD"}</strong>.
+          <strong className="text-[#DFE7E2]">{plan ? PLAN_LABEL[plan as keyof typeof PLAN_LABEL] ?? plan : "STANDARD"}</strong>.
         </p>
         <p className="mt-3 text-xs leading-5 text-[#A7B7A8]">
           Contactez votre administrateur pour une mise à niveau, ou connectez-vous au compte
           Super Admin pour changer le forfait de l’établissement.
         </p>
         <div className="mt-6 flex justify-center gap-3">
-          <Link href="/tableau-de-bord" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#D0C6AE]">
+          <Link href="/tableau-de-bord" className="rounded-lg border border-[#3ECF6A]/40 px-4 py-2 text-sm text-[#DFE7E2]">
             Retour au tableau de bord
           </Link>
           <button type="button" onClick={onUpgrade} className="btn-or px-4 py-2 text-sm">
@@ -208,7 +208,7 @@ export function ShellApp({
           className={cn(
             "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm transition",
             actif === m.label
-              ? "bg-[#8FB59B] font-bold text-[#252D2D]"
+              ? "bg-[#3ECF6A] font-bold text-[#252D2D]"
               : "text-[#E8ECE8]/80 hover:bg-[#344440] hover:text-[#E8ECE8]"
           )}
         >
@@ -246,7 +246,7 @@ export function ShellApp({
         <Logo compact />
         {nav}
         {droits.plan && (
-          <p className="mt-4 rounded-xl bg-[#344440] px-3 py-2 text-center text-[10px] uppercase tracking-[0.2em] text-[#D0C6AE]">
+          <p className="mt-4 rounded-xl bg-[#344440] px-3 py-2 text-center text-[10px] uppercase tracking-[0.2em] text-[#DFE7E2]">
             Offre {PLAN_LABEL[droits.plan]}
           </p>
         )}
@@ -270,7 +270,7 @@ export function ShellApp({
             </div>
             {nav}
             {droits.plan && (
-              <p className="mt-4 rounded-xl bg-[#344440] px-3 py-2 text-center text-[10px] uppercase tracking-[0.2em] text-[#D0C6AE]">
+              <p className="mt-4 rounded-xl bg-[#344440] px-3 py-2 text-center text-[10px] uppercase tracking-[0.2em] text-[#DFE7E2]">
                 Offre {PLAN_LABEL[droits.plan]}
               </p>
             )}
@@ -290,7 +290,7 @@ export function ShellApp({
             aria-expanded={ouvert}
           >
             <svg viewBox="0 0 20 20" width="18" height="18">
-              <path d="M3 5h14M3 10h11M3 15h14" stroke="#8FB59B" strokeWidth="2" strokeLinecap="round" />
+              <path d="M3 5h14M3 10h11M3 15h14" stroke="#3ECF6A" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
 
@@ -306,11 +306,11 @@ export function ShellApp({
 
           <div className="hidden sm:block text-right text-[11px] leading-tight text-[#A7B7A8] capitalize">
             <span>{aujourdHui}</span>
-            <span className="mt-0.5 block text-[#D0C6AE]">{heureActuelle}</span>
+            <span className="mt-0.5 block text-[#DFE7E2]">{heureActuelle}</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#344440] text-xs font-bold text-[#D0C6AE]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#344440] text-xs font-bold text-[#DFE7E2]">
               {initiales}
             </span>
             <span className="hidden text-xs text-[#E8ECE8]">{profil.fullName || "Manager"} <span className="block text-[10px] text-[#A7B7A8]">{libelleRole}</span></span>
@@ -318,7 +318,7 @@ export function ShellApp({
         </header>
 
         {horsLigne && (
-          <p role="status" className="bg-[#8FB59B]/20 px-4 py-2 text-center text-xs font-semibold text-[#D0C6AE] lg:px-7">
+          <p role="status" className="bg-[#3ECF6A]/20 px-4 py-2 text-center text-xs font-semibold text-[#DFE7E2] lg:px-7">
             Hors connexion — les données affichées peuvent ne pas être à jour et les écritures seront impossibles jusqu’au retour du réseau.
           </p>
         )}
@@ -360,7 +360,7 @@ export function ShellApp({
             aria-current={actif === m.label ? "page" : undefined}
             className={cn(
               "flex min-h-14 min-w-16 touch-manipulation flex-1 flex-col items-center justify-center gap-0.5 rounded-t-lg py-2 text-[10px] font-semibold transition",
-              actif === m.label ? "bg-[#344440] text-[#D0C6AE]" : "text-[#A7B7A8] active:bg-[#2C3735]",
+              actif === m.label ? "bg-[#344440] text-[#DFE7E2]" : "text-[#A7B7A8] active:bg-[#2C3735]",
             )}
           >
             <Icone nom={m.icone} taille={20} />

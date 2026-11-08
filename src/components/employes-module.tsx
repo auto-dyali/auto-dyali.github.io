@@ -172,7 +172,7 @@ export function EmployesModule() {
             type="button"
             onClick={() => setFiltre(f.cle)}
             className={`rounded-lg px-3 py-1.5 text-xs transition ${
-              filtre === f.cle ? "bg-[#8FB59B] font-bold text-[#252D2D]" : "bg-[#344440] text-[#8FB59B]"
+              filtre === f.cle ? "bg-[#3ECF6A] font-bold text-[#252D2D]" : "bg-[#344440] text-[#3ECF6A]"
             }`}
           >
             {f.label}
@@ -197,7 +197,7 @@ export function EmployesModule() {
                   <th className="px-5 py-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#8FB59B]/10">
+              <tbody className="divide-y divide-[#3ECF6A]/10">
                 {visibles.map((e) => {
                   const s = stats.get(e.id) ?? { total: 0, termines: 0, ca: 0 };
                   return (
@@ -210,9 +210,9 @@ export function EmployesModule() {
                       </td>
                       <td className="px-5 py-4 text-[#E8ECE8]/80">{e.job_title}</td>
                       <td className="px-5 py-4 text-right text-[#A7B7A8]">{Number(e.weekly_hours)} h</td>
-                      <td className="px-5 py-4 text-right text-[#D0C6AE]">{s.total}</td>
+                      <td className="px-5 py-4 text-right text-[#DFE7E2]">{s.total}</td>
                       <td className="px-5 py-4 text-right text-[#5D9E7F]">{s.termines}</td>
-                      <td className="px-5 py-4 text-right font-bold text-[#D0C6AE]">{formatMad(s.ca)}</td>
+                      <td className="px-5 py-4 text-right font-bold text-[#DFE7E2]">{formatMad(s.ca)}</td>
                       <td className="px-5 py-4 text-right">
                         <button
                           type="button"

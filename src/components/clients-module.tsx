@@ -269,7 +269,7 @@ export function ClientsModule() {
       </div>
 
       <section className="carte overflow-hidden">
-        <div className="border-b border-[#8FB59B]/10 p-4">
+        <div className="border-b border-[#3ECF6A]/10 p-4">
           <input
             type="search"
             value={recherche}
@@ -294,7 +294,7 @@ export function ClientsModule() {
                   <th className="px-5 py-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#8FB59B]/10">
+              <tbody className="divide-y divide-[#3ECF6A]/10">
                 {clientsFiltres.map((c) => {
                   const solde = Number(c.balance_due ?? 0);
                   return (
@@ -307,12 +307,12 @@ export function ClientsModule() {
                         {c.phone ?? "—"}
                         {c.email && <span className="block text-[11px]">{c.email}</span>}
                       </td>
-                      <td className="px-5 py-4 text-right text-[#D0C6AE]">{c.vehicles?.length ?? 0}</td>
-                      <td className={`px-5 py-4 text-right font-bold ${solde > 0.001 ? "text-[#8FB59B]" : "text-[#5D9E7F]"}`}>
+                      <td className="px-5 py-4 text-right text-[#DFE7E2]">{c.vehicles?.length ?? 0}</td>
+                      <td className={`px-5 py-4 text-right font-bold ${solde > 0.001 ? "text-[#3ECF6A]" : "text-[#5D9E7F]"}`}>
                         {formatMad(solde)}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button type="button" onClick={() => void ouvrirFiche(c)} className="rounded-lg border border-[#8FB59B]/40 px-3 py-1.5 text-xs text-[#D0C6AE]">
+                        <button type="button" onClick={() => void ouvrirFiche(c)} className="rounded-lg border border-[#3ECF6A]/40 px-3 py-1.5 text-xs text-[#DFE7E2]">
                           Ouvrir la fiche
                         </button>
                       </td>
@@ -357,10 +357,10 @@ export function ClientsModule() {
             </div>
 
             {/* Solde */}
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#8FB59B]/20 bg-[#344440]/40 p-4">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#3ECF6A]/20 bg-[#344440]/40 p-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Solde client</p>
-                <p className={`titre-or mt-1 text-2xl font-extrabold ${Number(selection.balance_due) > 0.001 ? "text-[#8FB59B]" : "text-[#5D9E7F]"}`}>
+                <p className={`titre-or mt-1 text-2xl font-extrabold ${Number(selection.balance_due) > 0.001 ? "text-[#3ECF6A]" : "text-[#5D9E7F]"}`}>
                   {formatMad(Number(selection.balance_due ?? 0))}
                 </p>
               </div>
@@ -398,7 +398,7 @@ export function ClientsModule() {
                     {vehicules.map((v) => (
                       <li key={v.id} className="flex items-center justify-between gap-2 rounded-lg bg-[#344440]/50 px-3 py-2 text-sm">
                         <span className="text-[#E8ECE8]">{v.brand} {v.model}</span>
-                        <span className="font-mono text-xs text-[#D0C6AE]">{v.plate}</span>
+                        <span className="font-mono text-xs text-[#DFE7E2]">{v.plate}</span>
                       </li>
                     ))}
                     {!vehicules.length && <li className="text-xs text-[#A7B7A8]">Aucun véhicule.</li>}
@@ -414,7 +414,7 @@ export function ClientsModule() {
                       return (
                         <li key={v.id} className="rounded-lg bg-[#344440]/50 px-3 py-2 text-sm">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-semibold text-[#D0C6AE]">{v.reference}</span>
+                            <span className="text-xs font-semibold text-[#DFE7E2]">{v.reference}</span>
                             <span className="text-xs font-bold text-[#E8ECE8]">{formatMad(Number(v.total))}</span>
                           </div>
                           <p className="mt-1 text-[11px] text-[#A7B7A8]">
@@ -435,7 +435,7 @@ export function ClientsModule() {
                     {interventions.map((i) => (
                       <li key={i.id} className="rounded-lg bg-[#344440]/50 px-3 py-2 text-sm">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold text-[#D0C6AE]">{i.reference}</span>
+                          <span className="text-xs font-semibold text-[#DFE7E2]">{i.reference}</span>
                           <span className="rounded-full bg-[#344440] px-2 py-0.5 text-[10px] text-[#E8ECE8]">
                             {STATUTS_INTERVENTION[i.status] ?? i.status}
                           </span>

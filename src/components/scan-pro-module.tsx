@@ -190,7 +190,7 @@ export function ScanProModule() {
         </div>
 
         {genResult && (
-          <div className="mt-4 rounded-lg border border-[#8FB59B]/20 bg-[#344440]/30 p-4">
+          <div className="mt-4 rounded-lg border border-[#3ECF6A]/20 bg-[#344440]/30 p-4">
             <div className="text-center">
               <div className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Code généré</div>
               <div className="mt-1 font-mono text-lg font-bold text-[#E8ECE8]">{genResult.code}</div>

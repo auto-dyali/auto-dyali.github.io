@@ -41,8 +41,8 @@ type Vente = {
 type Facture = { id: string; number: string; total: number; issued_at: string; sale_id: string };
 
 const STATUTS: Record<string, { label: string; classe: string }> = {
-  open: { label: "À encaisser", classe: "bg-[#8FB59B]/15 text-[#D0C6AE]" },
-  partial: { label: "Partiel", classe: "bg-[#8FB59B]/20 text-[#D0C6AE]" },
+  open: { label: "À encaisser", classe: "bg-[#3ECF6A]/15 text-[#DFE7E2]" },
+  partial: { label: "Partiel", classe: "bg-[#3ECF6A]/20 text-[#DFE7E2]" },
   paid: { label: "Payée", classe: "bg-[#5D9E7F]/20 text-[#7FBF9E]" },
   refunded: { label: "Remboursée", classe: "bg-[#C5716B]/15 text-[#C5716B]" },
   cancelled: { label: "Annulée", classe: "bg-[#344440] text-[#A7B7A8]" },
@@ -443,12 +443,12 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
       {error && <p role="alert" className="rounded-lg bg-[#C5716B]/15 px-4 py-3 text-sm text-[#C5716B]">{error}</p>}
 
       <div className="carte overflow-hidden">
-        <div className="border-b border-[#8FB59B]/10 p-5">
+        <div className="border-b border-[#3ECF6A]/10 p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Caisse & documents</p>
           <h2 className="titre-or mt-1 text-xl font-extrabold">Historique des ventes</h2>
         </div>
 
-        <div className="flex flex-wrap gap-2 border-b border-[#8FB59B]/10 p-4">
+        <div className="flex flex-wrap gap-2 border-b border-[#3ECF6A]/10 p-4">
           <input
             type="search"
             value={recherche}
@@ -482,7 +482,7 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#8FB59B]/10">
+              <tbody className="divide-y divide-[#3ECF6A]/10">
                 {ventesFiltrees.map((v) => {
                   const info = STATUTS[v.status] ?? STATUTS.open;
                   const reste = Math.max(0, Number(v.total) - Number(v.paid_total));
@@ -491,16 +491,16 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
                   const retournable = v.status !== "refunded" && v.status !== "cancelled";
                   return (
                     <tr key={v.id}>
-                      <td className="px-5 py-4 font-semibold text-[#D0C6AE]">
+                      <td className="px-5 py-4 font-semibold text-[#DFE7E2]">
                         {v.reference}
                         <span className="block text-[11px] font-normal text-[#A7B7A8]">{new Date(v.created_at).toLocaleString("fr-FR")}</span>
                       </td>
                       <td className="px-5 py-4 text-[#E8ECE8]">{v.client_nom ?? "Comptoir"}</td>
                       <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${info.classe}`}>{info.label}</span></td>
-                      <td className="px-5 py-4 text-right font-bold text-[#D0C6AE]">{formatMad(Number(v.total))}</td>
+                      <td className="px-5 py-4 text-right font-bold text-[#DFE7E2]">{formatMad(Number(v.total))}</td>
                       <td className="px-5 py-4 text-right">
                         <span className={reste > 0.001 ? "font-bold text-[#C5716B]" : "text-[#5D9E7F]"}>{formatMad(Number(v.paid_total))}</span>
-                        {reste > 0.001 && <span className="block text-[11px] text-[#8FB59B]">reste {formatMad(reste)}</span>}
+                        {reste > 0.001 && <span className="block text-[11px] text-[#3ECF6A]">reste {formatMad(reste)}</span>}
                       </td>
                       <td className="px-5 py-4 text-[#A7B7A8]">{numero ?? "—"}</td>
                       <td className="px-5 py-4">
@@ -519,15 +519,15 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
                               type="button"
                               disabled={traitement === v.id}
                               onClick={() => void genererFacture(v)}
-                              className="rounded-lg border border-[#8FB59B]/40 px-2.5 py-1.5 text-xs text-[#D0C6AE] disabled:opacity-40"
+                              className="rounded-lg border border-[#3ECF6A]/40 px-2.5 py-1.5 text-xs text-[#DFE7E2] disabled:opacity-40"
                             >
                               Facture
                             </button>
                           )}
-                          <button type="button" onClick={() => void imprimerTicketVente(v)} disabled={traitement === v.id} className="rounded-lg border border-[#8FB59B]/40 px-2.5 py-1.5 text-xs text-[#D0C6AE] disabled:opacity-40">
+                          <button type="button" onClick={() => void imprimerTicketVente(v)} disabled={traitement === v.id} className="rounded-lg border border-[#3ECF6A]/40 px-2.5 py-1.5 text-xs text-[#DFE7E2] disabled:opacity-40">
                             Ticket
                           </button>
-                          <button type="button" onClick={() => void imprimerFacture(v)} className="rounded-lg border border-[#8FB59B]/40 px-2.5 py-1.5 text-xs text-[#D0C6AE]">
+                          <button type="button" onClick={() => void imprimerFacture(v)} className="rounded-lg border border-[#3ECF6A]/40 px-2.5 py-1.5 text-xs text-[#DFE7E2]">
                             Imprimer
                           </button>
                           {retournable && peutRembourser && (
@@ -558,7 +558,7 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
             <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Encaissement différé</p>
             <h2 className="titre-or mt-1 text-xl font-extrabold">{encaissement.reference}</h2>
             <p className="mt-2 text-sm text-[#A7B7A8]">
-              Reste dû : <strong className="text-[#D0C6AE]">{formatMad(Math.max(0, Number(encaissement.total) - Number(encaissement.paid_total)))}</strong>
+              Reste dû : <strong className="text-[#DFE7E2]">{formatMad(Math.max(0, Number(encaissement.total) - Number(encaissement.paid_total)))}</strong>
             </p>
 
             <label className="mt-4 block text-xs text-[#A7B7A8]">Mode de paiement

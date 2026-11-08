@@ -279,7 +279,7 @@ export function TireModule() {
                     <th className="px-4 py-3 text-right">Prix</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#8FB59B]/10">
+                <tbody className="divide-y divide-[#3ECF6A]/10">
                   {filtres.map((p) => (
                     <tr key={p.id}>
                       <td className="px-4 py-3">
@@ -287,7 +287,7 @@ export function TireModule() {
                         {p.spec?.modele && <span className="ml-2 text-xs text-[#A7B7A8]">{p.spec.modele}</span>}
                         <span className="block text-[11px] text-[#A7B7A8]">{p.sku}</span>
                       </td>
-                      <td className="px-4 py-3 font-mono text-[#D0C6AE]">
+                      <td className="px-4 py-3 font-mono text-[#DFE7E2]">
                         {p.spec ? `${p.spec.largeur}/${p.spec.hauteur}R${p.spec.diametre}` : "—"}
                       </td>
                       <td className="px-4 py-3 text-[#A7B7A8]">
@@ -297,7 +297,7 @@ export function TireModule() {
                       <td className={`px-4 py-3 text-right font-bold ${Number(p.stock) > 0 ? "text-[#5D9E7F]" : "text-[#C5716B]"}`}>
                         {Number(p.stock) || 0}
                       </td>
-                      <td className="px-4 py-3 text-right font-bold text-[#D0C6AE]">{formatMad(Number(p.sale_price))}</td>
+                      <td className="px-4 py-3 text-right font-bold text-[#DFE7E2]">{formatMad(Number(p.sale_price))}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -317,7 +317,7 @@ export function TireModule() {
               <ul className="mt-3 space-y-2">
                 {dimensionsPopulaires.map(([dim, stats]) => (
                   <li key={dim} className="flex items-center justify-between text-sm">
-                    <span className="font-mono text-[#D0C6AE]">{dim}</span>
+                    <span className="font-mono text-[#DFE7E2]">{dim}</span>
                     <span className="text-[#A7B7A8]">{stats.qte} u. · {formatMad(stats.valeur)}</span>
                   </li>
                 ))}
@@ -331,7 +331,7 @@ export function TireModule() {
               {prestations.map((p) => (
                 <li key={p.id} className="flex items-center justify-between gap-2">
                   <span className={p.is_active ? "text-[#E8ECE8]" : "text-[#A7B7A8] line-through"}>{p.name}</span>
-                  <span className="font-bold text-[#D0C6AE]">{p.price > 0 ? formatMad(p.price) : "Gratuit"}</span>
+                  <span className="font-bold text-[#DFE7E2]">{p.price > 0 ? formatMad(p.price) : "Gratuit"}</span>
                 </li>
               ))}
               {!prestations.length && <li className="text-[#A7B7A8]">Aucune prestation — exécutez la migration 0013.</li>}

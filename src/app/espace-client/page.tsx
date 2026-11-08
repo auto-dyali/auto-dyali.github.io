@@ -108,13 +108,13 @@ export default function EspaceClientPage() {
 
   return (
     <main className="min-h-screen bg-[#252D2D] text-[#E8ECE8]">
-      <header className="flex items-center justify-between border-b border-[#8FB59B]/15 bg-[#2C3735] px-5 py-4 lg:px-10">
+      <header className="flex items-center justify-between border-b border-[#3ECF6A]/15 bg-[#2C3735] px-5 py-4 lg:px-10">
         <Logo compact />
         <div className="flex items-center gap-4">
           <span className="hidden text-xs text-[#A7B7A8] sm:block">
             {nonLues} notification{nonLues > 1 ? "s" : ""} non lue{nonLues > 1 ? "s" : ""}
           </span>
-          <button type="button" onClick={() => void logout()} className="text-sm text-[#8FB59B] hover:underline">Déconnexion</button>
+          <button type="button" onClick={() => void logout()} className="text-sm text-[#3ECF6A] hover:underline">Déconnexion</button>
         </div>
       </header>
 
@@ -143,14 +143,14 @@ export default function EspaceClientPage() {
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           {/* Notifications */}
           <section className="carte overflow-hidden">
-            <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold">Notifications</h2>
-            <ul className="max-h-80 divide-y divide-[#8FB59B]/10 overflow-y-auto">
+            <h2 className="border-b border-[#3ECF6A]/10 p-5 font-bold">Notifications</h2>
+            <ul className="max-h-80 divide-y divide-[#3ECF6A]/10 overflow-y-auto">
               {notifications.map((n) => (
                 <li key={n.id} className="flex items-start justify-between gap-3 px-5 py-4">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[#E8ECE8]">
                       {n.title}
-                      {!n.is_read && <span className="ml-2 rounded-full bg-[#8FB59B]/20 px-2 py-0.5 text-[10px] text-[#D0C6AE]">nouveau</span>}
+                      {!n.is_read && <span className="ml-2 rounded-full bg-[#3ECF6A]/20 px-2 py-0.5 text-[10px] text-[#DFE7E2]">nouveau</span>}
                     </p>
                     <p className="mt-1 text-sm leading-5 text-[#A7B7A8]">{n.body}</p>
                     <p className="mt-1 text-[11px] text-[#A7B7A8]">{new Date(n.created_at).toLocaleString("fr-FR")}</p>
@@ -168,15 +168,15 @@ export default function EspaceClientPage() {
 
           {/* Véhicules */}
           <section className="carte overflow-hidden">
-            <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold">Mes véhicules</h2>
-            <ul className="divide-y divide-[#8FB59B]/10">
+            <h2 className="border-b border-[#3ECF6A]/10 p-5 font-bold">Mes véhicules</h2>
+            <ul className="divide-y divide-[#3ECF6A]/10">
               {vehicules.map((v) => (
                 <li key={v.id} className="flex items-center justify-between gap-3 px-5 py-4">
                   <div>
                     <p className="text-sm font-semibold text-[#E8ECE8]">{v.brand} {v.model}</p>
                     <p className="text-xs text-[#A7B7A8]">{v.year ?? ""}</p>
                   </div>
-                  <span className="rounded-full bg-[#344440] px-3 py-1 font-mono text-xs text-[#D0C6AE]">{v.plate}</span>
+                  <span className="rounded-full bg-[#344440] px-3 py-1 font-mono text-xs text-[#DFE7E2]">{v.plate}</span>
                 </li>
               ))}
               {!vehicules.length && <li className="p-6 text-center text-sm text-[#A7B7A8]">Aucun véhicule enregistré.</li>}
@@ -185,12 +185,12 @@ export default function EspaceClientPage() {
 
           {/* Interventions */}
           <section className="carte overflow-hidden">
-            <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold">Mes interventions</h2>
-            <ul className="divide-y divide-[#8FB59B]/10">
+            <h2 className="border-b border-[#3ECF6A]/10 p-5 font-bold">Mes interventions</h2>
+            <ul className="divide-y divide-[#3ECF6A]/10">
               {interventions.map((i) => (
                 <li key={i.id} className="flex items-center justify-between gap-3 px-5 py-4">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#D0C6AE]">{i.reference}</p>
+                    <p className="text-sm font-semibold text-[#DFE7E2]">{i.reference}</p>
                     <p className="truncate text-xs text-[#A7B7A8]">{i.diagnosis ?? new Date(i.created_at).toLocaleDateString("fr-FR")}</p>
                   </div>
                   <span className="shrink-0 rounded-full bg-[#344440] px-3 py-1 text-xs text-[#E8ECE8]">{STATUTS[i.status] ?? i.status}</span>
@@ -202,11 +202,11 @@ export default function EspaceClientPage() {
 
           {/* Factures */}
           <section className="carte overflow-hidden">
-            <h2 className="border-b border-[#8FB59B]/10 p-5 font-bold">Mes factures</h2>
-            <ul className="divide-y divide-[#8FB59B]/10">
+            <h2 className="border-b border-[#3ECF6A]/10 p-5 font-bold">Mes factures</h2>
+            <ul className="divide-y divide-[#3ECF6A]/10">
               {factures.map((f) => (
                 <li key={f.id} className="flex items-center justify-between gap-3 px-5 py-4">
-                  <span className="text-sm font-semibold text-[#D0C6AE]">{f.number}</span>
+                  <span className="text-sm font-semibold text-[#DFE7E2]">{f.number}</span>
                   <span className="text-xs text-[#A7B7A8]">{new Date(f.issued_at).toLocaleDateString("fr-FR")}</span>
                   <span className="text-sm font-bold text-[#E8ECE8]">{Number(f.total).toLocaleString("fr-FR")} MAD</span>
                 </li>
