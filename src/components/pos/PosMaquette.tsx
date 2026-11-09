@@ -143,7 +143,7 @@ export function PosMaquette() {
   ];
 
   return (
-    <section aria-label="Point de Vente — maquette" className="maquette-pos flex flex-1 min-h-0 flex-col gap-3">
+    <section aria-label="Point de Vente — maquette" className="maquette-pos flex min-h-0 flex-col gap-3 lg:h-full">
       <DashboardHero variante="logo" />
 
       {erreurBandeau && <div className="rounded-xl border border-[#C66A68]/60 bg-[#C66A68]/15 px-3 py-2 text-xs text-[#F0A8A4]">{erreurBandeau}</div>}
@@ -211,7 +211,7 @@ export function PosMaquette() {
           {chargementCat ? (
             <p className="py-10 text-center text-xs text-[#A7B7A8]">Chargement du catalogue…</p>
           ) : (
-            <div className="pos-product-grid grid grid-cols-2 gap-3 overflow-y-auto pb-1 sm:grid-cols-3 lg:max-h-[430px] xl:grid-cols-5">
+            <div className="pos-product-grid grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto pb-1 sm:grid-cols-3 lg:grid-cols-4">
               {produitsVisibles.map((p) => (
                 <button
                   key={p.id}

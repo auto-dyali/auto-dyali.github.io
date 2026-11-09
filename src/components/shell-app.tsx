@@ -314,8 +314,9 @@ export function ShellApp({
   // Garde de forfait : module présent dans l'URL mais pas dans l'offre.
   const moduleDemande = feature && !droits.loading && !droits.allows(feature);
 
+  const estPosFixe = actif === "Point de vente";
   return (
-    <div className={`flex min-h-screen bg-[#252D2D] bg-cover bg-center bg-fixed ${["Tableau de bord", "Point de vente", "Mini-POS"].includes(actif) ? "maquette-shell" : ""}`} style={{ backgroundImage: `linear-gradient(rgba(37,45,45,.64),rgba(37,45,45,.78)), url('${basePath}/images/backgrounds/dashboard.webp')` }}>
+    <div className={`flex ${estPosFixe ? "lg:h-screen lg:overflow-hidden" : "min-h-screen"} bg-[#252D2D] bg-cover bg-center bg-fixed ${["Tableau de bord", "Point de vente", "Mini-POS"].includes(actif) ? "maquette-shell" : ""}`} style={{ backgroundImage: `linear-gradient(rgba(37,45,45,.64),rgba(37,45,45,.78)), url('${basePath}/images/backgrounds/dashboard.webp')` }}>
       {/* Sidebar desktop */}
       <aside
         className={`carte hidden shrink-0 rounded-none border-y-0 border-l-0 lg:flex lg:flex-col p-5 sticky top-0 h-screen overflow-y-auto app-sidebar ${
@@ -380,7 +381,7 @@ export function ShellApp({
       )}
 
       {/* Contenu */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className={`flex min-w-0 flex-1 flex-col ${estPosFixe ? "lg:h-full lg:min-h-0" : ""}`}>
         {/* En-tête */}
         <header className="carte maquette-header sticky top-0 z-30 flex items-center gap-3 rounded-none border-x-0 border-t-0 px-4 py-3 lg:px-7">
           <button
@@ -444,7 +445,7 @@ export function ShellApp({
           </p>
         )}
 
-        <main className="flex-1 p-4 pb-28 lg:pb-7 lg:p-7">
+        <main className={estPosFixe ? "lg:min-h-0 lg:flex-1 lg:overflow-hidden p-3 lg:p-4" : "flex-1 p-4 pb-28 lg:pb-7 lg:p-7"}>
           {moduleDemande ? (
             <ModuleVerrouille
               feature={feature!}
