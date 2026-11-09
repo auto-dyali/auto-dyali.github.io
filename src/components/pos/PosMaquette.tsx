@@ -45,12 +45,10 @@ const POOL_IMAGES_PRODUITS = [
   "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400&q=60&auto=format&fit=crop", // jante/pneu
 ];
 
-function imgProduit(p: Produit): string {
-  // Image propre et distincte par produit (stable via sa référence).
-  const cle = `${p.reference ?? ""}${p.nom}`.toLowerCase();
-  let h = 0;
-  for (let i = 0; i < cle.length; i++) h = (h * 31 + cle.charCodeAt(i)) >>> 0;
-  return POOL_IMAGES_PRODUITS[h % POOL_IMAGES_PRODUITS.length];
+function imgProduit(p: Produit, index: number): string {
+  // Image distincte par carte affichée (les 8 produits ont 8 photos différentes).
+  void p;
+  return POOL_IMAGES_PRODUITS[index % POOL_IMAGES_PRODUITS.length];
 }
 
 function iconeMetier(p: Produit): string {
@@ -231,7 +229,7 @@ export function PosMaquette() {
             <p className="py-10 text-center text-xs text-[#A7B7A8]">Chargement du catalogue…</p>
           ) : (
             <div className="pos-product-grid grid min-h-0 flex-1 grid-cols-2 gap-4 overflow-y-auto pb-1 sm:grid-cols-3 md:grid-cols-4">
-              {produitsVisibles.map((p) => (
+              {produitsVisibles.map((p, index) => (
                 <button
                   key={p.id}
                   type="button"
@@ -241,7 +239,7 @@ export function PosMaquette() {
                   className="pos-product-card group flex min-h-28 flex-col p-3 text-left transition hover:-translate-y-0.5 disabled:opacity-40"
                 >
                   <span className="pos-product-media relative overflow-hidden" aria-hidden>
-                    <img src={imgProduit(p)} alt="" loading="eager" onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover" />
+                    <img src={imgProduit(p, index)} alt="" loading="eager" onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover" />
                     <span className="absolute bottom-1 left-1 rounded-md bg-black/60 px-1 py-0.5 text-sm">{iconeMetier(p)}</span>
                   </span>
                   <span className="mt-1 truncate text-[13px] font-bold leading-snug text-[#F2F7F3]" title={p.nom}>{p.nom}</span>

@@ -115,6 +115,12 @@ export const piecesTest: ProduitTest[] = [
   { sku: "PIE-SET-FILTRE", nom: "Jeu complet de filtres (huile/air/carburant)", marque: "Mann-Filter", categorie: "Pièce", prix: 420, stock: 15 },
 ];
 
+// --- PNEUMATIQUES ---
+export const pneumatiquesTest: ProduitTest[] = [
+  { sku: "PNE-MIC-20555R16", nom: "Pneu Michelin 205/55 R16", marque: "Michelin", categorie: "Pneumatique", prix: 850, stock: 24 },
+  { sku: "PNE-CON-19565R15", nom: "Pneu Continental 195/65 R15", marque: "Continental", categorie: "Pneumatique", prix: 720, stock: 18 },
+];
+
 // ============================================
 // CATALOGUE GLOBAL (fusion des tableaux)
 // ============================================
@@ -124,6 +130,7 @@ export const catalogueTest: ProduitTest[] = [
   ...lubrifiantsTest,
   ...accessoiresTest,
   ...piecesTest,
+  ...pneumatiquesTest,
 ];
 
 // Formatage MAD
