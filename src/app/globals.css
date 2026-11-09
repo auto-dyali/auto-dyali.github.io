@@ -154,9 +154,9 @@
   min-width: 3rem;
   padding: 0 1.125rem;
   border-radius: var(--radius-button);
-  background: var(--color-accent);
-  color: #252d2d;
-  border: 1px solid rgba(208, 198, 174, 0.35);
+  background: linear-gradient(180deg, #34d399 0%, #10b981 52%, #047857 100%);
+  color: #04120c;
+  border: 1px solid rgba(141, 255, 206, 0.45);
   box-shadow: var(--shadow-button);
   font-weight: 600;
   font-size: 0.9375rem;
