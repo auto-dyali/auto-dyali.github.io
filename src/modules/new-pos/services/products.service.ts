@@ -7,8 +7,8 @@
 
 import type { Prestation, Produit } from "../types";
 import { versCentimes } from "../core/money.ts";
-import { catalogueTest } from "@/lib/catalogue-test";
-import { supabase } from "@/lib/supabase-browser";
+import { catalogueTest } from "../../../lib/catalogue-test.ts";
+import { supabase } from "../../../lib/supabase-browser.ts";
 
 export type ResultatCatalogue = {
   produits: Produit[];
@@ -28,10 +28,62 @@ const LIBELLE_FAMILLE: Record<string, string> = {
   climatisation: "Climatisation", jantes: "Jantes", carrosserie: "Carrosserie",
   eclairage: "Éclairage", injection: "Injection", outillage: "Outillage",
   main_oeuvre: "Services", autres: "Divers", vidange: "Vidange",
+  // Familles obligatoires du catalogue automobile universel (Phase 2).
+  entretien: "Vidange et entretien", pompes: "Pompes et alimentation",
+  diagnostic: "Diagnostic électronique", mecanique: "Mécanique générale",
+  distribution: "Distribution", peinture: "Peinture",
+  piece_occasion: "Pièces occasion", prestations: "Prestations et forfaits",
+  equilibrage: "Jantes et équilibrage", transmission: "Embrayage et transmission",
 };
 
 function libelleFamille(cle: string): string {
   return LIBELLE_FAMILLE[cle] ?? cle.charAt(0).toUpperCase() + cle.slice(1);
+}
+
+/** Sous-catégorie extensible d'un produit (logique pure, sans changement de schéma). */
+export function sousCategorie(p: { categorie: string; nom: string }): string {
+  const cat = (p.categorie ?? "").toLowerCase();
+  const nom = (p.nom ?? "").toLowerCase();
+  if (cat.includes("filtre")) {
+    if (nom.includes("huile")) return "Filtre à huile";
+    if (nom.includes("air")) return "Filtre à air";
+    if (nom.includes("carburant") || nom.includes("fioul")) return "Filtre à carburant";
+    if (nom.includes("habitacle")) return "Filtre habitacle";
+    return "Filtres";
+  }
+  if (cat.includes("lubrifiant")) {
+    if (nom.includes("5w") || nom.includes("10w") || nom.includes("15w") || nom.includes("0w")) return "Huiles moteur";
+    return "Lubrifiants";
+  }
+  if (cat.includes("pneu")) return "Pneus";
+  if (cat.includes("jante")) return "Jantes et équilibrage";
+  if (cat.includes("frein")) return "Freinage";
+  if (cat.includes("batterie")) return "Batteries";
+  if (cat.includes("injection")) return "Injection et injecteurs";
+  if (cat.includes("climatisation")) return "Climatisation";
+  if (cat.includes("refroidissement")) return "Refroidissement";
+  if (cat.includes("main_oeuvre") || cat.includes("service")) return "Main-d'œuvre";
+  return libelleFamille(cat);
+}
+
+/** Règles métier produit : pas de doublon SKU/code-barres dans la liste. */
+export function doublonsProduits(produits: { reference?: string | null; codeBarres?: string | null }[]): string[] {
+  const refs = new Set<string>();
+  const codes = new Set<string>();
+  const doublons: string[] = [];
+  for (const p of produits) {
+    const r = (p.reference ?? "").trim().toUpperCase();
+    if (r) {
+      if (refs.has(r)) doublons.push(`reference dupliquée : ${r}`);
+      refs.add(r);
+    }
+    const c = (p.codeBarres ?? "").trim();
+    if (c) {
+      if (codes.has(c)) doublons.push(`code-barres dupliqué : ${c}`);
+      codes.add(c);
+    }
+  }
+  return doublons;
 }
 
 export async function chargerCatalogue(): Promise<ResultatCatalogue> {
