@@ -142,7 +142,7 @@ export function PosMaquette() {
   ];
 
   return (
-    <section aria-label="Point de Vente — maquette" className="maquette-pos flex min-h-0 flex-col gap-3 lg:h-full">
+    <section aria-label="Point de Vente — maquette" className="maquette-pos flex min-h-0 flex-col gap-4 md:h-full">
 
       {erreurBandeau && <div className="rounded-xl border border-[#C66A68]/60 bg-[#C66A68]/15 px-3 py-2 text-xs text-[#F0A8A4]">{erreurBandeau}</div>}
       {infoValidation && <div className="rounded-xl border border-[#31ffb0]/50 bg-[#31ffb0]/10 px-3 py-2 text-xs text-[#8dffce]">{infoValidation}</div>}
@@ -158,7 +158,7 @@ export function PosMaquette() {
             <span className="block text-xs text-[#A7B7A8]">Vente rapide • Gestion intelligente</span>
           </span>
         </div>
-        <label className="maquette-search order-3 flex min-h-12 w-full items-center gap-3 rounded-full px-4 lg:order-none lg:w-full lg:max-w-xl">
+        <label className="maquette-search flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-full px-4">
           <span aria-hidden className="text-[#D9F4E7]">⌕</span>
           <input
             value={recherche}
@@ -174,8 +174,8 @@ export function PosMaquette() {
             }} />
           </span>
         </label>
-        <button type="button" onClick={vider} className="neon-btn-gold min-h-12 px-4 text-sm">＋ Nouvelle Vente</button>
-        <button type="button" onClick={() => window.print()} className="neon-btn-ghost min-h-12 px-4 text-sm">⎙ Imprimer</button>
+        <button type="button" onClick={vider} className="neon-btn-gold min-h-11 shrink-0 px-4 text-sm">＋ Nouvelle Vente</button>
+        <button type="button" onClick={() => window.print()} className="neon-btn-ghost min-h-11 shrink-0 px-4 text-sm">⎙ Imprimer</button>
       </div>
 
       {catalogue.mode === "test" && (
@@ -185,8 +185,8 @@ export function PosMaquette() {
       )}
 
       {/* Corps : catalogue (8) + panier/paiement (4) */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12">
-        <div className="flex min-h-0 flex-col gap-3 lg:col-span-8">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 md:grid-cols-12">
+        <div className="flex min-h-0 flex-col gap-3 md:col-span-8">
           {/* Catégories — image 2 */}
           <div className="pos-categories flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Catégories">
             {CATEGORIES.map((c) => (
@@ -196,10 +196,10 @@ export function PosMaquette() {
                 role="tab"
                 aria-selected={categorie === c.cle}
                 onClick={() => setCategorie(c.cle)}
-                className="pos-cat-pill flex min-h-28 min-w-32 flex-col items-center justify-center gap-2 px-3 text-xs font-bold"
+                className="pos-cat-pill flex min-h-16 min-w-28 flex-col items-center justify-center gap-1 px-3 text-xs font-bold"
                 data-actif={categorie === c.cle}
               >
-                <span aria-hidden className="flex h-14 w-14 items-center justify-center rounded-xl border border-[#31ffb0]/25 bg-black/40 text-4xl">{c.icone}</span>
+                <span aria-hidden className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#31ffb0]/25 bg-black/40 text-xl">{c.icone}</span>
                 {c.label}
               </button>
             ))}
@@ -209,7 +209,7 @@ export function PosMaquette() {
           {chargementCat ? (
             <p className="py-10 text-center text-xs text-[#A7B7A8]">Chargement du catalogue…</p>
           ) : (
-            <div className="pos-product-grid grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto pb-1 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="pos-product-grid grid min-h-0 flex-1 grid-cols-2 gap-4 overflow-y-auto pb-1 sm:grid-cols-3 md:grid-cols-4">
               {produitsVisibles.map((p) => (
                 <button
                   key={p.id}
@@ -217,10 +217,10 @@ export function PosMaquette() {
                   disabled={desactiveCatalogue}
                   onClick={() => op.ajouterProduit(p)}
                   title={desactiveCatalogue ? "Permissions POS insuffisantes." : `Ajouter ${p.nom} au panier`}
-                  className="pos-product-card group flex min-h-44 flex-col p-3 text-left transition hover:-translate-y-0.5 disabled:opacity-40"
+                  className="pos-product-card group flex min-h-28 flex-col p-3 text-left transition hover:-translate-y-0.5 disabled:opacity-40"
                 >
                   <span className="pos-product-media" aria-hidden>{iconeMetier(p)}</span>
-                  <span className="mt-2 min-h-10 text-[13px] font-bold leading-snug text-[#F2F7F3] line-clamp-2">{p.nom}</span>
+                  <span className="mt-1 truncate text-[13px] font-bold leading-snug text-[#F2F7F3]" title={p.nom}>{p.nom}</span>
                   <span className="mt-auto flex items-center justify-between gap-2">
                     <span className="pos-price text-base font-extrabold">{afMAD(p.prixUnitaireCent)}</span>
                     <span aria-hidden className="flex h-9 w-9 items-center justify-center rounded-full border border-[#F2D58A]/45 bg-[#F2D58A]/10 text-[#F2D58A]">🛒</span>
@@ -305,7 +305,7 @@ export function PosMaquette() {
         </div>
 
         {/* Panier + paiement — image 2 */}
-        <aside aria-label="Panier de Vente" className="flex min-h-0 flex-col gap-3 lg:col-span-4">
+        <aside aria-label="Panier de Vente" className="flex min-h-0 flex-col gap-3 md:col-span-4">
           <section className="pos-cart-panel p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 text-base font-extrabold text-[#F2F7F3]"><span aria-hidden className="text-[#F2D58A]">🛒</span> Panier de Vente</h2>
@@ -315,7 +315,7 @@ export function PosMaquette() {
             {panier.lignes.length === 0 ? (
               <p className="py-8 text-center text-xs text-[#A7B7A8]">Panier vide — ajoutez des produits depuis le catalogue.</p>
             ) : (
-              <ul className="flex max-h-72 flex-col gap-2 overflow-y-auto pr-1">
+              <ul className="flex max-h-32 flex-col gap-2 overflow-y-auto pr-1">
                 {panier.lignes.map((l) => (
                   <li key={l.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-black/25 p-2.5">
                     <span aria-hidden className="pos-product-media h-12 w-12 shrink-0">{l.libelle.slice(0, 2).toUpperCase()}</span>
