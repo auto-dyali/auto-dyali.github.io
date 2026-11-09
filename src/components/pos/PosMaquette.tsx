@@ -28,24 +28,29 @@ const CATEGORIES: CategorieMaquette[] = [
   { cle: "tout", label: "Tout", icone: "⊞", img: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&q=60&auto=format&fit=crop" },
   { cle: "pneumatiques", label: "Pneumatiques", icone: "🛞", img: "https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=400&q=60&auto=format&fit=crop" },
   { cle: "vidange", label: "Vidange", icone: "🛢️", img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=60&auto=format&fit=crop" },
-  { cle: "freinage", label: "Freinage", icone: "⭕", img: "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=400&q=60&auto=format&fit=crop" },
-  { cle: "filtration", label: "Filtration", icone: "▦", img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&q=60&auto=format&fit=crop" },
+  { cle: "freinage", label: "Freinage", icone: "⭕", img: "https://images.unsplash.com/photo-1600661653561-629509216228?w=400&q=60&auto=format&fit=crop" },
+  { cle: "filtration", label: "Filtration", icone: "▦", img: "https://images.unsplash.com/photo-1613214149922-f1809c99b414?w=400&q=60&auto=format&fit=crop" },
   { cle: "lubrifiants", label: "Lubrifiants", icone: "🫗", img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=60&auto=format&fit=crop" },
   { cle: "accessoires", label: "Accessoires", icone: "🪑", img: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=60&auto=format&fit=crop" },
 ];
 
-function imgMetier(p: Produit): string {
-  const cat = (p.categorie ?? "").toLowerCase();
-  const nom = `${p.nom} ${p.marque ?? ""}`.toLowerCase();
-  // Image propre par produit/marquet : Castrol → visuel Castrol dédié.
-  if (nom.includes("castrol")) return "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Castrol_Logo.svg/320px-Castrol_Logo.svg.png";
-  if (cat.includes("pneu") || nom.includes("pneu") || nom.includes("michelin")) return CATEGORIES[1].img;
-  if (cat.includes("freinage") || nom.includes("frein") || nom.includes("plaquette") || nom.includes("disque")) return CATEGORIES[3].img;
-  if (cat.includes("filtre") || nom.includes("filtre")) return CATEGORIES[4].img;
-  if (cat.includes("batterie") || nom.includes("batterie") || nom.includes("varta")) return CATEGORIES[6].img;
-  if (cat.includes("lubrifiant") || nom.includes("huile") || nom.includes("quartz") || nom.includes("motul")) return CATEGORIES[5].img;
-  if (cat.includes("accessoire")) return CATEGORIES[6].img;
-  return CATEGORIES[0].img;
+const POOL_IMAGES_PRODUITS = [
+  "https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=400&q=60&auto=format&fit=crop", // pneu
+  "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=60&auto=format&fit=crop", // huile/moteur
+  "https://images.unsplash.com/photo-1613214149922-f1809c99b414?w=400&q=60&auto=format&fit=crop", // filtre
+  "https://images.unsplash.com/photo-1600661653561-629509216228?w=400&q=60&auto=format&fit=crop", // frein
+  "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400&q=60&auto=format&fit=crop", // batterie
+  "https://images.unsplash.com/photo-1625047509168-a7026f36de04?w=400&q=60&auto=format&fit=crop", // bougies
+  "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?w=400&q=60&auto=format&fit=crop", // balais
+  "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400&q=60&auto=format&fit=crop", // jante/pneu
+];
+
+function imgProduit(p: Produit): string {
+  // Image propre et distincte par produit (stable via sa référence).
+  const cle = `${p.reference ?? ""}${p.nom}`.toLowerCase();
+  let h = 0;
+  for (let i = 0; i < cle.length; i++) h = (h * 31 + cle.charCodeAt(i)) >>> 0;
+  return POOL_IMAGES_PRODUITS[h % POOL_IMAGES_PRODUITS.length];
 }
 
 function iconeMetier(p: Produit): string {
@@ -236,7 +241,7 @@ export function PosMaquette() {
                   className="pos-product-card group flex min-h-28 flex-col p-3 text-left transition hover:-translate-y-0.5 disabled:opacity-40"
                 >
                   <span className="pos-product-media relative overflow-hidden" aria-hidden>
-                    <img src={imgMetier(p)} alt="" loading="eager" onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover" />
+                    <img src={imgProduit(p)} alt="" loading="eager" onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover" />
                     <span className="absolute bottom-1 left-1 rounded-md bg-black/60 px-1 py-0.5 text-sm">{iconeMetier(p)}</span>
                   </span>
                   <span className="mt-1 truncate text-[13px] font-bold leading-snug text-[#F2F7F3]" title={p.nom}>{p.nom}</span>
