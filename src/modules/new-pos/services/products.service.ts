@@ -20,14 +20,14 @@ export type ResultatCatalogue = {
 };
 
 const LIBELLE_FAMILLE: Record<string, string> = {
-  piece: "Pièces", accessoire: "Accessoires", lubrifiant: "Lubrifiants",
-  filtre: "Filtres", pneumatique: "Pneumatiques", merchandise: "Merchandising",
-  autrep: "Divers", moteure: "Moteur", moteur: "Moteur", freinage: "Freinage",
+  piece: "Pièces", accessoire: "Accessoires", accessoires: "Accessoires", lubrifiant: "Lubrifiants",
+  filtre: "Filtration", filters: "Filtration", pneumatique: "Pneumatiques", pneus: "Pneumatiques",
+  merchandise: "Merchandising", autrep: "Divers", moteur: "Moteur", freinage: "Freinage",
   embrayage: "Embrayage", suspension: "Suspension", electricite: "Électricité",
   batterie: "Batteries", refroidissement: "Refroidissement",
   climatisation: "Climatisation", jantes: "Jantes", carrosserie: "Carrosserie",
   eclairage: "Éclairage", injection: "Injection", outillage: "Outillage",
-  main_oeuvre: "Main-d'œuvre", autres: "Divers",
+  main_oeuvre: "Services", autres: "Divers", vidange: "Vidange",
 };
 
 function libelleFamille(cle: string): string {
@@ -39,17 +39,22 @@ export async function chargerCatalogue(): Promise<ResultatCatalogue> {
     return catalogueTestResultat("Supabase non configuré — catalogue de démonstration uniquement.");
   }
   // 1) Produits — colonnes 0021 d'abord, repli colonnes de base.
-  let req: any = await supabase
+  type ProduitRow = {
+    id: string; sku: string; barcode: string | null; name: string; category: string;
+    brand?: string | null; manufacturer_ref?: string | null; oem_ref?: string | null;
+    image_url?: string | null; sale_price: number; stock: number; tax_rate: number; unit?: string;
+  };
+  let req: { data: ProduitRow[] | null; error: { message: string } | null } = await supabase
     .from("products")
     .select("id, sku, barcode, name, category, brand, manufacturer_ref, oem_ref, image_url, sale_price, stock, tax_rate, unit")
     .eq("is_active", true)
     .order("name");
   if (req.error && /does not exist|column/i.test(req.error.message)) {
-    req = await supabase
+    req = (await supabase
       .from("products")
       .select("id, sku, barcode, name, category, sale_price, stock, tax_rate")
       .eq("is_active", true)
-      .order("name");
+      .order("name")) as { data: ProduitRow[] | null; error: { message: string } | null };
   }
   if (req.error) {
     return catalogueTestResultat(`Chargement produits impossible : ${req.error.message}`);

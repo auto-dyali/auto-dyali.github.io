@@ -1,65 +1,77 @@
 import { nomMois } from "@/lib/mock-data";
 
-/** Évolution du chiffre d'affaires — courbe area + points (SVG). */
-export function CourbeCA({ donnees }: { donnees: readonly number[] }) {
+/** Évolution financière — courbes SVG multi-séries (CA, Dépenses, Bénéfices). */
+export function CourbeCA({ series, donnees }: { series?: { label: string; donnees: readonly number[]; couleur: string }[]; donnees?: readonly number[] }) {
+  const lignesSeries = series ?? (donnees ? [{ label: "Chiffre d’affaires", donnees, couleur: "#31ffb0" }] : []);
   const w = 560;
-  const h = 180;
-  const padX = 26;
-  const padH = 22;
-  const max = Math.max(...donnees) * 1.15;
+  const h = 210;
+  const padX = 30;
+  const padH = 24;
+  const max = Math.max(1, ...lignesSeries.flatMap((s) => s.donnees)) * 1.15;
 
-  const pts = donnees.map((v, i) => [
-    padX + (i * (w - padX * 2)) / (donnees.length - 1),
+  const ptsParSerie = lignesSeries.map((s) => s.donnees.map((v, i) => [
+    padX + (i * (w - padX * 2)) / (Math.max(1, s.donnees.length - 1)),
     h - padH - (v / max) * (h - padH * 2),
-  ]);
-
-  const ligne = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0]},${p[1]}`).join(" ");
-  const aire = `${ligne} L${pts[pts.length - 1][0]},${h - padH} L${pts[0][0]},${h - padH} Z`;
+  ]));
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img" aria-label="Évolution du chiffre d'affaires">
-      <defs>
-        <linearGradient id="aireCA" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#8FB59B" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#8FB59B" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="ligneCA" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#DFE7E2" />
-          <stop offset="100%" stopColor="#8FB59B" />
-        </linearGradient>
-      </defs>
+    <div>
+      <div className="mb-2 flex flex-wrap gap-3 text-[11px] text-[#CDE6DA]" aria-hidden>
+        {lignesSeries.map((s) => (
+          <span key={s.label} className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full" style={{ background: s.couleur }} />{s.label}
+          </span>
+        ))}
+      </div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img" aria-label="Évolution financière">
+        <defs>
+          <linearGradient id="aireCA" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#31ffb0" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#31ffb0" stopOpacity="0" />
+          </linearGradient>
+        </defs>
 
-      {/* grille horizontale */}
-      {[0.25, 0.5, 0.75, 1].map((r) => (
-        <line
-          key={r}
-          x1={padX}
-          x2={w - padX}
-          y1={h - padH - r * (h - padH * 2)}
-          y2={h - padH - r * (h - padH * 2)}
-          stroke="#344440"
-          strokeDasharray="4 6"
-        />
-      ))}
+        {[0.25, 0.5, 0.75, 1].map((r) => (
+          <line
+            key={r}
+            x1={padX}
+            x2={w - padX}
+            y1={h - padH - r * (h - padH * 2)}
+            y2={h - padH - r * (h - padH * 2)}
+            stroke="rgba(49,255,176,0.16)"
+            strokeDasharray="4 6"
+          />
+        ))}
 
-      <path d={aire} fill="url(#aireCA)" />
-      <path d={ligne} fill="none" stroke="url(#ligneCA)" strokeWidth="3" strokeLinecap="round" />
+        {ptsParSerie[0] && (
+          <path
+            d={`${ptsParSerie[0].map((p, i) => `${i === 0 ? "M" : "L"}${p[0]},${p[1]}`).join(" ")} L${ptsParSerie[0][ptsParSerie[0].length - 1][0]},${h - padH} L${ptsParSerie[0][0][0]},${h - padH} Z`}
+            fill="url(#aireCA)"
+          />
+        )}
 
-      {pts.map((p, i) => (
-        <g key={i}>
-          <circle cx={p[0]} cy={p[1]} r="4.5" fill="#252D2D" stroke="#DFE7E2" strokeWidth="2.5" />
-          <text
-            x={p[0]}
-            y={h - 5}
-            textAnchor="middle"
-            fontSize="10"
-            fill="#A7B7A8"
-          >
+        {ptsParSerie.map((pts, si) => (
+          <g key={si}>
+            <path
+              d={pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0]},${p[1]}`).join(" ")}
+              fill="none"
+              stroke={lignesSeries[si].couleur}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            {pts.map((p, i) => (
+              <circle key={i} cx={p[0]} cy={p[1]} r="3.6" fill="#07180f" stroke={lignesSeries[si].couleur} strokeWidth="2" />
+            ))}
+          </g>
+        ))}
+
+        {(ptsParSerie[0] ?? []).map((p, i) => (
+          <text key={i} x={p[0]} y={h - 6} textAnchor="middle" fontSize="10" fill="#A7B7A8">
             {nomMois[i]}
           </text>
-        </g>
-      ))}
-    </svg>
+        ))}
+      </svg>
+    </div>
   );
 }
 

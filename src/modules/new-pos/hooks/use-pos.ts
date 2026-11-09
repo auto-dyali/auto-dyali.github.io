@@ -232,6 +232,7 @@ export function usePos() {
     catalogue, chargementCat, recataloguer, rechercher: rechercherProduits,
     // panier
     panier, totaux, reglements, op, vider,
+    setPanier: (p: EtatPanier) => setPanier(p),
     setReglements: (rs: Reglement[]) => setReglements(rs),
     // clients / véhicules
     clients, erreurClients, rechargerClients, choisirClient,

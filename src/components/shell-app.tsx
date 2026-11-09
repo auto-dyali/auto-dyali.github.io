@@ -26,10 +26,11 @@ import {
 
 const modules: { label: string; icone: NomIcone; href: string; feature: FeatureKey }[] = [
   { label: "Tableau de bord", icone: "pos", href: "/tableau-de-bord", feature: "dashboard" },
-  { label: "Véhicules", icone: "voiture", href: "/tableau-de-bord/vehicules", feature: "vehicles" },
-  { label: "Clients", icone: "client", href: "/tableau-de-bord/clients", feature: "clients" },
-  { label: "Atelier", icone: "cle", href: "/tableau-de-bord/atelier", feature: "workshop" },
+  { label: "Mini-POS", icone: "pos", href: "/tableau-de-bord#mini-pos", feature: "dashboard" },
+  { label: "Atelier & Interventions", icone: "cle", href: "/tableau-de-bord/atelier", feature: "workshop" },
+  { label: "Clients & Véhicules", icone: "client", href: "/tableau-de-bord/clients", feature: "clients" },
   { label: "Point de vente", icone: "pos", href: "/tableau-de-bord/point-de-vente", feature: "pos" },
+  { label: "Véhicules", icone: "voiture", href: "/tableau-de-bord/vehicules", feature: "vehicles" },
   { label: "Historique des ventes", icone: "historique", href: "/tableau-de-bord/historique-ventes", feature: "pos" },
   { label: "Scan Pro", icone: "scanner", href: "/tableau-de-bord/scan-pro", feature: "pos" },
   { label: "Print Pro", icone: "imprimante", href: "/tableau-de-bord/print-pro", feature: "pos" },
@@ -38,19 +39,53 @@ const modules: { label: string; icone: NomIcone; href: string; feature: FeatureK
   { label: "Pneumatiques", icone: "resistance", href: "/tableau-de-bord/pneumatiques", feature: "tires" },
   { label: "Achats", icone: "carton", href: "/tableau-de-bord/achats", feature: "purchasing" },
   { label: "Fournisseurs", icone: "client", href: "/tableau-de-bord/fournisseurs", feature: "suppliers" },
-  { label: "Caisse", icone: "ca", href: "/tableau-de-bord/caisse", feature: "dashboard" },
+  { label: "Caisse & Trésorerie", icone: "ca", href: "/tableau-de-bord/caisse", feature: "dashboard" },
   { label: "Chèques", icone: "ca", href: "/tableau-de-bord/cheques", feature: "cheques" },
   { label: "Créances", icone: "benefice", href: "/tableau-de-bord/creances", feature: "reports_finance" },
   { label: "Devis", icone: "rapport", href: "/tableau-de-bord/devis", feature: "quotes" },
   { label: "Facturation", icone: "rapport", href: "/tableau-de-bord/facturation", feature: "invoices" },
-  { label: "Employés", icone: "profil", href: "/tableau-de-bord/employes", feature: "employees" },
-  { label: "Planning", icone: "planning", href: "/tableau-de-bord/planning", feature: "appointments" },
-  { label: "Rapports", icone: "rapport", href: "/tableau-de-bord/rapports", feature: "reports_basic" },
-  { label: "AUTO DYALI AI", icone: "plus", href: "/tableau-de-bord/assistant", feature: "ai" },
+  { label: "Employés & RH", icone: "profil", href: "/tableau-de-bord/employes", feature: "employees" },
+  { label: "Planning & Rendez-vous", icone: "planning", href: "/tableau-de-bord/planning", feature: "appointments" },
+  { label: "Rapports & Analyses", icone: "rapport", href: "/tableau-de-bord/rapports", feature: "reports_basic" },
+  { label: "Communication IA", icone: "plus", href: "/tableau-de-bord/assistant", feature: "ai" },
   { label: "Permissions", icone: "cle", href: "/tableau-de-bord/permissions", feature: "advanced_permissions" },
   { label: "Import / Export", icone: "scanner", href: "/tableau-de-bord/import-export", feature: "excel" },
   { label: "Support", icone: "cloche", href: "/tableau-de-bord/support", feature: "support" },
   { label: "Notifications", icone: "cloche", href: "/tableau-de-bord/notifications", feature: "alerts" },
+  { label: "Paramètres", icone: "plus", href: "/tableau-de-bord/parametres", feature: "dashboard" },
+];
+
+const modulesMaquetteDashboard: { label: string; icone: NomIcone; href: string; feature: FeatureKey }[] = [
+  { label: "Dashboard", icone: "pos", href: "/tableau-de-bord", feature: "dashboard" },
+  { label: "Mini-POS", icone: "pos", href: "/tableau-de-bord#mini-pos", feature: "dashboard" },
+  { label: "Atelier & Interventions", icone: "cle", href: "/tableau-de-bord/atelier", feature: "workshop" },
+  { label: "Clients & Véhicules", icone: "client", href: "/tableau-de-bord/clients", feature: "clients" },
+  { label: "Catalogue", icone: "carton", href: "/tableau-de-bord/catalogue", feature: "catalogue" },
+  { label: "Stock", icone: "carton", href: "/tableau-de-bord/stock", feature: "stock" },
+  { label: "Achats", icone: "carton", href: "/tableau-de-bord/achats", feature: "purchasing" },
+  { label: "Fournisseurs", icone: "client", href: "/tableau-de-bord/fournisseurs", feature: "suppliers" },
+  { label: "Caisse & Trésorerie", icone: "ca", href: "/tableau-de-bord/caisse", feature: "dashboard" },
+  { label: "Comptabilité", icone: "rapport", href: "/tableau-de-bord/facturation", feature: "invoices" },
+  { label: "Employés & RH", icone: "profil", href: "/tableau-de-bord/employes", feature: "employees" },
+  { label: "Planning & Rendez-vous", icone: "planning", href: "/tableau-de-bord/planning", feature: "appointments" },
+  { label: "Rapports & Analyses", icone: "rapport", href: "/tableau-de-bord/rapports", feature: "reports_basic" },
+  { label: "Communication IA", icone: "plus", href: "/tableau-de-bord/assistant", feature: "ai" },
+  { label: "Paramètres", icone: "plus", href: "/tableau-de-bord/parametres", feature: "dashboard" },
+];
+
+const modulesMaquettePos: { label: string; icone: NomIcone; href: string; feature: FeatureKey }[] = [
+  { label: "Dashboard", icone: "pos", href: "/tableau-de-bord", feature: "dashboard" },
+  { label: "Point de Vente", icone: "pos", href: "/tableau-de-bord/point-de-vente", feature: "pos" },
+  { label: "Atelier & Interventions", icone: "cle", href: "/tableau-de-bord/atelier", feature: "workshop" },
+  { label: "Clients & Véhicules", icone: "client", href: "/tableau-de-bord/clients", feature: "clients" },
+  { label: "Catalogue", icone: "carton", href: "/tableau-de-bord/catalogue", feature: "catalogue" },
+  { label: "Stock", icone: "carton", href: "/tableau-de-bord/stock", feature: "stock" },
+  { label: "Achats", icone: "carton", href: "/tableau-de-bord/achats", feature: "purchasing" },
+  { label: "Fournisseurs", icone: "client", href: "/tableau-de-bord/fournisseurs", feature: "suppliers" },
+  { label: "Caisse & Trésorerie", icone: "ca", href: "/tableau-de-bord/caisse", feature: "dashboard" },
+  { label: "Comptabilité", icone: "rapport", href: "/tableau-de-bord/facturation", feature: "invoices" },
+  { label: "Rapports", icone: "rapport", href: "/tableau-de-bord/rapports", feature: "reports_basic" },
+  { label: "RH & Employés", icone: "profil", href: "/tableau-de-bord/employes", feature: "employees" },
   { label: "Paramètres", icone: "plus", href: "/tableau-de-bord/parametres", feature: "dashboard" },
 ];
 
@@ -209,7 +244,10 @@ export function ShellApp({
     // TODO PHASE 6 : recherche globale branchée sur l'API.
   };
 
-  const navModules = modules.filter((m) => droitAllows(m.feature));
+  const estMaquette = actif === "Tableau de bord" || actif === "Point de vente";
+  const labelActif = estMaquette ? (actif === "Tableau de bord" ? "Dashboard" : "Point de Vente") : actif;
+  const baseModules = estMaquette ? (actif === "Tableau de bord" ? modulesMaquetteDashboard : modulesMaquettePos) : modules;
+  const navModules = baseModules.filter((m) => droitAllows(m.feature));
 
   function droitAllows(f: FeatureKey) {
     // Pendant le chargement : n'afficher que la base (jamais ouvrir en grand).
@@ -224,12 +262,12 @@ export function ShellApp({
           key={m.label}
           href={m.href}
           onClick={() => setOuvert(false)}
-          aria-current={actif === m.label ? "page" : undefined}
+          aria-current={labelActif === m.label ? "page" : undefined}
           title={m.label}
           aria-label={m.label}
           className={cn(
-            "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm transition",
-            actif === m.label
+            "maquette-nav-link flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm transition",
+            labelActif === m.label
               ? "bg-[#8FB59B] font-bold text-[#252D2D]"
               : "text-[#E8ECE8]/80 hover:bg-[#344440] hover:text-[#E8ECE8]"
           )}
@@ -276,7 +314,7 @@ export function ShellApp({
   const moduleDemande = feature && !droits.loading && !droits.allows(feature);
 
   return (
-    <div className="flex min-h-screen bg-[#252D2D] bg-cover bg-center bg-fixed" style={{ backgroundImage: `linear-gradient(rgba(37,45,45,.64),rgba(37,45,45,.78)), url('${basePath}/images/backgrounds/dashboard.webp')` }}>
+    <div className={`flex min-h-screen bg-[#252D2D] bg-cover bg-center bg-fixed ${["Tableau de bord", "Point de vente", "Mini-POS"].includes(actif) ? "maquette-shell" : ""}`} style={{ backgroundImage: `linear-gradient(rgba(37,45,45,.64),rgba(37,45,45,.78)), url('${basePath}/images/backgrounds/dashboard.webp')` }}>
       {/* Sidebar desktop */}
       <aside
         className={`carte hidden shrink-0 rounded-none border-y-0 border-l-0 lg:flex lg:flex-col p-5 sticky top-0 h-screen overflow-y-auto app-sidebar ${
@@ -299,6 +337,18 @@ export function ShellApp({
             Offre {PLAN_LABEL[droits.plan]}
           </p>
         )}
+        <div className="neon-panel mt-auto rounded-2xl p-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#344440] text-xs font-bold text-[#DFE7E2]">
+              {initiales}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-xs font-bold text-[#E8ECE8]">{profil.fullName || "Admin Garage"}</span>
+              <span className="block truncate text-[10px] text-[#A7B7A8]">{libelleRole} · Garage AUTO DYALI</span>
+            </span>
+            <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-[#3dffb4] dashboard-alert-dot" aria-hidden />
+          </div>
+        </div>
         {actionDeconnexion}
       </aside>
 
@@ -331,7 +381,7 @@ export function ShellApp({
       {/* Contenu */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* En-tête */}
-        <header className="carte sticky top-0 z-30 flex items-center gap-3 rounded-none border-x-0 border-t-0 px-4 py-3 lg:px-7">
+        <header className="carte maquette-header sticky top-0 z-30 flex items-center gap-3 rounded-none border-x-0 border-t-0 px-4 py-3 lg:px-7">
           <button
             className="lg:hidden min-h-11 min-w-11 touch-manipulation rounded-lg bg-[#344440] p-2.5"
             onClick={() => setOuvert(true)}
@@ -343,15 +393,36 @@ export function ShellApp({
             </svg>
           </button>
 
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-[#E8ECE8]">
-              {salutation} <span className="block text-xs font-normal text-[#A7B7A8]">{sousTitre}</span>
-            </p>
-          </div>
+          {estMaquette ? (
+            <form onSubmit={recherche} className="hidden min-w-0 flex-1 md:flex md:justify-center">
+              <label className="maquette-search flex min-h-11 w-full max-w-xl items-center gap-3 rounded-full px-4">
+                <span aria-hidden className="text-[#D9F4E7]">⌕</span>
+                <input type="search" placeholder="Rechercher un client, un véhicule, une intervention..." className="w-full border-0 bg-transparent text-sm text-[#F2F7F3] outline-none placeholder:text-[#8da298]" aria-label="Rechercher un client, un véhicule, une intervention" />
+                <span aria-hidden className="text-[#F2D58A]">⫼</span>
+              </label>
+            </form>
+          ) : (
+            <>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-[#E8ECE8]">
+                  {salutation} <span className="block text-xs font-normal text-[#A7B7A8]">{sousTitre}</span>
+                </p>
+              </div>
 
-          <form onSubmit={recherche} className="hidden md:block">
-            <input type="search" placeholder="Rechercher…" className="champ w-56 py-2 text-sm" />
-          </form>
+              <form onSubmit={recherche} className="hidden md:block">
+                <input type="search" placeholder="Rechercher un client, un véhicule, une intervention..." className="champ maquette-search w-64 py-2 text-sm" aria-label="Rechercher" />
+              </form>
+            </>
+          )}
+
+          <div className="hidden sm:flex items-center gap-2">
+            <Link href="/tableau-de-bord/notifications" className="maquette-icon-btn relative flex h-10 w-10 items-center justify-center rounded-xl" aria-label="Notifications">
+              <Icone nom="cloche" taille={20} />
+            </Link>
+            <Link href="/tableau-de-bord/planning" className="maquette-icon-btn flex h-10 w-10 items-center justify-center rounded-xl" aria-label="Planning">
+              <Icone nom="planning" taille={20} />
+            </Link>
+          </div>
 
           <div className="hidden sm:block text-right text-[11px] leading-tight text-[#A7B7A8] capitalize">
             <span>{aujourdHui}</span>

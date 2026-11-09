@@ -10,10 +10,12 @@
  */
 
 import { useState } from "react";
+import Link from "next/link";
 import { CatalogueVentes } from "./catalogue";
 import { PanierVentes } from "./panier";
 import { ClientFormulaire } from "./client-form";
 import { TicketVente } from "./ticket";
+import { Icone } from "@/components/icones";
 import { usePos } from "../hooks/use-pos";
 import { afMAD } from "../core/money.ts";
 import type { ModePaiement, Reglement } from "../types";
@@ -22,6 +24,7 @@ export function PosEcran({ compact = false }: { compact?: boolean }) {
   const {
     catalogue, chargementCat,
     panier, totaux, reglements, op, vider,
+    setPanier,
     setReglements,
     clients, erreurClients, rechargerClients, choisirClient,
     estGestionnaire, permPosEdit, role,
@@ -63,6 +66,25 @@ export function PosEcran({ compact = false }: { compact?: boolean }) {
     await validerVenteCourante(payeCent, reglements);
   }
 
+  const CLE_VENTE_EN_ATTENTE = "auto-dyali-pos-vente-en-attente";
+  function mettreEnAttente() {
+    if (panier.lignes.length === 0) return;
+    localStorage.setItem(CLE_VENTE_EN_ATTENTE, JSON.stringify({ panier, reglements }));
+    vider();
+  }
+  function reprendreVente() {
+    const brut = localStorage.getItem(CLE_VENTE_EN_ATTENTE);
+    if (!brut) return;
+    try {
+      const data = JSON.parse(brut) as { panier: typeof panier; reglements: Reglement[] };
+      setPanier(data.panier);
+      setReglements(data.reglements ?? []);
+      localStorage.removeItem(CLE_VENTE_EN_ATTENTE);
+    } catch {
+      // Vente en attente illisible : ne rien écraser, le panier courant reste intact.
+    }
+  }
+
   const peutValider =
     panier.lignes.length > 0 &&
     (resteACouvrir === 0 || (reglements.length === 0 && panier.client && (estGestionnaire || permPosEdit)));
@@ -79,7 +101,7 @@ export function PosEcran({ compact = false }: { compact?: boolean }) {
   };
 
   return (
-    <section aria-label="Point de vente" className="flex flex-1 min-h-0 flex-col gap-2">
+    <section aria-label="Point de vente" className="maquette-pos flex flex-1 min-h-0 flex-col gap-2">
       {erreurBandeau && (
         <div className="rounded-lg border border-[#C66A68] bg-[#C66A68]/20 px-3 py-2 text-xs text-[#C66A68]">{erreurBandeau}</div>
       )}
@@ -90,6 +112,25 @@ export function PosEcran({ compact = false }: { compact?: boolean }) {
       {fileRetard > 0 && (
         <div className="rounded-lg border border-[#D6A34D] bg-[#D6A34D]/20 px-3 py-2 text-xs text-[#D6A34D]">
           {fileRetard} vente(s) en attente de synchronisation (hors ligne).
+        </div>
+      )}
+
+      {!compact && (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="mr-auto flex items-center gap-3">
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#31ffb0]/30 bg-[#07180f]/80 text-[#F2D58A] shadow-[0_0_18px_rgba(49,255,176,0.12)]">
+              <Icone nom="pos" taille={24} />
+            </span>
+            <span>
+              <span className="block text-xl font-extrabold text-[#F2F7F3]">Point de Vente</span>
+              <span className="block text-xs text-[#A7B7A8]">Vente rapide · Gestion intelligente</span>
+            </span>
+          </div>
+          <button type="button" onClick={vider} className="neon-btn-gold text-xs">＋ Nouvelle Vente</button>
+          <button type="button" onClick={mettreEnAttente} disabled={panier.lignes.length === 0} className="neon-btn-ghost text-xs">Mise en attente</button>
+          <button type="button" onClick={reprendreVente} className="neon-btn-ghost text-xs">Reprendre</button>
+          <Link href="/tableau-de-bord/historique-ventes" className="neon-btn-ghost text-xs">Historique</Link>
+          <button type="button" onClick={() => window.print()} className="neon-btn-ghost text-xs">🖨 Imprimer</button>
         </div>
       )}
 
@@ -115,10 +156,10 @@ export function PosEcran({ compact = false }: { compact?: boolean }) {
         />
       )}
 
-      {/* CORPS : 3 zones sur PC (≥1024px), empilement sur mobile */}
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row gap-2">
+      {/* CORPS : catalogue à gauche, panier + paiement à droite (PC) ; empilement mobile */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12">
         {/* ZONE A : catalogue */}
-        <div className="min-h-0 flex-1 lg:w-[40%]">
+        <div className="min-h-0 lg:col-span-7">
           <CatalogueVentes
             produits={catalogue.produits}
             familles={catalogue.familles}
@@ -132,8 +173,10 @@ export function PosEcran({ compact = false }: { compact?: boolean }) {
           />
         </div>
 
-        {/* ZONE B : panier */}
-        <div className="min-h-0 flex-1 lg:w-[30%]">
+        {/* RAIL DROIT : panier puis paiement, comme la maquette */}
+        <div className="flex min-h-0 flex-col gap-3 lg:col-span-5">
+          {/* ZONE B : panier */}
+          <div className="pos-cart-panel min-h-0 flex-1 p-3">
           <PanierVentes
             lignes={panier.lignes}
             remiseGlobale={panier.remiseGlobale}
@@ -149,8 +192,8 @@ export function PosEcran({ compact = false }: { compact?: boolean }) {
           />
         </div>
 
-        {/* ZONE C : paiement */}
-        <div className="min-h-0 flex-1 lg:w-[30%]">
+          {/* ZONE C : paiement */}
+          <div className="pos-payment-panel min-h-0 p-3">
           <section aria-label="Paiement" className="flex min-h-0 flex-1 flex-col gap-3">
             {/* 4 moyens principaux immédiatement visibles */}
             <div className="grid grid-cols-4 gap-2">
@@ -161,7 +204,7 @@ export function PosEcran({ compact = false }: { compact?: boolean }) {
                     key={m} type="button"
                     onClick={() => setModeChoisi(m)}
                     aria-pressed={actif}
-                    className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl border text-xs font-semibold transition ${actif ? "border-[#D0C6AE] bg-[#49675B] text-[#E8ECE8]" : "border-[#46524D] bg-[#303A38] text-[#A7B7A8] hover:bg-[#37433E]"}`}
+                    className={`pos-pay-btn flex min-h-20 flex-col items-center justify-center gap-1 px-2 text-xs font-semibold transition ${actif ? "" : "opacity-90 hover:opacity-100"}`}
                   >
                     <span aria-hidden className="text-xl">{MODE_ICONE[m]}</span>{MODE_LABEL[m]}
                   </button>
@@ -177,7 +220,7 @@ export function PosEcran({ compact = false }: { compact?: boolean }) {
                     title={bloque ? "Permission requise." : undefined}
                     onClick={() => setModeChoisi(m)}
                     aria-pressed={modeChoisi === m}
-                    className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl border text-[11px] font-semibold transition ${modeChoisi === m ? "border-[#D0C6AE] bg-[#49675B] text-[#E8ECE8]" : "border-[#46524D] bg-[#303A38] text-[#A7B7A8] hover:bg-[#37433E]"}${bloque ? " opacity-40" : ""}`}
+                    className={`pos-pay-btn flex min-h-14 flex-col items-center justify-center gap-0.5 px-2 text-[11px] font-semibold transition ${bloque ? " opacity-40" : ""}`}
                   >
                     <span aria-hidden>{MODE_ICONE[m]}</span>{MODE_LABEL[m]}
                   </button>
@@ -237,12 +280,13 @@ export function PosEcran({ compact = false }: { compact?: boolean }) {
                 type="button"
                 disabled={!peutValider}
                 onClick={valider}
-                className="btn-premium mt-2 min-h-12 w-full text-xs font-extrabold tracking-wide"
+                className="pos-final-btn mt-2 min-h-14 w-full rounded-xl text-sm font-extrabold tracking-wide"
               >
-                Valider la vente
+                ✓ Finaliser la Vente
               </button>
             </div>
           </section>
+          </div>
         </div>
       </div>
 

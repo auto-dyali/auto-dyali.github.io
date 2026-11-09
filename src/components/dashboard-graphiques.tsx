@@ -11,7 +11,7 @@ import { CourbeCA, DonutServices } from "@/components/graphiques";
  * Aucune donnée fictive : si la base est vide, on l’indique explicitement.
  */
 
-const COULEURS = ["#D6B66F", "#38A987", "#E9D998", "#D69B6A", "#5B8A8F", "#A8BB87"];
+const COULEURS = ["#31ffb0", "#d4b36a", "#5b8ee6", "#9aa5a0", "#00d084", "#f2d58a"];
 
 const CATEGORIES_LABEL: Record<string, string> = {
   piece: "Pièces",
@@ -24,7 +24,7 @@ const CATEGORIES_LABEL: Record<string, string> = {
 };
 
 export function CourbeCAReelle() {
-  const [donnees, setDonnees] = useState<number[] | null>(null);
+  const [series, setSeries] = useState<{ label: string; donnees: number[]; couleur: string }[] | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,29 +35,44 @@ export function CourbeCAReelle() {
       depuis.setMonth(depuis.getMonth() - 5);
       depuis.setDate(1);
       depuis.setHours(0, 0, 0, 0);
-      const { data, error } = await supabase.from("sales").select("total, created_at").gte("created_at", depuis.toISOString());
+      const [ventesReq, depensesReq] = await Promise.all([
+        supabase.from("sales").select("total, created_at").gte("created_at", depuis.toISOString()),
+        supabase.from("expenses").select("amount, created_at").gte("created_at", depuis.toISOString()),
+      ]);
       if (!vivant) return;
-      if (error) { setErreur(error.message); return; }
+      if (ventesReq.error) { setErreur(ventesReq.error.message); return; }
 
-      const parMois = new Array(6).fill(0) as number[];
-      for (const vente of (data ?? []) as { total: number; created_at: string }[]) {
+      const parMoisVentes = new Array(6).fill(0) as number[];
+      for (const vente of ((ventesReq.data ?? []) as { total: number; created_at: string }[])) {
         const d = new Date(vente.created_at);
         const ecart = (new Date().getFullYear() - d.getFullYear()) * 12 + (new Date().getMonth() - d.getMonth());
         const index = 5 - ecart;
-        if (index >= 0 && index < 6) parMois[index] += Number(vente.total) || 0;
+        if (index >= 0 && index < 6) parMoisVentes[index] += Number(vente.total) || 0;
       }
-      setDonnees(parMois);
+      const parMoisDepenses = new Array(6).fill(0) as number[];
+      for (const dep of ((depensesReq.data ?? []) as { amount: number; created_at: string }[])) {
+        const d = new Date(dep.created_at);
+        const ecart = (new Date().getFullYear() - d.getFullYear()) * 12 + (new Date().getMonth() - d.getMonth());
+        const index = 5 - ecart;
+        if (index >= 0 && index < 6) parMoisDepenses[index] += Number(dep.amount) || 0;
+      }
+      const benefices = parMoisVentes.map((v, i) => v - parMoisDepenses[i]);
+      setSeries([
+        { label: "Chiffre d'affaires", donnees: parMoisVentes, couleur: "#31ffb0" },
+        { label: "Dépenses", donnees: parMoisDepenses, couleur: "#d4b36a" },
+        { label: "Bénéfices", donnees: benefices, couleur: "#5b8ee6" },
+      ]);
     };
     const timer = window.setTimeout(() => void charger(), 0);
     return () => { vivant = false; window.clearTimeout(timer); };
   }, []);
 
   if (erreur) return <p className="text-xs text-[#C5716B]">{erreur}</p>;
-  if (!donnees) return <p className="py-8 text-center text-xs text-[#A7B7A8]">Chargement des ventes…</p>;
-  if (!donnees.some((v) => v > 0)) {
+  if (!series) return <p className="py-8 text-center text-xs text-[#A7B7A8]">Chargement des ventes…</p>;
+  if (!series.some((s) => s.donnees.some((v) => v !== 0))) {
     return <p className="py-8 text-center text-xs text-[#A7B7A8]">Aucune vente enregistrée sur les 6 derniers mois — la courbe s’affichera dès la première vente.</p>;
   }
-  return <CourbeCA donnees={donnees} />;
+  return <CourbeCA series={series} />;
 }
 
 export function DonutCAReel() {

@@ -4,7 +4,7 @@ import { ReportsAdvancedModule } from "@/components/reports-advanced-module";
 export default function RapportsPage() {
   return (
     <ShellApp
-      actif="Rapports"
+      actif="Rapports & Analyses"
       feature="reports_basic"
       salutation="Rapports & statistiques"
       sousTitre="Décisions fondées sur vos données"

@@ -3,7 +3,7 @@ import { AssistantAI } from "@/components/assistant-ai";
 
 export default function AssistantPage() {
   return (
-    <ShellApp actif="AUTO DYALI AI" feature="ai" salutation="AUTO DYALI AI" sousTitre="Garage AUTO DYALI — Agadir">
+    <ShellApp actif="Communication IA" feature="ai" salutation="AUTO DYALI AI" sousTitre="Garage AUTO DYALI — Agadir">
       <AssistantAI />
     </ShellApp>
   );

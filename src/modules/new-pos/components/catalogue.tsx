@@ -60,11 +60,11 @@ export function CatalogueVentes({
         </p>
       )}
 
-      <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Familles">
+      <div className="pos-categories flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Familles">
         <button
           role="tab" aria-selected={famille === null}
           onClick={() => setFamille(null)}
-          className={`min-h-12 shrink-0 rounded-full px-4 text-sm font-semibold transition ${famille === null ? "bg-[#49675B] text-[#E8ECE8]" : "bg-[#303A38] text-[#A7B7A8] hover:bg-[#37433E]"}`}
+          className={`pos-cat-pill min-h-12 shrink-0 px-4 text-sm font-semibold transition ${famille === null ? "" : "opacity-80 hover:opacity-100"}`}
         >
           Tout
         </button>
@@ -72,22 +72,23 @@ export function CatalogueVentes({
           <button
             key={f.cle} role="tab" aria-selected={famille === f.cle}
             onClick={() => setFamille(famille === f.cle ? null : f.cle)}
-            className={`min-h-12 shrink-0 rounded-full px-4 text-sm font-semibold transition ${famille === f.cle ? "bg-[#49675B] text-[#E8ECE8]" : "bg-[#303A38] text-[#A7B7A8] hover:bg-[#37433E]"}`}
+            className={`pos-cat-pill min-h-12 shrink-0 px-4 text-sm font-semibold transition ${famille === f.cle ? "" : "opacity-80 hover:opacity-100"}`}
           >
             {f.libelle}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="pos-product-grid grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {visibles.map((p) => (
           <button
             key={p.id}
             disabled={desactive}
             onClick={() => surAjouter(p)}
             title={desactive ? "Permissions POS insuffisantes." : `Ajouter ${p.nom} au panier`}
-            className="carte-premium group flex min-h-28 min-w-0 flex-col justify-between gap-1 rounded-xl p-3 text-left transition hover:-translate-y-0.5 disabled:opacity-40"
+            className="pos-product-card group flex min-h-40 min-w-0 flex-col justify-between gap-1 p-3 text-left transition hover:-translate-y-0.5 disabled:opacity-40"
           >
+            <span className="pos-product-media" aria-hidden>{(p.marque ?? "AD").slice(0, 2).toUpperCase()}</span>
             <span className="min-h-10 text-[13px] font-semibold leading-snug text-[#E8ECE8] line-clamp-2">
               {p.nom}
             </span>
@@ -96,16 +97,15 @@ export function CatalogueVentes({
               {p.reference ? ` · ${p.reference}` : ""}
             </span>
             <span className="mt-auto flex items-center justify-between gap-2">
-              <b className="text-sm text-[#D0C6AE]">{afMAD(p.prixUnitaireCent)}</b>
-              <i
-                className={
-                  p.source === "test"
-                    ? "text-[10px] text-[#D6A34D]"
-                    : p.stock > 0 ? "text-[10px] text-[#4D9B73]" : "text-[10px] text-[#C66A68]"
-                }
-              >
-                {p.source === "test" ? "démo" : p.stock > 0 ? `stock ${p.stock}` : "épuisé"}
-              </i>
+              <b className="pos-price text-sm">{afMAD(p.prixUnitaireCent)}</b>
+              <span className="flex items-center gap-2">
+                <i
+                  className="pos-stock"
+                >
+                {p.source === "test" ? "démo" : p.stock > 0 ? `Stock : ${p.stock}` : "épuisé"}
+                </i>
+                <span aria-hidden className="flex h-8 w-8 items-center justify-center rounded-full border border-[#F2D58A]/45 bg-[#F2D58A]/10 text-[#F2D58A]">🛒</span>
+              </span>
             </span>
           </button>
         ))}

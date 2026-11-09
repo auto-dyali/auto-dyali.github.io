@@ -119,7 +119,7 @@ export function PanierVentes({
       )}
 
       {/* RÉCAP DU TICKET (valeurs du moteur de tarification, jamais recalculées ici) */}
-      <div className="carte-premium space-y-2 rounded-xl p-3 text-sm">
+      <div className="neon-panel space-y-2 rounded-xl p-3 text-sm">
         {lignes.length > 0 && (
           <>
             <label className="flex items-center gap-2 text-xs text-[#A7B7A8]">
@@ -160,9 +160,9 @@ export function PanierVentes({
               <dd>{afMAD(g.tvaCent)}</dd>
             </div>
           ))}
-          <div className="flex items-baseline justify-between border-t border-[#46524D]/60 pt-2 text-base">
-            <dt className="font-bold text-[#E8ECE8]">Total TTC</dt>
-            <dd className="font-extrabold text-[#D0C6AE]">{afMAD(totaux.ttcCent)}</dd>
+          <div className="pos-total-ttc flex items-baseline justify-between rounded-xl px-3 py-2 text-base">
+            <dt className="font-bold">Total TTC</dt>
+            <dd className="font-extrabold">{afMAD(totaux.ttcCent)}</dd>
           </div>
         </dl>
         {lignes.length > 0 && (
