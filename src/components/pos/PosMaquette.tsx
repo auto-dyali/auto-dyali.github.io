@@ -13,7 +13,6 @@ import Link from "next/link";
 import { ScanChamp } from "@/components/scan-champ";
 import { ClientFormulaire } from "@/modules/new-pos/components/client-form";
 import { TicketVente } from "@/modules/new-pos/components/ticket";
-import { DashboardHero } from "@/components/dashboard/dashboard-maquette";
 import { usePos } from "@/modules/new-pos/hooks/use-pos";
 import { afMAD } from "@/modules/new-pos/core/money.ts";
 import type { ModePaiement, Produit, Reglement } from "@/modules/new-pos/types";
@@ -144,7 +143,6 @@ export function PosMaquette() {
 
   return (
     <section aria-label="Point de Vente — maquette" className="maquette-pos flex min-h-0 flex-col gap-3 lg:h-full">
-      <DashboardHero variante="logo" />
 
       {erreurBandeau && <div className="rounded-xl border border-[#C66A68]/60 bg-[#C66A68]/15 px-3 py-2 text-xs text-[#F0A8A4]">{erreurBandeau}</div>}
       {infoValidation && <div className="rounded-xl border border-[#31ffb0]/50 bg-[#31ffb0]/10 px-3 py-2 text-xs text-[#8dffce]">{infoValidation}</div>}
