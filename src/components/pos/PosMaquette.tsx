@@ -160,7 +160,7 @@ export function PosMaquette() {
   ];
 
   return (
-    <section aria-label="Point de Vente — maquette" className="maquette-pos flex min-h-0 flex-col gap-4 md:h-full">
+    <section aria-label="Point de Vente — maquette" className="maquette-pos flex min-h-0 flex-col gap-4 pb-40 md:h-full md:pb-0">
 
       {erreurBandeau && <div className="rounded-xl border border-[#C66A68]/60 bg-[#C66A68]/15 px-3 py-2 text-xs text-[#F0A8A4]">{erreurBandeau}</div>}
       {infoValidation && <div className="rounded-xl border border-[#31ffb0]/50 bg-[#31ffb0]/10 px-3 py-2 text-xs text-[#8dffce]">{infoValidation}</div>}
@@ -471,6 +471,45 @@ export function PosMaquette() {
       )}
 
       {ticketTermine && <TicketVente ticket={ticketTermine} />}
+
+      {/* Barre de paiement fixe smartphone (< md) : mode + moyens + Finaliser.
+          Le design PC/tablette (>= md) est inchangé. */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#31ffb0]/25 bg-[#07180f]/95 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+        <div className="flex items-center gap-2">
+          <select
+            value={modeEffectif}
+            onChange={(e) => setModeChoisi(e.target.value as ModePaiement)}
+            aria-label="Mode de paiement"
+            className="min-h-11 min-w-0 flex-1 rounded-lg border border-[#31ffb0]/25 bg-black/50 px-2 text-xs font-bold text-[#F2F7F3] outline-none"
+          >
+            <option value="especes">Espèces</option>
+            <option value="visa">Carte — Visa</option>
+            <option value="mastercard">Carte — Mastercard</option>
+            <option value="virement">Virement</option>
+            <option value="mobile">Mobile</option>
+            <option value="cheque">Chèque</option>
+            <option value="credit">Crédit</option>
+            <option value="avoir">Avoir</option>
+          </select>
+          <div className="grid shrink-0 grid-cols-5 gap-1" role="group" aria-label="Moyens de paiement">
+            {MODES_IMAGE.map((m) => (
+              <button
+                key={m.cle + m.label}
+                type="button"
+                onClick={() => { if (m.cle === "visa") { setModeChoisi(carteType); } else { setModeChoisi(m.cle); } setPaiementOuvert(true); }}
+                aria-pressed={modeEffectif === m.cle || ((m.cle === "visa") && (modeChoisi === "visa" || modeChoisi === "mastercard"))}
+                aria-label={m.label}
+                className={`flex h-11 w-11 flex-col items-center justify-center rounded-lg border text-base ${modeEffectif === m.cle ? "border-[#31ffb0]/60 bg-[#31ffb0]/20" : "border-[#31ffb0]/20 bg-black/40"}`}
+              >
+                <span aria-hidden>{m.icone}</span>
+              </button>
+            ))}
+          </div>
+          <button type="button" disabled={!peutValider} onClick={valider} className="pos-final-btn min-h-11 shrink-0 rounded-lg px-3 text-xs font-black">
+            ✓ Finaliser
+          </button>
+        </div>
+      </div>
     </section>
   );
 }

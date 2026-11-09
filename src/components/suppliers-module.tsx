@@ -125,6 +125,10 @@ export function FournisseursModule() {
 
       let totalRecu = 0;
       for (const item of (items ?? []) as { id: string; product_id: string | null; quantity: number; received_quantity: number }[]) {
+        // Contrôle (Phase 3) : jamais de quantité reçue > commandée ni négative.
+        if (Number(item.received_quantity) < 0 || Number(item.received_quantity) > Number(item.quantity)) {
+          throw new Error(`Réception invalide pour la référence ${commande.reference} : quantité reçue hors limites.`);
+        }
         const reste = Math.max(0, Number(item.quantity) - Number(item.received_quantity));
         if (reste <= 0) continue;
         totalRecu += reste;

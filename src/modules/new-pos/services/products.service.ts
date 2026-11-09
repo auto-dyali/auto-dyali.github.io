@@ -100,13 +100,15 @@ export async function chargerCatalogue(): Promise<ResultatCatalogue> {
     .from("products")
     .select("id, sku, barcode, name, category, brand, manufacturer_ref, oem_ref, image_url, sale_price, stock, tax_rate, unit")
     .eq("is_active", true)
-    .order("name");
+    .order("name")
+    .limit(500);
   if (req.error && /does not exist|column/i.test(req.error.message)) {
     req = (await supabase
       .from("products")
       .select("id, sku, barcode, name, category, sale_price, stock, tax_rate")
       .eq("is_active", true)
-      .order("name")) as { data: ProduitRow[] | null; error: { message: string } | null };
+      .order("name")
+      .limit(500)) as { data: ProduitRow[] | null; error: { message: string } | null };
   }
   if (req.error) {
     return catalogueTestResultat(`Chargement produits impossible : ${req.error.message}`);
