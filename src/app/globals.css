@@ -72,9 +72,9 @@
   min-width: 3rem;
   padding: 0 1.125rem;
   border-radius: var(--radius-button);
-  background: var(--color-primary);
-  color: var(--color-text);
-  border: 1px solid rgba(208, 198, 174, 0.22);
+  background: linear-gradient(180deg, #34d399 0%, #10b981 52%, #047857 100%);
+  color: #04120c;
+  border: 1px solid rgba(141, 255, 206, 0.45);
   box-shadow: var(--shadow-button);
   font-weight: 600;
   font-size: 0.9375rem;
@@ -154,9 +154,9 @@
   min-width: 3rem;
   padding: 0 1.125rem;
   border-radius: var(--radius-button);
-  background: var(--color-accent);
-  color: #252d2d;
-  border: 1px solid rgba(208, 198, 174, 0.35);
+  background: linear-gradient(180deg, #34d399 0%, #10b981 52%, #047857 100%);
+  color: #04120c;
+  border: 1px solid rgba(141, 255, 206, 0.45);
   box-shadow: var(--shadow-button);
   font-weight: 600;
   font-size: 0.9375rem;
@@ -372,8 +372,8 @@ option {
 .btn-or {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 38%),
-    linear-gradient(180deg, #5d7d6e 0%, #49675b 52%, #3e5a4e 100%);
-  color: #f4f8f5;
+    linear-gradient(180deg, #34d399 0%, #10b981 52%, #047857 100%);
+  color: #04120c;
   font-weight: 700;
   border: 1px solid rgba(232, 236, 232, 0.16);
   border-radius: 0.8rem;
