@@ -90,3 +90,40 @@ https://auto-dyali.github.io
 ---
 
 **Nouvelle scène connexion** (`conxxion.png`) : intégrée comme demandé — desktop 2048×1152 (upscale net + micro-netteté, logo mural et écran « Performance Center » entiers) et mobile portrait 1264×2257 (scène complète préservée : le recadrage des téléphones ne touche que les prolongements fondus latéraux ; reflet de sol puis fondu graphite). Servie en production (200).
+
+---
+
+## 16. INVESTIGATION URGENTE — « L'ancien POS s'affiche encore en production » (commit `a3bc6ea`)
+
+### 1–4. Vérifications effectuées (toutes concluantes)
+| Point | Vérification | Résultat |
+|---|---|---|
+| 1. HEAD `main` | `git rev-parse HEAD` | `689a93548036…` — contient `9b70193` ✓ |
+| 2. Route POS | `src/app/tableau-de-bord/point-de-vente/page.tsx` | importe bien `PosModule` de `pos-module.tsx` ✓ |
+| 3. Config Pages | `next.config.ts` + workflow | `output: export`, `basePath` vide, `trailingSlash`, artifact `./out` ✓ |
+| 4. Workflow | `.github/workflows/deploy-pages.yml` | checkout du commit pushé → `npm run build` → upload `out` → deploy-pages ✓ |
+| 5. Comparaison build/prod | chunks du HTML POS | **différents** → investigué (§ ci-dessous) |
+| 6. Caches | `public/sw.js` + `pwa-register.tsx` + en-têtes CDN | **Service Worker trouvé** : cache `auto-dyali-shell-v6`, cache-first sur **tous** `.js/.css` (regex trop large) + HTML en repli |
+| 7. Anciens composants | grep `PosModule` | un seul usage — aucun ancien layout POS |
+| 8. Export statique | `out/` | nouveaux fichiers inclus ✓ |
+
+### Cause identifiée (preuve)
+**La production était déjà à jour** : le CSS servi contient `app-sidebar` et `btn-premium` (nouveau design), `last-modified` frais. Les hashes de chunks différents prod/local venaient des variables d'environnement inlinées (workflow vs local) — pas d'un déploiement en retard. L'ancien POS affiché provenait du **Service Worker** : son cache `v6` servait en **cache-first tous les .js/.css** (y compris non-hashés) et son HTML ancien en repli réseau.
+
+### Corrections appliquées (commit `a3bc6ea`)
+1. **Cache SW bumpé `v6` → `v7`** : à l'activation, tous les anciens caches sont supprimés (`skipWaiting` + `clients.claim` — effet immédiat au premier rechargement).
+2. **Stratégie resserrée** : cache-first uniquement sur `/_next/static/` (URLs réellement hashées) et médias immuables ; les `.js/.css` hors `/_next/static/` passent en **réseau d'abord** (repli cache) → toute mise à jour du POS est désormais visible sans manipulation.
+3. **Badge de version visible** : « POS BUILD 2026-11-08 · `<sha>` » (sidebar PC sous ENCAISSER + en-tête mobile), SHA injecté par le workflow via `NEXT_PUBLIC_BUILD_SHA: ${{ github.sha }}`.
+
+### 9–10. Preuves de production (build ↔ prod)
+| Preuve | Résultat |
+|---|---|
+| GitHub Actions | **completed success** sur `a3bc6ea` |
+| `sw.js` servi en prod | **`auto-dyali-shell-v7`** ✓ (nouveau cache actif) |
+| `last-modified` POS prod | Mon, 09 Nov 2026 00:04 UTC ✓ |
+| SHA du build dans les chunks prod | **`a3bc6e…` trouvé inliné** dans `/_next/static/chunks/3yfbxk0-ww5i4.js` ✓ |
+| Littéral badge dans les chunks prod | « POS BUILD 2026-11-08 · ${…} » trouvé ✓ |
+| Supabase / tables / stock | **Non touchés** |
+
+### Pour l'utilisateur
+Recharger une fois la page (le SW v7 purge l'ancien cache à l'activation) : le POS affichera en bas de la barre latérale **« POS BUILD 2026-11-08 · a3bc6e… »** — reconnaissance immédiate de la version chargée. Si un ancien onglet restait ouvert, un second rechargement suffit.
