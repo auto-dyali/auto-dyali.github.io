@@ -86,6 +86,12 @@ const ORDRE_FAMILLES = [
 /** Clé de catégorie réservée : vue des prestations (main-d'œuvre). */
 const CAT_SERVICES = "__services__";
 
+/** Badge de build : SHA réel du commit déployé (injecté par le workflow GitHub Actions). */
+const BUILD_SHA = process.env.NEXT_PUBLIC_BUILD_SHA ?? "";
+const BUILD_LABEL = BUILD_SHA
+  ? `POS BUILD 2026-11-08 · ${BUILD_SHA.slice(0, 7)}`
+  : "POS BUILD dev";
+
 type ModePaiement =
   | "especes"
   | "visa"
@@ -1391,7 +1397,12 @@ export function PosModule() {
         >
           🛒
         </button>
-        <h1 className="titre-or text-base font-extrabold flex-1 text-center">AUTO DYALI POS</h1>
+        <h1 className="titre-or text-base font-extrabold flex-1 text-center leading-tight">
+          AUTO DYALI POS
+          <span className="mt-0.5 block text-[8px] font-medium tracking-[0.18em] text-[#8DA298]" title={BUILD_LABEL}>
+            {BUILD_LABEL}
+          </span>
+        </h1>
         <button
           type="button"
           onClick={ouvrirPaiement}
@@ -1477,6 +1488,9 @@ export function PosModule() {
             >
               {saving ? "Enregistrement…" : `ENCAISSER ${lignes.length ? formatMad(totalTTC) : ""}`}
             </button>
+            <p className="text-center text-[9px] tracking-[0.18em] text-[#8DA298]" title={BUILD_LABEL}>
+              {BUILD_LABEL}
+            </p>
           </div>
         </div>
       </aside>

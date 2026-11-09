@@ -35,6 +35,7 @@ jobs:
           NEXT_PUBLIC_SITE_BASE_PATH: ""
           NEXT_PUBLIC_SUPABASE_URL: https://nxmsqqoflskfajqrqddw.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ugGsts0KUOh1VBmYAla5hA_ZXNjZ4bT
+          NEXT_PUBLIC_BUILD_SHA: ${{ github.sha }}
         run: npm run build
 
       - name: Upload Pages artifact

@@ -1,4 +1,4 @@
-const CACHE = "auto-dyali-shell-v6";
+const CACHE = "auto-dyali-shell-v7";
 const SHELL = ["./", "./icons/auto-dyali-192.png", "./icons/auto-dyali-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -34,8 +34,12 @@ self.addEventListener("fetch", (event) => {
   if (isApi) return; // réseau uniquement, aucune donnée API en cache
 
   const isStaticAsset = sameOrigin && (
+    // Uniquement les URLs RÉELLEMENT immuables (hash de contenu Next.js)
+    // ou les médias. Les .js/.css HORS /_next/static/ ne sont PAS ici :
+    // ils suivent la stratégie réseau-d'abord (repli cache) afin qu'une
+    // mise à jour du POS soit toujours visible sans manipulation.
     url.pathname.includes("/_next/static/") ||
-    /\.(?:css|js|png|svg|ico|woff2?)$/i.test(url.pathname)
+    /\.(?:png|jpe?g|webp|svg|ico|woff2?)$/i.test(url.pathname)
   );
 
   if (isStaticAsset) {
