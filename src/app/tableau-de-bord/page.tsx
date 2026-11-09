@@ -5,6 +5,7 @@ import { ShellApp } from "@/components/shell-app";
 import { DashboardKpis } from "@/components/dashboard-kpis";
 import { DashboardLive } from "@/components/dashboard-live";
 import { CourbeCAReelle, DonutCAReel } from "@/components/dashboard-graphiques";
+import { MiniPos } from "@/modules/new-pos/mini-pos/mini-pos";
 import {
   Icone,
   type NomIcone,
@@ -52,6 +53,13 @@ export default function TableauDeBordPage() {
           <Link href="/tableau-de-bord/atelier" className="mt-4 block text-center text-xs text-[#8FB59B] hover:underline">
             Voir l&apos;atelier →
           </Link>
+        </div>
+      </section>
+
+      {/* Mini-POS — vente rapide (moteur unique avec le POS complet) */}
+      <section aria-label="Mini-POS" className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <div className="carte p-3 xl:col-span-12">
+          <MiniPos />
         </div>
       </section>
 
