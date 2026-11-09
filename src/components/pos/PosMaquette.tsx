@@ -37,6 +37,8 @@ const CATEGORIES: CategorieMaquette[] = [
 function imgMetier(p: Produit): string {
   const cat = (p.categorie ?? "").toLowerCase();
   const nom = `${p.nom} ${p.marque ?? ""}`.toLowerCase();
+  // Image propre par produit/marquet : Castrol → visuel Castrol dédié.
+  if (nom.includes("castrol")) return "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Castrol_Logo.svg/320px-Castrol_Logo.svg.png";
   if (cat.includes("pneu") || nom.includes("pneu") || nom.includes("michelin")) return CATEGORIES[1].img;
   if (cat.includes("freinage") || nom.includes("frein") || nom.includes("plaquette") || nom.includes("disque")) return CATEGORIES[3].img;
   if (cat.includes("filtre") || nom.includes("filtre")) return CATEGORIES[4].img;
@@ -239,8 +241,8 @@ export function PosMaquette() {
                   </span>
                   <span className="mt-1 truncate text-[13px] font-bold leading-snug text-[#F2F7F3]" title={p.nom}>{p.nom}</span>
                   <span className="mt-auto flex items-center justify-between gap-2">
-                    <span className="pos-price text-base font-extrabold">{afMAD(p.prixUnitaireCent)}</span>
-                    <span aria-hidden className="flex h-9 w-9 items-center justify-center rounded-full border border-[#F2D58A]/45 bg-[#F2D58A]/10 text-[#F2D58A]">🛒</span>
+                    <span className="pos-price min-w-0 truncate text-base font-extrabold">{afMAD(p.prixUnitaireCent)}</span>
+                    <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#F2D58A]/45 bg-[#F2D58A]/10 text-[#F2D58A]">🛒</span>
                   </span>
                   <span className="pos-stock mt-1 w-fit">{p.source === "test" ? "démo" : p.stock > 0 ? `Stock : ${p.stock}` : "épuisé"}</span>
                 </button>
