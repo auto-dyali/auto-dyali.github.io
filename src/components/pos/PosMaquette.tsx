@@ -25,13 +25,13 @@ type CategorieMaquette = {
 };
 
 const CATEGORIES: CategorieMaquette[] = [
-  { cle: "tout", label: "Tout", icone: "⊞", img: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&q=60&auto=format&fit=crop" },
+  { cle: "tout", label: "Tout", icone: "⊞", img: "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=400&q=60&auto=format&fit=crop" },
   { cle: "pneumatiques", label: "Pneumatiques", icone: "🛞", img: "https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=400&q=60&auto=format&fit=crop" },
   { cle: "vidange", label: "Vidange", icone: "🛢️", img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=60&auto=format&fit=crop" },
   { cle: "freinage", label: "Freinage", icone: "⭕", img: "https://images.unsplash.com/photo-1600661653561-629509216228?w=400&q=60&auto=format&fit=crop" },
   { cle: "filtration", label: "Filtration", icone: "▦", img: "https://images.unsplash.com/photo-1613214149922-f1809c99b414?w=400&q=60&auto=format&fit=crop" },
   { cle: "lubrifiants", label: "Lubrifiants", icone: "🫗", img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=60&auto=format&fit=crop" },
-  { cle: "accessoires", label: "Accessoires", icone: "🪑", img: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=60&auto=format&fit=crop" },
+  { cle: "accessoires", label: "Accessoires", icone: "🪑", img: "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?w=400&q=60&auto=format&fit=crop" },
 ];
 
 const POOL_IMAGES_PRODUITS = [
