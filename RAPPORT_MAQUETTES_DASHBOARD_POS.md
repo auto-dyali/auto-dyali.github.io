@@ -17,7 +17,7 @@
 | Point de Vente actif en vert | Entrée Point de Vente active | `shell-app.tsx` (`modulesMaquettePos`) | Lien `/tableau-de-bord/point-de-vente` |
 | Recherche top center | Barre de recherche de l’en-tête maquette | `shell-app.tsx` (`.maquette-header`, `.maquette-search`) | Champ de recherche visible (formulaire existant) |
 | Cloche notifications, calendrier, date/heure, avatar | Icônes d’en-tête | `shell-app.tsx` | Cloche → `/notifications`, calendrier → `/planning`, date/heure réelles de l’horloge, avatar = initiales du profil |
-| Hero voiture verte + logo AUTO DYALI | Hero Dashboard / Point de Vente | `src/components/dashboard/dashboard-maquette.tsx` (`DashboardHero`) | Image existante `car-premium.jpg` teintée vert, titre et tagline de la maquette |
+| Hero voiture verte + logo AUTO DYALI | Hero Dashboard / Point de Vente | `src/components/dashboard/dashboard-maquette.tsx` (`DashboardHero`) | Image existante `car-premium.jpg` teintée vert. Dashboard : titre + logo. Point de Vente : variante « logo seul » (aucun titre dans le hero ; « Point de Vente » apparaît une seule fois, dans la barre de contenu — vérifié en rendu réel). |
 | 4 cartes KPI néon (CA, Bénéfices, Dépenses, Interventions) | 8 KPI réels Supabase | `src/components/dashboard-kpis.tsx`, `src/components/carte-kpi.tsx` | CA, bénéfice net, dépenses, ventes, interventions en cours, valeur du stock, créances clients, trésorerie — aucune valeur de démonstration présentée comme production |
 | Évolution Financière (3 courbes) | Courbe multi-séries | `src/components/dashboard-graphiques.tsx`, `src/components/graphiques.tsx` | CA, Dépenses et Bénéfices des 6 derniers mois depuis `sales` + `expenses` |
 | Répartition des Activités (donut) | Donut CA par catégorie | `DonutCAReel` | Répartition réelle depuis `sale_items` + `products`, couleurs de la maquette |
@@ -94,7 +94,7 @@
 | Build `npm run build` | ✓ pages statiques générées |
 | Tests Print Pro / Scan Pro / POS core | 24/24 · 21/21 · 38/38 |
 | Rendu réel local (navigateur, session de test) | Dashboard : hero, 8 KPI, Alertes, Mini-POS Rapide, Activité, Accès Rapide présents, non bloqué sur la session |
-| Rendu réel local POS | Catégories Tout/Pneumatiques/Vidange/Freinage/Filtration/Lubrifiants/Accessoires, produits, panier, Remise, Client, Mode de Paiement, 5 moyens de paiement, Finaliser la Vente présents |
+| Rendu réel local POS | Catégories Tout/Pneumatiques/Vidange/Freinage/Filtration/Lubrifiants/Accessoires, produits, panier, Remise, Client, Mode de Paiement, 5 moyens de paiement, Finaliser la Vente présents ; hero POS « logo seul », « Point de Vente » présent une seule fois |
 | Captures | `docs-refonte/captures-maquettes/dashboard-mobile.jpeg`, `pos-mobile.jpeg` |
 | Supabase / auth / données | Non modifiés. Référence fournie dans la mission (`lwepn…`) différente du fallback historique du code (`nxms…`) : aucune modification de configuration effectuée ; la variable d’environnement de production reste la source de vérité |
 

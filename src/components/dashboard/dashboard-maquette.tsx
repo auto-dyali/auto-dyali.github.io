@@ -14,7 +14,28 @@ import { supabase } from "@/lib/supabase-browser";
 
 const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
 
-export function DashboardHero({ titre, sousTitre }: { titre: string; sousTitre: string }) {
+export function DashboardHero({ titre = "", sousTitre = "", variante = "defaut" }: { titre?: string; sousTitre?: string; variante?: "defaut" | "logo" }) {
+  if (variante === "logo") {
+    return (
+      <section aria-label="AUTO DYALI" className="maquette-hero mb-5 p-5 sm:p-8">
+        <div
+          aria-hidden
+          className="maquette-hero__image"
+          style={{
+            backgroundImage: `url('${basePath}/images/car-premium.jpg')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center right",
+          }}
+        />
+        <div className="relative z-10 flex min-h-40 items-center justify-center">
+          <div className="text-center">
+            <p className="maquette-hero__logo text-4xl font-black italic tracking-tight text-[#EAF6EF] sm:text-5xl">AUTO DYALI</p>
+            <p className="maquette-hero__tagline mt-2 text-[10px] font-bold uppercase text-[#A7B7A8]">Performance · Innovation · Confiance</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
   return (
     <section aria-label="Présentation AUTO DYALI" className="maquette-hero mb-5 p-5 sm:p-8">
       <div
