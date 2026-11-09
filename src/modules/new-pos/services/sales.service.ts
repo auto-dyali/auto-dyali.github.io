@@ -1,9 +1,10 @@
 /**
  * NEW POS — Service ventes.
  * Validation via le RPC transactionnel serveur `create_pos_sale`
- * (migration 0021 : vente + lignes + règlements + stock en UNE transaction,
- * anti-doublon par référence unique). Repli legacy si le RPC est indisponible :
- * insertion multi-tables contrôlée — jamais un "succès" sans confirmation.
+ * (migration 0021) puis `create_pos_sale_v2` (migration 0025, vérification
+ * serveur des totaux) : vente + lignes + règlements + stock en UNE
+ * transaction, anti-doublon par référence unique. AUCUN repli multi-INSERT :
+ * sans RPC joignable, la vente part en file offline (jamais d'écriture partielle).
  *
  * Offline : file d'attente locale idempotente (référence unique en base) ;
  * une vente n'est marquée synchronisée QUE sur confirmation serveur.
@@ -92,76 +93,14 @@ export async function validerVente(payload: SalePayload): Promise<ResultatVente>
     // réseau → passe à l'empilement
   }
 
-  // 2) Repli contrôlé : insertion tables directes (même ordre que le RPC).
-  try {
-    return await validerVenteLegacy(p);
-  } catch (e) {
-    empiler(p);
-    return {
-      ok: false, reference,
-      erreur: `Serveur injoignable — vente en attente de synchronisation. ${e instanceof Error ? e.message : ""}`.trim(),
-      enAttenteSync: true,
-    };
-  }
-}
-
-async function validerVenteLegacy(p: SalePayload): Promise<ResultatVente> {
-  if (!supabase) throw new Error("no supabase");
-  const profilRpc = await supabase.rpc("get_my_profile");
-  const establishmentId = profilRpc.data?.[0]?.establishment_id;
-  if (!establishmentId) throw new Error("établissement introuvable");
-
-  // Tentative avec vehicle_id (colonne 0021), repli sans si colonne absente.
-  let insVente = await supabase.from("sales").insert({
-    establishment_id: establishmentId, client_id: p.client_id, vehicle_id: p.vehicle_id,
-    work_order_id: p.work_order_id, reference: p.reference, status: p.status,
-    subtotal: p.subtotal, discount: p.discount, tax_total: p.tax_total,
-    total: p.total, paid_total: p.paid_total,
-  }).select("id").single();
-  if (insVente.error && /column|vehicle_id/i.test(insVente.error.message)) {
-    insVente = await supabase.from("sales").insert({
-      establishment_id: establishmentId, client_id: p.client_id, work_order_id: p.work_order_id,
-      reference: p.reference, status: p.status, subtotal: p.subtotal, discount: p.discount,
-      tax_total: p.tax_total, total: p.total, paid_total: p.paid_total,
-    }).select("id").single();
-  }
-  if (insVente.error) throw new Error(insVente.error.message);
-  const venteId = String(insVente.data.id);
-
-  const reqItems = await supabase.from("sale_items").insert(p.items.map((i) => ({
-    establishment_id: establishmentId, sale_id: venteId,
-    product_id: i.product_id, service_id: i.service_id, label: i.label,
-    quantity: i.quantity, unit_price: i.unit_price, tax_rate: i.tax_rate, discount: i.discount,
-  })));
-  const reqPayes = await supabase.from("payments").insert(p.payments.map((r) => ({
-    establishment_id: establishmentId, sale_id: venteId, method: r.method, amount: r.amount,
-  })));
-
-  // Stock : pour les produits uniquement (les prestations ne touchent rien).
-  const produits = p.items.filter((i) => i.product_id);
-  for (const it of produits) {
-    await supabase.from("stock_movements").insert({
-      establishment_id: establishmentId, product_id: it.product_id,
-      direction: "out", quantity: it.quantity, reference: p.reference,
-    });
-    const dec = await supabase.rpc("decrement_product_stock", { p_product_id: it.product_id, p_qty: Math.max(1, Math.round(it.quantity)) });
-    if (dec.error) {
-      // Décrément direct contrôlé si le RPC échoue — jamais silencieux.
-      const { data: prod } = await supabase.from("products").select("stock").eq("id", it.product_id).single();
-      if (prod) {
-        await supabase.from("products").update({
-          stock: Math.max(0, Number(prod.stock ?? 0) - Math.max(1, Math.round(it.quantity))),
-        }).eq("id", it.product_id);
-      }
-    }
-  }
-
-  const fragiles = [reqItems, reqPayes].find((r) => r.error);
-  if (fragiles?.error) {
-    // La vente existe : on NE dit PAS qu'elle a échoué en bloc — signal réel.
-    return { ok: true, venteId, reference: p.reference, statut: `${p.status} (détail partiel : ${fragiles.error.message})` };
-  }
-  return { ok: true, venteId, reference: p.reference, statut: p.status };
+  // Aucun repli multi-INSERT : la transaction atomique RPC est la seule
+  // voie d'écriture. Sans RPC joignable, la vente part en file offline.
+  empiler(p);
+  return {
+    ok: false, reference,
+    erreur: "Serveur injoignable — vente en attente de synchronisation (aucune écriture partielle).",
+    enAttenteSync: true,
+  };
 }
 
 function empiler(p: SalePayload): void {

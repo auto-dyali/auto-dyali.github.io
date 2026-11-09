@@ -82,9 +82,10 @@ export function construirePayloadVente(
     .map((r) => ({ method: mapModeBdd(r), amount: r.montantCent / 100 }));
   // payeCent côté moteur = montant dépassé = TTC — centré par le règlement réel.
   const paidTotal = Math.min(t.payeCent, t.ttcCent);
+  const reference = nouvelleReference();
   return {
     payload: {
-      reference: nouvelleReference(),
+      reference,
       client_id: etat.client?.id ?? null,
       vehicle_id: etat.vehicule?.id ?? null,
       work_order_id: null,
@@ -97,7 +98,7 @@ export function construirePayloadVente(
       items,
       payments,
     },
-    reference: nouvelleReference(),
+    reference,
   };
 }
 
@@ -166,6 +167,7 @@ export function payloadValide(p: SalePayload): string[] {
   const e: string[] = [];
   if (!p.items.every((i) => i.quantity > 0 && i.unit_price >= 0)) e.push("quantity / unit_price invalides");
   if (p.total < 0 || p.paid_total < 0) e.push("totaux négatifs");
+  if (p.paid_total > p.total + 0.001) e.push("le montant payé dépasse le total de la vente");
   if (p.payments.length === 0 && p.status !== "opened") e.push("ventes non-credit sans règlement");
   const sumPaye = p.payments.reduce((s, r) => s + r.amount, 0);
   // La monnaie rendue (trop-perçu espèces) est légitime : l'encaissé peut

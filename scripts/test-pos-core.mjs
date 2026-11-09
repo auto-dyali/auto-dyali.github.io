@@ -265,6 +265,23 @@ test("payload complet : cohérence server-like depuis lignes", () => {
     vrai(payloadValide(p).length === 0, "payload valide");
   }
 });
+test("payload : référence unique (payload === retour, jamais deux appels)", () => {
+  let e = panierVide();
+  e = ajouterPrestationLibre(e, "Test", 1000, 20);
+  e = majClient(e, { id: "c1", nomComplet: "A", soldeDuCent: 0 });
+  const built = construirePayloadVente(e, [{ mode: "especes", montantCent: 1200 }], { payeCent: 1200, soldeAvoirCent: 0 });
+  vrai("payload" in built, "payload construite");
+  if ("payload" in built) {
+    egal(built.payload.reference, built.reference, "référence payload === référence retournée");
+    vrai(/^VNT-/.test(built.reference), "format");
+  }
+});
+test("payloadValide : paid_total > total rejeté + règlements < paid rejeté", () => {
+  const base = { reference: "VNT-X", client_id: null, vehicle_id: null, work_order_id: null, subtotal: 100, discount: 0, tax_total: 20, total: 120, paid_total: 130, status: "paid", items: [{ product_id: null, service_id: null, label: "x", quantity: 1, unit_price: 100, tax_rate: 0, discount: 0 }], payments: [{ method: "cash", amount: 130 }] };
+  vrai(payloadValide(base).some((m) => m.includes("dépasse le total")), "paid > total rejeté");
+  const base2 = { ...base, paid_total: 120, payments: [{ method: "cash", amount: 100 }] };
+  vrai(payloadValide(base2).some((m) => m.includes("règlements < paid_total")), "règlements < paid rejeté");
+});
 test("payload crédit sans client → erreur", () => {
   let e = panierVide();
   e = ajouterPrestationLibre(e, "x", 1000, 20);

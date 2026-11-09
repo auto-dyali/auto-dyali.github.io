@@ -59,9 +59,46 @@ export function usePos() {
 
   useEffect(() => { const t = window.setTimeout(() => void recataloguer(), 0); return () => window.clearTimeout(t); }, [recataloguer]);
 
-  // ---- panier ------------------------------------------------------------
-  const [panier, setPanier] = useState<EtatPanier>(panierVide);
-  const [reglements, setReglements] = useState<Reglement[]>([]);
+  // ---- panier (persisté : partagé Mini-POS ↔ POS complet, survit à la navigation) ----
+  const CLE_PANIER = "auto-dyali-pos-panier";
+  const chargerPanier = (): EtatPanier => {
+    try {
+      const brut = typeof localStorage !== "undefined" ? localStorage.getItem(CLE_PANIER) : null;
+      if (!brut) return panierVide();
+      const parsed = JSON.parse(brut) as Partial<EtatPanier>;
+      if (!Array.isArray(parsed.lignes)) return panierVide();
+      return {
+        lignes: parsed.lignes as LignePanier[],
+        remiseGlobale: parsed.remiseGlobale ?? { pourcent: 0, montantCent: 0 },
+        client: (parsed.client as Client | null) ?? null,
+        vehicule: (parsed.vehicule as Vehicule | null) ?? null,
+      };
+    } catch {
+      return panierVide();
+    }
+  };
+  const chargerReglements = (): Reglement[] => {
+    try {
+      const brut = typeof localStorage !== "undefined" ? localStorage.getItem(`${CLE_PANIER}-reglements`) : null;
+      if (!brut) return [];
+      const parsed = JSON.parse(brut);
+      return Array.isArray(parsed) ? (parsed as Reglement[]) : [];
+    } catch {
+      return [];
+    }
+  };
+  const [panier, setPanier] = useState<EtatPanier>(chargerPanier);
+  const [reglements, setReglements] = useState<Reglement[]>(chargerReglements);
+
+  // Persistance : le panier survit à la navigation Mini-POS ↔ POS et à la fermeture.
+  useEffect(() => {
+    try {
+      localStorage.setItem(CLE_PANIER, JSON.stringify(panier));
+      localStorage.setItem(`${CLE_PANIER}-reglements`, JSON.stringify(reglements));
+    } catch {
+      // Stockage indisponible : le panier reste valide en mémoire.
+    }
+  }, [panier, reglements]);
 
   // ---- droits (permissions serveur, complément de RLS) --------------------
   const [permPosEdit, setPermPosEdit] = useState(true);

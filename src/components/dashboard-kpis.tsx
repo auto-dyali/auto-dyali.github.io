@@ -8,7 +8,7 @@ import type { NomIcone } from "@/components/icones";
 type Kpi = { titre: string; valeur: string; variation: string; positif: boolean; icone: NomIcone; image?: string };
 const initialKpis: Kpi[] = [
   { titre: "Chiffre d'affaires", valeur: "—", variation: "Chargement Supabase…", positif: true, icone: "ca", image: "/images/kpi/chiffre-affaires.svg" },
-  { titre: "Bénéfice net", valeur: "—", variation: "Chargement Supabase…", positif: true, icone: "benefice", image: "/images/kpi/benefice-net.svg" },
+  { titre: "Résultat intermédiaire", valeur: "—", variation: "Coût des marchandises manquant", positif: true, icone: "benefice", image: "/images/kpi/benefice-net.svg" },
   { titre: "Dépenses", valeur: "—", variation: "Chargement Supabase…", positif: false, icone: "depenses", image: "/images/kpi/depenses.svg" },
   { titre: "Interventions en cours", valeur: "—", variation: "Chargement Supabase…", positif: true, icone: "cle", image: "/images/kpi/interventions.svg" },
   { titre: "Ventes", valeur: "—", variation: "Chargement Supabase…", positif: true, icone: "pos" },
@@ -46,7 +46,7 @@ export function DashboardKpis() {
     const creances = clientsResult.error ? 0 : (clientsResult.data ?? []).reduce((sum, c) => sum + Number(c.balance_due ?? 0), 0);
     setKpis([
       { ...initialKpis[0], valeur: mad(ca), variation: "Total des ventes Supabase" },
-      { ...initialKpis[1], valeur: mad(ca - depenses), variation: "CA moins dépenses" },
+      { ...initialKpis[1], valeur: mad(ca - depenses), variation: "CA − dépenses — coût marchandises manquant, pas un bénéfice net" },
       { ...initialKpis[2], valeur: mad(depenses), variation: "Total des dépenses Supabase" },
       { ...initialKpis[3], valeur: String(interventions), variation: "Ordres en cours" },
       { ...initialKpis[4], valeur: String(ventes), variation: "Ventes enregistrées" },
