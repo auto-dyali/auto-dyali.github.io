@@ -21,17 +21,30 @@ type CategorieMaquette = {
   cle: string;
   label: string;
   icone: string;
+  img: string;
 };
 
 const CATEGORIES: CategorieMaquette[] = [
-  { cle: "tout", label: "Tout", icone: "⊞" },
-  { cle: "pneumatiques", label: "Pneumatiques", icone: "🛞" },
-  { cle: "vidange", label: "Vidange", icone: "🛢️" },
-  { cle: "freinage", label: "Freinage", icone: "⭕" },
-  { cle: "filtration", label: "Filtration", icone: "▦" },
-  { cle: "lubrifiants", label: "Lubrifiants", icone: "🫗" },
-  { cle: "accessoires", label: "Accessoires", icone: "🪑" },
+  { cle: "tout", label: "Tout", icone: "⊞", img: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&q=60&auto=format&fit=crop" },
+  { cle: "pneumatiques", label: "Pneumatiques", icone: "🛞", img: "https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=400&q=60&auto=format&fit=crop" },
+  { cle: "vidange", label: "Vidange", icone: "🛢️", img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=60&auto=format&fit=crop" },
+  { cle: "freinage", label: "Freinage", icone: "⭕", img: "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=400&q=60&auto=format&fit=crop" },
+  { cle: "filtration", label: "Filtration", icone: "▦", img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&q=60&auto=format&fit=crop" },
+  { cle: "lubrifiants", label: "Lubrifiants", icone: "🫗", img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=60&auto=format&fit=crop" },
+  { cle: "accessoires", label: "Accessoires", icone: "🪑", img: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=60&auto=format&fit=crop" },
 ];
+
+function imgMetier(p: Produit): string {
+  const cat = (p.categorie ?? "").toLowerCase();
+  const nom = `${p.nom} ${p.marque ?? ""}`.toLowerCase();
+  if (cat.includes("pneu") || nom.includes("pneu") || nom.includes("michelin")) return CATEGORIES[1].img;
+  if (cat.includes("freinage") || nom.includes("frein") || nom.includes("plaquette") || nom.includes("disque")) return CATEGORIES[3].img;
+  if (cat.includes("filtre") || nom.includes("filtre")) return CATEGORIES[4].img;
+  if (cat.includes("batterie") || nom.includes("batterie") || nom.includes("varta")) return CATEGORIES[6].img;
+  if (cat.includes("lubrifiant") || nom.includes("huile") || nom.includes("quartz") || nom.includes("motul")) return CATEGORIES[5].img;
+  if (cat.includes("accessoire")) return CATEGORIES[6].img;
+  return CATEGORIES[0].img;
+}
 
 function iconeMetier(p: Produit): string {
   const cat = (p.categorie ?? "").toLowerCase();
@@ -196,10 +209,11 @@ export function PosMaquette() {
                 role="tab"
                 aria-selected={categorie === c.cle}
                 onClick={() => setCategorie(c.cle)}
-                className="pos-cat-pill flex min-h-16 min-w-28 flex-col items-center justify-center gap-1 px-3 text-xs font-bold"
+                className="pos-cat-pill relative flex min-h-20 min-w-28 flex-col items-center justify-center gap-1 overflow-hidden px-3 text-xs font-bold"
                 data-actif={categorie === c.cle}
               >
-                <span aria-hidden className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#31ffb0]/25 bg-black/40 text-xl">{c.icone}</span>
+                <img src={c.img} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover opacity-50" />
+                <span aria-hidden className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-[#31ffb0]/25 bg-black/60 text-xl">{c.icone}</span>
                 {c.label}
               </button>
             ))}
@@ -219,7 +233,10 @@ export function PosMaquette() {
                   title={desactiveCatalogue ? "Permissions POS insuffisantes." : `Ajouter ${p.nom} au panier`}
                   className="pos-product-card group flex min-h-28 flex-col p-3 text-left transition hover:-translate-y-0.5 disabled:opacity-40"
                 >
-                  <span className="pos-product-media" aria-hidden>{iconeMetier(p)}</span>
+                  <span className="pos-product-media relative overflow-hidden" aria-hidden>
+                    <img src={imgMetier(p)} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover" />
+                    <span className="relative">{iconeMetier(p)}</span>
+                  </span>
                   <span className="mt-1 truncate text-[13px] font-bold leading-snug text-[#F2F7F3]" title={p.nom}>{p.nom}</span>
                   <span className="mt-auto flex items-center justify-between gap-2">
                     <span className="pos-price text-base font-extrabold">{afMAD(p.prixUnitaireCent)}</span>

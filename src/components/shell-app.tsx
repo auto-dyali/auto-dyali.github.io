@@ -57,7 +57,6 @@ const modules: { label: string; icone: NomIcone; href: string; feature: FeatureK
 
 const modulesMaquetteDashboard: { label: string; icone: NomIcone; href: string; feature: FeatureKey }[] = [
   { label: "Dashboard", icone: "pos", href: "/tableau-de-bord", feature: "dashboard" },
-  { label: "Mini-POS", icone: "pos", href: "/tableau-de-bord#mini-pos", feature: "dashboard" },
   { label: "Point de Vente", icone: "pos", href: "/tableau-de-bord/point-de-vente", feature: "pos" },
   { label: "Atelier & Interventions", icone: "cle", href: "/tableau-de-bord/atelier", feature: "workshop" },
   { label: "Clients & Véhicules", icone: "client", href: "/tableau-de-bord/clients", feature: "clients" },
