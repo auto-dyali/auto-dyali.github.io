@@ -27,7 +27,7 @@ export function DashboardHero({ titre = "", sousTitre = "", variante = "defaut" 
             backgroundPosition: "center right",
           }}
         />
-        <div className="relative z-10 flex min-h-40 items-center justify-center">
+        <div className="relative z-10 flex min-h-28 items-center justify-center">
           <div className="text-center">
             <p className="maquette-hero__logo text-4xl font-black italic tracking-tight text-[#EAF6EF] sm:text-5xl">AUTO DYALI</p>
             <p className="maquette-hero__tagline mt-2 text-[10px] font-bold uppercase text-[#A7B7A8]">Performance · Innovation · Confiance</p>

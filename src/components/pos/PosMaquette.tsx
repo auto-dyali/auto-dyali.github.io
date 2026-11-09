@@ -26,13 +26,25 @@ type CategorieMaquette = {
 
 const CATEGORIES: CategorieMaquette[] = [
   { cle: "tout", label: "Tout", icone: "⊞" },
-  { cle: "pneumatiques", label: "Pneumatiques", icone: "◉" },
-  { cle: "vidange", label: "Vidange", icone: "💧" },
-  { cle: "freinage", label: "Freinage", icone: "◎" },
+  { cle: "pneumatiques", label: "Pneumatiques", icone: "🛞" },
+  { cle: "vidange", label: "Vidange", icone: "🛢️" },
+  { cle: "freinage", label: "Freinage", icone: "⭕" },
   { cle: "filtration", label: "Filtration", icone: "▦" },
   { cle: "lubrifiants", label: "Lubrifiants", icone: "🫗" },
-  { cle: "accessoires", label: "Accessoires", icone: "▤" },
+  { cle: "accessoires", label: "Accessoires", icone: "🪑" },
 ];
+
+function iconeMetier(p: Produit): string {
+  const cat = (p.categorie ?? "").toLowerCase();
+  const nom = `${p.nom} ${p.marque ?? ""}`.toLowerCase();
+  if (cat.includes("pneu") || nom.includes("pneu") || nom.includes("michelin")) return "🛞";
+  if (cat.includes("freinage") || nom.includes("frein") || nom.includes("plaquette") || nom.includes("disque")) return "⭕";
+  if (cat.includes("filtre") || nom.includes("filtre")) return "▦";
+  if (cat.includes("batterie") || nom.includes("batterie") || nom.includes("varta")) return "🔋";
+  if (cat.includes("lubrifiant") || nom.includes("huile") || nom.includes("quartz") || nom.includes("motul")) return "🫗";
+  if (cat.includes("accessoire")) return "🪑";
+  return "🔧";
+}
 
 function dansCategorie(p: Produit, cle: string): boolean {
   if (cle === "tout") return true;
@@ -66,6 +78,7 @@ export function PosMaquette() {
   const [remisePct, setRemisePct] = useState("0");
   const [clientFormOuvert, setClientFormOuvert] = useState(false);
   const [rechClient, setRechClient] = useState("");
+  const [paiementOuvert, setPaiementOuvert] = useState(false);
 
   const produitsVisibles = useMemo(() => {
     const q = recherche.trim().toLowerCase();
@@ -73,7 +86,25 @@ export function PosMaquette() {
     if (q) {
       ls = ls.filter((p) => `${p.nom} ${p.marque ?? ""} ${p.reference ?? ""} ${p.referenceOem ?? ""} ${p.codeBarres ?? ""}`.toLowerCase().includes(q));
     }
-    return ls.slice(0, 20);
+    // Affichage : 8 produits maximum, mélangés par métier (une part de chaque famille).
+    if (q || categorie !== "tout") return ls.slice(0, 8);
+    const parMetier = new Map<string, Produit[]>();
+    for (const p of ls) {
+      const k = (p.categorie ?? "divers").toLowerCase();
+      parMetier.set(k, [...(parMetier.get(k) ?? []), p]);
+    }
+    const melange: Produit[] = [];
+    let reste = true;
+    while (reste && melange.length < 8) {
+      reste = false;
+      for (const liste of parMetier.values()) {
+        if (liste.length > 0 && melange.length < 8) {
+          melange.push(liste.shift()!);
+          reste = true;
+        }
+      }
+    }
+    return melange;
   }, [catalogue.produits, categorie, recherche]);
 
   const dejaCouvert = reglements.reduce((s, r) => s + r.montantCent, 0);
@@ -167,10 +198,10 @@ export function PosMaquette() {
                 role="tab"
                 aria-selected={categorie === c.cle}
                 onClick={() => setCategorie(c.cle)}
-                className="pos-cat-pill flex min-h-20 min-w-28 flex-col items-center justify-center gap-1 px-3 text-xs font-bold"
+                className="pos-cat-pill flex min-h-28 min-w-32 flex-col items-center justify-center gap-2 px-3 text-xs font-bold"
                 data-actif={categorie === c.cle}
               >
-                <span aria-hidden className="text-2xl">{c.icone}</span>
+                <span aria-hidden className="flex h-14 w-14 items-center justify-center rounded-xl border border-[#31ffb0]/25 bg-black/40 text-4xl">{c.icone}</span>
                 {c.label}
               </button>
             ))}
@@ -180,7 +211,7 @@ export function PosMaquette() {
           {chargementCat ? (
             <p className="py-10 text-center text-xs text-[#A7B7A8]">Chargement du catalogue…</p>
           ) : (
-            <div className="pos-product-grid grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+            <div className="pos-product-grid grid grid-cols-2 gap-3 overflow-y-auto pb-1 sm:grid-cols-3 lg:max-h-[430px] xl:grid-cols-5">
               {produitsVisibles.map((p) => (
                 <button
                   key={p.id}
@@ -190,7 +221,7 @@ export function PosMaquette() {
                   title={desactiveCatalogue ? "Permissions POS insuffisantes." : `Ajouter ${p.nom} au panier`}
                   className="pos-product-card group flex min-h-44 flex-col p-3 text-left transition hover:-translate-y-0.5 disabled:opacity-40"
                 >
-                  <span className="pos-product-media" aria-hidden>{(p.marque ?? "AD").slice(0, 2).toUpperCase()}</span>
+                  <span className="pos-product-media" aria-hidden>{iconeMetier(p)}</span>
                   <span className="mt-2 min-h-10 text-[13px] font-bold leading-snug text-[#F2F7F3] line-clamp-2">{p.nom}</span>
                   <span className="mt-auto flex items-center justify-between gap-2">
                     <span className="pos-price text-base font-extrabold">{afMAD(p.prixUnitaireCent)}</span>
@@ -327,8 +358,8 @@ export function PosMaquette() {
                     key={m.cle + m.label}
                     type="button"
                     onClick={() => {
-                      if (m.cle === "visa") { setModeChoisi(carteType); return; }
-                      setModeChoisi(m.cle);
+                      if (m.cle === "visa") { setModeChoisi(carteType); } else { setModeChoisi(m.cle); }
+                      setPaiementOuvert(true);
                     }}
                     aria-pressed={actif}
                     className="pos-pay-btn flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[11px] font-bold"
@@ -340,58 +371,9 @@ export function PosMaquette() {
               })}
             </div>
 
-            <div className="mt-3 space-y-2 rounded-xl border border-white/5 bg-black/25 p-3">
-              {(modeChoisi === "visa" || modeChoisi === "mastercard") && (
-                <div className="grid grid-cols-2 gap-2" role="group" aria-label="Type de carte">
-                  {(["visa", "mastercard"] as const).map((t) => (
-                    <button key={t} type="button" onClick={() => { setCarteType(t); setModeChoisi(t); }} aria-pressed={carteType === t} className={`min-h-11 rounded-lg border text-xs font-bold ${carteType === t ? "border-[#31ffb0]/60 bg-[#31ffb0]/15 text-white" : "border-[#31ffb0]/20 bg-black/30 text-[#A7B7A8]"}`}>
-                      {t === "visa" ? "Visa" : "Mastercard"}
-                    </button>
-                  ))}
-                  <input value={refTpe} onChange={(e) => setRefTpe(e.target.value)} placeholder="Référence TPE" aria-label="Référence TPE" className="col-span-2 min-h-11 rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none placeholder:text-[#8da298]" />
-                </div>
-              )}
-              {modeChoisi === "cheque" && (
-                <div className="grid grid-cols-2 gap-2">
-                  <input value={cheque.numero} onChange={(e) => setCheque({ ...cheque, numero: e.target.value })} placeholder="N° chèque" aria-label="N° chèque" className="min-h-11 rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none" />
-                  <input value={cheque.banque} onChange={(e) => setCheque({ ...cheque, banque: e.target.value })} placeholder="Banque" aria-label="Banque" className="min-h-11 rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none" />
-                  <input type="date" value={cheque.echeance} onChange={(e) => setCheque({ ...cheque, echeance: e.target.value })} aria-label="Échéance" className="min-h-11 rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none" />
-                  <p className="col-span-2 text-[10px] text-[#F2D58A]">Chèque = encaissement différé, jamais espèces.</p>
-                </div>
-              )}
-              {modeChoisi === "virement" && (
-                <input value={refVirement} onChange={(e) => setRefVirement(e.target.value)} placeholder="Référence du virement" aria-label="Référence du virement" className="min-h-11 w-full rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none placeholder:text-[#8da298]" />
-              )}
-              {(modeChoisi === "credit" || modeChoisi === "avoir") && !panier.client && (
-                <p className="text-[11px] text-[#F0A8A4]">Sélectionnez un client pour ce mode de paiement.</p>
-              )}
-
-              <div className="flex items-center gap-2">
-                <label className="flex min-w-0 flex-1 flex-col gap-1 text-[11px] font-bold text-[#A7B7A8]">
-                  Montant (MAD)
-                  <input value={montant} onChange={(e) => setMontant(e.target.value)} inputMode="decimal" placeholder={((resteACouvrir) / 100).toFixed(2)} aria-label="Montant du règlement" className="min-h-11 rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-right text-sm font-bold text-[#F2F7F3] outline-none" />
-                </label>
-                <button type="button" disabled={montantCent <= 0} onClick={ajouterReglement} className="neon-btn-gold mt-4 min-h-11 shrink-0 px-3 text-xs">Ajouter</button>
-              </div>
-
-              {reglements.length > 0 && (
-                <ul className="space-y-1.5 text-xs" aria-label="Règlements ajoutés">
-                  {reglements.map((r, i) => (
-                    <li key={`${r.mode}-${i}`} className="flex items-center gap-2 rounded-lg border border-white/5 bg-black/30 px-2 py-1.5">
-                      <span className="font-bold text-[#F2F7F3]">{r.mode}</span>
-                      <span className="ml-auto font-mono text-[#F2D58A]">{afMAD(r.montantCent)}</span>
-                      {r.mode === "cheque" && r.cheque?.statut === "en_attente" && <span className="text-[10px] text-[#F2D58A]">en attente</span>}
-                      <button type="button" onClick={() => setReglements(reglements.filter((_, j) => j !== i))} aria-label="Retirer ce règlement" className="min-h-8 min-w-8 text-[#F0A8A4]">✕</button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <div className="flex justify-between border-t border-[#31ffb0]/15 pt-2 text-xs font-bold text-[#F2F7F3]">
-                <span>{monnaie > 0 ? "Monnaie à rendre" : "Reste à payer"}</span>
-                <span className={monnaie > 0 ? "text-[#8dffce]" : "text-[#F2D58A]"}>{afMAD(monnaie > 0 ? monnaie : resteACouvrir)}</span>
-              </div>
-            </div>
+            <p className="mt-3 text-center text-[11px] text-[#A7B7A8]">
+              Cliquez un moyen de paiement pour saisir le montant — la fenêtre de paiement s’ouvre, l’écran principal reste propre comme la maquette.
+            </p>
 
             <button type="button" disabled={!peutValider} onClick={valider} className="pos-final-btn mt-3 flex min-h-14 w-full items-center justify-center gap-2 rounded-xl text-base font-black">
               <span aria-hidden>✓</span> Finaliser la Vente <span aria-hidden>›</span>
@@ -403,6 +385,70 @@ export function PosMaquette() {
           </section>
         </aside>
       </div>
+
+      {paiementOuvert && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label="Fenêtre de paiement">
+          <div className="neon-panel w-full max-w-md p-5">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-base font-extrabold text-[#F2F7F3]">Paiement — {modeEffectif}</h2>
+              <button type="button" onClick={() => setPaiementOuvert(false)} aria-label="Fermer la fenêtre de paiement" className="min-h-11 min-w-11 rounded-xl border border-[#31ffb0]/25 bg-black/30 text-lg text-[#F2F7F3]">✕</button>
+            </div>
+
+            {(modeEffectif === "visa" || modeEffectif === "mastercard") && (
+              <div className="mb-3 grid grid-cols-2 gap-2" role="group" aria-label="Type de carte">
+                {(["visa", "mastercard"] as const).map((t) => (
+                  <button key={t} type="button" onClick={() => { setCarteType(t); setModeChoisi(t); }} aria-pressed={carteType === t} className={`min-h-11 rounded-lg border text-xs font-bold ${carteType === t ? "border-[#31ffb0]/60 bg-[#31ffb0]/15 text-white" : "border-[#31ffb0]/20 bg-black/30 text-[#A7B7A8]"}`}>
+                    {t === "visa" ? "Visa" : "Mastercard"}
+                  </button>
+                ))}
+                <input value={refTpe} onChange={(e) => setRefTpe(e.target.value)} placeholder="Référence TPE" aria-label="Référence TPE" className="col-span-2 min-h-11 rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none placeholder:text-[#8da298]" />
+              </div>
+            )}
+            {modeEffectif === "cheque" && (
+              <div className="mb-3 grid grid-cols-2 gap-2">
+                <input value={cheque.numero} onChange={(e) => setCheque({ ...cheque, numero: e.target.value })} placeholder="N° chèque" aria-label="N° chèque" className="min-h-11 rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none" />
+                <input value={cheque.banque} onChange={(e) => setCheque({ ...cheque, banque: e.target.value })} placeholder="Banque" aria-label="Banque" className="min-h-11 rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none" />
+                <input type="date" value={cheque.echeance} onChange={(e) => setCheque({ ...cheque, echeance: e.target.value })} aria-label="Échéance" className="min-h-11 rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none" />
+                <p className="col-span-2 text-[10px] text-[#F2D58A]">Chèque = encaissement différé, jamais espèces.</p>
+              </div>
+            )}
+            {modeEffectif === "virement" && (
+              <input value={refVirement} onChange={(e) => setRefVirement(e.target.value)} placeholder="Référence du virement" aria-label="Référence du virement" className="mb-3 min-h-11 w-full rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none placeholder:text-[#8da298]" />
+            )}
+
+            <div className="flex items-end gap-2">
+              <label className="flex min-w-0 flex-1 flex-col gap-1 text-[11px] font-bold text-[#A7B7A8]">
+                Montant (MAD)
+                <input value={montant} onChange={(e) => setMontant(e.target.value)} inputMode="decimal" placeholder={((resteACouvrir) / 100).toFixed(2)} aria-label="Montant du règlement" className="min-h-11 rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-right text-base font-bold text-[#F2F7F3] outline-none" />
+              </label>
+              <button type="button" disabled={montantCent <= 0} onClick={ajouterReglement} className="neon-btn-gold min-h-11 shrink-0 px-4 text-xs">Ajouter</button>
+            </div>
+
+            {reglements.length > 0 && (
+              <ul className="mt-3 space-y-1.5 text-xs" aria-label="Règlements ajoutés">
+                {reglements.map((r, i) => (
+                  <li key={`${r.mode}-${i}`} className="flex items-center gap-2 rounded-lg border border-white/5 bg-black/30 px-2 py-1.5">
+                    <span className="font-bold text-[#F2F7F3]">{r.mode}</span>
+                    <span className="ml-auto font-mono text-[#F2D58A]">{afMAD(r.montantCent)}</span>
+                    {r.mode === "cheque" && r.cheque?.statut === "en_attente" && <span className="text-[10px] text-[#F2D58A]">en attente</span>}
+                    <button type="button" onClick={() => setReglements(reglements.filter((_, j) => j !== i))} aria-label="Retirer ce règlement" className="min-h-8 min-w-8 text-[#F0A8A4]">✕</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-3 flex justify-between border-t border-[#31ffb0]/15 pt-2 text-xs font-bold text-[#F2F7F3]">
+              <span>{monnaie > 0 ? "Monnaie à rendre" : "Reste à payer"}</span>
+              <span className={monnaie > 0 ? "text-[#8dffce]" : "text-[#F2D58A]"}>{afMAD(monnaie > 0 ? monnaie : resteACouvrir)}</span>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <button type="button" onClick={() => setPaiementOuvert(false)} className="neon-btn-ghost min-h-12 flex-1 text-xs">Fermer</button>
+              <button type="button" disabled={!peutValider} onClick={() => { void valider(); setPaiementOuvert(false); }} className="pos-final-btn min-h-12 flex-1 rounded-xl text-sm font-black">✓ Finaliser la Vente</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {ticketTermine && <TicketVente ticket={ticketTermine} />}
     </section>
