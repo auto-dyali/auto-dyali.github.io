@@ -315,7 +315,7 @@ export function ShellApp({
 
   const estPosFixe = actif === "Point de vente";
   return (
-    <div className={`flex ${estPosFixe ? "md:h-screen md:overflow-hidden" : "min-h-screen"} bg-[#252D2D] bg-cover bg-center bg-fixed ${["Tableau de bord", "Point de vente", "Mini-POS"].includes(actif) ? "maquette-shell" : ""}`} style={{ backgroundImage: `linear-gradient(rgba(37,45,45,.55),rgba(37,45,45,.72)), url('${basePath}/images/backgrounds/connexion.webp')` }}>
+    <div className={`flex ${estPosFixe ? "md:h-screen md:overflow-hidden" : "min-h-screen"} bg-[#252D2D] bg-cover bg-center bg-fixed ${["Tableau de bord", "Point de vente", "Mini-POS"].includes(actif) ? "maquette-shell" : ""}`} style={{ backgroundImage: `linear-gradient(rgba(37,45,45,.55),rgba(37,45,45,.72)), url('${actif === "Tableau de bord" ? `${basePath}/images/backgrounds/connexion.webp` : `${basePath}/images/backgrounds/dashboard.webp`}')` }}>
       {/* Sidebar desktop */}
       <aside
         className={`carte hidden shrink-0 rounded-none border-y-0 border-l-0 lg:flex lg:flex-col p-5 sticky top-0 h-screen overflow-y-auto app-sidebar ${
