@@ -126,4 +126,15 @@ https://auto-dyali.github.io
 | Supabase / tables / stock | **Non touchés** |
 
 ### Pour l'utilisateur
-Recharger une fois la page (le SW v7 purge l'ancien cache à l'activation) : le POS affichera en bas de la barre latérale **« POS BUILD 2026-11-08 · a3bc6e… »** — reconnaissance immédiate de la version chargée. Si un ancien onglet restait ouvert, un second rechargement suffit.
+Recharger une fois la page (le SW v7 purge l'ancien cache à l'activation) : le POS affichera en bas de la barre latérale **« POS BUILD 2026-11-08 · <sha> »** — reconnaissance immédiate de la version chargée. Si un ancien onglet restait ouvert, un second rechargement suffit.
+
+### Preuves de rendu réel (commit `3065b5d`, vérifié dans le navigateur)
+| Test | Résultat |
+|---|---|
+| Badge de build en prod | `POS BUILD 2026-11-08 · 3065b5d` ✓ (SHA inliné dans les chunks servis) |
+| Rendu POS réel (session active) | Catalogue monté, 60 produits, boutons « Ajouter », panier, sidebar, scan — **plus bloqué sur « Vérification de la session »** |
+| Panneau de paiement | Visa, Mastercard, Chèque, Espèces, Virement, Partiel, Crédit + ENCAISSER ✓ |
+| Console JS | 0 erreur bloquante (401 attendus sur données avec session de test) |
+| GitHub Actions `3065b5d` | completed success ✓ |
+| Production | 200 sur `/tableau-de-bord/point-de-vente/` ✓ |
+| Supabase / données / stock | Non touchés ✓ |
