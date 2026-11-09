@@ -72,9 +72,9 @@
   min-width: 3rem;
   padding: 0 1.125rem;
   border-radius: var(--radius-button);
-  background: var(--color-primary);
-  color: var(--color-text);
-  border: 1px solid rgba(208, 198, 174, 0.22);
+  background: linear-gradient(180deg, #34d399 0%, #10b981 52%, #047857 100%);
+  color: #04120c;
+  border: 1px solid rgba(141, 255, 206, 0.45);
   box-shadow: var(--shadow-button);
   font-weight: 600;
   font-size: 0.9375rem;
@@ -372,8 +372,8 @@ option {
 .btn-or {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 38%),
-    linear-gradient(180deg, #5d7d6e 0%, #49675b 52%, #3e5a4e 100%);
-  color: #f4f8f5;
+    linear-gradient(180deg, #34d399 0%, #10b981 52%, #047857 100%);
+  color: #04120c;
   font-weight: 700;
   border: 1px solid rgba(232, 236, 232, 0.16);
   border-radius: 0.8rem;
@@ -724,11 +724,11 @@ label {
   min-height: 3rem;
   padding: 0 1rem;
   border-radius: 0.85rem;
-  border: 1px solid rgba(242, 213, 138, 0.55);
-  background: linear-gradient(180deg, #f2d58a 0%, #d4b36a 52%, #ad8a3f 100%);
-  color: #1c1504;
+  border: 1px solid rgba(141, 255, 206, 0.55);
+  background: linear-gradient(180deg, #34d399 0%, #10b981 52%, #047857 100%);
+  color: #04120c;
   font-weight: 800;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34), 0 0 18px rgba(212, 179, 106, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34), 0 0 18px rgba(49, 255, 176, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   touch-action: manipulation;
 }
 .neon-btn-gold:active {
@@ -844,10 +844,10 @@ label {
   box-shadow: 0 0 20px rgba(49, 255, 176, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
 .maquette-pos .pos-final-btn {
-  background: linear-gradient(180deg, #f2d58a 0%, #d4b36a 52%, #ad8a3f 100%);
-  color: #1c1504;
-  border: 1px solid rgba(242, 213, 138, 0.60);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.38), 0 0 20px rgba(212, 179, 106, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  background: linear-gradient(180deg, #34d399 0%, #10b981 52%, #047857 100%);
+  color: #04120c;
+  border: 1px solid rgba(141, 255, 206, 0.60);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.38), 0 0 20px rgba(49, 255, 176, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 .maquette-pos .pos-final-btn:disabled {
   opacity: 0.55;
