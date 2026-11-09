@@ -214,7 +214,7 @@ export function PosMaquette() {
                 className="pos-cat-pill relative flex min-h-20 min-w-28 flex-col items-center justify-center gap-1 overflow-hidden px-3 text-xs font-bold"
                 data-actif={categorie === c.cle}
               >
-                <img src={c.img} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover opacity-50" />
+                <img src={c.img} alt="" loading="eager" onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover opacity-50" />
                 <span aria-hidden className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-[#31ffb0]/25 bg-black/60 text-xl">{c.icone}</span>
                 {c.label}
               </button>
@@ -236,8 +236,8 @@ export function PosMaquette() {
                   className="pos-product-card group flex min-h-28 flex-col p-3 text-left transition hover:-translate-y-0.5 disabled:opacity-40"
                 >
                   <span className="pos-product-media relative overflow-hidden" aria-hidden>
-                    <img src={imgMetier(p)} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover" />
-                    <span className="relative">{iconeMetier(p)}</span>
+                    <img src={imgMetier(p)} alt="" loading="eager" onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover" />
+                    <span className="absolute bottom-1 left-1 rounded-md bg-black/60 px-1 py-0.5 text-sm">{iconeMetier(p)}</span>
                   </span>
                   <span className="mt-1 truncate text-[13px] font-bold leading-snug text-[#F2F7F3]" title={p.nom}>{p.nom}</span>
                   <span className="mt-auto flex items-center justify-between gap-2">
