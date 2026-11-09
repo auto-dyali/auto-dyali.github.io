@@ -108,6 +108,7 @@ export function ShellApp({
   const [confirmerDeconnexion, setConfirmerDeconnexion] = useState(false);
   const [messageDroit, setMessageDroit] = useState<string | null>(null);
   const [horsLigne, setHorsLigne] = useState(false);
+  const [erreurSession, setErreurSession] = useState(false);
   const router = useRouter();
 
   // Connectivité réelle : bandeau explicite quand le réseau est absent.
@@ -134,10 +135,17 @@ export function ShellApp({
   useEffect(() => {
     let vivant = true;
     const timer = window.setTimeout(async () => {
-      const { data } = (await supabase?.auth.getSession()) ?? { data: { session: null } };
-      if (!vivant) return;
-      if (!data.session) { router.replace("/connexion/"); return; }
-      setEstConnecte(true);
+      try {
+        const { data } = (await supabase?.auth.getSession()) ?? { data: { session: null } };
+        if (!vivant) return;
+        if (!data.session) { router.replace("/connexion/"); return; }
+        setEstConnecte(true);
+      } catch {
+        // Échec réseau / extension de blocage : ne JAMAIS rester bloqué sur
+        // « Vérification de la session… ». Afficher un état explicite.
+        if (!vivant) return;
+        setErreurSession(true);
+      }
     }, 0);
     return () => { vivant = false; window.clearTimeout(timer); };
   }, [router]);
@@ -232,6 +240,20 @@ export function ShellApp({
       ))}
     </nav>
   );
+
+  if (erreurSession) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#252D2D] p-6 text-center">
+        <p className="text-sm text-[#D6A34D]">Impossible de joindre le serveur d&#39;authentification.</p>
+        <p className="max-w-md text-xs leading-5 text-[#A7B7A8]">
+          Vérifiez votre connexion internet, désactivez temporairement les bloqueurs/VPN, puis réessayez.
+        </p>
+        <button type="button" onClick={() => window.location.reload()} className="btn-or px-5 py-2 text-sm">
+          Réessayer
+        </button>
+      </main>
+    );
+  }
 
   if (!estConnecte || profil.loading) return <div className="flex min-h-screen items-center justify-center bg-[#252D2D] text-sm text-[#A7B7A8]">Vérification de la session…</div>;
 

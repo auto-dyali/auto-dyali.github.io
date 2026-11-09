@@ -97,28 +97,34 @@ export function useFeatures(): FeaturesState {
         setLoading(false);
         return;
       }
-      const { data, error: rpcError } = await supabase.rpc("my_features");
-      if (!vivant) return;
-      if (rpcError) {
-        // Ne jamais ouvrir les fonctions premium à l'aveugle.
-        setError(rpcError.message);
-        setEnabled(new Set<string>(BASE_FEATURES));
-        setPlan(null);
-      } else if (data) {
-        const actives = new Set<string>();
-        for (const ligne of data as { feature_key: string; enabled: boolean }[]) {
-          if (ligne.enabled) actives.add(ligne.feature_key);
+      try {
+        const { data, error: rpcError } = await supabase.rpc("my_features");
+        if (!vivant) return;
+        if (rpcError) {
+          // Ne jamais ouvrir les fonctions premium à l'aveugle.
+          setError(rpcError.message);
+          setEnabled(new Set<string>(BASE_FEATURES));
+          setPlan(null);
+        } else if (data) {
+          const actives = new Set<string>();
+          for (const ligne of data as { feature_key: string; enabled: boolean }[]) {
+            if (ligne.enabled) actives.add(ligne.feature_key);
+          }
+          // Plan déduit des fonctionnalités actives (un seul plan ouvre l'IA).
+          setPlan(
+            actives.has("ai") || actives.has("multisite") ? "gold"
+              : actives.has("workshop") ? "silver"
+              : "standard",
+          );
+          setEnabled(actives.size ? actives : new Set<string>(BASE_FEATURES));
+          setError(null);
         }
-        // Plan déduit des fonctionnalités actives (un seul plan ouvre l'IA).
-        setPlan(
-          actives.has("ai") || actives.has("multisite") ? "gold"
-            : actives.has("workshop") ? "silver"
-            : "standard",
-        );
-        setEnabled(actives.size ? actives : new Set<string>(BASE_FEATURES));
-        setError(null);
+      } catch (e) {
+        // Échec réseau : ne jamais rester bloqué sur le chargement des droits.
+        setError(e instanceof Error ? e.message : "Chargement des droits impossible.");
+      } finally {
+        if (vivant) setLoading(false);
       }
-      setLoading(false);
     };
     const timer = window.setTimeout(() => void charger(), 0);
     return () => {
@@ -167,13 +173,18 @@ export function useProfil(): ProfilState {
         setLoading(false);
         return;
       }
-      const { data, error } = await supabase.rpc("get_my_profile");
-      if (!vivant) return;
-      if (!error && data?.[0]) {
-        setRole((data[0].role as Role) ?? null);
-        setFullName(String(data[0].full_name ?? ""));
+      try {
+        const { data, error } = await supabase.rpc("get_my_profile");
+        if (!vivant) return;
+        if (!error && data?.[0]) {
+          setRole((data[0].role as Role) ?? null);
+          setFullName(String(data[0].full_name ?? ""));
+        }
+      } catch {
+        // Échec réseau : sortir du chargement plutôt que bloquer l'écran.
+      } finally {
+        if (vivant) setLoading(false);
       }
-      setLoading(false);
     };
     const timer = window.setTimeout(() => void charger(), 0);
     return () => {
