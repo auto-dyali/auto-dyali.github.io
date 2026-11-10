@@ -44,6 +44,9 @@ declare
   v_item      jsonb;
   v_pay       jsonb;
   v_product   uuid;
+  v_produit_ok boolean;
+  v_client_ok boolean;
+  v_vehicule_ok boolean;
   v_qty       numeric;
   v_qty_int   integer;
   v_ligne_brut   numeric;
@@ -59,6 +62,14 @@ declare
 begin
   if v_est is null then
     raise exception 'Établissement introuvable pour cet utilisateur.';
+  end if;
+
+  if v_role is null then
+    raise exception 'Rôle utilisateur introuvable.';
+  end if;
+
+  if jsonb_array_length(coalesce(p_items, '[]'::jsonb)) = 0 then
+    raise exception 'Le panier ne contient aucune ligne.';
   end if;
 
   -- Recalcul serveur : la ligne est la seule source de vérité.
@@ -108,6 +119,22 @@ begin
     raise exception 'Permission refusée : remise ou vente à crédit non autorisée (module POS).';
   end if;
 
+  -- Vérifier l'appartenance du client à l'établissement courant
+  if p_client_id is not null then
+    select count(*) > 0 into v_client_ok from public.clients where id = p_client_id and establishment_id = v_est;
+    if not v_client_ok then
+      raise exception 'Client introuvable ou appartient à un autre établissement.';
+    end if;
+  end if;
+
+  -- Vérifier l'appartenance du véhicule à l'établissement courant
+  if p_vehicle_id is not null then
+    select count(*) > 0 into v_vehicule_ok from public.vehicles where id = p_vehicle_id and establishment_id = v_est;
+    if not v_vehicule_ok then
+      raise exception 'Véhicule introuvable ou appartient à un autre établissement.';
+    end if;
+  end if;
+
   -- Vente (anti-doublon par référence unique).
   insert into public.sales
     (establishment_id, client_id, vehicle_id, work_order_id, reference, status,
@@ -120,6 +147,12 @@ begin
   -- Lignes + stock (les prestations ne décrémentent JAMAIS).
   for v_item in select * from jsonb_array_elements(coalesce(p_items, '[]'::jsonb)) loop
     v_product := nullif(v_item->>'product_id', '')::uuid;
+    if v_product is not null then
+      select count(*) > 0 into v_produit_ok from public.products where id = v_product and establishment_id = v_est;
+      if not v_produit_ok then
+        raise exception 'Produit introuvable ou appartient à un autre établissement.';
+      end if;
+    end if;
     v_qty := coalesce((v_item->>'quantity')::numeric, 1);
     v_qty_int := greatest(0, round(v_qty))::integer;
 
@@ -163,7 +196,7 @@ $$;
 revoke execute on function public.create_pos_sale_v2(text, uuid, uuid, uuid, jsonb, jsonb) from public, anon;
 grant  execute on function public.create_pos_sale_v2(text, uuid, uuid, uuid, jsonb, jsonb) to authenticated;
 
-comment on function public.create_pos_sale_v2(...) IS
+comment on function public.create_pos_sale_v2(text, uuid, uuid, uuid, jsonb, jsonb) IS
   'Encaissement POS v2 : vérification serveur des totaux (recalcul depuis les lignes), statut dérivé du solde, anti-doublon par référence, prestations sans stock, RLS intacte.';
 
 -- ---------------------------------------------------------------------

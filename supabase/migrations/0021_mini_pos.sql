@@ -78,9 +78,15 @@ declare
   v_service  uuid;
   v_qty      numeric;
   v_qty_int  integer;
+  v_client_ok boolean;
+  v_vehicule_ok boolean;
 begin
   if v_est is null then
     raise exception 'Établissement introuvable pour cet utilisateur.';
+  end if;
+
+  if v_role is null then
+    raise exception 'Rôle utilisateur introuvable.';
   end if;
 
   -- Client obligatoire pour un crédit (paiement différé).
@@ -112,6 +118,26 @@ begin
           and pe.can_edit
      ) then
     raise exception 'Permission refusée : vente à crédit non autorisée (module POS).';
+  end if;
+
+  if jsonb_array_length(coalesce(p_items, '[]'::jsonb)) = 0 then
+    raise exception 'Le panier ne contient aucune ligne.';
+  end if;
+
+  -- Vérifier l'appartenance du client à l'établissement courant
+  if p_client_id is not null then
+    select count(*) > 0 into v_client_ok from public.clients where id = p_client_id and establishment_id = v_est;
+    if not v_client_ok then
+      raise exception 'Client introuvable ou appartient à un autre établissement.';
+    end if;
+  end if;
+
+  -- Vérifier l'appartenance du véhicule à l'établissement courant
+  if p_vehicle_id is not null then
+    select count(*) > 0 into v_vehicule_ok from public.vehicles where id = p_vehicle_id and establishment_id = v_est;
+    if not v_vehicule_ok then
+      raise exception 'Véhicule introuvable ou appartient à un autre établissement.';
+    end if;
   end if;
 
   -- Vente (la contrainte unique (establishment_id, reference) bloque tout doublon).
@@ -174,7 +200,7 @@ $$;
 revoke execute on function public.create_pos_sale(text, uuid, uuid, uuid, numeric, numeric, numeric, numeric, numeric, text, jsonb, jsonb) from public, anon;
 grant  execute on function public.create_pos_sale(text, uuid, uuid, uuid, numeric, numeric, numeric, numeric, numeric, text, jsonb, jsonb) to authenticated;
 
-comment on function public.create_pos_sale(...) IS
+comment on function public.create_pos_sale(text, uuid, uuid, uuid, numeric, numeric, numeric, numeric, numeric, text, jsonb, jsonb) IS
   'Encaissement POS transactionnel : vente, lignes (produits + services), règlements, mouvements de stock. Les services ne decrementent jamais le stock. Permission serveur sur remise et crédit.';
 
 -- ---------------------------------------------------------------------
