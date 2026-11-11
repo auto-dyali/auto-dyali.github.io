@@ -10,8 +10,13 @@ export type ProduitTest = {
     | "Lubrifiant"
     | "Accessoire"
     | "Pièce"
-    | "Merchandising"
     | "Pneumatique"
+    | "Batterie"
+    | "Injection"
+    | "Entretien"
+    | "Equilibrage"
+    | "Piece_occasion"
+    | "Prestations"
     | "Autre";
   prix: number;
   stock: number;
@@ -121,6 +126,56 @@ export const pneumatiquesTest: ProduitTest[] = [
   { sku: "PNE-CON-19565R15", nom: "Pneu Continental 195/65 R15", marque: "Continental", categorie: "Pneumatique", prix: 720, stock: 18 },
 ];
 
+// --- BATTERIES ---
+export const batteriesTest: ProduitTest[] = [
+  { sku: "BAT-BOS-60AH", nom: "Batterie Bosch 60Ah 12V", marque: "Bosch", categorie: "Batterie", prix: 890, stock: 15 },
+  { sku: "BAT-VAR-70AH", nom: "Batterie Varta 70Ah 12V", marque: "Varta", categorie: "Batterie", prix: 950, stock: 12 },
+  { sku: "BAT-BOS-72AH", nom: "Batterie Bosch 72Ah 12V", marque: "Bosch", categorie: "Batterie", prix: 980, stock: 8 },
+];
+
+// --- INJECTION ---
+export const injectionTest: ProduitTest[] = [
+  { sku: "INJ-BOS-001", nom: "Injecteur Common Rail Bosch", marque: "Bosch", categorie: "Injection", prix: 850, stock: 4 },
+  { sku: "INJ-BOS-002", nom: "Injecteur Common Rail Delphi", marque: "Delphi", categorie: "Injection", prix: 780, stock: 3 },
+  { sku: "INJ-POM-001", nom: "Pompe injection haute pression", marque: "Bosch", categorie: "Injection", prix: 1500, stock: 3 },
+  { sku: "INJ-SENS-001", nom: "Capteur de pression rampe", marque: "Bosch", categorie: "Injection", prix: 240, stock: 8 },
+];
+
+// --- VIDANGE ET ENTRETIEN ---
+export const entretienTest: ProduitTest[] = [
+  { sku: "ENT-KIT-VIDANGE", nom: "Kit vidange complète (huile + filtres)", marque: "Auto", categorie: "Entretien", prix: 450, stock: 12 },
+  { sku: "ENT-FIL-HUILE", nom: "Filtre à huile moteur", marque: "Mann-Filter", categorie: "Entretien", prix: 45, stock: 45 },
+  { sku: "ENT-FIL-AIR", nom: "Filtre à air moteur", marque: "Mann-Filter", categorie: "Entretien", prix: 38, stock: 38 },
+  { sku: "ENT-BUG-BOS", nom: "Bougies d'allumage (jeu de 4)", marque: "Bosch", categorie: "Entretien", prix: 120, stock: 10 },
+  { sku: "ENT-LIQ-REF", nom: "Liquide de refroidissement 5L", marque: "Elf", categorie: "Entretien", prix: 85, stock: 20 },
+  { sku: "ENT-LIQ-FREIN", nom: "Liquide de frein DOT4 1L", marque: "Motul", categorie: "Entretien", prix: 42, stock: 15 },
+];
+
+// --- JANTES ET ÉQUILIBRAGE ---
+export const equilibrageTest: ProduitTest[] = [
+  { sku: "EQU-JAN-16", nom: "Jante tôle 16 pouces", marque: "Auto", categorie: "Equilibrage", prix: 120, stock: 20 },
+  { sku: "EQU-VAL-ROUE", nom: "Valve de roue universelle", marque: "Sensorex", categorie: "Equilibrage", prix: 15, stock: 50 },
+  { sku: "EQU-CAP-ROUE", nom: "Capuchon de roue en métal", marque: "CoverKing", categorie: "Equilibrage", prix: 25, stock: 100 },
+  { sku: "EQU-KIT-CLE", nom: "Kit de réparation crevaison", marque: "Auto", categorie: "Equilibrage", prix: 120, stock: 25 },
+];
+
+// --- PIÈCES OCCASION ---
+export const pieceOccasionTest: ProduitTest[] = [
+  { sku: "OCC-MOT-001", nom: "Moteur d'occasion 1.6 essence", marque: "Renault", categorie: "Piece_occasion", prix: 1200, stock: 1 },
+  { sku: "OCC-BOI-001", nom: "Boîte de vitesse manuelle occasion", marque: "Peugeot", categorie: "Piece_occasion", prix: 800, stock: 1 },
+  { sku: "OCC-ALT-001", nom: "Alternateur occasion", marque: "Bosch", categorie: "Piece_occasion", prix: 150, stock: 3 },
+];
+
+// --- PRESTATIONS ET FORFAITS ---
+export const prestationsTest: ProduitTest[] = [
+  { sku: "PRE-VID-COMP", nom: "Vidange complète (huile + filtres)", marque: "AUTO DYALI", categorie: "Prestations", prix: 450, stock: 0 },
+  { sku: "PRE-FIL-HUILE", nom: "Remplacement filtre à huile", marque: "AUTO DYALI", categorie: "Prestations", prix: 85, stock: 0 },
+  { sku: "PRE-CTRL-TECH", nom: "Contrôle technique", marque: "AUTO DYALI", categorie: "Prestations", prix: 75, stock: 0 },
+  { sku: "PRE-FREIN-AVR", nom: "Réparation freinage avant", marque: "AUTO DYALI", categorie: "Prestations", prix: 280, stock: 0 },
+  { sku: "PRE-PNE-CHANG", nom: "Changement de pneus (4)", marque: "AUTO DYALI", categorie: "Prestations", prix: 120, stock: 0 },
+  { sku: "PRE-DIAG-ELC", nom: "Diagnostic électronique", marque: "AUTO DYALI", categorie: "Prestations", prix: 60, stock: 0 },
+];
+
 // ============================================
 // CATALOGUE GLOBAL (fusion des tableaux)
 // ============================================
@@ -131,6 +186,12 @@ export const catalogueTest: ProduitTest[] = [
   ...accessoiresTest,
   ...piecesTest,
   ...pneumatiquesTest,
+  ...batteriesTest,
+  ...injectionTest,
+  ...entretienTest,
+  ...equilibrageTest,
+  ...pieceOccasionTest,
+  ...prestationsTest,
 ];
 
 // Formatage MAD

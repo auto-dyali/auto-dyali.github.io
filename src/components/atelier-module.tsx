@@ -58,6 +58,7 @@ type Entretien = {
 
 const STATUTS: { cle: string; label: string }[] = [
   { cle: "pending", label: "À faire" },
+  { cle: "devis_en_attente", label: "Devis en attente client" },
   { cle: "in_progress", label: "En cours" },
   { cle: "waiting_parts", label: "Pièces en attente" },
   { cle: "done", label: "Terminé" },
@@ -69,6 +70,7 @@ const STATUT_COULEUR: Record<string, string> = {
   pending: "bg-[#8FB59B]/15 text-[#DFE7E2]",
   in_progress: "bg-[#8DA298]/15 text-[#8DA298]",
   waiting_parts: "bg-[#8FB59B]/15 text-[#DFE7E2]",
+  devis_en_attente: "bg-[#C5B01A]/15 text-[#252D2D]",
   done: "bg-[#8DA298]/20 text-[#8DA298]",
   delivered: "bg-[#8DA298]/25 text-[#8DA298]",
   cancelled: "bg-[#C5716B]/15 text-[#C5716B]",
@@ -88,6 +90,8 @@ export function AtelierModule() {
   const [clients, setClients] = useState<{ id: string; full_name: string }[]>([]);
   const [form, setForm] = useState({ vehicleId: "", clientId: "", diagnosis: "" });
   const [filtreStatut, setFiltreStatut] = useState("actifs");
+  const [openDevis, setOpenDevis] = useState(false);
+  const [devisForm, setDevisForm] = useState({ clientId: "", vehicleId: "", diagnosis: "", reference: "" });
 
   // Détail d’un ordre : tâches + historique du véhicule
   const [selection, setSelection] = useState<WorkOrder | null>(null);
@@ -309,6 +313,74 @@ export function AtelierModule() {
     setSaving(false);
   }
 
+  /* ---------------------------------------------------------------
+   * Workflow Devis → Ordre de réparation
+   * --------------------------------------------------------------- */
+  async function creerDevis(event: FormEvent) {
+    event.preventDefault();
+    if (!supabase || !devisForm.clientId || !devisForm.vehicleId) return;
+    setSaving(true);
+    setError(null);
+    const { data: profile } = await supabase.rpc("get_my_profile");
+    const establishmentId = profile?.[0]?.establishment_id;
+    const reference = `DEV-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`;
+    const { error: insertError } = await supabase
+      .from("work_orders")
+      .insert({
+        establishment_id: establishmentId,
+        vehicle_id: devisForm.vehicleId,
+        client_id: devisForm.clientId,
+        reference,
+        diagnosis: devisForm.diagnosis.trim() || null,
+        status: "devis_en_attente",
+        total_amount: 0,
+      });
+    if (insertError) setError(insertError.message);
+    else {
+      setNotice(`Devis ${reference} créé, en attente de validation client.`);
+      setOpenDevis(false);
+      setDevisForm({ clientId: "", vehicleId: "", diagnosis: "", reference: "" });
+      await loadOrders();
+    }
+    setSaving(false);
+  }
+
+  async function accepterDevis(order: WorkOrder) {
+    if (!supabase || !order) return;
+    setTraitement(order.id);
+    setError(null);
+    
+    // Mise à jour du statut en pending (ordre de réparation actif)
+    const { error: majError } = await supabase
+      .from("work_orders")
+      .update({ status: "pending" })
+      .eq("id", order.id);
+    
+    if (majError) {
+      setError(majError.message);
+    } else {
+      setNotice(`Ordre ${order.reference} créé, devis validé.`);
+      // Note : consommation de stock peut être déclenchée séparément
+      // ou via l'interface de gestion de pièces
+    }
+    setTraitement(null);
+    await loadOrders();
+  }
+
+  async function refuserDevis(order: WorkOrder) {
+    if (!supabase || !order) return;
+    setTraitement(order.id);
+    setError(null);
+    const { error: majError } = await supabase
+      .from("work_orders")
+      .update({ status: "pending" })
+      .eq("id", order.id);
+    if (majError) setError(majError.message);
+    else setNotice(`Devis ${order.reference} refusé, retour à l'état précédent.`);
+    setTraitement(null);
+    await loadOrders();
+  }
+
   /** Bon d'intervention imprimable — thermique (58/80) ou A4/PDF.
    *  Ce document N'EST NI une facture NI un ticket de paiement (mention
    *  en pied de page). Imprimable à l'ouverture, en suivi comme à la
@@ -401,22 +473,22 @@ export function AtelierModule() {
   return (
     <section className="space-y-6">
       {/* KPI réels */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {kpis.map((k) => (
-          <article key={k.label} className="carte p-5">
+          <article key={k.label} className="carte p-3">
             <p className="text-xs text-[#A7B7A8]">{k.label}</p>
-            <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : k.value}</p>
+            <p className="titre-or mt-1 text-xl font-extrabold">{loading ? "…" : k.value}</p>
           </article>
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-end sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Production Supabase</p>
-          <h1 className="titre-or mt-1 text-2xl font-extrabold">Ordres de réparation</h1>
+          <h1 className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : /* k.value non utilisé ici, affiché ailleurs */ ''}</h1>
           <p className="mt-1 text-sm text-[#A7B7A8]">Statuts, techniciens affectés et validation client.</p>
         </div>
-        <button type="button" onClick={() => setOpen(true)} className="btn-or min-h-11 px-5 text-sm">+ Nouvel ordre</button>
+        <button type="button" onClick={() => setOpen(true)} className="btn-or min-h-11 px-4 text-sm">+ Nouvel ordre</button>
       </div>
 
       {notice && <p role="status" className="rounded-lg bg-[#8DA298]/10 px-4 py-3 text-sm text-[#8DA298]">{notice}</p>}
@@ -446,7 +518,7 @@ export function AtelierModule() {
           <p className="p-8 text-center text-sm text-[#A7B7A8]">Chargement des ordres…</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-left text-sm">
+            <table className="w-full text-left text-sm">
               <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                 <tr>
                   <th className="px-4 py-3">Référence</th>

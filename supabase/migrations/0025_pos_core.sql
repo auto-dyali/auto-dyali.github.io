@@ -48,7 +48,7 @@ declare
   v_client_ok boolean;
   v_vehicule_ok boolean;
   v_qty       numeric;
-  v_qty_int   integer;
+  v_stock_actuel numeric;
   v_ligne_brut   numeric;
   v_ligne_remise numeric;
   v_ligne_nette  numeric;
@@ -78,6 +78,8 @@ begin
     if v_qty <= 0 then raise exception 'Quantité invalide.'; end if;
     if coalesce((v_item->>'unit_price')::numeric, 0) < 0 then raise exception 'Prix unitaire invalide.'; end if;
 
+    -- Quantité décimale : la quantité insérée dans sale_items est la quantité exacte demandée.
+    -- Le décrément de stock utilise la quantité arrondie à l'entier pour le comptage physique.
     v_ligne_brut  := round(v_qty * (v_item->>'unit_price')::numeric, 2);
     v_ligne_remise := coalesce((v_item->>'discount')::numeric, 0);
     if v_ligne_remise < 0
@@ -92,11 +94,19 @@ begin
   end loop;
   v_total := round(v_ht_nette + v_tva, 2);
 
-  -- Somme réellement reçue (aucun règlement négatif ici).
+  -- Somme réellement reçue : les règlements en attente (chèque non encaissé) ne sont pas comptés.
   for v_pay in select * from jsonb_array_elements(coalesce(p_payments, '[]'::jsonb)) loop
     if coalesce((v_pay->>'amount')::numeric, 0) < 0 then raise exception 'Règlement négatif interdit.'; end if;
-    v_recu := v_recu + coalesce((v_pay->>'amount')::numeric, 0);
+    -- Un règlement avec statut en_attente (ex: chèque non encaissé) n'est pas compté comme encaissé.
+    if (v_pay->>'status')::text <> 'en_attente' then
+      v_recu := v_recu + coalesce((v_pay->>'amount')::numeric, 0);
+    end if;
   end loop;
+  
+  if v_recu > v_total then
+    raise exception 'Paiement excédentaire : le montant des règlements (%) dépasse le total de la vente (%).', v_recu, v_total;
+  end if;
+  
   v_paye := least(v_recu, v_total);
 
   v_statut := case
@@ -135,6 +145,14 @@ begin
     end if;
   end if;
 
+  -- Vérifier l'appartenance de l'ordre de travail à l'établissement courant
+  if p_work_order_id is not null then
+    select count(*) > 0 into v_vehicule_ok from public.work_orders where id = p_work_order_id and establishment_id = v_est;
+    if not v_vehicule_ok then
+      raise exception 'Ordre de travail introuvable ou appartient à un autre établissement.';
+    end if;
+  end if;
+
   -- Vente (anti-doublon par référence unique).
   insert into public.sales
     (establishment_id, client_id, vehicle_id, work_order_id, reference, status,
@@ -166,14 +184,21 @@ begin
        coalesce((v_item->>'tax_rate')::numeric, 20),
        coalesce((v_item->>'discount')::numeric, 0));
 
-    if v_product is not null and v_qty_int > 0 then
+    if v_product is not null and v_qty > 0 then
+      -- Verrouillage de la ligne produit pour éviter les ventes simultanées
+      select stock into v_stock_actuel from public.products where id = v_product and establishment_id = v_est for update;
+
+      if v_stock_actuel < v_qty then
+        raise exception 'Stock insuffisant pour le produit %.', v_product;
+      end if;
+
       insert into public.stock_movements
         (establishment_id, product_id, direction, quantity, reference, actor_id)
       values
         (v_est, v_product, 'out', v_qty, p_reference, auth.uid());
 
       update public.products
-         set stock = greatest(coalesce(stock, 0) - v_qty_int, 0)
+         set stock = stock - v_qty
        where id = v_product and establishment_id = v_est;
     end if;
   end loop;

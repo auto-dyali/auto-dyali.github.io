@@ -32,6 +32,12 @@ const CATEGORIES: CategorieMaquette[] = [
   { cle: "filtration", label: "Filtration", icone: "▦", img: "https://images.unsplash.com/photo-1613214149922-f1809c99b414?w=400&q=60&auto=format&fit=crop" },
   { cle: "lubrifiants", label: "Lubrifiants", icone: "🫗", img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&q=60&auto=format&fit=crop" },
   { cle: "accessoires", label: "Accessoires", icone: "🪑", img: "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?w=400&q=60&auto=format&fit=crop" },
+  { cle: "batteries", label: "Batteries", icone: "🔋", img: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400&q=60&auto=format&fit=crop" },
+  { cle: "injection", label: "Injection", icone: "🔧", img: "https://images.unsplash.com/photo-1625047509168-a7026f36de04?w=400&q=60&auto=format&fit=crop" },
+  { cle: "entretien", label: "Entretien", icone: "🧰", img: "https://images.unsplash.com/photo-1529038480990-f7c4b76696b3?w=400&q=60&auto=format&fit=crop" },
+  { cle: "equilibrage", label: "Jantes et équilibrage", icone: "🏎️", img: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400&q=60&auto=format&fit=crop" },
+  { cle: "piece_occasion", label: "Pièces occasion", icone: "♻️", img: "https://images.unsplash.com/photo-1580932849964-8fa1cbce65da?w=400&q=60&auto=format&fit=crop" },
+  { cle: "prestations", label: "Prestations", icone: "🔧", img: "https://images.unsplash.com/photo-1553070479-06e9816774f2?w=400&q=60&auto=format&fit=crop" },
 ];
 
 const POOL_IMAGES_PRODUITS = [

@@ -28,16 +28,55 @@ type RapportImport = {
   erreurs: { ligne: number; motif: string }[];
 };
 
+type VoitureLigne = {
+  immatriculation: string;
+  vin: string;
+  marque: string;
+  modele: string;
+  version: string | null;
+  annee: number | null;
+  motorisation: string | null;
+  carburant: string | null;
+  cylindree: number | null;
+  boite_vitesses: string | null;
+  couleur: string | null;
+  date_mise_en_circulation: string | null;
+  kilometrage: number | null;
+  client_id: string;
+};
+
+type VoitureDbRow = {
+  id: string;
+  plate: string;
+  brand: string;
+  model: string;
+  year: number | null;
+  mileage: number | null;
+  status: string;
+  client_id: string | null;
+  vin: string | null;
+};
+
+type RapportImportVehicules = {
+  total: number;
+  importees: number;
+  doublons: number;
+  erreurs: { ligne: number; motif: string }[];
+  clients_rapproches: number;
+  clients_inconnus: number;
+};
+
 const CATEGORIES = ["piece", "accessoire", "lubrifiant", "merchandise", "autrep", "pneumatique", "filtre"];
 
 export function ExcelModule() {
   const [produits, setProduits] = useState<ProduitLigne[]>([]);
   const [clients, setClients] = useState<{ id: string; code: string | null; full_name: string; phone: string | null; email: string | null }[]>([]);
+  const [voitures, setVoitures] = useState<VoitureLigne[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
-  const [rapport, setRapport] = useState<RapportImport | null>(null);
+  const [rapport, setRapport] = useState<RapportImport | RapportImportVehicules | null>(null);
   const [progression, setProgression] = useState("");
   const fichierRef = useRef<HTMLInputElement>(null);
 
@@ -47,13 +86,30 @@ export function ExcelModule() {
       setLoading(false);
       return;
     }
-    const [produitsReq, clientsReq] = await Promise.all([
+    const [produitsReq, clientsReq, voituresReq] = await Promise.all([
       supabase.from("products").select("id, sku, name, category, purchase_price, sale_price, stock").eq("is_active", true).order("name"),
       supabase.from("clients").select("id, code, full_name, phone, email").order("full_name").limit(5000),
+      supabase.from("vehicles").select("id, plate, brand, model, year, mileage, status, client_id, vin").order("created_at", { ascending: false }),
     ]);
     if (produitsReq.error) setError(produitsReq.error.message);
     else setProduits((produitsReq.data ?? []) as ProduitLigne[]);
     if (!clientsReq.error) setClients((clientsReq.data ?? []) as typeof clients);
+    if (!voituresReq.error) setVoitures((voituresReq.data ?? []).map((v: VoitureDbRow) => ({
+  immatriculation: v.plate,
+  vin: v.vin ?? "",
+  marque: v.brand,
+  modele: v.model,
+  version: null,
+  annee: v.year,
+  motorisation: null,
+  carburant: null,
+  cylindree: null,
+  boite_vitesses: null,
+  couleur: null,
+  date_mise_en_circulation: null,
+  kilometrage: v.mileage,
+  client_id: v.client_id ?? "",
+})));
     setLoading(false);
   }
 
@@ -102,6 +158,36 @@ export function ExcelModule() {
     setNotice(`Export ${donnees.length} client(s) généré.`);
   }
 
+  function exporterVoitures() {
+    const donnees = voitures.map((v) => ({
+      Immatriculation: v.immatriculation,
+      VIN: v.vin,
+      Marque: v.marque,
+      Modèle: v.modele,
+      Version: v.version ?? "",
+      Année: v.annee ?? "",
+      Motorisation: v.motorisation ?? "",
+      Carburant: v.carburant ?? "",
+      "Cylindrée": v.cylindree ?? "",
+      "Boîte de vitesses": v.boite_vitesses ?? "",
+      Couleur: v.couleur ?? "",
+      "Date mise en circulation": v.date_mise_en_circulation ?? "",
+      Kilométrage: v.kilometrage ?? "",
+      Client: v.client_id ?? "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(donnees);
+    ws["!cols"] = [
+      { wch: 18 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 10 },
+      { wch: 8 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+      { wch: 16 }, { wch: 24 }, { wch: 14 },
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Voitures");
+    const date = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `auto-dyali-voitures-${date}.xlsx`);
+    setNotice(`Export ${donnees.length} voiture(s) générée.`);
+  }
+
   function modeleProduits() {
     const ws = XLSX.utils.json_to_sheet([
       { SKU: "FIL-001", Nom: "Filtre à huile Bosch", Categorie: "filtre", "Prix achat": 45, "Prix vente": 75, Stock: 12 },
@@ -111,6 +197,19 @@ export function ExcelModule() {
     XLSX.utils.book_append_sheet(wb, ws, "Produits");
     XLSX.writeFile(wb, "auto-dyali-modele-import.xlsx");
     setNotice("Modèle téléchargé — remplissez-le puis importez-le.");
+  }
+
+  function modeleVoitures() {
+    const ws = XLSX.utils.json_to_sheet([
+      { Immatriculation: "AB-123-CD", VIN: "VF1ZZZ1KZBX123456", Marque: "Renault", Modèle: "Megane", Version: "Dynamique", Année: "2020", Motorisation: "Essence", Carburant: "Essence", Cylindrée: "1600", "Boîte de vitesses": "Boîte automatique", Couleur: "Rouge", "Date mise en circulation": "2020-03-15", Kilométrage: "45000", Client: "C1" },
+    ]);
+    ws["!cols"] = [
+      { wch: 18 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 10 }, { wch: 8 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 16 }, { wch: 24 }, { wch: 14 },
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Voitures");
+    XLSX.writeFile(wb, "auto-dyali-modele-voitures.xlsx");
+    setNotice("Modèle véhicules téléchargé — remplissez-le puis importez-le.");
   }
 
   /* ---------------------------------------------------------------
@@ -210,6 +309,200 @@ export function ExcelModule() {
     }
   }
 
+  /* ---------------------------------------------------------------
+   * Import véhicules (Phase 5.4)
+   * --------------------------------------------------------------- */
+  async function importerVoituresFichier(file: File) {
+    if (!supabase) return;
+    setImporting(true);
+    setError(null);
+    setNotice(null);
+    setRapport(null);
+    try {
+      const buffer = await file.arrayBuffer();
+      const classeur = XLSX.read(buffer, { type: "array" });
+      const premiereFeuille = classeur.SheetNames[0];
+      if (!premiereFeuille) throw new Error("Le fichier ne contient aucune feuille.");
+      const lignes = XLSX.utils.sheet_to_json<Record<string, unknown>>(classeur.Sheets[premiereFeuille], { defval: "" });
+
+      const rapportCalcule: RapportImportVehicules = {
+        total: lignes.length,
+        importees: 0,
+        doublons: 0,
+        erreurs: [],
+        clients_rapproches: 0,
+        clients_inconnus: 0,
+      };
+
+      // Récupération des clients existants pour rapprochement
+      const { data: clientsData, error: clientsError } = await supabase
+        .from("clients")
+        .select("id, code, full_name, phone")
+        .order("full_name");
+      if (clientsError) throw new Error("Impossible de charger les clients: " + clientsError.message);
+      const clientsExistants = clientsData ?? [];
+
+      // Cartes de rapprochement par téléphone/code
+      const clientsParTelephone = new Map<string, string>();
+      const clientsParCode = new Map<string, string>();
+      for (const c of clientsExistants) {
+        if (c.phone) clientsParTelephone.set(c.phone.toLowerCase(), c.id);
+        if (c.code) clientsParCode.set(c.code.toLowerCase(), c.id);
+      }
+
+      // Établissement de l'utilisateur
+      const { data: profileRows } = await supabase.rpc("get_my_profile");
+      const etablissementId = profileRows?.[0]?.establishment_id;
+      if (!etablissementId) throw new Error("Établissement introuvable.");
+
+      const immatriculationsFichier = new Set<string>();
+      const vinsFichier = new Set<string>();
+
+      for (let i = 0; i < lignes.length; i++) {
+        const ligne = lignes[i];
+        const numero = i + 2;
+
+        const getCol = (name: string) =>
+          String(ligne[name] ?? ligne[name.toLowerCase()] ?? "").trim();
+
+      const immatriculation = getCol("immatriculation") || "";
+      const vin = getCol("vin") || "";
+      const marque = getCol("marque") || getCol("Marque") || "";
+      const modele = getCol("modele") || getCol("Modèle") || "";
+      const version = getCol("version") || "";
+      const anneeStr = getCol("annee") || getCol("Annee") || "";
+      const motorisation = getCol("motorisation") || getCol("Motorisation") || "";
+      const carburant = getCol("carburant") || getCol("Carburant") || "";
+      const cylindreeStr = getCol("cylindree") || getCol("Cylindree") || "";
+      const boite_vitesses = getCol("boite_vitesses") || getCol("Boite_vitesses") || getCol("Boîte_vitesses") || "";
+      const couleur = getCol("couleur") || getCol("Couleur") || "";
+      const date_mise_en_circulation = getCol("date_mise_en_circulation") || getCol("Date_mise_en_circulation") || "";
+      const kilometrageStr = getCol("kilometrage") || getCol("Kilométrage") || "";
+
+      // Validation champs obligatoires
+      if (!immatriculation) {
+        rapportCalcule.erreurs.push({ ligne: numero, motif: "Immatriculation manquante ligne " + numero });
+        rapportCalcule.importees += 0;
+        continue;
+      }
+      if (!marque) {
+        rapportCalcule.erreurs.push({ ligne: numero, motif: "Marque manquante ligne " + numero });
+        rapportCalcule.importees += 0;
+        continue;
+      }
+      if (!modele) {
+        rapportCalcule.erreurs.push({ ligne: numero, motif: "Modèle manquante ligne " + numero });
+        rapportCalcule.importees += 0;
+        continue;
+      }
+
+      // Normalisation immatriculation
+      const immatriculationNorm = immatriculation.replace(/\s/g, "").toUpperCase();
+
+      // Détection doublons dans le fichier
+      if (immatriculationsFichier.has(immatriculationNorm)) {
+        rapportCalcule.doublons += 1;
+        continue;
+      }
+      if (vin && vinsFichier.has(vin.toLowerCase().trim())) {
+        rapportCalcule.doublons += 1;
+        continue;
+      }
+      immatriculationsFichier.add(immatriculationNorm);
+      if (vin && vin.trim()) vinsFichier.add(vin.toLowerCase().trim());
+
+      // Vérification doublons véhicule existant (même établissement)
+      const immatExiste = await supabase
+        .from("vehicles")
+        .select("id, plate")
+        .eq("establishment_id", etablissementId)
+        .eq("plate", immatriculationNorm)
+        .maybeSingle();
+      const vinExiste = vin && (await supabase
+        .from("vehicles")
+        .select("id, vin")
+        .eq("establishment_id", etablissementId)
+        .eq("vin", vin.toLowerCase().trim())
+        .maybeSingle());
+
+      if (immatExiste || (vin && vinExiste)) {
+        rapportCalcule.doublons += 1;
+        continue;
+      }
+
+      // Rapprochement client
+      let clientId = "";
+      let clientInconnu = true;
+      const clientPhone = getCol("client_phone") || "";
+      if (clientPhone && clientsParTelephone.has(clientPhone.toLowerCase())) {
+        clientId = clientsParTelephone.get(clientPhone.toLowerCase()) ?? "";
+        clientInconnu = false;
+        rapportCalcule.clients_rapproches += 1;
+      } else if (clientPhone && clientsParCode.has(clientPhone.toLowerCase())) {
+        clientId = clientsParCode.get(clientPhone.toLowerCase()) ?? "";
+        clientInconnu = false;
+        rapportCalcule.clients_rapproches += 1;
+      } else if (!clientPhone) {
+        clientId = "";
+        clientInconnu = true;
+        rapportCalcule.clients_inconnus += 1;
+      } else {
+        rapportCalcule.clients_inconnus += 1;
+      }
+
+      // Parsing des champs numériques
+      const annee = anneeStr ? Number(anneeStr) : null;
+      const cylindree = cylindreeStr ? Number(cylindreeStr) : null;
+      const kilometrage = kilometrageStr ? Math.max(0, Number(kilometrageStr)) : 0;
+
+      // Insertion véhicule
+      const { data: véhicule, error: insertError } = await supabase
+        .from("vehicles")
+        .insert({
+          establishment_id: etablissementId,
+          client_id: clientId,
+          plate: immatriculationNorm,
+          brand: marque.trim(),
+          model: modele.trim(),
+          year: annee,
+          mileage: kilometrage,
+          status: "actif",
+          vin: vin.trim() || null,
+          color: couleur.trim() || null,
+          fuel: carburant.trim() || null,
+          gearbox: boite_vitesses.trim() || null,
+          registration_date: date_mise_en_circulation ? new Date(date_mise_en_circulation) : null,
+        })
+        .select("id")
+        .single();
+
+      if (insertError || !véhicule) {
+        rapportCalcule.erreurs.push({ ligne: numero, motif: insertError?.message ?? "Insertion véhicule échouée" });
+        rapportCalcule.importees += 0;
+        continue;
+      }
+
+      rapportCalcule.importees += 1;
+      if (i % 10 === 0) setProgression(`Import véhicules en cours… ${i + 1}/${lignes.length}`);
+    }
+
+    setProgression("");
+    setRapport(rapportCalcule);
+    setNotice(
+      `Import véhicules terminé : ${rapportCalcule.importees} importée(s), ${rapportCalcule.doublons} doublon(s) ignoré(s), ${rapportCalcule.erreurs.length} erreur(s). ${rapportCalcule.clients_rapproches} client(s) rapproché(s), ${rapportCalcule.clients_inconnus} client(s) inconnu(s).`
+    );
+    await charger();
+    setImporting(false);
+  } catch (e) {
+    setError(e instanceof Error ? e.message : "Import véhicules impossible.");
+    setProgression("");
+    setImporting(false);
+  }
+}
+
+  /* ---------------------------------------------------------------
+   * Render
+   * --------------------------------------------------------------- */
   return (
     <section className="space-y-6">
       {/* KPI réels */}
@@ -223,8 +516,8 @@ export function ExcelModule() {
           <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : clients.length}</p>
         </article>
         <article className="carte p-5">
-          <p className="text-xs text-[#A7B7A8]">Dernier import</p>
-          <p className="titre-or mt-1 text-2xl font-extrabold">{rapport ? `${rapport.crees} créés` : "—"}</p>
+          <p className="text-xs text-[#A7B7A8]">Véhicules exportables</p>
+          <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : voitures.length}</p>
         </article>
       </div>
 
@@ -246,16 +539,52 @@ export function ExcelModule() {
             <button type="button" onClick={exporterClients} disabled={loading || !clients.length} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2.5 text-sm text-[#DFE7E2] disabled:opacity-40">
               Exporter les clients (.xlsx)
             </button>
+            <button type="button" onClick={exporterVoitures} disabled={loading || !voitures.length} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2.5 text-sm text-[#DFE7E2] disabled:opacity-40">
+              Exporter les voitures (.xlsx)
+            </button>
           </div>
         </section>
 
-        {/* Import */}
+        {/* Import véhicules (Phase 5.4) */}
+        <section className="carte p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Import</p>
+          <h2 className="titre-or mt-1 text-xl font-extrabold">Importer des véhicules</h2>
+          <p className="mt-2 text-sm leading-6 text-[#A7B7A8]">
+            Colonnes attendues : <strong className="text-[#DFE7E2]">Immatriculation, VIN, Marque, Modèle, Année, Motorisation, Carburant, Cylindrée, Boîte de vitesses, Couleur, Date mise en circulation, Kilométrage, Client (code)</strong>.
+            Les doublons (immatriculation ou VIN déjà présent) sont ignorés — aucun doublon n&apos;est créé.
+            Le rapprochement client se fait par téléphone ou code si fourni.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <label className={`btn-or cursor-pointer px-4 py-2.5 text-sm ${importing ? "opacity-50" : ""}`}>
+              {importing ? (progression || "Import…") : "Choisir un fichier .xlsx"}
+              <input
+                ref={fichierRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                className="hidden"
+                disabled={importing}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void importerVoituresFichier(file);
+                }}
+              />
+            </label>
+            <button type="button" onClick={modeleVoitures} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2.5 text-sm text-[#DFE7E2]">
+              Télécharger le modèle
+            </button>
+          </div>
+          <p className="text-xs text-[#7FBF9E] mt-2">
+            Le modèle contient les en-têtes exacts attendus. Remplissez-le puis importez-le.
+          </p>
+        </section>
+
+        {/* Import produits (existant) */}
         <section className="carte p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Import</p>
           <h2 className="titre-or mt-1 text-xl font-extrabold">Importer un catalogue</h2>
           <p className="mt-2 text-sm leading-6 text-[#A7B7A8]">
             Colonnes attendues : <strong className="text-[#DFE7E2]">SKU, Nom, Categorie, Prix achat, Prix vente, Stock</strong>.
-            Les doublons (SKU déjà présent) sont ignorés — aucun doublon n’est créé.
+            Les doublons (SKU déjà présent) sont ignorés — aucun doublon n&apos;est créé.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <label className={`btn-or cursor-pointer px-4 py-2.5 text-sm ${importing ? "opacity-50" : ""}`}>
@@ -279,27 +608,25 @@ export function ExcelModule() {
         </section>
       </div>
 
-      {/* Rapport d’erreurs */}
-      {rapport && (
+      {/* Rapport d'erreurs */}
+      {rapport && 'importees' in rapport && (
         <section className="carte overflow-hidden">
           <div className="border-b border-[#8FB59B]/10 p-5">
-            <h2 className="font-bold">Rapport d’import</h2>
+            <h2 className="font-bold">Rapport d&apos;import véhicules</h2>
             <p className="mt-1 text-xs text-[#A7B7A8]">
-              {rapport.total} ligne(s) lue(s) — {rapport.crees} créée(s), {rapport.doublons} doublon(s) ignoré(s), {rapport.erreurs.length} erreur(s).
+              {rapport.total} ligne(s) lue(s) — {rapport.importees} importée(s), {rapport.doublons} doublon(s) ignoré(s), {rapport.erreurs.length} erreur(s).
+              {rapport.clients_rapproches} client(s) rapproché(s), {rapport.clients_inconnus} client(s) inconnu(s).
             </p>
           </div>
           {rapport.erreurs.length ? (
-            <div className="max-h-72 overflow-y-auto">
+            <div className="max-h-80 overflow-y-auto">
               <table className="w-full text-left text-sm">
                 <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
                   <tr><th className="px-5 py-3">Ligne</th><th className="px-5 py-3">Motif</th></tr>
                 </thead>
                 <tbody className="divide-y divide-[#8FB59B]/10">
                   {rapport.erreurs.map((err, index) => (
-                    <tr key={`${err.ligne}-${index}`}>
-                      <td className="px-5 py-3 font-mono text-[#DFE7E2]">{err.ligne}</td>
-                      <td className="px-5 py-3 text-[#C5716B]">{err.motif}</td>
-                    </tr>
+                    <tr key={`${err.ligne}-${index}`}><td className="px-5 py-3 font-mono text-[#DFE7E2]">{err.ligne}</td><td className="px-5 py-3 text-[#C5716B]">{err.motif}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -307,7 +634,16 @@ export function ExcelModule() {
           ) : (
             <p className="p-6 text-sm text-[#5D9E7F]">Aucune erreur — toutes les lignes valides ont été traitées.</p>
           )}
+          <p className="mt-2 text-xs text-[#8FB59B]">
+            Les doublons (immatriculation ou VIN déjà présent dans l&apos;établissement) sont ignorés.
+            Le rapprochement client se fait par téléphone si fourni.
+          </p>
         </section>
+      )}
+      {rapport && 'importees' in rapport && rapport.total && rapport.importees === 0 && rapport.doublons === 0 && rapport.erreurs.length === 0 && (
+        <p className="mt-2 text-xs text-[#8FB59B]">
+          Aucune donnée valide à traiter.
+        </p>
       )}
     </section>
   );

@@ -63,6 +63,11 @@ export default function SuperAdminPage() {
   const [etabSaving, setEtabSaving] = useState(false);
   const [etabForm, setEtabForm] = useState({ name: "", slug: "", city: "", phone: "", email: "", plan: "standard" });
 
+  const [clientDeleteOpen, setClientDeleteOpen] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<string | null>(null);
+  const [clientDeleting, setClientDeleting] = useState(false);
+  const [clients, setClients] = useState<{ id: string; full_name: string; email: string | null }[]>([]);
+
   const router = useRouter();
   const [estConnecte, setEstConnecte] = useState(false);
   const [accesRefuse, setAccesRefuse] = useState(false);
@@ -71,17 +76,19 @@ export default function SuperAdminPage() {
 
   const charger = useCallback(async () => {
     if (!supabase) { setError("Supabase n’est pas configuré."); setLoading(false); return; }
-    const [etabs, plansData, featuresData, auditData] = await Promise.all([
+    const [etabs, plansData, featuresData, auditData, clientsData] = await Promise.all([
       supabase.from("establishments").select("id, name, city, plan, is_active, created_at, suspended_at").order("created_at", { ascending: false }),
       supabase.from("plans").select("code, label, description, price_monthly, price_yearly, trial_days, max_users, max_sites, storage_mb").order("price_monthly"),
       supabase.from("plan_features").select("plan_code, feature_key, enabled"),
       supabase.from("audit_log").select("id, action, entity, payload_json, created_at").order("created_at", { ascending: false }).limit(12),
+      supabase.from("profiles").select("id, full_name, email, establishment_id, role").eq("role", "client"),
     ]);
     if (etabs.error) setError(etabs.error.message);
     else setEstablishments((etabs.data ?? []) as Establishment[]);
     setPlans((plansData.data ?? []) as PlanRow[]);
     setFeatures((featuresData.data ?? []) as FeatureRow[]);
     setAudit((auditData.data ?? []) as AuditRow[]);
+    setClients((clientsData.data ?? []).map((c: any) => ({ id: c.id, full_name: c.full_name, email: c.email })));
     setLoading(false);
   }, []);
 
@@ -312,6 +319,29 @@ export default function SuperAdminPage() {
     setEmployeeSaving(false);
   }
 
+  /* -----------------------------------------------------------------
+   * Supprimer un compte client
+   * ----------------------------------------------------------------- */
+  async function deleteClientAccount(userId: string) {
+    if (!supabase) return;
+    setClientDeleting(true);
+    setError(null);
+    try {
+      const { error } = await supabase.rpc("admin_delete_client_account", {
+        p_user_id: userId,
+      });
+      if (error) throw new Error(error.message);
+      setClientDeleteOpen(false);
+      setClientToDelete(null);
+      setClientDeleting(false);
+      await charger();
+      setNotice("Compte client supprimé.");
+    } catch (e) {
+      setClientDeleting(false);
+      setError(e instanceof Error ? e.message : "Suppression impossible.");
+    }
+  }
+
   if (accesRefuse) return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#252D2D] p-6 text-center">
       <p className="text-sm text-[#C5716B]">Accès refusé : l’espace Super Admin est réservé à l’administrateur de la plateforme.</p>
@@ -409,6 +439,46 @@ export default function SuperAdminPage() {
               </tbody>
             </table>
             {!establishments.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucun établissement enregistré.</p>}
+          </div>}
+        </section>
+
+        {/* Comptes clients */}
+        <section className="mt-6 overflow-hidden">
+          <div className="flex flex-col gap-3 border-b border-[#8FB59B]/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div><h2 className="font-bold">Comptes clients</h2><p className="mt-1 text-xs text-[#A7B7A8]">Gestion des comptes clients — suppression irréversible.</p></div>
+          </div>
+          {!loading && <div className="overflow-x-auto">
+            <table className="w-full min-w-[840px] text-left text-sm">
+              <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
+                <tr>
+                  <th className="px-5 py-3">Client</th>
+                  <th className="px-5 py-3">Email</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#8FB59B]/10">
+                {clients.map((client) => (
+                  <tr key={client.id}>
+                    <td className="px-5 py-4 font-semibold">{client.full_name}</td>
+                    <td className="px-5 py-4 text-[#A7B7A8]">{client.email ?? "—"}</td>
+                    <td className="px-5 py-4 text-right">
+                      <button
+                        type="button"
+                        disabled={clientDeleting}
+                        onClick={() => {
+                          setClientToDelete(client.id);
+                          setClientDeleteOpen(true);
+                        }}
+                        className="rounded-lg border border-[#C5716B]/40 px-3 py-1.5 text-xs text-[#C5716B] hover:bg-[#C5716B]/10 disabled:opacity-40"
+                      >
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {!clients.length && <tr><td className="px-5 py-8 text-center text-sm text-[#A7B7A8]" colSpan={3}>Aucun client enregistré.</td></tr>}
+              </tbody>
+            </table>
           </div>}
         </section>
 

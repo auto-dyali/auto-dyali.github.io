@@ -3,13 +3,33 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase-browser";
 import { formatMad } from "@/lib/catalogue-test";
+import { prochaineEcheance } from "@/lib/crm";
+import { useFeatures, useProfil } from "@/lib/features";
+
+/* ---------------------------------------------------------------
+   * Initialisation des droits et du profil
+   * --------------------------------------------------------------- */
+const [features, setFeatures] = useState<ReturnType<typeof useFeatures> | undefined>();
+const [profil, setProfil] = useState<ReturnType<typeof useProfil> | undefined>();
+useEffect(() => {
+  const charger = async () => {
+    const f = useFeatures();
+    const p = useProfil();
+    setFeatures(f);
+    setProfil(p);
+  };
+  charger();
+}, []);
 
 /**
  * Clients — fiche complète (§5 du cahier des charges).
  * - Liste réelle avec solde (balance_due) et nombre de véhicules.
  * - Fiche détaillée : véhicules, ventes (dont reste dû), interventions.
  * - Encaissement du crédit client (paiement tracé dans payments).
+ * - Type de client, segmentation, détection doublons.
  */
+
+type ClientType = "particulier" | "entreprise" | "flotte" | "professionnel" | "occasionnel";
 
 type Client = {
   id: string;
@@ -17,8 +37,17 @@ type Client = {
   full_name: string;
   phone: string | null;
   email: string | null;
+  client_type: ClientType;
   balance_due: number;
-  vehicles: { id: string }[] | null;
+  vehicles: { id: string; label: string }[] | null;
+  segment: "nouveau" | "regulier" | "fidele" | "inactif";
+  prochaineEcheance: string | null;
+};
+
+type EntrepriseInfo = {
+  ice: string | null;
+  raison_sociale: string | null;
+  rc: string | null;
 };
 
 type VehiculeClient = { id: string; plate: string; brand: string; model: string; year: number | null };
@@ -56,7 +85,7 @@ export function ClientsModule() {
   const [notice, setNotice] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ fullName: "", phone: "", email: "", code: "" });
+  const [form, setForm] = useState({ fullName: "", phone: "", email: "", code: "", clientType: "particulier" as ClientType, ice: "" });
   const [recherche, setRecherche] = useState("");
 
   // Fiche ouverte
@@ -113,6 +142,7 @@ export function ClientsModule() {
     setVehicules([]);
     setVentes([]);
     setInterventions([]);
+    // Calculer le segment client basé sur la dernière intervention
     const [vehReq, ventesReq, interReq] = await Promise.all([
       supabase.from("vehicles").select("id, plate, brand, model, year").eq("client_id", client.id).order("brand"),
       supabase.from("sales").select("id, reference, status, total, paid_total, created_at").eq("client_id", client.id).order("created_at", { ascending: false }).limit(30),
@@ -120,7 +150,16 @@ export function ClientsModule() {
     ]);
     if (!vehReq.error) setVehicules((vehReq.data ?? []) as VehiculeClient[]);
     if (!ventesReq.error) setVentes((ventesReq.data ?? []) as VenteClient[]);
-    if (!interReq.error) setInterventions((interReq.data ?? []) as InterventionClient[]);
+    if (!interReq.error) {
+      setInterventions((interReq.data ?? []) as InterventionClient[]);
+      // Déterminer le segment et la prochaine échéance basés sur la dernière intervention
+      const derniereInter = (interReq.data ?? []).at(0);
+      const seg = derniereInter ? calculerSegment(derniereInter.created_at) : "inactif";
+      const prossEch = derniereInter ? prochaineEcheance(derniereInter.created_at, null, null) : null;
+      // Mise à jour du segment et de la prochaine échéance dans la sélection
+      const current = selection ?? { id: "", code: "", full_name: "", phone: null, email: null, client_type: "particulier", balance_due: 0, vehicles: [], segment: "inactif", prochaineEcheance: null };
+      setSelection({ ...current, segment: seg, prochaineEcheance: prossEch } as Client);
+    }
     setChargementFiche(false);
   }
 
@@ -203,6 +242,81 @@ export function ClientsModule() {
     }
   }
 
+  /* ---------------------------------------------------------------
+   * Calcul de la segmentation client
+   * - Nouveau: création récente (dans les 3 derniers mois)
+   * - Régulier: visite dans les 6 derniers mois
+   * - Fidèle: plusieurs interventions ou gros chiffre d'affaires
+   * - Inactif: pas de visite depuis plus de 6 mois
+   * --------------------------------------------------------------- */
+  function calculerSegment(derniereInterventionIso: string | null): "nouveau" | "regulier" | "fidele" | "inactif" {
+    if (!derniereInterventionIso) {
+      // Pas d'intervention : on considère "nouveau" si le client est récent, sinon "inactif"
+      // On utilisera la date de création depuis la base pour déterminer
+      return "inactif";
+    }
+    const dateInt = new Date(derniereInterventionIso);
+    const maintenant = new Date();
+    const diffMois = (maintenant.getFullYear() - dateInt.getFullYear()) * 12 + (maintenant.getMonth() - dateInt.getMonth());
+
+    if (diffMois <= 3) return "nouveau";
+    if (diffMois <= 6) return "regulier";
+    if (diffMois <= 12) return "fidele";
+    return "inactif";
+  }
+  /* ---------------------------------------------------------------
+   * Normalisation de téléphone : enlève espaces, gère indicatif +212/0
+   * --------------------------------------------------------------- */
+  function normaliserTelephone(phone: string | null): string | null {
+    if (!phone) return null;
+    // Enlève tous les espaces et caractères non numériques
+    let p = phone.replace(/\s/g, "").replace(/[^\d+]/g, "");
+    // Si commence par +212 et fait 12 chiffres, remplace par 0 (numéro marocain)
+    if (p.startsWith("+212") && p.length === 13) p = "0" + p.substring(4);
+    // Si commence par 0 et fait 9 chiffres, garde tel quel
+    if (p.startsWith("0") && p.length === 9) return p;
+    // Si 8 chiffres sans 0 initial, ajoute 0
+    if (p.length === 8) p = "0" + p;
+    return p;
+  }
+
+  /* ---------------------------------------------------------------
+   * Détection de doublons — recherche client existant par téléphone/email/ICE normalisés
+   * --------------------------------------------------------------- */
+  async function verifierDoublonsClient(
+    phone: string | null,
+    email: string | null,
+    ice: string | null,
+    excludeId: string | null = null
+  ) {
+    if (!supabase) return { doublons: [] };
+
+    // Normalisations
+    const phoneNorm = normaliserTelephone(phone);
+    const emailLower = (email ?? "").toLowerCase().trim();
+    const iceNorm = (ice ?? "").trim().toUpperCase();
+
+    const q: string[] = [];
+    if (phoneNorm) q.push(`phone.eq.${phoneNorm}`);
+    if (emailLower) q.push(`email.eq.${emailLower}`);
+    if (iceNorm) q.push(`ice.eq.${iceNorm}`);
+    if (q.length === 0) return { doublons: [] };
+
+    const whereClause = q.join(",");
+    const { data, error } = await supabase
+      .from("clients")
+      .select("id, full_name, phone, email, ice")
+      .or(`full_name.ilike.%${form.fullName.trim()}%,${whereClause}`)
+      .limit(100);
+
+    if (error) return { doublons: [], erreur: error.message };
+
+    const doublons = (data ?? []).filter(
+      (c: any) => c.id !== excludeId
+    );
+    return { doublons };
+  }
+
   async function createClient(event: FormEvent) {
     event.preventDefault();
     if (!supabase) return;
@@ -217,17 +331,59 @@ export function ClientsModule() {
       return;
     }
 
+    // 👉 Détection de doublons avant création
+    const { doublons, erreur } = await verifierDoublonsClient(
+      form.phone,
+      form.email,
+      form.ice || null,
+      selection?.id || null
+    );
+    if (erreur) {
+      setError(erreur);
+      setSaving(false);
+      return;
+    }
+    if (doublons.length > 0) {
+      // Afficher les correspondances probables et laisser l'utilisateur choisir
+      setNotice(
+        `⚠ ${doublons.length} correspondance(s) probable(s) trouvée(s). Ouvrez la fiche existante ou corrigez les informations.`
+      );
+      // Afficher les correspondances probables et laisser l'utilisateur choisir
+      setNotice(
+        `⚠ ${doublons.length} correspondance(s) probable(s) trouvée(s). Ouvrez la fiche existante ou corrigez les informations.`
+      );
+      // Transformer le doublon en forme Client pour setSelection
+      const raw = doublons[0] as any;
+      const doublonClient: Client = {
+        id: raw.id,
+        code: raw.code || "",
+        full_name: raw.full_name || "",
+        phone: raw.phone || null,
+        email: raw.email || null,
+        client_type: raw.client_type || "particulier",
+        balance_due: Number(raw.balance_due ?? 0),
+        vehicles: (raw.vehicles ?? []).map((v: any) => ({ id: v.id, label: `${v.brand} ${v.model}` })),
+        segment: "nouveau",
+        prochaineEcheance: null,
+      };
+      setSelection(doublonClient);
+      setSaving(false);
+      return;
+    }
+
     const { error: insertError } = await supabase.from("clients").insert({
       establishment_id: establishmentId,
       code: form.code.trim(),
       full_name: form.fullName.trim(),
+      client_type: form.clientType as any,
       phone: form.phone.trim() || null,
       email: form.email.trim() || null,
+      ice: form.ice || null,
     });
     if (insertError) setError(insertError.message);
     else {
       setNotice(`Client « ${form.fullName.trim()} » créé.`);
-      setForm({ fullName: "", phone: "", email: "", code: "" });
+      setForm({ fullName: "", phone: "", email: "", code: "", clientType: "particulier", ice: "" });
       setFormOpen(false);
       await loadClients();
     }
@@ -297,11 +453,26 @@ export function ClientsModule() {
               <tbody className="divide-y divide-[#8FB59B]/10">
                 {clientsFiltres.map((c) => {
                   const solde = Number(c.balance_due ?? 0);
+                  const typeLabel: Record<ClientType, string> = {
+                    particulier: "Particulier",
+                    entreprise: "Entreprise",
+                    flotte: "Flotte",
+                    professionnel: "Professionnel",
+                    occasionnel: "Occasionnel",
+                  };
+                  const segmentLabel: Record<"nouveau" | "regulier" | "fidele" | "inactif", string> = {
+                    nouveau: "Nouveau",
+                    regulier: "Régulier",
+                    fidele: "Fidèle",
+                    inactif: "Inactif",
+                  };
                   return (
                     <tr key={c.id}>
                       <td className="px-5 py-4">
                         <p className="font-semibold text-[#E8ECE8]">{c.full_name}</p>
                         <p className="text-[11px] text-[#A7B7A8]">{c.code}</p>
+                        <p className="text-[10px] text-[#8FB59B]">{typeLabel[c.client_type ?? "particulier"]}</p>
+                        <p className="text-[10px] text-[#7FBF9E]">{segmentLabel[c.segment ?? "nouveau"]}</p>
                       </td>
                       <td className="px-5 py-4 text-[#A7B7A8]">
                         {c.phone ?? "—"}
@@ -312,7 +483,8 @@ export function ClientsModule() {
                         {formatMad(solde)}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button type="button" onClick={() => void ouvrirFiche(c)} className="rounded-lg border border-[#8FB59B]/40 px-3 py-1.5 text-xs text-[#DFE7E2]">
+                        <span className="text-[10px] uppercase text-[#A7B7A8]">{segmentLabel[c.segment ?? "nouveau"]}</span>
+                        <button type="button" onClick={() => void ouvrirFiche(c)} className="rounded-lg border border-[#8FB59B]/40 px-3 py-1.5 text-xs text-[#DFE7E2] mt-1">
                           Ouvrir la fiche
                         </button>
                       </td>
@@ -391,6 +563,32 @@ export function ClientsModule() {
               <p className="py-8 text-center text-sm text-[#A7B7A8]">Chargement de la fiche…</p>
             ) : (
               <div className="mt-5 grid gap-5 lg:grid-cols-3">
+                {/* Alertes entretien */}
+                <section>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Rappels entretien</p>
+                  <div className="alert-box">
+                    {selection.prochaineEcheance ? (
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-[#D6B66F]/20 flex items-center justify-center shrink-0">
+                          <svg className="w-4 h-4 text-[#D6B66F]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 2v2M12 22v2M4.93 4.93l2.83 2.83a1 1 0 0 1 0 1.41l-2.83 2.83a1 1 0 1 1-1.41-1.41L12 9l2.66 1.33a2 2 0 0 1 1.42 1.77l-2.59 2.85a1 1 0 0 1-1.06 0l-2.71-2.7a2 2 0 0 1 0-2.98 2.2 2 0 0 0-2.79-.04m5.66 0a1 1 0 1 1 0 2h-.01M12 14l-1.41-1.41m-5.66 0a1 1 0 1 1 0-2h.01M12 14l1.41-1.41m5.66 0a1 1 0 1 1 0 2h-.01"/>
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] uppercase tracking-[0.15em] text-[#D6B66F] mb-1">Prochaine échéance</p>
+                          <p className="text-[12px] font-medium text-[#E8ECE8]">{new Date(selection.prochaineEcheance).toLocaleDateString("fr-FR")}</p>
+                          <p className="text-[10px] text-[#A7B7A8]">{selection.prochaineEcheance ? `3 mois après ${selection.full_name === "" ? "la dernière intervention" : ""}` : ""}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-[#7FBF9E]">
+                        <p className="text-[10px] uppercase tracking-[0.15em] text-[#7FBF9E]">Pas d'échéance</p>
+                        <p className="text-[12px] text-[#E8ECE8]">Aucune intervention récente pour calculer la prochaine échéance.</p>
+                      </div>
+                    )}
+                  </div>
+                </section>
+
                 {/* Véhicules */}
                 <section>
                   <p className="text-[10px] uppercase tracking-[0.15em] text-[#A7B7A8]">Véhicules ({vehicules.length})</p>
@@ -466,6 +664,14 @@ export function ClientsModule() {
               <input required className="champ" placeholder="Nom complet" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} />
               <input className="champ" type="tel" placeholder="Téléphone" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
               <input className="champ" type="email" placeholder="Email (facultatif)" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
+              <select className="champ mt-1 min-h-11" value={form.clientType} onChange={(event) => setForm({ ...form, clientType: event.target.value as ClientType })} >
+                <option value="particulier">Particulier</option>
+                <option value="entreprise">Entreprise</option>
+                <option value="flotte">Flotte</option>
+                <option value="professionnel">Professionnel</option>
+                <option value="occasionnel">Occasionnel</option>
+              </select>
+              <input className="champ" placeholder="ICE / RC (Entreprise)" value={form.ice} onChange={(event) => setForm({ ...form, ice: event.target.value })} />
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button type="button" onClick={() => setFormOpen(false)} className="rounded-lg px-4 py-2 text-sm text-[#A7B7A8]">Annuler</button>

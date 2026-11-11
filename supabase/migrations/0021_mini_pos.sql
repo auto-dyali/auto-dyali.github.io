@@ -77,9 +77,10 @@ declare
   v_product  uuid;
   v_service  uuid;
   v_qty      numeric;
-  v_qty_int  integer;
+  v_stock_actuel numeric;
   v_client_ok boolean;
   v_vehicule_ok boolean;
+  v_paiements_total numeric;
 begin
   if v_est is null then
     raise exception 'Établissement introuvable pour cet utilisateur.';
@@ -88,6 +89,8 @@ begin
   if v_role is null then
     raise exception 'Rôle utilisateur introuvable.';
   end if;
+
+  v_paiements_total := 0;
 
   -- Client obligatoire pour un crédit (paiement différé).
   if p_status = 'open' and p_client_id is null then
@@ -140,6 +143,14 @@ begin
     end if;
   end if;
 
+  -- Vérifier l'appartenance de l'ordre de travail à l'établissement courant
+  if p_work_order_id is not null then
+    select count(*) > 0 into v_vehicule_ok from public.work_orders where id = p_work_order_id and establishment_id = v_est;
+    if not v_vehicule_ok then
+      raise exception 'Ordre de travail introuvable ou appartient à un autre établissement.';
+    end if;
+  end if;
+
   -- Vente (la contrainte unique (establishment_id, reference) bloque tout doublon).
   insert into public.sales
     (establishment_id, client_id, vehicle_id, work_order_id, reference,
@@ -168,30 +179,42 @@ begin
        coalesce((v_item->>'discount')::numeric, 0));
 
     -- Stock UNIQUEMENT pour un produit réel : les prestations ne décrémentent rien.
-    if v_product is not null and v_qty_int > 0 then
+    if v_product is not null and v_qty > 0 then
+      -- Verrouillage de la ligne produit pour éviter les ventes simultanées
+      select stock into v_stock_actuel from public.products where id = v_product and establishment_id = v_est for update;
+
+      if v_stock_actuel < v_qty then
+        raise exception 'Stock insuffisant pour le produit %.', v_product;
+      end if;
+
       insert into public.stock_movements
         (establishment_id, product_id, direction, quantity, reference, actor_id)
       values
         (v_est, v_product, 'out', v_qty, p_reference, auth.uid());
 
       update public.products
-         set stock = greatest(coalesce(stock, 0) - v_qty_int, 0)
-       where id = v_product
-         and establishment_id = v_est;
+         set stock = stock - v_qty
+       where id = v_product and establishment_id = v_est;
     end if;
   end loop;
 
   -- Règlements (espèces, carte, chèque, virement, mobile… — jusqu'à N modes,
   -- ce qui couvre le règlement mixte : espèces + carte par exemple).
   for v_pay in select * from jsonb_array_elements(coalesce(p_payments, '[]'::jsonb)) loop
-    if coalesce((v_pay->>'amount')::numeric, 0) > 0 then
-      insert into public.payments
-        (establishment_id, sale_id, method, amount, received_by)
-      values
-        (v_est, v_sale, (v_pay->>'method')::public.payment_method,
-         (v_pay->>'amount')::numeric, auth.uid());
+    if coalesce((v_pay->>'amount')::numeric, 0) < 0 then raise exception 'Règlement négatif interdit.'; end if;
+    if coalesce((v_pay->>'statut')::text, '') <> 'en_attente' then
+      v_recu := v_recu + coalesce((v_pay->>'amount')::numeric, 0);
+      v_paiements_total := v_paiements_total + coalesce((v_pay->>'amount')::numeric, 0);
     end if;
   end loop;
+
+  if v_recu > p_paid_total then
+    raise exception 'Paiement excédentaire : le montant des règlements (%) dépasse le montant payé (%).', v_recu, p_paid_total;
+  end if;
+
+  if v_paiements_total <> p_paid_total then
+    raise exception 'Incohérence : la somme des règlements (%) ne correspond pas au montant payé (%).', v_paiements_total, p_paid_total;
+  end if;
 
   return v_sale;
 end;
