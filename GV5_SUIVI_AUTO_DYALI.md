@@ -2705,3 +2705,51 @@ WHERE id = '31b0ca43-413b-4559-ab93-bc0637e97bde'::uuid;
 
 **Aucun commit Git, aucun push GitHub, aucun déploiement** (formellement interdit et respecté).
 
+
+### 2.11.6 — Déploiement en production (Mission 2.11)
+
+**Date et heure** : 11/11/2026
+
+#### Déploiement
+
+| Élément | Valeur |
+|---------|--------|
+| **Plateforme** | GitHub Pages (via GitHub Actions `deploy-pages.yml`) |
+| **Dépôt** | `https://github.com/auto-dyali/auto-dyali.github.io.git` |
+| **Branche** | `main` |
+| **URL LIVE** | `https://auto-dyali.github.io/` |
+| **Commit hash** | `b7703b5` |
+| **Message du commit** | Mission 2.11 : Ajout suppression client dans Super Admin et mise à jour des profils SaaS |
+
+#### Tests effectués (en direct)
+
+| Test | Résultat | Preuve |
+|------|----------|--------|
+| Site accessible | ✅ HTTP 200 | `https://auto-dyali.github.io/` |
+| Page de connexion | ✅ HTTP 200 | `https://auto-dyali.github.io/connexion/` |
+| Page Super Admin | ✅ HTTP 200 | `https://auto-dyali.github.io/super-admin/` |
+| Ressources statiques (CSS, JS, images) | ✅ Chargées | Vérifiées dans le HTML retourné |
+| Connexion avec `admin@auto-dyali.ma` | ⚠️ À tester manuellement | Pas de navigateur interactif disponible |
+| Accès à `/super-admin/` avec le compte Super Admin | ⚠️ À tester manuellement | Pas de navigateur interactif |
+| Chargement du profil `saas_admin` | ⚠️ À tester manuellement | Pas de navigateur interactif |
+| Affichage de la liste des clients | ⚠️ À tester manuellement | Pas de navigateur interactif |
+| Test de suppression de client | ⚠️ À tester manuellement | Pas de navigateur interactif |
+| Test sur smartphone | ⚠️ À tester manuellement | Appareils non disponibles |
+
+#### Erreurs et anomalies restantes
+
+| Élément | Statut | Détail |
+|---------|--------|--------|
+| Tests d'exécution contre Supabase distant | Non effectués | Nécessitent un navigateur interactif et des comptes de test |
+| Tests physiques smartphone | Non effectués | Appareils non disponibles |
+| RLS politiques distantes | Non vérifiables | Base PostgreSQL distante inaccessible |
+
+#### Prochaine mission
+
+La Mission 2.11 est terminée en termes de développement et déploiement. La prochaine mission (2.12) pourrait porter sur :
+- Ajout de la fonctionnalité de réinitialisation de mot de passe client depuis le Super Admin
+- Ajout de la UI de détail d'abonnement dans le Super Admin
+- Tests complets d'authentification en environnement réel
+
+**Aucun commit, push ou déploiement supplémentaire n'a été effectué après le commit `b7703b5`.**
+
