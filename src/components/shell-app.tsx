@@ -193,11 +193,15 @@ export function ShellApp({
     });
   }
 
-  // Garde de rôle : le tableau de bord est réservé aux managers / super admin.
+  // Garde de rôle : le tableau de bord professionnel est réservé aux managers / super admin.
   useEffect(() => {
     if (!estConnecte || profil.loading) return;
     if (profil.role && !profil.is(["manager", "saas_admin"])) {
-      router.replace(profil.role === "employee" ? "/employe/" : "/espace-client/");
+      if (profil.role === "employee") router.replace("/employe/");
+      else {
+        void supabase?.auth.signOut();
+        router.replace("/connexion/");
+      }
     }
   }, [estConnecte, profil, router]);
 
@@ -297,10 +301,11 @@ export function ShellApp({
 
   // Garde de rôle : refus explicite si l'URL est saisie manuellement.
   if (profil.role && !profil.is(["manager", "saas_admin"])) {
+    const destination = profil.role === "employee" ? "/employe/" : "/connexion/";
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#252D2D] p-6 text-center">
-        <p className="text-sm text-[#C5716B]">Accès refusé : cette section est réservée aux managers.</p>
-        <button type="button" onClick={() => router.replace(profil.role === "employee" ? "/employe/" : "/espace-client/")} className="btn-or px-5 py-2 text-sm">
+        <p className="text-sm text-[#C5716B]">Accès refusé : cette section est réservée aux gestionnaires professionnels.</p>
+        <button type="button" onClick={() => router.replace(destination)} className="btn-or px-5 py-2 text-sm">
           Revenir à mon espace
         </button>
       </main>

@@ -798,7 +798,7 @@ export default function SuperAdminPage() {
 
 
 
-  const [toggleActiveTarget, setToggleActiveTarget] = useState<{ id: string; is_active: boolean; role: string } | null>(null);
+  const [toggleActiveTarget, setToggleActiveTarget] = useState<{ id: string; is_active: boolean; role?: string } | null>(null);
 
 
 
@@ -926,7 +926,7 @@ export default function SuperAdminPage() {
 
 
 
-      supabase.from("profiles").select("id, full_name, email, phone, establishment_id, role, is_active").eq("role", "client"),
+      supabase.from("profiles").select("id, full_name, email, phone, establishment_id, role, is_active").eq("role", "manager"),
 
 
 
@@ -951,6 +951,7 @@ export default function SuperAdminPage() {
 
 
     if (etabs.error) setError(etabs.error.message);
+    if (clientsData.error) setError(`Erreur chargement des profils managers : ${clientsData.error.message}`);
 
 
 
@@ -3374,6 +3375,18 @@ export default function SuperAdminPage() {
 
 
 
+    const codeExists = clients.some((c) => c.id !== clientId && c.code === newCode.trim());
+    if (codeExists) {
+      setError("Ce code client est déjà utilisé par un autre client.");
+      return;
+    }
+
+
+
+
+
+
+
     setEditCodeSaving(true);
 
 
@@ -3383,56 +3396,6 @@ export default function SuperAdminPage() {
 
 
     setError(null);
-
-
-
-
-
-
-
-    // Vérifier l'unicité du code client
-
-    const codeExists = clients.some((c) => c.id !== clientId && c.code === newCode.trim());
-
-
-
-
-
-
-
-    if (codeExists) {
-
-
-
-
-
-
-
-      setEditCodeSaving(false);
-
-
-
-
-
-
-
-      setError("Ce code client est déjà utilisé par un autre client.");
-
-
-
-
-
-
-
-      return;
-
-
-
-
-
-
-
-    }
 
 
 
@@ -3696,14 +3659,6 @@ export default function SuperAdminPage() {
 
 
 
-      setNotice("Email mis à jour dans le profil. Le changement de mot de passe doit être fait par le client via \"Mot de passe oublié\".");
-
-
-
-
-
-
-
       await charger();
 
 
@@ -3808,6 +3763,17 @@ export default function SuperAdminPage() {
 
 
 
+    if (toggleActiveTarget?.role === "saas_admin") {
+      setError("Impossible de désactiver un compte Super Admin.");
+      return;
+    }
+
+
+
+
+
+
+
     setToggleActiveSaving(true);
 
 
@@ -3817,48 +3783,6 @@ export default function SuperAdminPage() {
 
 
     setError(null);
-
-
-
-
-
-
-
-    // Empêcher la désactivation d'un compte Super Admin
-
-    if (toggleActiveTarget?.role === 'saas_admin') {
-
-
-
-
-
-
-
-      setToggleActiveSaving(false);
-
-
-
-
-
-
-
-      setError("Impossible de désactiver un compte Super Admin.");
-
-
-
-
-
-
-
-      return;
-
-
-
-
-
-
-
-    }
 
 
 

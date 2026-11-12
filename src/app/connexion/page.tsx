@@ -56,13 +56,18 @@ export default function ConnexionPage() {
       return;
     }
 
-    if (profile.role === "saas_admin") router.replace("/super-admin/");
-    else if (profile.role === "employee") router.replace("/employe/");
-    else if (profile.role === "manager") router.replace("/tableau-de-bord/");
-    else if (profile.role === "client") router.replace("/espace-client/");
-    else {
+    if (profile.role === "saas_admin") {
+      router.replace("/super-admin/");
+    } else if (profile.role === "manager") {
+      router.replace("/tableau-de-bord/");
+    } else if (profile.role === "employee") {
+      router.replace("/employe/");
+    } else if (profile.role === "client") {
       await supabase.auth.signOut();
-      setErreur("Ce compte n’a pas encore accès à un espace AUTO DYALI.");
+      setErreur("Ce compte n'a pas accès à l'espace professionnel AUTO DYALI. Contactez votre administrateur.");
+    } else {
+      await supabase.auth.signOut();
+      setErreur("Ce compte n'a pas encore accès à un espace AUTO DYALI.");
     }
   }
 
