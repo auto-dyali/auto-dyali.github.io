@@ -4,22 +4,6 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase-browser";
 import { formatMad } from "@/lib/catalogue-test";
 import { prochaineEcheance } from "@/lib/crm";
-import { useFeatures, useProfil } from "@/lib/features";
-
-/* ---------------------------------------------------------------
-   * Initialisation des droits et du profil
-   * --------------------------------------------------------------- */
-const [features, setFeatures] = useState<ReturnType<typeof useFeatures> | undefined>();
-const [profil, setProfil] = useState<ReturnType<typeof useProfil> | undefined>();
-useEffect(() => {
-  const charger = async () => {
-    const f = useFeatures();
-    const p = useProfil();
-    setFeatures(f);
-    setProfil(p);
-  };
-  charger();
-}, []);
 
 /**
  * Clients — fiche complète (§5 du cahier des charges).
@@ -312,7 +296,7 @@ export function ClientsModule() {
     if (error) return { doublons: [], erreur: error.message };
 
     const doublons = (data ?? []).filter(
-      (c: any) => c.id !== excludeId
+      (c: { id: string }) => c.id !== excludeId
     );
     return { doublons };
   }
@@ -353,7 +337,16 @@ export function ClientsModule() {
         `⚠ ${doublons.length} correspondance(s) probable(s) trouvée(s). Ouvrez la fiche existante ou corrigez les informations.`
       );
       // Transformer le doublon en forme Client pour setSelection
-      const raw = doublons[0] as any;
+      const raw = doublons[0] as {
+        id: string;
+        code?: string | null;
+        full_name?: string | null;
+        phone?: string | null;
+        email?: string | null;
+        client_type?: ClientType;
+        balance_due?: number | null;
+        vehicles?: Array<{ id: string; brand?: string; model?: string }> | null;
+      };
       const doublonClient: Client = {
         id: raw.id,
         code: raw.code || "",
@@ -362,7 +355,7 @@ export function ClientsModule() {
         email: raw.email || null,
         client_type: raw.client_type || "particulier",
         balance_due: Number(raw.balance_due ?? 0),
-        vehicles: (raw.vehicles ?? []).map((v: any) => ({ id: v.id, label: `${v.brand} ${v.model}` })),
+        vehicles: (raw.vehicles ?? []).map((v) => ({ id: v.id, label: `${v.brand ?? ""} ${v.model ?? ""}`.trim() })),
         segment: "nouveau",
         prochaineEcheance: null,
       };
@@ -375,7 +368,7 @@ export function ClientsModule() {
       establishment_id: establishmentId,
       code: form.code.trim(),
       full_name: form.fullName.trim(),
-      client_type: form.clientType as any,
+      client_type: form.clientType as ClientType,
       phone: form.phone.trim() || null,
       email: form.email.trim() || null,
       ice: form.ice || null,
@@ -582,7 +575,7 @@ export function ClientsModule() {
                       </div>
                     ) : (
                       <div className="p-4 text-center text-[#7FBF9E]">
-                        <p className="text-[10px] uppercase tracking-[0.15em] text-[#7FBF9E]">Pas d'échéance</p>
+                        <p className="text-[10px] uppercase tracking-[0.15em] text-[#7FBF9E]">Pas d&apos;échéance</p>
                         <p className="text-[12px] text-[#E8ECE8]">Aucune intervention récente pour calculer la prochaine échéance.</p>
                       </div>
                     )}

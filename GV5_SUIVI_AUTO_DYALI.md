@@ -3893,3 +3893,70 @@ Après autorisation : appliquer `0028` en environnement contrôlé, déployer l�
 2. Application contrôlée de la migration `0028` + Edge Function d’invitation (onboarding entreprise + Manager) — autorisation explicite requise.
 3. Déploiement/vérification GitHub Pages.
 4. Suppression éventuelle des 2 comptes test (`a.naji`, `r.bami`) après sauvegarde/dépendances/autorisation.
+
+---
+
+## 2.16 — FINALISATION DES MODULES DU SUPER ADMIN SAAS PREMIUM
+**Date** : 2026-11-12
+**Statut** : implémentation locale terminée (15 nouvelles pages + navigation) — build/tsc/lint/tests ✅ — **aucune mutation Supabase distante**, **déploiement production non vérifié**, authentification non testée (aucune session saas_admin disponible).
+
+### 1. État initial constaté
+- Branche `main`, HEAD `edc2fd7` (poussé), working tree : modifications non commitées + fichiers non suivis étrangers (non touchés).
+- Le Dashboard premium existait ; le menu latéral pointait vers des ancres de la page unique ou des modules « à venir ».
+
+### 2. Modules créés (routes réelles sous `/super-admin/`)
+| Module | Route | Données réelles | Actions |
+|---|---|---|---|
+| Entreprises & abonnés | `entreprises/` | establishments + subscriptions embedded, recherche/filtres | Suspendre/réactiver (`admin_set_establishment_status`), changer forfait (`admin_change_plan`), CSV |
+| Comptes & Managers | `managers/` | profiles (role=manager) + répertoire clients (email/code par téléphone) | Activer/désactiver profil + journal d’audit, CSV |
+| Garages & établissements | `garages/` | establishments × plans (max_users/sites/storage/price) | Suspendre/réactiver, synthèse par forfait, CSV |
+| Plans & fonctionnalités | `plans/` | plans + plan_features | Éditer prix/essai/limites (`admin_save_plan`), basculer droits (`admin_set_feature`), export matrice CSV |
+| Abonnements | `abonnements/` | subscriptions + counts par statut + échéances ≤ 7 j | Lecture réelle, filtres par statut, CSV, lien « Gérer les forfaits » |
+| Paiements & facturation | `paiements/` | État honnête (aucun fournisseur SaaS connecté) + MRR estimé sur prix réels | Checklist d’activation, aucun encaissement inventé |
+| Support & assistance | `support/` | support_tickets + ticket_messages (RLS saas_admin) | Répondre (staff), changer statut, KPIs file |
+| Rapports & analyses | `rapports/` | establishments, subscriptions, crm_leads, support_tickets, plans | KPIs réels, barres plan/CRM, CSV |
+| Journal d’audit | `audit/` | audit_log (recherche serveur, pagination, count exact) | CSV (2000 dernières entrées) |
+| Rôles & permissions | `roles/` | profiles par rôle + comptes saas_admin | Compteurs, règles de moindre privilège, CSV |
+| Paramètres système | `parametres/` | plans en vigueur, identité plateforme | Liens vers surfaces d’édition réelles |
+| Sauvegarde & export | `sauvegarde/` | Exports CSV réels (entreprises, abonnements, audit, plans) | Téléchargements + rappel backups Supabase (PITR) |
+| WhatsApp Business | `whatsapp/` | plans avec feature whatsapp habilitée, établissements | État honnête « non opérationnelle » + checklist d’activation |
+| Chatbot IA | `chatbot/` | plans avec features ai/automation | État honnête « non opérationnel » + plan d’activation |
+| (existant) CRM | `crm/` | inchangé | inchangé |
+
+### 3. Architecture
+- `src/components/super-admin-guard.tsx` — garde partagée (session + rôle saas_admin).
+- `src/components/super-admin-module-page.tsx` — conteneur : garde + shell + déconnexion + compteur audit_log (badge réel).
+- `src/components/super-admin-page.tsx` — `ModuleHeader`, `Chargement`, `Vide`, `Erreur`.
+- `src/lib/csv-export.ts` — export CSV générique + `formatMontant`, `dateFrCourte`.
+- Shell restructuré en 4 groupes : **Pilotage / Gestion / Sécurité / Intégrations** (15 entrées toutes réelles, plus aucune ancre « bientôt »).
+- Section « Modules SaaS » du Dashboard : liens directs vers les 14 modules livrables.
+
+### 4. Correctif critique indépendant trouvé et corrigé
+- `src/components/clients-module.tsx` : hooks React appelés au niveau module (useState/useEffect hors composant) → la route `/tableau-de-bord/clients` était cassée au runtime. **Corrigé** (bloc mort supprimé, types `any` resserrés). Lint du fichier : 0 erreur.
+
+### 5. ESLint / fichiers non suivis (§9 de la mission)
+- `src/modules/new-pos/*` (non suivis, non commités) : 4 erreurs `no-explicit-any` et 1 erreur TS corrigées (`purchasing.service.ts`). **Non commités.**
+- Global `npm run lint` : **0 erreur** (35 warnings préexistants/restants).
+
+### 6. Preuves exécutées
+| Commande | Résultat | Code |
+|---|---|---|
+| `npx tsc --noEmit` | ✅ aucune erreur | 0 |
+| `npm run build` | ✅ compilé — **16 routes `/super-admin/*` exportées** | 0 |
+| `npm test` | ✅ 14/14 | 0 |
+| `npm run lint` | ✅ **0 erreur** (35 warnings) | 0 |
+| Garde anonyme | ✅ routes `/super-admin/*` redirigent vers `/connexion/` sans session | constaté via Chrome headless |
+
+### 7. Limites honnêtes (non validé)
+- Aucune session Super Admin disponible dans cet environnement : **interactions authentifiées et données réelles non vérifiées** (tables, actions, modales, CRM, support).
+- Largeurs CSS < 500 px non vérifiables dans Chrome headless (minimum 500 px).
+- Déploiement GitHub Pages non vérifié.
+- Migration 0028 : **toujours PRÉPARÉE et NON APPLIQUÉE** ; Edge Function non déployée.
+- Comptes `a.naji` / `r.bami` : préservés, aucune modification ni suppression ; ressources partagées intactes.
+- new-pos : inspecté, corrigé pour lint, **non commité** (work in progress Mini-POS) — décision utilisateur requise pour l’inclure ou non.
+
+### 8. Prochaines étapes / autorisations nécessaires
+1. Vérification authentifiée des 16 pages (compte Super Admin réel requis).
+2. Déploiement/vérification GitHub Pages.
+3. Application encadrée de 0028 + Edge Function d’invitation (autorisation explicite).
+4. Sort des fichiers new-pos non suivis (commit, archive ou suppression) — décision utilisateur.

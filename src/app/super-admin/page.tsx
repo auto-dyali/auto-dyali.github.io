@@ -6088,31 +6088,37 @@ export default function SuperAdminPage() {
 
 
 
-      {/* Feuille de route — état réel des modules à venir */}
+      {/* Modules SaaS — accès réels */}
       <section id="roadmap" className="mx-auto max-w-7xl px-5 pb-10 lg:px-10">
         <div className="carte-premium p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="titre-or text-lg font-extrabold">Modules SaaS à venir</h2>
-              <p className="mt-1 text-xs text-[#A7B7A8]">État réel documenté — aucune page vide ni statistique fictive. Les modules seront activés progressivement selon le GV5.</p>
+              <h2 className="titre-or text-lg font-extrabold">Modules SaaS</h2>
+              <p className="mt-1 text-xs text-[#A7B7A8]">Chaque module ouvre une page fonctionnelle réelle reliée à Supabase.</p>
             </div>
-            <span className="rounded-full bg-[#D6A34D]/15 px-3 py-1 text-[11px] font-semibold text-[#D6A34D]">Feuille de route</span>
           </div>
           <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { label: "Abonnements & renouvellements", etat: "Modèle présent (subscriptions), cycle de vie complet à finaliser" },
-              { label: "Paiements & facturation SaaS", etat: "Non implémenté — aucune transaction simulée" },
-              { label: "WhatsApp Business", etat: "Intégration centrale non opérationnelle — backend sécurisé requis" },
-              { label: "Chatbot & automatisations", etat: "Supervision centrale à concevoir" },
-              { label: "Support & assistance", etat: "Tickets tenant existants (0015), centre Super Admin à construire" },
-              { label: "Rapports & analyses", etat: "KPI réels disponibles ; BI avancée à développer" },
-              { label: "Rôles & permissions admin", etat: "Rôles applicatifs présents ; RBAC admin à centraliser" },
-              { label: "Sauvegarde & export", etat: "Exports locaux disponibles ; sauvegarde gérée côté Supabase" },
-              { label: "Paramètres système", etat: "Plans/fonctionnalités éditables ; centre de paramètres unifié à créer" },
+              { label: "Entreprises & abonnés", href: "/super-admin/entreprises" },
+              { label: "Comptes & Managers", href: "/super-admin/managers" },
+              { label: "Garages & établissements", href: "/super-admin/garages" },
+              { label: "Plans & fonctionnalités", href: "/super-admin/plans" },
+              { label: "Abonnements", href: "/super-admin/abonnements" },
+              { label: "Paiements & facturation", href: "/super-admin/paiements" },
+              { label: "Support & assistance", href: "/super-admin/support" },
+              { label: "Rapports & analyses", href: "/super-admin/rapports" },
+              { label: "Sauvegarde & export", href: "/super-admin/sauvegarde" },
+              { label: "Journal d'audit", href: "/super-admin/audit" },
+              { label: "Rôles & permissions", href: "/super-admin/roles" },
+              { label: "Paramètres système", href: "/super-admin/parametres" },
+              { label: "WhatsApp Business", href: "/super-admin/whatsapp" },
+              { label: "Chatbot IA", href: "/super-admin/chatbot" },
             ].map((m) => (
-              <li key={m.label} className="rounded-xl border border-[#8FB59B]/15 bg-[#2C3735] p-3">
-                <p className="text-sm font-semibold text-[#E8ECE8]">{m.label}</p>
-                <p className="mt-1 text-[11px] leading-5 text-[#A7B7A8]">{m.etat}</p>
+              <li key={m.label}>
+                <Link href={m.href} className="flex h-full items-center justify-between gap-2 rounded-xl border border-[#8FB59B]/15 bg-[#2C3735] p-4 text-sm font-semibold text-[#E8ECE8] transition hover:border-[#8FB59B]/40 hover:bg-[#344440]">
+                  {m.label}
+                  <span aria-hidden="true" className="text-[#8FB59B]">→</span>
+                </Link>
               </li>
             ))}
           </ul>

@@ -36,23 +36,37 @@ const NAV: NavGroup[] = [
   {
     titre: "Pilotage",
     items: [
-      { label: "Tableau de bord", href: "#vue-generale", icon: "dashboard" },
-      { label: "Entreprises", href: "#entreprises", icon: "building" },
-      { label: "Comptes & Managers", href: "#comptes", icon: "users" },
-      { label: "Plans & fonctionnalités", href: "#plans", icon: "layers" },
-      { label: "Journal d'audit", href: "#audit", icon: "shield" },
-      { label: "CRM commercial", href: "/super-admin/crm", icon: "target", route: true },
+      { label: "Tableau de bord", href: "/super-admin/", icon: "dashboard", route: true },
+      { label: "Entreprises", href: "/super-admin/entreprises/", icon: "building", route: true },
+      { label: "Comptes & Managers", href: "/super-admin/managers/", icon: "users", route: true },
+      { label: "Garages & Établissements", href: "/super-admin/garages/", icon: "building", route: true },
+      { label: "Plans & fonctionnalités", href: "/super-admin/plans/", icon: "layers", route: true },
+      { label: "Abonnements", href: "/super-admin/abonnements/", icon: "card", route: true },
+      { label: "CRM commercial", href: "/super-admin/crm/", icon: "target", route: true },
     ],
   },
   {
-    titre: "Feuille de route",
+    titre: "Gestion",
     items: [
-      { label: "Abonnements", href: "#roadmap", icon: "card" },
-      { label: "WhatsApp Business", href: "#roadmap", icon: "chat" },
-      { label: "Chatbot IA", href: "#roadmap", icon: "spark" },
-      { label: "Support & assistance", href: "#roadmap", icon: "life" },
-      { label: "Rapports & analyses", href: "#roadmap", icon: "chart" },
-      { label: "Paramètres système", href: "#roadmap", icon: "gear" },
+      { label: "Paiements & Facturation", href: "/super-admin/paiements/", icon: "card", route: true },
+      { label: "Support & Assistance", href: "/super-admin/support/", icon: "life", route: true },
+      { label: "Rapports & Analyses", href: "/super-admin/rapports/", icon: "chart", route: true },
+      { label: "Sauvegarde & Export", href: "/super-admin/sauvegarde/", icon: "shield", route: true },
+    ],
+  },
+  {
+    titre: "Sécurité",
+    items: [
+      { label: "Journal d'audit", href: "/super-admin/audit/", icon: "shield", route: true },
+      { label: "Rôles & Permissions", href: "/super-admin/roles/", icon: "users", route: true },
+      { label: "Paramètres système", href: "/super-admin/parametres/", icon: "gear", route: true },
+    ],
+  },
+  {
+    titre: "Intégrations",
+    items: [
+      { label: "WhatsApp Business", href: "/super-admin/whatsapp/", icon: "chat", route: true },
+      { label: "Chatbot IA", href: "/super-admin/chatbot/", icon: "spark", route: true },
     ],
   },
 ];
@@ -354,8 +368,8 @@ export function SuperAdminShell({
           </form>
 
           <div className="ml-auto flex items-center gap-2">
-            <a
-              href="#audit"
+            <Link
+              href="/super-admin/audit/"
               className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-[#8FB59B]/20 text-[#D0C6AE] hover:bg-[#344440]"
               aria-label={`Notifications (${notifications ?? 0})`}
               title={`${notifications ?? 0} action(s) récente(s)`}
@@ -366,7 +380,7 @@ export function SuperAdminShell({
                   {notifications > 9 ? "9+" : notifications}
                 </span>
               )}
-            </a>
+            </Link>
             <div className="hidden items-center gap-2 rounded-xl border border-[#8FB59B]/20 px-2.5 py-1.5 sm:flex">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#344440] text-[10px] font-bold text-[#D0C6AE]">
                 {initiales}

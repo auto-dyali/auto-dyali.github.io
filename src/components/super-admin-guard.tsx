@@ -1,0 +1,65 @@
+"use client";
+
+/**
+ * Garde d'accès partagée pour toutes les pages Super Admin.
+ * Vérifie la session Supabase et le rôle `saas_admin` côté serveur.
+ */
+
+import { useEffect, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase-browser";
+
+type Etat = "chargement" | "ok" | "refuse";
+
+export function SuperAdminGuard({ children, titre = "zone" }: { children: ReactNode; titre?: string }) {
+  const router = useRouter();
+  const [etat, setEtat] = useState<Etat>("chargement");
+
+  useEffect(() => {
+    let vivant = true;
+    const verifier = async () => {
+      if (!supabase) {
+        if (vivant) setEtat("refuse");
+        return;
+      }
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        router.replace("/connexion/");
+        return;
+      }
+      const { data: roleData } = await supabase.rpc("get_my_profile");
+      if (!vivant) return;
+      if (roleData?.[0]?.role && roleData[0].role !== "saas_admin") {
+        setEtat("refuse");
+        return;
+      }
+      setEtat("ok");
+    };
+    const timer = window.setTimeout(() => void verifier(), 0);
+    return () => {
+      vivant = false;
+      window.clearTimeout(timer);
+    };
+  }, [router]);
+
+  if (etat === "refuse") {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#252D2D] p-6 text-center">
+        <p className="text-sm text-[#C5716B]">Accès refusé : cette {titre} est réservée à l’administrateur de la plateforme.</p>
+        <button type="button" onClick={() => router.replace("/connexion/")} className="btn-or px-5 py-2 text-sm">
+          Revenir à la connexion
+        </button>
+      </main>
+    );
+  }
+
+  if (etat === "chargement") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#252D2D] text-sm text-[#A7B7A8]">
+        Vérification de la session…
+      </main>
+    );
+  }
+
+  return <>{children}</>;
+}
