@@ -3536,3 +3536,58 @@ order by e.created_at desc;
 4. (Optionnel serveur) Créer RPC/Edge Function sécurisée pour exposer emails managers au Super Admin sans `service_role` client.
 5. Vérifier workflow GitHub Pages du commit `dc60931` et tester en production les connexions/liste abonnés.
 
+
+---
+
+## 2.15 — MISSION 2.15 (PHASE A démarrée) : Audit CRM Super Admin, comptes test, abonnés/managers
+**Date** : 2026-11-12 (audit local + correctifs mineurs code)
+**Branche** : `main` | **HEAD au démarrage** : `21f0057` (puis commit correctifs 2.15-A si créé)
+**Production connue** : `https://auto-dyali.github.io/` (état déployé réel non re-vérifié)
+**Règle** : aucune mutation distante Supabase/Auth effectuée. Comptes test `a.naji@auto-dyali.ma` / `r.bami@auto-dyali.ma` : **NON supprimés**.
+
+### PHASE 2.15-A — Audit (preuves locales)
+
+#### État Git / dépôt
+- Branche `main`, historique récent : `21f0057` (2.14 correctif profiles.email), `34d096b`, `4df9c78`, `5ad464c`, `d22b1c8`.
+- Working tree : fichiers untracked non liés (AUDIT*, GV5_PHASE*, backups, fix*.py, sauvegardes migrations, etc.) — exclus des commits.
+- Registre maître lu et mis à jour par append (`GV5_SUIVI_AUTO_DYALI.md`).
+
+#### Super Admin / Control Center (code)
+- `src/app/super-admin/page.tsx` (~7757 lignes) : gestion établissements/plans/features/audit, liste profils managers (`profiles` role=manager), formulaires création client/employé, actions abonnements/utilisateurs. Correctif 2.14 appliqué (suppression `profiles.email` du select managers).
+- `src/app/super-admin/crm/page.tsx` : garde saas_admin via `get_my_profile`, rend `CrmModule`.
+- Anomalies/écarts : emails managers non disponibles via `profiles` (colonne absente) ; récupération sécurisée serveur/RPC/Edge Function non implémentée. Création "entreprise + manager + établissement + abonnement" unifiée (mission 2.15-D) **absente** comme flux transactionnel complet ; formulaires existants distincts/limités. Listes/chargements reposent sur accès RLS navigateur (état distant inconnu).
+
+#### CRM (`src/components/crm-module.tsx`, migration `0018_crm_super_admin.sql`)
+- Données : `crm_leads`, `crm_events`, RLS saas_admin uniquement. Champs présents : company/contact/email/phone/city/activity/stage/plan_interest/notes/next_action_at/owner_id/dates. **Absents vs attentes 2.15** : gestion explicite opportunités/contrats/démos structurées, conversion prospect→entreprise abonnée/manager/établissement/abonnement, historique des modifications dédié (audit), pièces jointes/preuves paiement, export historique complet enrichi.
+- Fonctions présentes : pipeline par étapes, création prospect, changement étape avec événement, ajout notes/échanges, filtres UI (recherche, étape, dates création/relance, owner placeholder), pagination UI, export CSV, KPIs/relances.
+- **Défauts constatés** : (1) chargement serveur paginé par `page` (`range`) mais filtres/KPIs/totaux/relances/export calculés côté client sur la **page chargée uniquement** (pas sur l’ensemble filtré en base) ⇒ statistiques et export non conformes si >1 page ou filtres serveur absents ; (2) absence de `count`/requête totale filtrée côté serveur ; (3) événements chargés avec même plage arbitraire ; (4) filtre `owner` sans source de données ; (5) bug "tous " (espace) corrigé en 2.15-A, reset page sur changement filtre ajouté, chargement initial/page via `useEffect` ajouté.
+- Séparation concepts : CRM = prospects `crm_leads` (OK à ne pas mélanger avec abonnés actifs), mais conversion vers abonnés/managers/établissements/abonnements non implémentée.
+
+#### Supabase / schéma (migrations locales auditées)
+- Tables clés : `establishments`, `profiles` (pas d’email), `subscriptions`, `plans/plan_features`, `crm_leads/crm_events`, etc. RPC `get_my_profile` (0003), helpers RLS (0001/0002/0007), abonnements (0009/0026). **État d’application distant inconnu**.
+- Contraintes pertinentes : suppression comptes Auth/profiles peut impacter données liées selon FK/RLS/triggers ; `establishment_id` partagé rapporté entre comptes test ⇒ suppression établissement/abonnement partagé **interdite sans décision**.
+
+#### Comptes de test (décision utilisateur 2.15)
+- `a.naji@auto-dyali.ma` (UUID réf. `31b0ca43-413b-4559-ab93-bc0637e97bde`) et `r.bami@auto-dyali.ma` (UUID réf. `72b8d0a6-c4b8-4b35-a5ab-9aca5ee84da2`) : à traiter comme tests à supprimer **ciblé** (Auth + profils associés) uniquement après vérifications, sauvegarde/export, analyse dépendances/FK/RLS, et autorisation explicite. **Aucune suppression exécutée.**
+- Ressources partagées signalées à préserver : établissement `00000000-0000-0000-0000-000000000001`, abonnement `47b1c71e-cf73-46a5-b0a4-b3f4ac762e22`.
+
+### PHASE 2.15-B — Préparation suppression ciblée (plan, **non exécuté**)
+1. **Lecture seule (Auth Dashboard/API admin + SQL autorisé)** : confirmer existence des 2 users Auth, emails/UUID réels, profils `public.profiles`, `establishment_id`, abonnements, rôles, sessions, données liées (employees, audit_log actor refs, ventes/factures/interventions créées par/associées, etc.).
+2. **Sauvegarde avant/après** : exporter lignes `auth` (métadonnées autorisées) et `public.profiles` + dépendances directes des 2 UUID ; capturer état établissement/abonnement partagés.
+3. **Analyse d’impact** : vérifier FK `on delete cascade/set null/restrict`, policies, triggers, RPC ; si suppression d’un profil/user touche établissement/abonnement partagé ou données entreprise → **STOP et blocage documenté**.
+4. **Exécution autorisée uniquement** : supprimer profils ciblés si requis puis users Auth via mécanisme admin sécurisé (Dashboard/service role côté serveur autorisé, jamais navigateur) ; ne pas supprimer l’établissement/abonnement partagés ni autres comptes.
+5. **Preuves après** : absence de connexion possible, absence en Auth/profils ciblés, intégrité établissement/abonnement/ autres comptes.
+
+### Correctifs code 2.15-A (mineurs, sûrs)
+- `src/components/crm-module.tsx` : correction filtres `stage/owner` valeur `"tous"` (suppression espace), `setPage(1)` sur changements de filtres, ajout chargement initial/rechargement page (`useEffect` -> `charger`). **Ne corrige pas** le défaut structurel de filtrage/KPI/export serveur sur ensemble complet.
+- Validations locales prévues/exécutées après modifs : `npx tsc --noEmit`, `npm run build` (voir rapport mission).
+
+### Priorités / anomalies (synthèse)
+- **P0 (données/autorisations)** : confirmer état distant comptes test/établissement partagé/abonnement ; suppression ciblée uniquement sur autorisation explicite avec sauvegarde. Corriger rôles/rattachements managers réels via flux sécurisé (2.15-D) sans recréer comptes test.
+- **P1 (CRM)** : refactor requêtes pour filtres + pagination + `count` serveur, KPIs/relances/export calculés sur résultat filtré complet, source owners, robustesse erreurs/états vides.
+- **P1 (Control Plane)** : flux "Ajouter entreprise/garage" transactionnel sécurisé (auth admin côté serveur/RPC/Edge Function), prévention doublons/orphelins, association entreprise-manager-établissement-plan-abonnement.
+- **P2** : WhatsApp central, paiements/facturation SaaS, cycle de vie abonnements complet, dashboard KPI réels, chatbot/support — selon capacités réelles existantes.
+
+### Limites
+- Pas d’accès Supabase distant/Auth admin, pas d’exécution SQL distante, pas de test navigateur production, pas de push déploiement vérifié dans cette phase sauf mention explicite. Lint global préexistant en échec.
+

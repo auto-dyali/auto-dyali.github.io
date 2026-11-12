@@ -291,6 +291,11 @@ export function CrmModule() {
     setLoading(false);
   }
 
+  useEffect(() => {
+    void charger();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
   // --- Navigation précédente ---
   function precedentPage() {
     if (page > 1) setPage(page - 1);
@@ -474,9 +479,10 @@ export function CrmModule() {
               <input
                 type="text"
                 value={filtre.recherche}
-                onChange={(e) =>
-                  setFiltre({ ...filtre, recherche: e.target.value })
-                }
+                onChange={(e) => {
+                  setFiltre({ ...filtre, recherche: e.target.value });
+                  setPage(1);
+              }}
                 placeholder="Entreprise, contact, email ou ville..."
                 className="champ mt-1 min-h-11 w-full"
               />
@@ -488,9 +494,10 @@ export function CrmModule() {
               Étape
               <select
                 value={filtre.stage === "tous" ? "" : filtre.stage}
-                onChange={(e) =>
-                  setFiltre({ ...filtre, stage: e.target.value || "tous " })
-                }
+                onChange={(e) => {
+                  setFiltre({ ...filtre, stage: e.target.value || "tous" });
+                  setPage(1);
+              }}
                 className="champ mt-1 min-h-11"
               >
                 <option value="tous">Toutes</option>
@@ -509,9 +516,10 @@ export function CrmModule() {
               <input
                 type="date"
                 value={filtre.dateCreationDebut}
-                onChange={(e) =>
-                  setFiltre({ ...filtre, dateCreationDebut: e.target.value })
-                }
+                onChange={(e) => {
+                  setFiltre({ ...filtre, dateCreationDebut: e.target.value });
+                  setPage(1);
+              }}
                 className="champ mt-1 min-h-11"
               />
             </label>
@@ -523,9 +531,10 @@ export function CrmModule() {
               <input
                 type="date"
                 value={filtre.dateCreationFin}
-                onChange={(e) =>
-                  setFiltre({ ...filtre, dateCreationFin: e.target.value })
-                }
+                onChange={(e) => {
+                  setFiltre({ ...filtre, dateCreationFin: e.target.value });
+                  setPage(1);
+              }}
                 className="champ mt-1 min-h-11"
               />
             </label>
@@ -537,9 +546,10 @@ export function CrmModule() {
               <input
                 type="date"
                 value={filtre.dateRelanceDebut}
-                onChange={(e) =>
-                  setFiltre({ ...filtre, dateRelanceDebut: e.target.value })
-                }
+                onChange={(e) => {
+                  setFiltre({ ...filtre, dateRelanceDebut: e.target.value });
+                  setPage(1);
+              }}
                 className="champ mt-1 min-h-11"
               />
             </label>
@@ -551,9 +561,10 @@ export function CrmModule() {
               <input
                 type="date"
                 value={filtre.dateRelanceFin}
-                onChange={(e) =>
-                  setFiltre({ ...filtre, dateRelanceFin: e.target.value })
-                }
+                onChange={(e) => {
+                  setFiltre({ ...filtre, dateRelanceFin: e.target.value });
+                  setPage(1);
+              }}
                 className="champ mt-1 min-h-11"
               />
             </label>
@@ -564,9 +575,10 @@ export function CrmModule() {
               Propriétaire
               <select
                 value={filtre.owner === "tous" ? "" : filtre.owner}
-                onChange={(e) =>
-                  setFiltre({ ...filtre, owner: e.target.value || "tous " })
-                }
+                onChange={(e) => {
+                  setFiltre({ ...filtre, owner: e.target.value || "tous" });
+                  setPage(1);
+              }}
                 className="champ mt-1 min-h-11"
               >
                 <option value="tous">Tous</option>
