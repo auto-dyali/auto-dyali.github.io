@@ -2753,3 +2753,54 @@ La Mission 2.11 est terminée en termes de développement et déploiement. La pr
 
 **Aucun commit, push ou déploiement supplémentaire n'a été effectué après le commit `b7703b5`.**
 
+
+### 2.12.1 — Déploiement en production (Mission 2.12)
+
+**Date et heure** : 11/11/2026
+
+#### Déploiement
+
+| Élément | Valeur |
+|---------|--------|
+| **Plateforme** | GitHub Pages (via GitHub Actions `deploy-pages.yml`) |
+| **Dépôt** | `https://github.com/auto-dyali/auto-dyali.github.io.git` |
+| **Branche** | `main` |
+| **URL LIVE** | `https://auto-dyali.github.io/` |
+| **Commit hash** | `48098d7` |
+| **Message du commit** | Mission 2.12 : Gestion complète des clients dans Super Admin |
+
+#### Tests effectués (en direct)
+
+| Test | Résultat | Preuve |
+|------|----------|--------|
+| Site accessible | ✅ HTTP 200 | `https://auto-dyali.github.io/` |
+| Page de connexion | ✅ HTTP 200 | `https://auto-dyali.github.io/connexion/` |
+| Page Super Admin | ✅ HTTP 200 | `https://auto-dyali.github.io/super-admin/` |
+| Ressources statiques | ✅ Chargées | CSS, JS, images servies correctement |
+| Connexion avec `admin@auto-dyali.ma` | ⚠️ À tester manuellement | Navigateur interactif requis |
+| Accès Super Admin | ⚠️ À tester manuellement | Navigateur interactif requis |
+| Liste des clients | ⚠️ À tester manuellement | Navigateur interactif requis |
+| Fonction de suppression | ⚠️ À tester manuellement | Navigateur interactif requis |
+| Réinitialisation mot de passe | ⚠️ À tester manuellement | Navigateur interactif requis |
+| Modification du code client | ⚠️ À tester manuellement | Navigateur interactif requis |
+| Tests smartphone | ⚠️ Non effectués | Appareils non disponibles |
+
+#### Erreurs et anomalies restantes
+
+| Élément | Statut | Détail |
+|---------|--------|--------|
+| Tests d'exécution contre Supabase distant | Non effectués | Nécessitent un navigateur interactif |
+| Tests physiques smartphone | Non effectués | Appareils non disponibles |
+| RLS politiques distantes | Non vérifiables | Base PostgreSQL distante inaccessible |
+| Tests de suppression réelle | Non effectués | Nécessitent un navigateur interactif |
+
+#### Prochaines actions
+
+1. Tester la connexion avec `admin@auto-dyali.ma` sur `https://auto-dyali.github.io/connexion/`
+2. Vérifier l'accès à `/super-admin/`
+3. Vérifier l'affichage de la liste des clients
+4. Tester les fonctionnalités de gestion (mot de passe, code, email, suppression)
+5. Tester sur mobile et tablette
+
+**Aucun commit, push ou déploiement supplémentaire n'a été effectué après le commit `48098d7`.**
+
