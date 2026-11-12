@@ -3666,3 +3666,52 @@ order by e.created_at desc;
 ### 7. Prochaine action recommandée immédiate
 - Poursuivre **2.15-C (correctif CRM serveur)** en local sur `crm-module.tsx` (et requêtes) pour garantir cohérence filtres/count/KPI/pagination/export, puis tests tsc/build/lint et commit/push contrôlé ; en parallèle préparer script de vérification/suppression ciblée des comptes test pour exécution manuelle autorisée.
 
+
+---
+
+## 2.15-C (décision de cadrage) — Maquette de référence Super Admin SaaS Premium et ordre de travail
+**Date** : 2026-11-12
+**Statut** : décision enregistrée — **aucune refonte graphique commencée**, maquette **non encore validée** par l’utilisateur.
+
+### 1. Maquette de référence reçue (direction visuelle et fonctionnelle cible)
+L’utilisateur a transmis une maquette du futur **tableau de bord global AUTO DYALI Super Admin** :
+- identité premium automobile : noir, gris métallisé, champagne et or ;
+- menu latéral complet (Tableau de bord, Clients/Abonnés, Utilisateurs, Garages & Entreprises, Abonnements, Paiements & Facturation, Rôles & Permissions, Rapports & Analyses, WhatsApp Business, Chatbot IA, CRM, Paramètres Système, Sauvegarde & Export, Sécurité & Audit, Support & Assistance) ;
+- barre supérieure : recherche globale, notifications, profil Super Admin ;
+- bannière « Administration Globale » ;
+- cartes KPI premium (Clients/Abonnés, Utilisateurs, Garages & Entreprises, Abonnements actifs) ;
+- graphiques d’activité plateforme et répartition des abonnements ;
+- outils rapides ;
+- dernières activités système ;
+- état des services et informations plateforme ;
+- interface professionnelle, claire, responsive PC/tablette/smartphone.
+
+### 2. Logo
+- **Décision** : réutiliser **le même logo que l’application AUTO DYALI existante**, sans en recréer un nouveau.
+- Source de vérité : composant `src/components/logo.tsx` → image `public/images/branding/logo.webp`.
+- La maquette devra reprendre ce logo officiel (wordmark + symbole AUTO DYALI) dans la sidebar/entête, en respectant l’identité déjà en production.
+
+### 3. Règles impératives pour la future adaptation (après validation explicite)
+- **Ne pas remplacer aveuglément** le Super Admin actuel ; **adaptation progressive** uniquement.
+- **Conserver toutes les fonctionnalités existantes** qui fonctionnent (KPI, établissements, plans/fonctionnalités, abonnements, comptes managers, suspension/réactivation, journal d’audit, formulaires, CRM).
+- Réutiliser les composants/données existants lorsqu’ils sont fiables.
+- **Relier chaque KPI, graphique, bouton, notification et raccourci à des données ou actions réelles**.
+- **Aucune statistique fictive** ; aucun bouton décoratif sans action ; chaque module du menu doit ouvrir une page/fonctionnalité réellement opérationnelle.
+- Préserver rôles, permissions, authentification, RLS et isolation multi-tenant.
+- Respecter l’architecture **Next.js export statique + Supabase existant** ; **jamais de `service_role` dans le navigateur**.
+- **Aucune modification de données/comptes Supabase distants** sans autorisation et sauvegarde préalables.
+- La maquette est une **référence de conception**, pas une autorisation de supprimer/remplacer des fonctions.
+
+### 4. Ordre de travail validé
+1. **2.15-C — CRM** : filtres serveur, `count` exact, pagination, KPI, relances, exports sur l’ensemble des résultats filtrés.
+2. **Onboarding** : préparation de la création sécurisée entreprise/garage + Manager + établissement + abonnement.
+3. **Maquette Super Admin** : travail collaboratif sur la maquette finale, **sans toucher au code graphique** avant validation explicite.
+4. **Adaptation** : après accord explicite, adaptation progressive du Super Admin existant à la maquette validée.
+5. **Validation** : tests par module, données réelles, permissions, responsive, performances, build, déploiement effectif.
+
+### 5. État
+- Refonte visuelle : **NON COMMENCÉE** (attente validation maquette).
+- Logo : **réutilisation du logo applicatif existant** (`logo.webp`).
+- Priorité technique en cours : **2.15-C CRM**.
+- Aucune mutation Supabase distante, aucune suppression de compte dans cette étape.
+
