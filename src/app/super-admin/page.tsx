@@ -798,7 +798,7 @@ export default function SuperAdminPage() {
 
 
 
-  const [toggleActiveTarget, setToggleActiveTarget] = useState<{ id: string; is_active: boolean } | null>(null);
+  const [toggleActiveTarget, setToggleActiveTarget] = useState<{ id: string; is_active: boolean; role: string } | null>(null);
 
 
 
@@ -3390,6 +3390,56 @@ export default function SuperAdminPage() {
 
 
 
+    // Vérifier l'unicité du code client
+
+    const codeExists = clients.some((c) => c.id !== clientId && c.code === newCode.trim());
+
+
+
+
+
+
+
+    if (codeExists) {
+
+
+
+
+
+
+
+      setEditCodeSaving(false);
+
+
+
+
+
+
+
+      setError("Ce code client est déjà utilisé par un autre client.");
+
+
+
+
+
+
+
+      return;
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
     try {
 
 
@@ -3646,6 +3696,14 @@ export default function SuperAdminPage() {
 
 
 
+      setNotice("Email mis à jour dans le profil. Le changement de mot de passe doit être fait par le client via \"Mot de passe oublié\".");
+
+
+
+
+
+
+
       await charger();
 
 
@@ -3759,6 +3817,48 @@ export default function SuperAdminPage() {
 
 
     setError(null);
+
+
+
+
+
+
+
+    // Empêcher la désactivation d'un compte Super Admin
+
+    if (toggleActiveTarget?.role === 'saas_admin') {
+
+
+
+
+
+
+
+      setToggleActiveSaving(false);
+
+
+
+
+
+
+
+      setError("Impossible de désactiver un compte Super Admin.");
+
+
+
+
+
+
+
+      return;
+
+
+
+
+
+
+
+    }
 
 
 
@@ -5342,7 +5442,7 @@ export default function SuperAdminPage() {
 
 
 
-                            setToggleActiveTarget({ id: client.id, is_active: client.is_active });
+                            setToggleActiveTarget({ id: client.id, is_active: client.is_active, role: client.role });
 
 
 
