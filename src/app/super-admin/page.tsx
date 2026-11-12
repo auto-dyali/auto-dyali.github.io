@@ -926,7 +926,7 @@ export default function SuperAdminPage() {
 
 
 
-      supabase.from("profiles").select("id, full_name, email, phone, establishment_id, role, is_active").eq("role", "manager"),
+      supabase.from("profiles").select("id, full_name, phone, establishment_id, role, is_active").eq("role", "manager"),
 
 
 

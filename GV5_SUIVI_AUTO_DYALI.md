@@ -3517,3 +3517,22 @@ order by e.created_at desc;
 - Vérification workflow GitHub Pages et tests de connexion réels en production requis après toute correction.
 - **Mission 2.14 : diagnostic complété, mutations distantes NON exécutées (en attente d’autorisation explicite et de preuves).**
 
+
+### 8. Correctif code appliqué (2.14, local puis poussé)
+- **Cause exacte confirmée (code)** : `src/app/super-admin/page.tsx` sélectionnait `profiles.email` (`.select("id, full_name, email, phone, establishment_id, role, is_active")`) alors que `public.profiles` ne comporte pas de colonne `email` dans le schéma local vérifié (0001). Cela peut provoquer une erreur Supabase sur la requête managers et empêcher l’affichage fiable de la liste.
+- **Correction** : suppression de `email` du select profils managers (`id, full_name, phone, establishment_id, role, is_active`). Emails managers non récupérés depuis `profiles` (nécessiterait RPC/Edge Function sécurisée côté serveur autorisée pour exposer auth emails sans `service_role` navigateur — non déployé).
+- **Fichier modifié** : `src/app/super-admin/page.tsx`.
+- **Validations** : `npx tsc --noEmit` (0), `npm run build` (0, 41 pages). `npm run lint` inchangé (1, erreurs préexistantes hors périmètre).
+- **Commit/push** : `dc60931` — `Mission 2.14 : correction requête Super Admin (profiles.email inexistant) + SQL préparation managers` (poussé sur `origin/main`).
+
+### 9. Migration/SQL préparée (locale, **NON appliquée**)
+- Fichier : `supabase/migrations/0027_mission_2_14_managers_prepared_NOT_APPLIED.sql`
+- Contenu : gabarit transactionnel (ROLLBACK par défaut) avec contrôles avant/après, sauvegarde des lignes, placeholders obligatoires (établissement réel de chaque manager, nom/slug/ville du nouvel établissement pour l’autre — **nom/ville r.bami non inventé**), séparation des `establishment_id`, mise à jour `profiles.role='manager'`/`is_active`/`establishment_id`, abonnement à traiter selon règle métier. **Aucune création/modification distante exécutée.**
+
+### 10. Opérations Supabase en attente d’autorisation explicite
+1. Exécuter les contrôles lecture seule (profiles/auth/establishments/subscriptions/RLS) pour a.naji (`31b0ca43-413b-4559-ab93-bc0637e97bde`) et r.bami (`72b8d0a6-c4b8-4b35-a5ab-9aca5ee84da2`).
+2. Identifier quel établissement existant appartient à quel manager ; fournir identité du garage manquant (r.bami) et décision abonnement.
+3. Appliquer SQL adapté 0027 (création second établissement distinct, rattachements, rôles manager, abonnements) avec sauvegarde/contrôles avant-après/COMMIT manuel.
+4. (Optionnel serveur) Créer RPC/Edge Function sécurisée pour exposer emails managers au Super Admin sans `service_role` client.
+5. Vérifier workflow GitHub Pages du commit `dc60931` et tester en production les connexions/liste abonnés.
+
