@@ -3591,3 +3591,78 @@ order by e.created_at desc;
 ### Limites
 - Pas d’accès Supabase distant/Auth admin, pas d’exécution SQL distante, pas de test navigateur production, pas de push déploiement vérifié dans cette phase sauf mention explicite. Lint global préexistant en échec.
 
+
+---
+
+## 2.15-B (continuation) — Audit GitHub/GV5, inventaire Super Admin, benchmark, architecture cible et roadmap
+**Date** : 2026-11-12 (analyse locale, sans codage UI/refonte)
+**HEAD vérifié** : `e4dee70971882409e4d1c12f34c7cf1e8cd3f0ac` (inchangé depuis 2.15-A)
+**Branche** : `main` | **Statut local** : untracked non liés uniquement (exclus)
+
+### 1. Continuité GV5 (exigences historiques clés à préserver)
+- Rôles/accès : `saas_admin`→`/super-admin/`, `manager`→`/tableau-de-bord/` (dashboard pro principal existant), `employee`→`/employe/`, `client` sans accès pro (2.13-C). Isolation multi-tenant/établissement.
+- Super Admin = Control Center plateforme (abonnés, plans/fonctionnalités, abonnements, audit), distinct du CRM prospects (`crm_leads`) et des modules métier garage.
+- Données/comptes : ne pas recréer Supabase, ne pas supprimer tables/données partagées, ne pas exposer secrets/service_role, mutations distantes autorisées/sauvegardées uniquement.
+- Comptes test à supprimer ciblé (décision 2.15) : `a.naji@auto-dyali.ma` (31b0ca43-413b-4559-ab93-bc0637e97bde), `r.bami@auto-dyali.ma` (72b8d0a6-c4b8-4b35-a5ab-9aca5ee84da2) — **non exécuté** ; protéger établissement `00000000-0000-0000-0000-000000000001` et abonnement `47b1c71e-cf73-46a5-b0a4-b3f4ac762e22`.
+- Architecture : Next.js export statique + Supabase ; opérations sensibles côté serveur sécurisé (RPC/Edge Functions) requises.
+
+### 2. Inventaire Dashboard Super Admin / CRM (audit GitHub local)
+
+| Module | Fonctionnalité | Présence GitHub | Fonctionnement prouvé | Défaut / limite | Action |
+|---|---|---:|---:|---|---|
+| Super Admin shell/auth | Garde saas_admin, navigation vers CRM, déconnexion/session | Oui (`super-admin/page.tsx`, `crm/page.tsx`) | Partiel (code/tsc/build) | Dépend RLS/Auth distant | Conserver, tests réels |
+| Vue générale KPI | Cartes entreprises actives, plans, etc. | Oui (page super-admin) | Partiel | KPIs à valider sur données réelles/complètes, pas de command center complet | Étendre avec données réelles, périodes/filtres |
+| Entreprises/établissements | Liste, création établissement (RPC `admin_create_establishment`), actions sensibles journalisées | Oui | Partiel | Emails managers absents via profiles; pas de fiche 360 complète; pas de séparation prospects/abonnés unifiée; pagination/filtres avancés serveur à renforcer | Compléter fiche, recherche/filtres serveur, actions cycle de vie |
+| Comptes managers/abonnés | Liste profils `role='manager'`, actions (reset/edit/toggle/delete selon implémentation), création client/employé formulaires | Oui | Partiel | `profiles.email` indisponible; flux unifié entreprise+manager+invitation sécurisé absent; risque doublons/orphelins | Créer onboarding sécurisé serveur (P1) |
+| Plans & fonctionnalités | Tables `plans/plan_features`, édition droits/forfaits (moteur) | Oui (migrations 0009+, UI) | Partiel | Entitlements centralisés à vérifier bout en bout; pas de catalogue produit complet UI | Centraliser entitlements, éviter logique dispersée |
+| Abonnements | Données/modèle `subscriptions`, actions cycle de vie partielles | Oui | Partiel/Incomplet | États entreprise/abonnement/paiement non pleinement séparés; renouvellement/grâce/annulation non prouvés | Modéliser cycle de vie complet |
+| Paiements & facturation SaaS | — (global SaaS) | Non prouvé comme module central | Non prouvé | Aucune preuve de facturation SaaS complète/idempotente | Concevoir selon données réelles (P2) |
+| CRM commercial | Prospects/étapes/notes/événements, filtres UI, export CSV, KPIs pipeline | Oui (`crm-module.tsx`, 0018) | Partiel (après correctifs 2.15-A: chargement initial, reset page, "tous") | Filtres/count/KPI/export non serveur sur ensemble filtré; owner sans source; pas de conversion vers abonné; champs démos/contrats/modifs limités | Refactor serveur + conversion sécurisée (P1) |
+| WhatsApp central | Feature key/références | Partiel | Absent/non prouvé | Pas d’intégration centrale supervisée prouvée; tokens/webhooks réels interdits à supposer | Concevoir Integration Plane, backend sécurisé |
+| Chatbot & automatisations | Références features/assistant côté tenant | Partiel | Non prouvé (central) | Pas de supervision centrale SaaS prouvée | Audit/plan ultérieur |
+| Support & assistance SaaS | Tickets tenant (`0015_support_tickets.sql`) / modules | Partiel | Non prouvé (central Super Admin) | Pas de centre support Super Admin global prouvé | Concevoir module support (P2) |
+| Utilisateurs/rôles/permissions admin | Rôles app, guards, permissions module tenant | Oui (partiel) | Partiel | Pas de gestion fine multi-admins Super Admin/least privilege prouvée | Centraliser RBAC admin (P2) |
+| Rapports & BI SaaS | KPI cartes, audit log | Oui (partiel) | Partiel | MRR/ARR/churn non calculables sans données prouvées; exports/rapports globaux limités | Ajouter rapports réels uniquement |
+| Journal d’audit | `audit_log` affiché/journalisé sur actions | Oui | Partiel | Couverture des actions sensibles à compléter; jamais secrets | Étendre journalisation |
+| Paramètres SaaS centraux | Plans/features/config dispersée | Partiel | Non prouvé comme module unifié | Risque paramètres sans effet | Créer centre paramètres effectifs |
+| Recherche globale / notifications Super Admin | — | Absent | — | — | Ajouter (P2, UX premium) |
+
+**Statuts synthèse** : nombreux modules **EXISTENT MAIS INCOMPLETS** ; CRM **EXISTE MAIS partiellement défaillant** sur cohérence données filtrées/export avant refactor serveur ; paiements SaaS central, onboarding sécurisé complet, WhatsApp central opérationnel, support/BI avancés **ABSENTS ou NON PROUVÉS**.
+
+### 3. Benchmark documentaire (bonnes pratiques, sans copie)
+| Bonne pratique observée | Produit ou source (catégorie/référence) | Intérêt AUTO DYALI | Décision |
+|---|---|---|---|
+| Gestion abonnements/facturation, états cycle de vie, factures, proration/idempotence | Stripe Billing / Chargebee / Zoho Subscriptions (docs & patterns industrie) | Modéliser entreprise/abonnement/paiement séparément, confirmations contrôlées | **Adopter principes** (adapter au schéma existant, données réelles uniquement) |
+| CRM pipeline, activités, conversion lead→compte, filtres serveur, reporting | HubSpot / Salesforce / Pipedrive (patterns CRM B2B) | KPIs/export sur ensemble filtré, traçabilité, conversion sécurisée vers abonné | **Adopter** pour refactor CRM |
+| Support/tickets, SLA, statuts, affectation | Zendesk / Freshdesk / Intercom (patterns support SaaS) | Centre support Super Admin structuré | **Planifier P2** |
+| Admin console, RBAC, audit, actions sensibles | Console patterns AWS/GCP/Stripe Dashboard (bonne pratique admin) | Moindre privilège, journalisation, confirmations | **Adopter** progressivement |
+| WhatsApp Business Platform, Embedded Signup, webhooks, templates, isolation par tenant | Meta WhatsApp Business Platform (documentation officielle) | Supervision centrale sans accès implicite aux conversations privées | **Étudier/intégrer via backend sécurisé** (non annoncé opérationnel sans tests) |
+| Tables serveur (pagination/tri/filtres), vues détail, états vides/erreurs | Patterns UI SaaS B2B (tables data-dense) | Performance, exactitude métriques | **Adopter** en 2.15-C/D UI |
+
+*Limite benchmark* : basé sur connaissances de patterns produits/documentations publiques, non sur exploration interactive live des produits concurrents dans cette session. Aucun code/marque/interface copié.
+
+### 4. Architecture cible (Super Admin SaaS Premium)
+- **Navigation** : shell Super Admin avec menu latéral persistant, sections Control Plane (Vue générale, Entreprises/Abonnés, Managers/Comptes, Établissements, Plans/Entitlements, Abonnements, Paiements, CRM, WhatsApp/Intégrations, Chatbot, Support, Utilisateurs/RBAC, Rapports, Audit, Paramètres), recherche globale, notifications, actions rapides.
+- **Domaines** : séparation stricte Prospect CRM / Entreprise abonnée / Compte Manager / Établissement / Abonnement / Paiement.
+- **Données** : requêtes serveur paginées/filtrées avec `count`, KPI calculés sur résultats filtrés réels, exports complets filtrés, états loading/empty/error.
+- **Sécurité** : opérations sensibles via RPC/Edge Functions sécurisées (jamais `service_role` navigateur), RLS + contrôles serveur, principe du moindre privilège, audit des actions admin (sans secrets).
+- **Multi-tenant** : 1 entreprise → 1..N établissements, isolation RLS stricte, entitlements par plan.
+
+### 5. Roadmap priorisée (phases suivantes autorisées)
+| Priorité | Phase | Livrables | Dépendances/risques |
+|---|---|---|---|
+| P0 | 2.15-B ops | Vérifications/sauvegarde/dépendances + suppression ciblée 2 comptes test (si sûr) ; contrôles 2 managers réels | **Autorisation explicite + accès Supabase Auth/SQL** ; protéger ressources partagées |
+| P1 | 2.15-C | Refactor CRM serveur : filtres SQL, `count` exact, pagination serveur, KPI/relances/export sur ensemble filtré, owners réels, événements cohérents, traçabilité | Tests avec données réelles ; possible ajustements schéma/migrations préparées |
+| P1 | 2.15-D/E onboarding | Backend sécurisé (Edge/RPC) + flux « Ajouter entreprise/garage » atomique/compensé, invitation Manager, associations, doublons, audit | Service role serveur/déploiement fonctions ; **autorisation** |
+| P1 | 2.15-D admin | Gestion abonnés/managers/établissements cohérente (fiche 360, statuts séparés) | Données et RLS réelles |
+| P2 | 2.15-F | Cycle de vie abonnements/paiements SaaS, WhatsApp central supervision (Meta/official), support/chatbot central | Intégrations externes, tokens, backend |
+| P2 | UX premium | Navigation/menu latéral, recherche globale, notifications, BI rapports, responsive/accessibilité/perf | Sans supprimer fonctions existantes |
+| P0 | 2.15-G/H | Tests réels (tsc/lint/build + Auth/RLS/multi-tenant/parcours), GV5, commit/push/déploiement vérifié | Environnement/accès |
+
+### 6. État suppression comptes test (2.15-B)
+- **Décision** : supprimer `a.naji` et `r.bami` (UUIDs ci-dessus) comme comptes test, recréation ultérieure via onboarding Super Admin.
+- **Exécution** : **NON réalisée**. Blocages : pas d’accès Auth admin distant, sauvegarde/export/dépendances/FK non vérifiées, risque ressources partagées, autorisation explicite requise. Établissement `000...001` et abonnement `47b1c71e...` **protégés** (aucune action).
+
+### 7. Prochaine action recommandée immédiate
+- Poursuivre **2.15-C (correctif CRM serveur)** en local sur `crm-module.tsx` (et requêtes) pour garantir cohérence filtres/count/KPI/pagination/export, puis tests tsc/build/lint et commit/push contrôlé ; en parallèle préparer script de vérification/suppression ciblée des comptes test pour exécution manuelle autorisée.
+
