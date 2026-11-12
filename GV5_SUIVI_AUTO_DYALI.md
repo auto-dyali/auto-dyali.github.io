@@ -3808,3 +3808,38 @@ Ajouté au-dessus des sections existantes (conservées intégralement) :
 - Rendu visuel non vérifié dans un navigateur réel dans cette session ; validation responsive/mobile à confirmer.
 - Aucune donnée Supabase distante modifiée ; déploiement GitHub Pages non vérifié.
 - Les modules de la feuille de route restent à développer (pas de fausse fonctionnalité).
+
+---
+
+## 2.15-E (préparation) — Onboarding sécurisé entreprise + Manager : SQL préparée et validation testée
+**Date** : 2026-11-12
+**Statut** : **préparé localement, NON appliqué à Supabase, NON déployé**. Aucune création de compte Auth, aucune mutation distante.
+
+### 1. Modèle de sécurité retenu
+1. **Invitation du compte Auth côté serveur uniquement** : Edge Function utilisant la clé `service_role` (jamais le navigateur) pour `auth.admin.inviteUserByEmail` / génération de lien sécurisé.
+2. **Association atomique côté base** : RPC `admin_onboard_tenant` (security definer, `is_saas_admin()`) crée entreprise + abonnement + profil Manager et journalise l’opération. En cas d’erreur, la transaction PL/pgSQL est annulée intégralement (pas de compte orphelin).
+3. **Contrôles** : slug unique, forfait standard/silver/gold, durée d’essai 0..90 j, compte Auth existant, refus si le compte est déjà rattaché à une entreprise, rôle compatible.
+
+### 2. Livrables préparés
+- `supabase/migrations/0028_mission_2_15_onboarding_prepared_NOT_APPLIED.sql` :
+  - `admin_find_user_id_by_email(text)` — détection de doublon sans exposer l’email.
+  - `admin_onboard_tenant(...)` — onboarding atomique entreprise + abonnement + Manager + audit.
+  - `admin_tenant_integrity(uuid)` — contrôle de cohérence lecture seule (manager présent, abonnement présent).
+- `src/lib/onboarding.ts` — validation pure partagée : `slugify`, `isValidEmail`, `isValidSlug`, `validateOnboardingInput`, `isOnboardingValid`.
+- `scripts/test-onboarding.mjs` — tests unitaires.
+
+### 3. Tests réellement exécutés
+| Commande | Résultat | Code |
+|---|---|---|
+| `npm test` (CRM + onboarding) | ✅ 14 tests passés | 0 |
+| `npx tsc --noEmit` | ✅ aucune erreur | 0 |
+| `npx eslint src/lib/onboarding.ts` | ✅ 0 problème | 0 |
+
+### 4. Blocages explicites (opération concernée uniquement)
+- Application de la migration `0028` : **non autorisée / non exécutée** (sauvegarde + contrôle des dépendances + autorisation explicite requis).
+- Déploiement de l’Edge Function d’invitation Auth : **non réalisé** (accès projet Supabase / secrets serveur requis).
+- Interface d’onboarding complète : **non branchée** tant que la RPC et l’Edge Function ne sont pas déployées — pour éviter un bouton qui échoue ou un faux parcours.
+- Aucun compte de test supprimé ; ressources partagées protégées.
+
+### 5. Prochaine étape conditionnelle
+Après autorisation : appliquer `0028` en environnement contrôlé, déployer l’Edge Function d’invitation, brancher le formulaire « Ajouter entreprise + Manager » sur `admin_onboard_tenant`, puis tester l’isolation multi-tenant et l’accès du Manager à son seul établissement.
