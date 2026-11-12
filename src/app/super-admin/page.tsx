@@ -38,7 +38,7 @@ import Link from "next/link";
 
 
 
-import { Logo } from "@/components/logo";
+import { SuperAdminShell } from "@/components/super-admin-shell";
 
 
 
@@ -270,6 +270,15 @@ type AuditRow = { id: string; action: string; entity: string; payload_json: unkn
 
 
 
+type ManagerProfileRow = {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  establishment_id: string | null;
+  role: string;
+  is_active: boolean;
+};
+type ClientDirectoryRow = { code: string | null; full_name: string | null; phone: string | null; email: string | null };
 type ClientRow = {
 
 
@@ -855,6 +864,7 @@ export default function SuperAdminPage() {
 
 
   const [maintenant, setMaintenant] = useState<number | null>(null);
+  const [rechercheGlobale, setRechercheGlobale] = useState("");
 
 
 
@@ -999,134 +1009,27 @@ export default function SuperAdminPage() {
 
 
 
-    const clientCodesMap = new Map<string, string>();
-
-
-
-
-
-
-
-    (clientsData.data ?? []).forEach((c) => {
-
-
-
-
-
-
-
-      if ((c as any).email) clientCodesMap.set((c as any).email.toLowerCase(), (c as any).code);
-
-
-
-
-
-
-
-      if ((c as any).phone) clientCodesMap.set((c as any).phone, (c as any).code);
-
-
-
-
-
-
-
-    });
-
-
-
-
-
-
-
-    setClients((clientsData.data ?? [] as any[]).map((c) => ({
-
-
-
-
-
-
-
-      id: (c as any).id,
-
-
-
-
-
-
-
-      full_name: (c as any).full_name,
-
-
-
-
-
-
-
-      email: (c as any).email,
-
-
-
-
-
-
-
-      phone: (c as any).phone,
-
-
-
-
-
-
-
-      code: clientCodesMap.get((c as any).email?.toLowerCase()) || clientCodesMap.get((c as any).phone) || null,
-
-
-
-
-
-
-
-      establishment_id: (c as any).establishment_id,
-
-
-
-
-
-
-
-      role: (c as any).role,
-
-
-
-
-
-
-
-      is_active: (c as any).is_active,
-
-
-
-
-
-
-
-      created_at: null,
-
-
-
-
-
-
-
-    })));
-
-
-
-
-
-
-
+    const clientDirectory = (clientCodesData.data ?? []) as ClientDirectoryRow[];
+    const clientInfoByPhone = new Map<string, ClientDirectoryRow>();
+    for (const c of clientDirectory) {
+      if (c.phone) clientInfoByPhone.set(c.phone, c);
+    }
+    setClients(
+      ((clientsData.data ?? []) as ManagerProfileRow[]).map((c) => {
+        const info = c.phone ? clientInfoByPhone.get(c.phone) : undefined;
+        return {
+          id: c.id,
+          full_name: c.full_name,
+          email: info?.email ?? null,
+          phone: c.phone,
+          code: info?.code ?? null,
+          establishment_id: c.establishment_id,
+          role: c.role,
+          is_active: c.is_active,
+          created_at: null,
+        };
+      })
+    );
     setLoading(false);
 
 
@@ -1359,175 +1262,7 @@ export default function SuperAdminPage() {
 
 
 
-  const kpis = [
 
-
-
-
-
-
-
-    { label: "Total entreprises", value: establishments.length, icon: "client" as const },
-
-
-
-
-
-
-
-    { label: "Entreprises actives", value: establishments.filter((e) => e.is_active).length, icon: "benefice" as const },
-
-
-
-
-
-
-
-    {
-
-
-
-
-
-
-
-      label: "En essai",
-
-
-
-
-
-
-
-      value: maintenant === null ? "…" : establishments.filter((e) => {
-
-
-
-
-
-
-
-        if (!e.is_active) return false;
-
-
-
-
-
-
-
-        const fin = new Date(e.created_at).getTime() + 14 * 86400_000;
-
-
-
-
-
-
-
-        return fin > maintenant;
-
-
-
-
-
-
-
-      }).length,
-
-
-
-
-
-
-
-      icon: "planning" as const,
-
-
-
-
-
-
-
-    },
-
-
-
-
-
-
-
-    { label: "Suspendues", value: establishments.filter((e) => !e.is_active).length, icon: "deconnexion" as const },
-
-
-
-
-
-
-
-    { label: "Offres STANDARD", value: establishments.filter((e) => e.plan === "standard").length, icon: "carton" as const },
-
-
-
-
-
-
-
-    { label: "Offres SILVER", value: establishments.filter((e) => e.plan === "silver").length, icon: "carton" as const },
-
-
-
-
-
-
-
-    { label: "Offres GOLD", value: establishments.filter((e) => e.plan === "gold").length, icon: "ca" as const },
-
-
-
-
-
-
-
-    {
-
-
-
-
-
-
-
-      label: "Nouveaux inscrits (30 j)",
-
-
-
-
-
-
-
-      value: maintenant === null ? "…" : establishments.filter((e) => maintenant - new Date(e.created_at).getTime() < 30 * 86400_000).length,
-
-
-
-
-
-
-
-      icon: "rapport" as const,
-
-
-
-
-
-
-
-    },
-
-
-
-
-
-
-
-  ];
 
 
 
@@ -1566,6 +1301,59 @@ export default function SuperAdminPage() {
 
 
 
+
+  /* -----------------------------------------------------------------
+   * Recherche globale (entreprises + comptes) — filtrage réel côté client
+   * sur les données déjà chargées depuis Supabase.
+   * ----------------------------------------------------------------- */
+  const recherche = rechercheGlobale.trim().toLowerCase();
+  const establishmentsAffiches = recherche
+    ? establishments.filter((e) =>
+        [e.name, e.city, e.plan].filter(Boolean).some((v) => String(v).toLowerCase().includes(recherche))
+      )
+    : establishments;
+  const clientsAffiches = recherche
+    ? clients.filter((c) =>
+        [c.full_name, c.email, c.phone, c.code].filter(Boolean).some((v) => String(v).toLowerCase().includes(recherche))
+      )
+    : clients;
+
+  /* -----------------------------------------------------------------
+   * Agrégats du Command Center — calculés uniquement sur des données
+   * réellement chargées depuis Supabase. Aucune valeur inventée.
+   * ----------------------------------------------------------------- */
+  const totalEntreprises = establishments.length;
+  const entreprisesActives = establishments.filter((e) => e.is_active).length;
+  const entreprisesSuspendues = totalEntreprises - entreprisesActives;
+  const managersCount = clients.length;
+  const plansCount = plans.length;
+  const featuresCount = features.length;
+
+  const repartitionForfaits = ["standard", "silver", "gold"].map((code) => ({
+    code,
+    label: code.toUpperCase(),
+    count: establishments.filter((e) => e.plan === code).length,
+  }));
+  const maxForfait = Math.max(1, ...repartitionForfaits.map((p) => p.count));
+
+  const inscriptionsParMois = (() => {
+    if (maintenant === null) return [] as { label: string; count: number }[];
+    const base = new Date(maintenant);
+    const mois: { label: string; count: number }[] = [];
+    for (let i = 5; i >= 0; i -= 1) {
+      const debut = new Date(base.getFullYear(), base.getMonth() - i, 1);
+      const fin = new Date(base.getFullYear(), base.getMonth() - i + 1, 1);
+      mois.push({
+        label: debut.toLocaleDateString("fr-FR", { month: "short" }),
+        count: establishments.filter((e) => {
+          const c = new Date(e.created_at);
+          return c >= debut && c < fin;
+        }).length,
+      });
+    }
+    return mois;
+  })();
+  const maxInscription = Math.max(1, ...inscriptionsParMois.map((m) => m.count));
 
   async function changerForfait(id: string, plan: string) {
 
@@ -3982,46 +3770,11 @@ export default function SuperAdminPage() {
 
 
 
-    <main className="min-h-screen bg-[#252D2D] text-[#E8ECE8]">
-
-
-
-
-
-
-
-      <header className="flex items-center justify-between border-b border-[#8FB59B]/15 bg-[#2C3735] px-5 py-4 lg:px-10">
-
-
-
-
-
-
-
-        <Logo compact />
-
-
-
-
-
-
-
-        <div className="flex items-center gap-4"><span className="hidden text-sm text-[#A7B7A8] sm:block">Super Admin · AUTO DYALI</span><button onClick={() => void logout()} className="text-sm text-[#8FB59B] hover:underline">Déconnexion</button></div>
-
-
-
-
-
-
-
-      </header>
-
-
-
-
-
-
-
+    <SuperAdminShell
+      search={{ value: rechercheGlobale, onChange: setRechercheGlobale }}
+      onLogout={() => void logout()}
+      notifications={audit.length}
+    >
       <div className="mx-auto max-w-7xl p-5 lg:p-10">
 
 
@@ -4030,23 +3783,20 @@ export default function SuperAdminPage() {
 
 
 
-        <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Administration centrale</p>
-
-
-
-
-
-
-
-        <h1 className="titre-or mt-2 text-3xl font-extrabold">Pilotage de la plateforme</h1>
-
-
-
-
-
-
-
-        <p className="mt-2 text-sm text-[#A7B7A8]">Entreprises, forfaits, droits et journal d’audit AUTO DYALI.</p>
+        <section className="rounded-2xl border border-[#8FB59B]/20 bg-gradient-to-r from-[#2C3735] via-[#2C3735] to-[#344440] p-6 lg:p-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-[#D0C6AE]">AUTO DYALI · SaaS Control Center</p>
+              <h1 className="titre-or mt-2 text-3xl font-extrabold">Administration Globale</h1>
+              <p className="mt-2 max-w-2xl text-sm text-[#A7B7A8]">Pilotage des entreprises, managers, forfaits et droits de la plateforme. Données Supabase en temps réel.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => { setNotice(null); setError(null); setEtabOpen(true); }} className="btn-or px-4 py-2 text-sm">+ Nouvelle entreprise</button>
+              <button type="button" onClick={() => { setNotice(null); setError(null); setClientOpen(true); }} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">+ Nouveau manager</button>
+              <Link href="/super-admin/crm" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Ouvrir le CRM</Link>
+            </div>
+          </div>
+        </section>
 
 
 
@@ -4086,94 +3836,130 @@ export default function SuperAdminPage() {
 
 
 
-        {/* KPI réels */}
-
-
-
-
-
-
-
-        <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-
-
-
-
-
-
-          {kpis.map((card) => (
-
-
-
-
-
-
-
-            <article key={card.label} className="carte flex items-center gap-4 p-5">
-
-
-
-
-
-
-
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#344440]"><Icone nom={card.icon} taille={24} /></span>
-
-
-
-
-
-
-
-              <div>
-
-
-
-
-
-
-
-                <p className="text-xs text-[#A7B7A8]">{card.label}</p>
-
-
-
-
-
-
-
-                <p className="titre-or mt-1 text-2xl font-extrabold">{loading ? "…" : card.value}</p>
-
-
-
-
-
-
-
+        {/* ===== Command Center premium — données Supabase réelles ===== */}
+        <section id="vue-generale" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { label: "Entreprises", value: totalEntreprises, sub: `${entreprisesActives} actives · ${entreprisesSuspendues} suspendues`, icon: "client" as const },
+            { label: "Managers", value: managersCount, sub: "Comptes professionnels", icon: "profil" as const },
+            { label: "Forfaits", value: plansCount, sub: `${featuresCount} droits configurés`, icon: "carton" as const },
+            { label: "Suspendues", value: entreprisesSuspendues, sub: "Entreprises inactives", icon: "deconnexion" as const },
+          ].map((card) => (
+            <article key={card.label} className="carte-premium relative overflow-hidden p-5">
+              <span className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-[#8FB59B]/10" aria-hidden />
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#A7B7A8]">{card.label}</p>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#344440]"><Icone nom={card.icon} taille={20} /></span>
               </div>
+              <p className="titre-or mt-3 text-3xl font-extrabold">{loading ? "…" : card.value}</p>
+              <p className="mt-1 text-xs text-[#A7B7A8]">{loading ? "Chargement…" : card.sub}</p>
+            </article>
+          ))}
+        </section>
 
+        {/* Graphiques, services et activité */}
+        <section className="mt-6 grid gap-4 xl:grid-cols-3">
+          <article className="carte-premium p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold">Répartition des forfaits</h2>
+              <span className="text-[11px] uppercase tracking-[0.18em] text-[#A7B7A8]">Réel</span>
+            </div>
+            <div className="mt-5 space-y-4">
+              {repartitionForfaits.map((p) => (
+                <div key={p.code}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#E8ECE8]">{p.label}</span>
+                    <span className="text-[#A7B7A8]">{loading ? "…" : `${p.count} entreprise(s)`}</span>
+                  </div>
+                  <div className="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-[#344440]">
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#8FB59B] to-[#D0C6AE]" style={{ width: `${Math.round((p.count / maxForfait) * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
 
+          <article className="carte-premium p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold">Inscriptions (6 mois)</h2>
+              <span className="text-[11px] uppercase tracking-[0.18em] text-[#A7B7A8]">Réel</span>
+            </div>
+            <div className="mt-6 flex h-36 items-end justify-between gap-2">
+              {inscriptionsParMois.length === 0 && <p className="text-xs text-[#A7B7A8]">Chargement…</p>}
+              {inscriptionsParMois.map((m) => (
+                <div key={m.label} className="flex flex-1 flex-col items-center gap-2">
+                  <div className="flex w-full flex-1 items-end">
+                    <div className="w-full rounded-t-lg bg-gradient-to-t from-[#49675B] to-[#D0C6AE]" style={{ height: `${Math.max(6, Math.round((m.count / maxInscription) * 100))}%` }} title={`${m.count} inscription(s)`} />
+                  </div>
+                  <span className="text-[10px] uppercase text-[#A7B7A8]">{m.label}</span>
+                </div>
+              ))}
+            </div>
+          </article>
 
+          <article className="carte-premium p-5">
+            <h2 className="font-bold">État des services</h2>
+            <ul className="mt-4 space-y-3 text-sm">
+              <li className="flex items-center justify-between gap-3">
+                <span className="text-[#A7B7A8]">Base de données</span>
+                <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${error ? "bg-[#C5716B]/15 text-[#C5716B]" : loading ? "bg-[#D6A34D]/15 text-[#D6A34D]" : "bg-[#5D9E7F]/15 text-[#7FBF9E]"}`}>{error ? "Incident" : loading ? "Vérification…" : "Opérationnelle"}</span>
+              </li>
+              <li className="flex items-center justify-between gap-3">
+                <span className="text-[#A7B7A8]">Authentification</span>
+                <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${estConnecte ? "bg-[#5D9E7F]/15 text-[#7FBF9E]" : "bg-[#D6A34D]/15 text-[#D6A34D]"}`}>{estConnecte ? "Session active" : "Non vérifiée"}</span>
+              </li>
+              <li className="flex items-center justify-between gap-3">
+                <span className="text-[#A7B7A8]">Moteur de droits</span>
+                <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${featuresCount > 0 ? "bg-[#5D9E7F]/15 text-[#7FBF9E]" : "bg-[#344440] text-[#A7B7A8]"}`}>{featuresCount > 0 ? `${featuresCount} droits` : "Non configuré"}</span>
+              </li>
+              <li className="flex items-center justify-between gap-3">
+                <span className="text-[#A7B7A8]">CRM commercial</span>
+                <Link href="/super-admin/crm" className="rounded-full bg-[#8FB59B]/15 px-2.5 py-1 text-[11px] font-semibold text-[#D0C6AE] hover:bg-[#8FB59B]/25">Ouvrir</Link>
+              </li>
+            </ul>
+          </article>
+        </section>
 
+        <section className="mt-6 grid gap-4 xl:grid-cols-3">
+          <article className="carte-premium p-5 xl:col-span-2">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold">Dernières activités système</h2>
+              <a href="#audit" className="text-xs text-[#8FB59B] hover:underline">Tout le journal</a>
+            </div>
+            <ul className="mt-4 divide-y divide-[#8FB59B]/10">
+              {audit.slice(0, 6).map((a) => (
+                <li key={a.id} className="flex items-start justify-between gap-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm text-[#E8ECE8]">{a.action}</p>
+                    <p className="truncate text-[11px] text-[#A7B7A8]">{a.entity}</p>
+                  </div>
+                  <span className="shrink-0 text-[11px] text-[#A7B7A8]">{dateCourte(a.created_at)}</span>
+                </li>
+              ))}
+              {!audit.length && <li className="py-4 text-xs text-[#A7B7A8]">{loading ? "Chargement…" : "Aucune activité enregistrée."}</li>}
+            </ul>
+          </article>
 
-
-
+          <div className="space-y-4">
+            <article className="carte-premium p-5">
+              <h2 className="font-bold">Outils rapides</h2>
+              <div className="mt-3 grid gap-2">
+                <button type="button" onClick={() => { setNotice(null); setError(null); setEtabOpen(true); }} className="rounded-xl border border-[#8FB59B]/25 px-3 py-2 text-left text-sm text-[#E8ECE8] hover:bg-[#344440]">+ Créer une entreprise</button>
+                <button type="button" onClick={() => { setNotice(null); setError(null); setClientOpen(true); }} className="rounded-xl border border-[#8FB59B]/25 px-3 py-2 text-left text-sm text-[#E8ECE8] hover:bg-[#344440]">+ Créer un manager</button>
+                <Link href="/super-admin/crm" className="rounded-xl border border-[#8FB59B]/25 px-3 py-2 text-left text-sm text-[#E8ECE8] hover:bg-[#344440]">CRM commercial</Link>
+                <a href="#plans" className="rounded-xl border border-[#8FB59B]/25 px-3 py-2 text-left text-sm text-[#E8ECE8] hover:bg-[#344440]">Plans &amp; fonctionnalités</a>
+              </div>
             </article>
 
-
-
-
-
-
-
-          ))}
-
-
-
-
-
-
-
+            <article className="carte-premium p-5">
+              <h2 className="font-bold">Informations plateforme</h2>
+              <ul className="mt-3 space-y-2 text-xs">
+                <li className="flex justify-between"><span className="text-[#A7B7A8]">Entreprises</span><span className="font-semibold text-[#E8ECE8]">{loading ? "…" : totalEntreprises}</span></li>
+                <li className="flex justify-between"><span className="text-[#A7B7A8]">Managers</span><span className="font-semibold text-[#E8ECE8]">{loading ? "…" : managersCount}</span></li>
+                <li className="flex justify-between"><span className="text-[#A7B7A8]">Forfaits</span><span className="font-semibold text-[#E8ECE8]">{loading ? "…" : plansCount}</span></li>
+                <li className="flex justify-between"><span className="text-[#A7B7A8]">Droits</span><span className="font-semibold text-[#E8ECE8]">{loading ? "…" : featuresCount}</span></li>
+              </ul>
+            </article>
+          </div>
         </section>
 
 
@@ -4198,7 +3984,7 @@ export default function SuperAdminPage() {
 
 
 
-        <section className="carte mt-6 overflow-hidden">
+        <section id="entreprises" className="carte mt-6 overflow-hidden">
 
 
 
@@ -4390,7 +4176,7 @@ export default function SuperAdminPage() {
 
 
 
-                {establishments.map((establishment) => (
+                {establishmentsAffiches.map((establishment) => (
 
 
 
@@ -4670,7 +4456,7 @@ export default function SuperAdminPage() {
 
 
 
-            {!establishments.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">Aucun établissement enregistré.</p>}
+            {!establishmentsAffiches.length && <p className="p-8 text-center text-sm text-[#A7B7A8]">{recherche ? "Aucune entreprise ne correspond à la recherche." : "Aucun établissement enregistré."}</p>}
 
 
 
@@ -4710,7 +4496,7 @@ export default function SuperAdminPage() {
 
 
 
-        <section className="mt-6 overflow-hidden">
+        <section id="comptes" className="mt-6 overflow-hidden">
 
 
 
@@ -4846,7 +4632,7 @@ export default function SuperAdminPage() {
 
 
 
-                {clients.map((client) => (
+                {clientsAffiches.map((client) => (
 
 
 
@@ -5558,7 +5344,7 @@ export default function SuperAdminPage() {
 
 
 
-                {!clients.length && <tr><td className="px-5 py-8 text-center text-sm text-[#A7B7A8]" colSpan={6}>Aucun client enregistré.</td></tr>}
+                {!clientsAffiches.length && <tr><td className="px-5 py-8 text-center text-sm text-[#A7B7A8]" colSpan={6}>{recherche ? "Aucun manager ne correspond à la recherche." : "Aucun client enregistré."}</td></tr>}
 
 
 
@@ -5614,7 +5400,7 @@ export default function SuperAdminPage() {
 
 
 
-        <section className="mt-6 grid gap-4 lg:grid-cols-3">
+        <section id="plans" className="mt-6 grid gap-4 lg:grid-cols-3">
 
 
 
@@ -6158,7 +5944,7 @@ export default function SuperAdminPage() {
 
 
 
-        <section className="carte mt-6 overflow-hidden">
+        <section id="audit" className="carte mt-6 overflow-hidden">
 
 
 
@@ -6301,6 +6087,37 @@ export default function SuperAdminPage() {
 
 
 
+
+      {/* Feuille de route — état réel des modules à venir */}
+      <section id="roadmap" className="mx-auto max-w-7xl px-5 pb-10 lg:px-10">
+        <div className="carte-premium p-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="titre-or text-lg font-extrabold">Modules SaaS à venir</h2>
+              <p className="mt-1 text-xs text-[#A7B7A8]">État réel documenté — aucune page vide ni statistique fictive. Les modules seront activés progressivement selon le GV5.</p>
+            </div>
+            <span className="rounded-full bg-[#D6A34D]/15 px-3 py-1 text-[11px] font-semibold text-[#D6A34D]">Feuille de route</span>
+          </div>
+          <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { label: "Abonnements & renouvellements", etat: "Modèle présent (subscriptions), cycle de vie complet à finaliser" },
+              { label: "Paiements & facturation SaaS", etat: "Non implémenté — aucune transaction simulée" },
+              { label: "WhatsApp Business", etat: "Intégration centrale non opérationnelle — backend sécurisé requis" },
+              { label: "Chatbot & automatisations", etat: "Supervision centrale à concevoir" },
+              { label: "Support & assistance", etat: "Tickets tenant existants (0015), centre Super Admin à construire" },
+              { label: "Rapports & analyses", etat: "KPI réels disponibles ; BI avancée à développer" },
+              { label: "Rôles & permissions admin", etat: "Rôles applicatifs présents ; RBAC admin à centraliser" },
+              { label: "Sauvegarde & export", etat: "Exports locaux disponibles ; sauvegarde gérée côté Supabase" },
+              { label: "Paramètres système", etat: "Plans/fonctionnalités éditables ; centre de paramètres unifié à créer" },
+            ].map((m) => (
+              <li key={m.label} className="rounded-xl border border-[#8FB59B]/15 bg-[#2C3735] p-3">
+                <p className="text-sm font-semibold text-[#E8ECE8]">{m.label}</p>
+                <p className="mt-1 text-[11px] leading-5 text-[#A7B7A8]">{m.etat}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       {/* Modale nouvel établissement */}
 
@@ -7738,7 +7555,7 @@ export default function SuperAdminPage() {
 
 
 
-    </main>
+    </SuperAdminShell>
 
 
 

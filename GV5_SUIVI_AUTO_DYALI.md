@@ -3758,3 +3758,53 @@ Ajout : script `npm run test:crm` dans `package.json`.
 - Conversion sécurisée prospect → entreprise/Manager/établissement/abonnement : **préparée conceptuellement**, backend non implémenté.
 - Aucune migration appliquée, aucun compte supprimé, aucun secret exposé.
 
+
+---
+
+## 2.15-D (démarrage) — Super Admin Control Center premium : shell, Command Center, données réelles
+**Date** : 2026-11-12
+**Statut** : implémentation locale terminée et testée (tsc/build/lint page) — **aucune mutation Supabase distante**, **déploiement production non vérifié**.
+
+### 1. Validation visuelle reçue
+L’utilisateur a confirmé l’orientation visuelle : la maquette est une **référence de conception** pour un Dashboard premium, organisé, sans surcharge de la page principale ; les modules manquants seront ajoutés progressivement. Le logo officiel (`src/components/logo.tsx` → `public/images/branding/logo.webp`) est conservé.
+
+### 2. Nouveau shell Super Admin (`src/components/super-admin-shell.tsx`)
+- **Sidebar premium** (desktop rétractable + tiroir mobile) : logo officiel, groupes « Pilotage » et « Feuille de route », profil Super Admin, déconnexion.
+- **Topbar** : recherche globale, notifications (compteur réel des dernières actions d’audit), profil, menu mobile.
+- Entrées de navigation **réelles** : Tableau de bord (`#vue-generale`), Entreprises (`#entreprises`), Comptes & Managers (`#comptes`), Plans (`#plans`), Journal d’audit (`#audit`), CRM (`/super-admin/crm`).
+- Modules non encore développés : regroupés dans « Feuille de route » pointant vers une section **honnête** `#roadmap` (état réel, aucune page vide).
+
+### 3. Command Center premium (page Super Admin)
+Ajouté au-dessus des sections existantes (conservées intégralement) :
+- **Bannière « Administration Globale »** + actions réelles (nouvelle entreprise, nouveau manager, ouvrir CRM).
+- **4 cartes KPI premium** calculées sur les données Supabase : entreprises, managers, forfaits, suspendues (avec sous-titres réels).
+- **Répartition des forfaits** (barres standard/silver/gold, comptages réels).
+- **Inscriptions sur 6 mois** (histogramme calculé depuis `establishments.created_at`, base temporelle figée via `maintenant`).
+- **État des services** : base de données, authentification, moteur de droits, CRM — états dérivés de l’état réel du chargement, sans valeur inventée.
+- **Dernières activités système** (audit réel, 6 dernières).
+- **Outils rapides** (actions réelles) et **informations plateforme** (compteurs réels).
+- **Section `#roadmap`** : état réel documenté des modules à venir (abonnements/paiements, WhatsApp, chatbot, support, BI, RBAC, sauvegarde, paramètres).
+
+### 4. Recherche globale réelle
+- État `rechercheGlobale` + filtrage effectif des tableaux **entreprises** et **managers** (nom, ville, forfait, email, téléphone, code).
+- Messages d’état vide adaptés à la recherche.
+- Les agrégats du Dashboard restent des totaux réels de la plateforme (non filtrés par la recherche), ce qui est explicite.
+
+### 5. Correctif réel découvert et corrigé (comptes Managers)
+- La liste des managers lisait `email`/`code` sur `profiles` (colonnes inexistantes) et n’utilisait pas la requête `clients`.
+- Correction : construction d’un index `clients` par téléphone, récupération réelle de `email` et `code` pour chaque manager, suppression des `any`.
+- Types ajoutés : `ManagerProfileRow`, `ClientDirectoryRow`.
+
+### 6. Preuves exécutées
+| Commande | Résultat | Code |
+|---|---|---|
+| `npx tsc --noEmit` | ✅ aucune erreur | 0 |
+| `npm run build` | ✅ build statique OK | 0 |
+| `npx eslint src/app/super-admin/page.tsx` | ✅ **0 erreur** (3 warnings préexistants : variables mortes) | 0 |
+| `npx eslint src/components/super-admin-shell.tsx src/lib/crm-csv.ts src/components/crm-module.tsx` | ✅ 0 problème | 0 |
+| `npm run lint` (global) | ⚠️ 14 erreurs restantes, toutes dans des fichiers **new-pos non suivis** (hors périmètre commité) | 1 |
+
+### 7. Limites / non prouvé
+- Rendu visuel non vérifié dans un navigateur réel dans cette session ; validation responsive/mobile à confirmer.
+- Aucune donnée Supabase distante modifiée ; déploiement GitHub Pages non vérifié.
+- Les modules de la feuille de route restent à développer (pas de fausse fonctionnalité).
