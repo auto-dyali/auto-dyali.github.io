@@ -47,9 +47,9 @@ const NAV: NavGroup[] = [
   {
     titre: "Feuille de route",
     items: [
-      { label: "Abonnements & paiements", href: "#roadmap", icon: "card" },
+      { label: "Abonnements", href: "#roadmap", icon: "card" },
       { label: "WhatsApp Business", href: "#roadmap", icon: "chat" },
-      { label: "Chatbot & automatisations", href: "#roadmap", icon: "spark" },
+      { label: "Chatbot IA", href: "#roadmap", icon: "spark" },
       { label: "Support & assistance", href: "#roadmap", icon: "life" },
       { label: "Rapports & analyses", href: "#roadmap", icon: "chart" },
       { label: "Paramètres système", href: "#roadmap", icon: "gear" },
@@ -280,6 +280,7 @@ export function SuperAdminShell({
         className={`carte sticky top-0 hidden h-screen shrink-0 flex-col overflow-y-auto rounded-none border-y-0 border-l-0 p-4 lg:flex app-sidebar ${
           collapsed ? "is-collapsed" : ""
         }`}
+        style={{ width: collapsed ? 72 : 250, minWidth: collapsed ? 72 : 250 }}
       >
         <div className="flex items-center justify-between gap-2">
           <Logo compact />

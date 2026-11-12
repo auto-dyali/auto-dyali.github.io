@@ -3886,7 +3886,7 @@ export default function SuperAdminPage() {
             <div className="mt-6 flex h-36 items-end justify-between gap-2">
               {inscriptionsParMois.length === 0 && <p className="text-xs text-[#A7B7A8]">Chargement…</p>}
               {inscriptionsParMois.map((m) => (
-                <div key={m.label} className="flex flex-1 flex-col items-center gap-2">
+                <div key={m.label} className="flex h-full flex-1 flex-col items-center gap-2">
                   <div className="flex w-full flex-1 items-end">
                     <div className="w-full rounded-t-lg bg-gradient-to-t from-[#49675B] to-[#D0C6AE]" style={{ height: `${Math.max(6, Math.round((m.count / maxInscription) * 100))}%` }} title={`${m.count} inscription(s)`} />
                   </div>

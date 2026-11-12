@@ -3843,3 +3843,53 @@ Ajouté au-dessus des sections existantes (conservées intégralement) :
 
 ### 5. Prochaine étape conditionnelle
 Après autorisation : appliquer `0028` en environnement contrôlé, déployer l’Edge Function d’invitation, brancher le formulaire « Ajouter entreprise + Manager » sur `admin_onboard_tenant`, puis tester l’isolation multi-tenant et l’accès du Manager à son seul établissement.
+
+---
+
+## 2.15-D (validation visuelle) — Dashboard premium : captures PC/tablette/mobile et corrections
+**Date** : 2026-11-12
+**Statut** : validation locale du rendu effectuée sur **aperçu temporaire** (supprimé avant build final). **Aucune donnée Supabase distante modifiée**. **Aucune session saas_admin disponible dans l’environnement** — les interactions authentifiées n’ont pas pu être testées de bout en bout.
+
+### 1. Captures et preuves visuelles (fichiers commités dans `docs/validation/2.15-visual/`)
+| Fichier | Contenu | Largeur CSS |
+|---|---|---|
+| `pc-1440.png` | Dashboard premium complet (sidebar 250px, topbar, bannière, KPI, graphiques, services, activité, outils rapides) | 1440 px |
+| `tablette-768.png` | Layout tablette (sidebar masquée, topbar avec recherche, KPI en 2 colonnes, graphiques visibles) | 768 px |
+| `mobile-500.png` | Layout mobile (hamburger, badge notifications, KPI empilés) | 500 px (minimum imposé par Chrome headless sur macOS) |
+| `route-super-admin-anonyme.png` | Route réelle `/super-admin/` sans session → écran « Vérification de la session… » (garde active) | 1440 px |
+
+**Méthode** : export statique généré par `npm run build`, servi localement en HTTP, captures via Chrome headless (`--headless=new --screenshot`). Les captures de mise en page utilisent un **aperçu temporaire avec données de démonstration locales** (supprimé ensuite), car aucune session saas_admin/anonyme authentifiée n’est disponible dans cet environnement. Elles valident la mise en page et la responsivité, **pas** les données réelles.
+
+### 2. Vérifications visuelles réalisées
+- Logo officiel affiché dans la sidebar (`logo.webp`).
+- Sidebar rétractable (labels complets après élargissement à 250 px ; bloc profil + déconnexion en bas).
+- Topbar : recherche globale, notifications (badge = nombre réel d’entrées audit chargées), profil Super Admin, bouton hamburger en mobile/tablette.
+- Bannière « Administration Globale » + actions réelles.
+- Cartes KPI, répartition des forfaits, histogramme « Inscriptions (6 mois) », état des services, dernières activités, outils rapides, informations plateforme.
+- Aucune statistique fictive dans le code de production : tous les agrégats proviennent des données Supabase chargées (`establishments`, `clients`, `plans`, `plan_features`, `audit_log`).
+
+### 3. Corrections apportées pendant la validation
+- **Histogramme « Inscriptions » invisible** : le conteneur de barre (`flex-1`) n’avait pas de hauteur définie → ajout de `h-full` sur la colonne. Barres désormais visibles et croissantes.
+- **Sidebar trop étroite (230 px)** : labels tronqués → passe à 250 px (72 px réduite) ; libellés raccourcis (`Abonnements`, `Chatbot IA`).
+- **Aperçu de diagnostic** (overflow factice signalé) : `position:absolute` décoratif `-right-6` hors cartes → confirmé non bloquant (`scrollWidth == viewport`), aucune correction nécessaire.
+
+### 4. Ce qui n’a PAS pu être vérifié (à ne pas déclarer validé)
+- Rendu réel avec **session saas_admin authentifiée** et données Supabase de production (aucun identifiant fourni).
+- Interactions fonctionnelles réelles : recherche globale, tables entreprises/managers, boutons d’action, modales, notifications, CRM, suspension/réactivation, changement de forfait.
+- Largeur d’écran < 500 px CSS (minimum imposé par Chrome headless sur macOS) ; le comportement ≤ 640 px repose sur les breakpoints Tailwind.
+- Déploiement GitHub Pages effectif et vérification en production.
+
+### 5. Preuves exécutées
+| Commande | Résultat | Code |
+|---|---|---|
+| `npx tsc --noEmit` | ✅ aucune erreur | 0 |
+| `npm run build` | ✅ build statique OK (41 pages) | 0 |
+| `npm test` | ✅ 14 tests passés | 0 |
+| `npx eslint` (fites tiers modifiés) | ✅ 0 erreur (3 warnings préexistants) | 0 |
+| Captures Chrome headless | ✅ 4 fichiers écrits | — |
+
+### 6. Prochaines étapes bloquées / en attente d’autorisation
+1. Vérification authentifiée du Dashboard en conditions réelles (compte Super Admin réel requis).
+2. Application contrôlée de la migration `0028` + Edge Function d’invitation (onboarding entreprise + Manager) — autorisation explicite requise.
+3. Déploiement/vérification GitHub Pages.
+4. Suppression éventuelle des 2 comptes test (`a.naji`, `r.bami`) après sauvegarde/dépendances/autorisation.
