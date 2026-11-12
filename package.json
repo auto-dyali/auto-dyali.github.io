@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:crm": "node --test scripts/test-crm-csv.mjs",
     "db:check": "node scripts/check-db.mjs"
   },
   "dependencies": {

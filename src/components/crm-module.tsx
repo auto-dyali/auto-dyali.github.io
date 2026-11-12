@@ -1,105 +1,13 @@
 /* eslint-disable */
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { supabase } from "@/lib/supabase-browser";
 import { FEATURE_LABEL } from "@/lib/features";
-
-/**
- * AUTO DYALI — Export CSV CRM.
- * Exporte les leads avec les filtres actifs appliqués.
- * Utilise file-saver (déjà dépendance du projet) pour le téléchargement.
- */
-
-/** Formatte une valeur pour le CSV (échappe les guillemets et les sauts de ligne). */
-const formatCSV = (value: string | null | undefined): string => {
-  if (value === null || value === undefined) return "";
-  const v = String(value).replace(/\"/g, '""').replace(/\\r?\\n/g, " ");
-  return `"${v}"`;
-};
-
-/** Exporte les leads filtrés en CSV. Respecte les filtres actifs. */
-const exporterCSV = (leads: any[], filtre: any) => {
-  let result = [...leads];
-
-  if (filtre.recherche && filtre.recherche.trim()) {
-    const q = filtre.recherche.trim().toLowerCase();
-    result = result.filter(
-      (l) =>
-        l.company.toLowerCase().includes(q) ||
-        (l.contact_name && l.contact_name.toLowerCase().includes(q)) ||
-        (l.email && l.email.toLowerCase().includes(q)) ||
-        (l.city && l.city.toLowerCase().includes(q))
-    );
-  }
-  if (filtre.stage && filtre.stage !== "tous") {
-    result = result.filter((l) => l.stage === filtre.stage);
-  }
-  if (filtre.dateCreationDebut) {
-    const debut = new Date(filtre.dateCreationDebut);
-    result = result.filter((l) => new Date(l.created_at) >= debut);
-  }
-  if (filtre.dateCreationFin) {
-    const fin = new Date(filtre.dateCreationFin);
-    fin.setDate(fin.getDate() + 1);
-    result = result.filter((l) => new Date(l.created_at) < fin);
-  }
-  if (filtre.dateRelanceDebut) {
-    const debut = new Date(filtre.dateRelanceDebut);
-    result = result.filter((l) => l.next_action_at && new Date(l.next_action_at) >= debut);
-  }
-  if (filtre.dateRelanceFin) {
-    const fin = new Date(filtre.dateRelanceFin);
-    fin.setDate(fin.getDate() + 1);
-    result = result.filter((l) => !l.next_action_at || new Date(l.next_action_at) < fin);
-  }
-  if (filtre.owner && filtre.owner !== "tous") {
-    result = result.filter((l) => l.owner_id === filtre.owner);
-  }
-
-  if (result.length === 0) {
-    return null;
-  }
-
-  const headers = [
-    "Entreprise",
-    "Contact",
-    "Email",
-    "Téléphone",
-    "Ville",
-    "Étape",
-    "Prochaine relance",
-    "Propriétaire",
-  ];
-  const rows: string[] = [];
-
-  // En-tête
-  rows.push(headers.map(formatCSV).join(","));
-
-  // Lignes
-  for (const l of result) {
-    const row = [
-      formatCSV(l.company),
-      formatCSV(l.contact_name || ""),
-      formatCSV(l.email || ""),
-      formatCSV(l.phone || ""),
-      formatCSV(l.city || ""),
-      formatCSV(l.stage || ""),
-      formatCSV(
-        l.next_action_at
-          ? new Date(l.next_action_at).toLocaleDateString("fr-FR")
-          : ""
-      ),
-      formatCSV(l.owner_id ? "OUI" : "NON"),
-    ];
-    rows.push(row.join(","));
-  }
-
-  return rows.join("\n");
-};
+import { exporterCSV } from "@/lib/crm-csv";
 
 type Lead = {
   id: string;
@@ -166,135 +74,175 @@ export function CrmModule() {
   const [note, setNote] = useState("");
   const [typeNote, setTypeNote] = useState("note");
 
-  // --- Nouvel état : computed values après filtrage ET pagination ---
-  const leadsFiltres = useMemo(() => {
-    let result = [...leads];
-
-    // Filtre recherche (entreprise, contact, email, ville)
-    if (filtre.recherche && filtre.recherche.trim()) {
-      const q = filtre.recherche.trim().toLowerCase();
-      result = result.filter(
-        (l) =>
-          l.company.toLowerCase().includes(q) ||
-          (l.contact_name && l.contact_name.toLowerCase().includes(q)) ||
-          (l.email && l.email.toLowerCase().includes(q)) ||
-          (l.city && l.city.toLowerCase().includes(q))
-      );
-    }
-    // Filtre étape
-    if (filtre.stage && filtre.stage !== "tous") {
-      result = result.filter((l) => l.stage === filtre.stage);
-    }
-    // Filtre date création début
-    if (filtre.dateCreationDebut) {
-      const debut = new Date(filtre.dateCreationDebut);
-      result = result.filter((l) => new Date(l.created_at) >= debut);
-    }
-    // Filtre date création fin
-    if (filtre.dateCreationFin) {
-      const fin = new Date(filtre.dateCreationFin);
-      fin.setDate(fin.getDate() + 1);
-      result = result.filter((l) => new Date(l.created_at) < fin);
-    }
-    // Filtre date prochaine relance début
-    if (filtre.dateRelanceDebut) {
-      const debut = new Date(filtre.dateRelanceDebut);
-      result = result.filter((l) => l.next_action_at && new Date(l.next_action_at) >= debut);
-    }
-    // Filtre date prochaine relance fin
-    if (filtre.dateRelanceFin) {
-      const fin = new Date(filtre.dateRelanceFin);
-      fin.setDate(fin.getDate() + 1);
-      result = result.filter((l) => !l.next_action_at || new Date(l.next_action_at) < fin);
-    }
-    // Filtre owner (responsable)
-    if (filtre.owner && filtre.owner !== "tous") {
-      result = result.filter((l) => l.owner_id === filtre.owner);
-    }
-
-    // --- Pagination ---
-    const total = result.length;
-    const totalPages = Math.max(1, Math.ceil(total / pageSize));
-    // On s'assure que la page est dans les bornes
-    const safePage = Math.min(Math.max(page, 1), totalPages);
-    const start = (safePage - 1) * pageSize;
-    const end = start + pageSize;
-    return {
-      result,
-      total,
-      totalPages,
-      page: safePage,
-      pageData: result.slice(start, end),
-    };
-  }, [leads, filtre, page, pageSize]);
-
-  // --- Utilitaires dérivés après filtrage et pagination ---
-  const aRelancer = useMemo(
-    () => leadsFiltres.result.filter(
-      (l) =>
-        l.next_action_at &&
-        l.next_action_at <= new Date().toISOString().slice(0, 10) &&
-        !["won", "lost"].includes(l.stage)
-    ),
-    [leadsFiltres.result]
-  );
-
-  const parEtape = useMemo(() => {
-    return ETAPES.map((e) => ({
-      cle: e.cle,
-      label: e.label,
-      couleur: e.couleur,
-      leads: leadsFiltres.result.filter((l) => l.stage === e.cle),
-    }));
-  }, [leadsFiltres.result]);
-
-  const eventsLead = useMemo(
-    () => (selection ? events.filter((e) => e.lead_id === selection.id) : []),
-    [events, selection]
-  );
-
-  // --- Nouvel état : export ---
+  // --- État serveur : total filtré, KPI, owners, comptes par étape ---
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [kpi, setKpi] = useState({ trialNegotiation: 0, won: 0, dueReminders: 0 });
+  const [stageCounts, setStageCounts] = useState<Record<string, number>>({});
+  const [owners, setOwners] = useState<{ id: string; full_name: string | null }[]>([]);
   const [exportEnCours, setExportEnCours] = useState(false);
+  const [eventsChargement, setEventsChargement] = useState(false);
 
-  /* ---------------------------------------------------------------
-   * Requête chargement avec pagination Supabase .range()
-   * --------------------------------------------------------------- */
-  async function charger() {
+  // Recherche nettoyée pour ne pas casser la syntaxe `.or(...)` de PostgREST.
+  const rechercheSanitisee = useMemo(
+    () => filtre.recherche.trim().replace(/[,%()]/g, " ").replace(/\s+/g, " "),
+    [filtre.recherche]
+  );
+
+  /** Construit une requête `crm_leads` avec tous les filtres actifs (côté serveur). */
+  const requeteLeads = useCallback(
+    (options?: { count?: "exact"; head?: boolean }) => {
+      if (!supabase) return null;
+      let q = supabase.from("crm_leads").select("*", options ?? { count: "exact" });
+      if (rechercheSanitisee) {
+        q = q.or(
+          `company.ilike.%${rechercheSanitisee}%,contact_name.ilike.%${rechercheSanitisee}%,email.ilike.%${rechercheSanitisee}%,city.ilike.%${rechercheSanitisee}%`
+        );
+      }
+      if (filtre.stage !== "tous") q = q.eq("stage", filtre.stage);
+      if (filtre.dateCreationDebut) {
+        q = q.gte("created_at", new Date(`${filtre.dateCreationDebut}T00:00:00`).toISOString());
+      }
+      if (filtre.dateCreationFin) {
+        const fin = new Date(`${filtre.dateCreationFin}T00:00:00`);
+        fin.setDate(fin.getDate() + 1);
+        q = q.lt("created_at", fin.toISOString());
+      }
+      if (filtre.dateRelanceDebut) {
+        q = q.gte("next_action_at", new Date(`${filtre.dateRelanceDebut}T00:00:00`).toISOString());
+      }
+      if (filtre.dateRelanceFin) {
+        const fin = new Date(`${filtre.dateRelanceFin}T00:00:00`);
+        fin.setDate(fin.getDate() + 1);
+        q = q.lt("next_action_at", fin.toISOString());
+      }
+      if (filtre.owner !== "tous") q = q.eq("owner_id", filtre.owner);
+      return q;
+    },
+    [
+      rechercheSanitisee,
+      filtre.stage,
+      filtre.dateCreationDebut,
+      filtre.dateCreationFin,
+      filtre.dateRelanceDebut,
+      filtre.dateRelanceFin,
+      filtre.owner,
+    ]
+  );
+
+  const charger = useCallback(async () => {
     if (!supabase) {
       setError("Supabase n'est pas configuré.");
       setLoading(false);
       return;
     }
-    // Utilisation de la pagination Supabase via range (début, fin)
-    // Les index sont 0-based : range(start, end) récupère rows[start] à rows[end]
+    setLoading(true);
+    setError(null);
     const start = (page - 1) * pageSize;
     const end = start + pageSize - 1;
-    const [leadsReq, eventsReq] = await Promise.all([
-      supabase
-        .from("crm_leads")
-        .select("*")
-        .order("updated_at", { ascending: false })
-        .range(start, end),
-      supabase
-        .from("crm_events")
-        .select("id, lead_id, event_type, body, created_at")
-        .order("created_at", { ascending: false })
-        .range(start, end),
+    const aujourdHui = new Date().toISOString().slice(0, 10);
+
+    const pageQuery = requeteLeads();
+    if (!pageQuery) return;
+    const { data, error: pageError, count } = await pageQuery
+      .order("updated_at", { ascending: false })
+      .range(start, end);
+
+    if (pageError && !pageError.message.includes("does not exist")) {
+      setError(pageError.message);
+      setLoading(false);
+      return;
+    }
+
+    const rows = (data ?? []) as Lead[];
+    const totalCount = count ?? rows.length;
+    const pages = Math.max(1, Math.ceil(totalCount / pageSize));
+    setLeads(rows);
+    setTotal(totalCount);
+    setTotalPages(pages);
+
+    if (page > pages) {
+      setPage(pages);
+      return;
+    }
+
+    const baseCount = () => requeteLeads({ count: "exact", head: true });
+    const [trialReq, wonReq, dueReq, stageReqs] = await Promise.all([
+      baseCount()?.in("stage", ["trial", "negotiation"]),
+      baseCount()?.eq("stage", "won"),
+      baseCount()
+        ?.lte("next_action_at", aujourdHui)
+        .not("next_action_at", "is", null)
+        .not("stage", "in", "(won,lost)"),
+      Promise.all(
+        ETAPES.map((e) => baseCount()?.eq("stage", e.cle) ?? Promise.resolve({ count: 0 }))
+      ),
     ]);
-    if (
-      leadsReq.error &&
-      !leadsReq.error.message.includes("does not exist")
-    )
-      setError(leadsReq.error.message);
-    else setLeads((leadsReq.data ?? []) as Lead[]);
-    if (!eventsReq.error) setEvents((eventsReq.data ?? []) as Evenement[]);
+
+    setKpi({
+      trialNegotiation: trialReq?.count ?? 0,
+      won: wonReq?.count ?? 0,
+      dueReminders: dueReq?.count ?? 0,
+    });
+
+    const counts: Record<string, number> = {};
+    ETAPES.forEach((e, index) => {
+      counts[e.cle] = stageReqs[index]?.count ?? 0;
+    });
+    setStageCounts(counts);
+
+    // Propriétaires réels (comptes plateforme/managers) pour le filtre.
+    const { data: ownerData } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("role", ["saas_admin", "manager"])
+      .order("full_name");
+    setOwners((ownerData ?? []) as { id: string; full_name: string | null }[]);
+
     setLoading(false);
-  }
+  }, [page, pageSize, requeteLeads]);
 
   useEffect(() => {
-    void charger();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+    const timer = window.setTimeout(() => {
+      void charger();
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [charger]);
+
+  // Événements du prospect sélectionné (chargement indépendant de la page).
+  const chargerEvenements = useCallback(async () => {
+    if (!supabase || !selection) {
+      setEvents([]);
+      return;
+    }
+    setEventsChargement(true);
+    const { data, error: eventsError } = await supabase
+      .from("crm_events")
+      .select("id, lead_id, event_type, body, created_at")
+      .eq("lead_id", selection.id)
+      .order("created_at", { ascending: false });
+    if (eventsError) setError(eventsError.message);
+    else setEvents((data ?? []) as Evenement[]);
+    setEventsChargement(false);
+  }, [selection]);
+
+  useEffect(() => {
+    void chargerEvenements();
+  }, [chargerEvenements]);
+
+  const eventsLead = events;
+
+  const parEtape = useMemo(
+    () =>
+      ETAPES.map((e) => ({
+        cle: e.cle,
+        label: e.label,
+        couleur: e.couleur,
+        count: stageCounts[e.cle] ?? 0,
+        leads: leads.filter((l) => l.stage === e.cle),
+      })),
+    [leads, stageCounts]
+  );
 
   // --- Navigation précédente ---
   function precedentPage() {
@@ -303,7 +251,6 @@ export function CrmModule() {
 
   // --- Navigation suivante ---
   function prochainePage() {
-    const totalPages = leadsFiltres.totalPages;
     if (page < totalPages) setPage(page + 1);
   }
 
@@ -318,21 +265,42 @@ export function CrmModule() {
       dateRelanceFin: "",
       owner: "tous",
     });
-    setPage(1); // reviens à la première page
+    setPage(1);
   }
 
-  // --- Export CSV ---
+  // Récupère l'intégralité des résultats filtrés (par lots) pour l'export.
+  async function recupererTousLesLeadsFiltres(): Promise<Lead[]> {
+    if (!supabase) return [];
+    const tailleLot = 1000;
+    let tous: Lead[] = [];
+    let offset = 0;
+    for (;;) {
+      const q = requeteLeads();
+      if (!q) break;
+      const { data, error: exportError } = await q
+        .order("updated_at", { ascending: false })
+        .range(offset, offset + tailleLot - 1);
+      if (exportError) throw new Error(exportError.message);
+      const rows = (data ?? []) as Lead[];
+      tous = tous.concat(rows);
+      if (rows.length < tailleLot) break;
+      offset += tailleLot;
+    }
+    return tous;
+  }
+
+  // --- Export CSV (tous les résultats filtrés, pas seulement la page) ---
   async function handleExportCSV() {
     setExportEnCours(true);
+    setError(null);
     try {
-      const contenu = exporterCSV(leads, filtre);
+      const tous = await recupererTousLesLeadsFiltres();
+      const contenu = exporterCSV(tous, owners);
       if (!contenu) {
         setNotice("Aucun résultat ne correspond aux filtres actuels.");
         return;
       }
-      const blob = new Blob([contenu], {
-        type: "text/csv;charset=utf-8;",
-      });
+      const blob = new Blob(["\ufeff" + contenu], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -341,13 +309,9 @@ export function CrmModule() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setNotice(
-        `Export CSV terminé — ${leadsFiltres.total} prospect(s) exportés.`
-      );
+      setNotice(`Export CSV terminé — ${tous.length} prospect(s) exportés.`);
     } catch (e) {
-      setError(
-        `Erreur lors de l'export : ${e instanceof Error ? e.message : "inconnu"}`
-      );
+      setError(`Erreur lors de l'export : ${e instanceof Error ? e.message : "inconnu"}`);
     } finally {
       setExportEnCours(false);
     }
@@ -438,6 +402,7 @@ export function CrmModule() {
         ETAPES.find((e) => e.cle === stage)?.label ?? stage
       }.`);
       if (selection?.id === lead.id) setSelection({ ...lead, stage });
+      await chargerEvenements();
       await charger();
     }
     setTraitement(null);
@@ -454,15 +419,7 @@ export function CrmModule() {
     if (insertError) setError(insertError.message);
     else {
       setNote("");
-      const { data } = await supabase
-        .from("crm_events")
-        .select("id, lead_id, event_type, body, created_at")
-        .eq("lead_id", selection.id)
-        .order("created_at", { ascending: false });
-      setEvents((current) => [
-        ...((data ?? []) as Evenement[]),
-        ...current.filter((e) => e.lead_id !== selection.id),
-      ]);
+      await chargerEvenements();
       await charger();
     }
   }
@@ -581,7 +538,12 @@ export function CrmModule() {
               }}
                 className="champ mt-1 min-h-11"
               >
-                <option value="tous">Tous</option>
+                <option value="">Tous</option>
+                {owners.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.full_name?.trim() || o.id.slice(0, 8)}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
@@ -617,12 +579,12 @@ export function CrmModule() {
               Précédent
             </button>
             <span className="mx-2 text-sm text-[#A7B7A8]">
-              page {page} / {leadsFiltres.totalPages}
+              page {page} / {totalPages}
             </span>
             <button
               type="button"
               onClick={prochainePage}
-              disabled={page >= leadsFiltres.totalPages}
+              disabled={page >= totalPages}
               className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440] hover:text-[#E8ECE8]"
             >
               Suivant
@@ -636,25 +598,25 @@ export function CrmModule() {
         <article className="carte p-5">
           <p className="text-xs text-[#A7B7A8]">Prospects au total</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">
-            {loading ? "…" : leadsFiltres.total}
+            {loading ? "…" : total}
           </p>
         </article>
         <article className="carte p-5">
           <p className="text-xs text-[#A7B7A8]">En essai / négociation</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">
-            {loading ? "…" : leadsFiltres.result.filter((l) => l.stage === "trial" || l.stage === "negotiation").length}
+            {loading ? "…" : kpi.trialNegotiation}
           </p>
         </article>
         <article className="carte p-5">
           <p className="text-xs text-[#A7B7A8]">Convertis (gagnés)</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">
-            {loading ? "…" : leadsFiltres.result.filter((l) => l.stage === "won").length}
+            {loading ? "…" : kpi.won}
           </p>
         </article>
         <article className="carte p-5">
           <p className="text-xs text-[#8FB59B]">Relances dues aujourd'hui</p>
           <p className="titre-or mt-1 text-2xl font-extrabold">
-            {loading ? "…" : aRelancer.length}
+            {loading ? "…" : kpi.dueReminders}
           </p>
         </article>
       </div>
@@ -700,7 +662,7 @@ export function CrmModule() {
                 <span
                   className="rounded-full bg-[#344440] px-2 py-0.5 text-[11px] text-[#DFE7E2]"
                 >
-                  {liste.length}
+                  {etape.count}
                 </span>
               </div>
               <ul className="mt-3 space-y-2">
@@ -803,6 +765,9 @@ export function CrmModule() {
                 Historique des contacts
               </p>
               <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
+                {eventsChargement && (
+                  <li className="text-xs text-[#A7B7A8]">Chargement de l’historique…</li>
+                )}
                 {eventsLead.map((ev) => (
                   <li
                     key={ev.id}
@@ -816,7 +781,7 @@ export function CrmModule() {
                     <p className="mt-1 leading-5 text-[#E8ECE8]">{ev.body}</p>
                   </li>
                 ))}
-                {!eventsLead.length && (
+                {!eventsChargement && !eventsLead.length && (
                   <li className="text-xs text-[#A7B7A8]">Aucun échange enregistré.</li>
                 )}
               </ul>

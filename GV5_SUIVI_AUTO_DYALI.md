@@ -3715,3 +3715,46 @@ L’utilisateur a transmis une maquette du futur **tableau de bord global AUTO D
 - Priorité technique en cours : **2.15-C CRM**.
 - Aucune mutation Supabase distante, aucune suppression de compte dans cette étape.
 
+
+---
+
+## 2.15-C (implémentation) — CRM Super Admin : filtres/count/KPI/pagination/export côté serveur + validation maquette
+**Date** : 2026-11-12
+**Statut** : implémentation locale terminée et testée (tsc/build/tests unitaires) — **mutation Supabase distante non exécutée**, **refonte visuelle non commencée au moment de cette section**.
+
+### 1. Décision utilisateur — maquette validée comme référence visuelle
+L’utilisateur a explicitement confirmé l’orientation visuelle :
+- la maquette est une **référence visuelle** du Dashboard global, pas une exigence d’afficher toutes les fonctionnalités sur une seule page ;
+- priorité : **Dashboard Super Admin visuellement professionnel, premium, moderne et organisé**, identité graphique de la maquette + **logo officiel AUTO DYALI** ;
+- modules/fonctionnalités manquants à ajouter **progressivement** dans les pages/sous-menus selon GV5 ;
+- page principale non surchargée : KPI essentiels et données réelles, graphiques professionnels, répartition des abonnements, activité récente, état des services, raccourcis, navigation latérale complète ;
+- chaque domaine SaaS dispose de son propre espace de gestion ;
+- conservation de toutes les fonctionnalités existantes, du logo officiel et des protections techniques.
+
+### 2. Refactor CRM (`src/components/crm-module.tsx` + `src/lib/crm-csv.ts`)
+Corrections appliquées :
+- **Filtres côté serveur** : recherche (`or` ilike company/contact/email/city, caractères PostgREST assainis), étape, dates de création, dates de relance, propriétaire — construits dans une requête Supabase (`requeteLeads`) et non plus filtrés localement.
+- **`count` exact** : `select("*", { count: "exact" })` sur la requête paginée ; `total` reflète l’ensemble filtré, pas la page.
+- **Pagination serveur** : `range(start, end)` + `totalPages = ceil(total/pageSize)` ; boutons Précédent/Suivant bornés par `totalPages`.
+- **KPI sur l’ensemble filtré** : requêtes `head: true` + `count: "exact"` pour « en essai/négociation », « gagnés » et « relances dues » (date `next_action_at <= aujourd’hui`, hors gagnés/perdus).
+- **Comptes par étape** : un `count` exact par étape du pipeline, indépendant de la page affichée (badges).
+- **Export CSV complet** : récupération par lots de 1000 de **tous** les résultats filtrés, puis génération CSV (aucun filtrage local) ; message du nombre réel exporté.
+- **Propriétaires réels** : options du filtre alimentées par `profiles` (`role in saas_admin, manager`, `id, full_name`), plus de valeur statique.
+- **Événements indépendants** : chargement des `crm_events` du seul prospect sélectionné (`eq("lead_id", selection.id)`), avec état de chargement ; rafraîchi après ajout de note / changement d’étape.
+- **Helpers CSV extraits** dans `src/lib/crm-csv.ts` (fonctions pures `formatCSV`, `exporterCSV`), export enrichi (activité, forfait visé, propriétaire nommé, dates création/maj).
+
+### 3. Tests réellement exécutés
+| Commande | Résultat | Code |
+|---|---|---|
+| `node --test scripts/test-crm-csv.mjs` | ✅ 6 tests passés (échappement, sauts de ligne, null, export vide, en-tête/lignes, propriétaire inconnu) | 0 |
+| `npx tsc --noEmit` | ✅ aucune erreur | 0 |
+| `npm run build` | ✅ build statique OK (41 pages) | 0 |
+| `npm run lint` | ⚠️ échec préexistant global (non corrigé ici) | 1 |
+
+Ajout : script `npm run test:crm` dans `package.json`.
+
+### 4. Limites / non prouvé
+- Aucune donnée Supabase distante interrogée dans cette session : la cohérence des compteurs est **structurellement** garantie (requêtes serveur) mais **non vérifiée sur données réelles**.
+- Conversion sécurisée prospect → entreprise/Manager/établissement/abonnement : **préparée conceptuellement**, backend non implémenté.
+- Aucune migration appliquée, aucun compte supprimé, aucun secret exposé.
+
