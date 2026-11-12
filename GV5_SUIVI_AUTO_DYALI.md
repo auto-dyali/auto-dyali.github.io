@@ -3416,3 +3416,104 @@ Les forfaits STANDARD, SILVER et GOLD sont définis dans `GV5_SUIVI_AUTO_DYALI.m
 
 **Statut 2.13-C (local)** : corrections de rôles/accès critiques appliquées et buildées ; validations techniques partielles (tsc/build OK, lint global préexistant en échec) ; vérifications distantes, auth réelle et production en attente de moyens/autorisations.
 
+
+---
+
+## 2.14 — MISSION 2.14 : Diagnostic — managers absents du Super Admin et refus d’accès `a.naji`
+
+**Date** : 2026-11-12 (diagnostic local, lecture seule)
+**Branche** : `main`
+**HEAD / commit publié** : `4df9c780f09a2ef63e269d4dd44b0634167c5520` (pushé sur `origin/main`, workflow Pages à vérifier côté GitHub)
+**Périmètre** : diagnostic code/migrations locales uniquement. **Aucune lecture ni mutation distante Supabase exécutée** (pas d’accès service/DB distant).
+
+### 1. Constat et état initial
+- Production signalée : (1) liste garages/managers/abonnés professionnels absente/vide dans Super Admin ; (2) `a.naji@auto-dyali.ma` reçoit un refus d’accès à l’espace professionnel.
+- Code local en production (commit 4df9c78) :
+  - `src/app/super-admin/page.tsx` charge les abonnés via `supabase.from("profiles").select("id, full_name, email, phone, establishment_id, role, is_active").eq("role","manager")` (+ requêtes establishments/plans/features/audit). Erreur Supabase remontée : `Erreur chargement des profils managers : ...` (pas de masquage d’erreur). Si requête sans erreur mais 0 ligne (RLS/filtre), la liste peut être vide sans erreur explicite.
+  - `src/app/connexion/page.tsx` appelle `supabase.rpc("get_my_profile")` (SECURITY DEFINER, retourne `role`, `establishment_id`). Si erreur ou profil absent → déconnexion + « profil non configuré ». Si `role === "manager"` → `/tableau-de-bord/`. Si `role === "client"` → déconnexion + refus espace professionnel (comportement 2.13-C volontaire, sans élévation). `employee` → `/employe/`, `saas_admin` → `/super-admin/`.
+  - `src/components/shell-app.tsx` autorise tableau de bord uniquement à `manager`/`saas_admin`.
+
+### 2. Chaîne technique analysée (lecture seule)
+- **RPC profil** : `supabase/migrations/0003_manager_profile_rpc.sql` définit `public.get_my_profile()` (`security definer`, `search_path public`, `select p.role, p.establishment_id from public.profiles p where p.id = auth.uid()`). Bypass RLS attendu pour la lecture du profil connecté.
+- **RLS profils/établissements** : `0002/0007_fix_admin_rls_and_rpc.sql` — politique `profiles_self_or_same_establishment` autorise `select` si `id = auth.uid()` ou même établissement (`current_establishment_id()`) ou `is_saas_admin()`. `is_saas_admin()` (0007) s’appuie sur `public.autoplus_current_role()` ; helpers/functions existent sous variantes (`autoplus_current_role`/`is_saas_admin`/`current_establishment_id`) selon migrations 0001/0002/0007 — **l’état réellement appliqué en base distante est inconnu**.
+- **Établissements** : visibles à `saas_admin` ou membre (0007). `subscriptions` liées à `establishment_id` (0009).
+
+### 3. Comptes ciblés (références historiques, non re-vérifiées à distance)
+| Compte | UUID référence | Email attendu | Rôle historique signalé | Statut distant |
+|---|---|---|---|---|
+| a.naji | `31b0ca43-413b-4559-ab93-bc0637e97bde` | `a.naji@auto-dyali.ma` (domaine à confirmer, ne pas corriger sans preuve) | `client` (rapports précédents) | **Non vérifié** : Auth, profil, role, is_active, establishment_id, abonnement, RLS |
+| r.bami | `72b8d0a6-c4b8-4b35-a5ab-9aca5ee84da2` | `r.bami@auto-dyali.ma` | `client`/manager selon contexte, à confirmer | **Non vérifié** |
+
+### 4. Anomalies probables / causes exactes candidates (à confirmer par contrôles SQL en lecture seule)
+| # | Symptôme | Cause probable (code/preuve locale) | Confirmation requise (remote, lecture seule) |
+|---|---|---|---|
+| A1 | `a.naji` refusé à la connexion pro | Si `profiles.role` = `client` (ou absent), connexion 2.13-C refuse/déconnecte correctement (pas d’accès pro). Si profil absent pour l’UUID Auth, `get_my_profile()` renvoie vide → « profil non configuré ». | Vérifier existence ligne `profiles` pour UUID, valeur `role`, `is_active`, `establishment_id`, email réel Auth vs profil. |
+| A2 | Liste managers vide en Super Admin | La requête filtre `.eq("role","manager")` : comptes abonnés encore en `role='client'` n’apparaissent pas. Ou RLS empêche le `saas_admin` de lire `profiles/establishments` (helpers RLS/fonctions non cohérents avec l’état migré). Ou `establishment_id`/jointures absents rendant l’affichage incomplet. | Vérifier rôles réels des profils ciblés, politiques RLS effectives, résultat `is_saas_admin()` pour le compte admin, visibilité `select` sur `profiles/establishments/subscriptions`. |
+| A3 | Incohérence identité établissement | Un manager sans `establishment_id` ou établissement manquant/inactif peut se connecter au rôle mais échouer sur modules/données. | Vérifier `profiles.establishment_id` et existence/`is_active`/plan de l’établissement. |
+| A4 | Divergence Auth/profil | Email Auth peut différer du profil ou du domaine attendu ; `profiles.id` doit correspondre à `auth.users.id`. | Contrôle croisé Auth ↔ profiles (sans exposer données sensibles). |
+
+### 5. Corrections proposées (SQL) — **NON EXÉCUTÉES, autorisation explicite requise avant toute mutation**
+
+> **Principe** : lecture seule d’abord, sauvegarde/export des lignes concernées, puis mutations ciblées et réversibles. Ne pas recréer les comptes Auth, ne pas changer d’UUID, ne pas fusionner les établissements sans preuve.
+
+**5.1 Contrôles lecture seule (à exécuter par un opérateur autorisé Supabase)**
+```sql
+-- A) Comptes cibles dans profiles (par UUID connus)
+select id, full_name, email, phone, establishment_id, role, is_active
+from public.profiles
+where id in (
+  '31b0ca43-413b-4559-ab93-bc0637e97bde', -- a.naji (réf)
+  '72b8d0a6-c4b8-4b35-a5ab-9aca5ee84da2'  -- r.bami (réf)
+);
+
+-- B) Comptes cibles par email (si présents en profil)
+select id, full_name, email, phone, establishment_id, role, is_active
+from public.profiles
+where lower(email) in ('a.naji@auto-dyali.ma','a.naji@auto-dyia.ma','r.bami@auto-dyali.ma');
+
+-- C) Managers visibles (ce que le Super Admin attend)
+select p.id, p.full_name, p.email, p.role, p.is_active, p.establishment_id, e.name as establishment_name, e.plan, e.is_active as establishment_active
+from public.profiles p
+left join public.establishments e on e.id = p.establishment_id
+where p.role = 'manager'
+order by p.full_name;
+
+-- D) Établissements et abonnements
+select e.id, e.name, e.plan, e.is_active, s.status, s.plan_code
+from public.establishments e
+left join public.subscriptions s on s.establishment_id = e.id
+order by e.created_at desc;
+
+-- E) Vérification RLS/helpers (selon droits SQL disponibles) : confirmer is_saas_admin/autoplus_current_role/current_establishment_id existent et cohérents.
+```
+*(Contrôle Auth `auth.users` : à faire via Dashboard Supabase/Auth API autorisée, pas via SQL public exposé ici.)*
+
+**5.2 Mutations candidates (uniquement après validation des résultats A–E et autorisation explicite)**
+```sql
+-- EXEMPLES À ADAPTER APRÈS PREUVE (ne pas exécuter tel quel sans contrôle préalable)
+-- Sauvegarder l'état avant: select * from public.profiles where id = '<UUID>';
+
+-- Si a.naji est un manager abonné identifié et rattaché au bon établissement :
+-- update public.profiles
+-- set role = 'manager', is_active = true, establishment_id = '<ETABLISSEMENT_REEL_UUID>'
+-- where id = '31b0ca43-413b-4559-ab93-bc0637e97bde';
+
+-- Si r.bami est un manager abonné identifié et rattaché à son propre établissement :
+-- update public.profiles
+-- set role = 'manager', is_active = true, establishment_id = '<ETABLISSEMENT_REEL_UUID>'
+-- where id = '72b8d0a6-c4b8-4b35-a5ab-9aca5ee84da2';
+```
+**Interdits** : ne pas attribuer le même `establishment_id` aux deux comptes sans preuve ; ne pas passer `client`→`manager` sans confirmer qu’il s’agit du compte professionnel du garage ; ne pas modifier Auth (email/mot de passe/UUID) sans procédure dédiée autorisée.
+
+### 6. Tests locaux (session 2.14, code non modifié)
+| Commande | Résultat | Code |
+|---|---|---|
+| `npx tsc --noEmit` | ✅ OK | 0 |
+| `npm run lint` | ⚠️ Échec global préexistant (30 erreurs / 38 warnings hors périmètre 2.14) | 1 |
+| `npm run build` | ✅ OK (41 pages) | 0 |
+
+### 7. Blocages / actions nécessaires
+- Accès distant Supabase (Auth, SQL, RLS effectives) requis pour confirmer A1–A4 et exécuter 5.1/5.2.
+- Vérification workflow GitHub Pages et tests de connexion réels en production requis après toute correction.
+- **Mission 2.14 : diagnostic complété, mutations distantes NON exécutées (en attente d’autorisation explicite et de preuves).**
+
