@@ -4883,3 +4883,51 @@ Une fois les étapes 1 à 3 exécutées (0028 + Edge Function), vous pourrez vou
 - **Code corrigé et compilant** : TypeScript 0 erreur, ESLint 0 erreur, Build OK, 18 tests passés.
 - **Déploiement** : CI en cours pour le commit `aafa759`.
 - **Fonctionnement réel** : Nécessite un test avec session `saas_admin` sur `https://auto-dyali.github.io/super-admin/onboarding/` pour confirmer la création d'abonné, l'invitation Manager et l'enregistrement d'abonnement.
+
+---
+
+## 18 — Phase 2 : corrections P0/P1/P2, fiabilisation onboarding, cycle de vie abonnements (date 2026-11-13)
+
+**SHA de référence** : `05251bc` (HEAD = `origin/main`, CI en cours).
+**Contexte** : Autorisation globale Phase 2 accordée (2026-11-13). Audit read-only Phase 1 livré (`bbfb849`), puis corrections.
+
+### A. Correctifs P0 réalisés (Phase 2)
+1. **Sécurité — `admin_delete_client_account`** : migration `0030_super_admin_security_hardening.sql` créée (garde `is_saas_admin`, journalisation `audit_log`, revoke PUBLIC, grant `authenticated`). **Action distante requise** : exécuter `0030` via SQL Editor avant toute utilisation.
+2. **Garde Super Admin fail-closed** : `src/components/super-admin-guard.tsx`, `src/app/super-admin/crm/page.tsx`, `src/app/super-admin/page.tsx` — profil absent ou rôle indéterminé ⇒ refus.
+3. **Onboarding** : `src/app/super-admin/onboarding/page.tsx` — remontée du message JSON serveur (`error.context.json`); plus de remplacement générique des erreurs non-2xx; message de succès aligné sur la réponse backend.
+4. **Récupération mot de passe** : `src/app/mot-de-passe-oublie/page.tsx` + `src/app/super-admin/page.tsx` — `redirectTo` dynamique `${window.location.origin}/mot-de-passe-traite?reset=1`.
+
+### B. Parcours abonné / Manager
+5. **Boutons Super Admin** : `+ Nouvelle entreprise`, `+ Nouvel établissement`, `+ Nouveau manager`, `+ Créer un manager` → redirection vers `/super-admin/onboarding/` (création réelle entreprise + établissement + Manager + abonnement).
+
+### C. Notifications visibles (toasts)
+6. Dashboard Super Admin : forfait (`changerForfait`), suspension (`basculerEtat`), enregistrement offre (`enregistrerPlan`), bascule feature (`basculerFeature`) → toasts succès/erreur.
+7. Module Entreprises : suspension/réactivation + changement de forfait → toasts.
+
+### D. Cycle de vie abonnements
+8. Module Abonnements : renouvellement (`admin_renew_subscription`), réactivation (`admin_reactivate_subscription`), expiration (`admin_expire_subscription`).
+
+### E. Vérifications Phase 2
+| Contrôle | Résultat |
+|----------|----------|
+| TypeScript | ✅ 0 erreur |
+| ESLint | ✅ 0 erreur (46 warnings) |
+| Tests unitaires | ✅ 18/18 |
+| Build | ✅ OK |
+| Commits Phase 2 | `305497a`, `5b235cb`, `70371a5`, `a2c6eb4`, `05251bc` |
+| CI GitHub Actions | ⏳ Vérifier pour `05251bc` |
+
+### F. Actions distantes restantes (BLOQUANT pour fonctionnement réel)
+1. Appliquer `supabase/migrations/0030_super_admin_security_hardening.sql` et `0031_profiles_rls_admin_access.sql` via SQL Editor.
+2. Appliquer les migrations distantes manquantes identifiées en Phase 1 : `0010`, `0015`, `0018`, `0026`, `0029` (état réel à confirmer — divergence `db:check` / probes REST observée).
+3. Déployer l'Edge Function `onboard-tenant`.
+4. Config Auth Supabase : domaine `.ma`, SMTP, Redirect URLs.
+
+### G. Verdict Phase 2
+- **Correctifs P0 livrés en code** : hardening suppression compte, garde fail-closed, onboarding erreurs serveur, reset mot de passe.
+- **Parcours création abonné** : boutons redirigés vers onboarding (création réelle).
+- **Notifications** : toasts centralisés côté dashboard + entreprises pour les actions métier.
+- **Cycle de vie** : UI abonnements opérationnelle (renouvellement/réactivation/expiration).
+- **Reste** : application distante des migrations et validation en conditions réelles (`saas_admin`).
+
+---
