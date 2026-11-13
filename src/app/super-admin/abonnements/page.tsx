@@ -3,9 +3,9 @@
 /**
  * AUTO DYALI — Super Admin › Abonnements & renouvellements
  * Lecture réelle du cycle de vie (trial → active → past_due → suspended
- * → expired / cancelled). Aucune écriture directe impossible depuis le
- * navigateur n'est simulée : les changements passent par les RPC
- * (changerForfait / suspend) documentés.
+ * → expired / cancelled). Les transitions passent par les RPC journalisées
+ * (admin_renew_subscription / admin_reactivate_subscription /
+ * admin_expire_subscription — migrations 0026) — aucune écriture simulée.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader, Chargement, Vide, Erreur } from "@/components/super-admin-page";
 import { downloadCsv, dateFrCourte } from "@/lib/csv-export";
+import { useNotification } from "@/lib/use-notification";
 
 type Sub = {
   id: string;
@@ -37,23 +38,30 @@ const STATUT: Record<string, string> = {
   cancelled: "Résilié",
 };
 
+const CHAMPS_RENDELLE = ["trial", "past_due", "active"] as const;
+
 export default function AbonnementsPage() {
   const [rows, setRows] = useState<Sub[]>([]);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
   const [recherche, setRecherche] = useState("");
   const [filtreStatut, setFiltreStatut] = useState<string>("tous");
+  const [traitement, setTraitement] = useState<string | null>(null);
+  const { success: toastSuccess, error: toastError } = useNotification();
+
+  async function charger() {
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("id, establishment_id, plan_code, status, started_at, trial_ends_at, current_period_end, cancelled_at, created_at, establishments(name, slug)")
+      .order("created_at", { ascending: false });
+    if (error) setErreur(error.message);
+    else setRows((data ?? []) as unknown as Sub[]);
+  };
 
   useEffect(() => {
     void (async () => {
-      if (!supabase) return;
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("subscriptions")
-        .select("id, establishment_id, plan_code, status, started_at, trial_ends_at, current_period_end, cancelled_at, created_at, establishments(name, slug)")
-        .order("created_at", { ascending: false });
-      if (error) setErreur(error.message);
-      else setRows((data ?? []) as unknown as Sub[]);
+      await charger();
       setLoading(false);
     })();
   }, []);
@@ -86,6 +94,45 @@ export default function AbonnementsPage() {
     });
   }, [rows, recherche, filtreStatut]);
 
+  async function renouveler(r: Sub) {
+    if (!supabase) return;
+    setTraitement(`renew-${r.establishment_id}`);
+    const { error } = await supabase.rpc("admin_renew_subscription", {
+      p_establishment_id: r.establishment_id,
+      p_months: 12,
+    });
+    setTraitement(null);
+    if (error) toastError({ title: "Erreur renouvellement", message: error.message });
+    else {
+      toastSuccess({ title: "Renouvellement", message: `Renouvellement de l'abonnement de ${r.establishments?.name ?? r.establishment_id} programmé (12 mois).` });
+      await charger();
+    }
+  };
+
+  async function reactiver(r: Sub) {
+    if (!supabase) return;
+    setTraitement(`reactivate-${r.establishment_id}`);
+    const { error } = await supabase.rpc("admin_reactivate_subscription", { p_establishment_id: r.establishment_id });
+    setTraitement(null);
+    if (error) toastError({ title: "Erreur réactivation", message: error.message });
+    else {
+      toastSuccess({ title: "Réactivation", message: `Abonnement de ${r.establishments?.name ?? r.establishment_id} réactivé.` });
+      await charger();
+    }
+  };
+
+  async function expirer(r: Sub) {
+    if (!supabase) return;
+    setTraitement(`expire-${r.establishment_id}`);
+    const { error } = await supabase.rpc("admin_expire_subscription", { p_establishment_id: r.establishment_id });
+    setTraitement(null);
+    if (error) toastError({ title: "Erreur expiration", message: error.message });
+    else {
+      toastSuccess({ title: "Expiration", message: `Abonnement de ${r.establishments?.name ?? r.establishment_id} expiré (l'établissement et ses données sont conservés).` });
+      await charger();
+    }
+  }
+
   function exporter() {
     downloadCsv(
       `auto-dyali-abonnements-${new Date().toISOString().slice(0, 10)}.csv`,
@@ -107,7 +154,7 @@ export default function AbonnementsPage() {
       <ModuleHeader
         surtitre="AUTO DYALI · Cycle de vie"
         titre="Abonnements & renouvellements"
-        description="Vue réelle des abonnements (essai, actif, en retard, suspendu, expiré, résilié). Les modifications de forfait passent par les RPC journalisées depuis la page Entreprises."
+        description="Vue réelle des abonnements (essai, actif, en retard, suspendu, expiré, résilié). Les transitions de cycle de vie passent par les RPC journalisées (0026)."
         action={
           <>
             <Link href="/super-admin/entreprises/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Gérer les forfaits</Link>
@@ -136,7 +183,7 @@ export default function AbonnementsPage() {
         </label>
         <label className="text-xs text-[#A7B7A8]">
           Filtre actif
-          <select value={filtreStatut} onChange={(e) => setFiltreStatut(e.target.value)} className="champ mt-1 min-h-11">
+          <select value={filtreStatut} onChange={(e) => setFiltreStatut(e.target.value)} className="champ mt-1 min-h-11 w-full">
             <option value="tous">Tous les statuts</option>
             {Object.entries(STATUT).map(([cle, label]) => <option key={cle} value={cle}>{label}</option>)}
           </select>
@@ -154,7 +201,7 @@ export default function AbonnementsPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] text-left text-sm">
               <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
-                <tr><th className="px-5 py-3">Entreprise</th><th className="px-5 py-3">Forfait</th><th className="px-5 py-3">Statut</th><th className="px-5 py-3">Échéance</th><th className="px-5 py-3">Inscrit le</th></tr>
+                <tr><th className="px-5 py-3">Entreprise</th><th className="px-5 py-3">Forfait</th><th className="px-5 py-3">Statut</th><th className="px-5 py-3">Échéance</th><th className="px-5 py-3">Inscrit le</th><th className="px-5 py-3">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-[#8FB59B]/10">
                 {visibles.map((r) => (
@@ -164,6 +211,25 @@ export default function AbonnementsPage() {
                     <td className="px-5 py-4">{STATUT[r.status] ?? r.status}</td>
                     <td className="px-5 py-4 text-[#A7B7A8]">{dateFrCourte(r.current_period_end ?? r.trial_ends_at)}</td>
                     <td className="px-5 py-4 text-[#A7B7A8]">{dateFrCourte(r.created_at)}</td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        {CHAMPS_RENDELLE.includes(r.status as (typeof CHAMPS_RENDELLE)[number]) && (
+                          <button type="button" disabled={traitement !== null} onClick={() => void renouveler(r)} className="rounded-lg border border-[#8FB59B]/40 px-3 py-1.5 text-xs text-[#E8ECE8] hover:bg-[#344440] disabled:opacity-60">
+                            {traitement === `renew-${r.establishment_id}` ? "Renouvellement…" : "Renouveler"}
+                          </button>
+                        )}
+                        {r.status === "suspended" && (
+                          <button type="button" disabled={traitement !== null} onClick={() => void reactiver(r)} className="rounded-lg border border-[#D6A34D]/40 px-3 py-1.5 text-xs text-[#E8ECE8] hover:bg-[#344440] disabled:opacity-60">
+                            {traitement === `reactivate-${r.establishment_id}` ? "Réactivation…" : "Réactiver"}
+                          </button>
+                        )}
+                        {r.status === "active" && (
+                          <button type="button" disabled={traitement !== null} onClick={() => void expirer(r)} className="rounded-lg border border-[#C5716B]/40 px-3 py-1.5 text-xs text-[#E8ECE8] hover:bg-[#344440] disabled:opacity-60">
+                            {traitement === `expire-${r.establishment_id}` ? "Expiration…" : "Expirer"}
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
