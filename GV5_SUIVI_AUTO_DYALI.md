@@ -4367,3 +4367,50 @@ Validation distante vérifiée (backup + vérification SQL + application autoris
 
 ### 4. Protections
 Inchangées : aucun compte modifié/supprimé, établissement 00000000-0000-0000-0000-000000000001 et abonnement 47b1c71e-cf73-46a5-b0a4-b3f4ac762e22 intacts ; `service_role` uniquement côté serveur ; aucune écriture distante exécutée.
+
+---
+
+## 9 — Corrections P0 réalisées (code) : Edge Function onboarding et validation
+**Date** : 2026-11-13
+**Branche de correction** : `fix/onboarding-edge-caller-rpc` → fusionnée dans `main`
+**Commits** : `5797abe` (correction) + merge dans `main` (voir `git log`)
+**Statut** : corrections **locales et versionnées** ; **aucune mutation distante** (pas de migration appliquée, pas de déploiement Edge Function, pas d'écriture Supabase).
+
+### 1. Edge Function `supabase/functions/onboard-tenant/index.ts` (P0 corrigé)
+- **Séparation stricte des clients** :
+  - `caller` (clé `SUPABASE_ANON_KEY` + JWT utilisateur dans `Authorization`, `persistSession:false`, `autoRefreshToken:false`) : utilisé pour `auth.getUser(token)` **et pour toutes les RPC 0028** (`admin_find_onboarding_request`, `admin_find_user_id_by_email`, `admin_onboard_tenant`). Ces RPC vérifient `public.is_saas_admin()` via `auth.uid()` ; l'appel via `caller` transmet le contexte JWT du Super Admin.
+  - `admin` (clé `SUPABASE_SERVICE_ROLE_KEY`, serveur uniquement) : utilisé **exclusivement** pour la vérification serveur du profil appelant (`profiles.role/is_active`) et les opérations Auth Admin (`inviteUserByEmail`, `deleteUser` en compensation). Jamais exposé.
+- **Vérifications renforcées** : JWT vérifié côté serveur avec token explicite, refus si session invalide/expirée ; rôle `saas_admin` actif vérifié depuis `profiles` côté serveur (jamais via frontend) ; validation stricte des entrées (UUID `requestId`, nom/slug/email/plan/essai 0–90, manager) ; messages explicites si RPC 0028 absente (`503` / PGRST202) sans création partielle.
+- **Idempotence et cohérence** : contrôle idempotence puis anti-doublon email via `caller.rpc` ; invitation Auth puis `admin_onboard_tenant` via `caller.rpc` ; en cas d'échec RPC, compensation `admin.auth.admin.deleteUser` (anti-orphelin) ; réponse = résultat réel de la RPC uniquement (aucun succès sans persistance confirmée).
+- **Sécurité** : aucun secret dans les réponses/logs métier ; directive eslint inutile supprimée.
+
+### 2. Validation onboarding alignée (`src/lib/onboarding.ts`)
+- Ajout de `isValidRequestId` (UUID) et durcissement : nom d'entreprise ≥ 2 caractères, nom du Manager ≥ 2 caractères (alignés avec l'Edge Function). `validateOnboardingInput` / `isOnboardingValid` inchangés dans leur contrat de retour.
+
+### 3. Vérifications effectuées (preuves locales)
+| Vérification | Résultat |
+|---|---|
+| `node --test` / `npm test` | ✅ 15 tests, 0 échec |
+| `npx tsc --noEmit` | ✅ exit 0 |
+| `npm run lint` | ✅ 0 erreur (avertissements préexistants/hors périmètre) |
+| `npm run build` | ✅ réussi (export statique, routes générées) |
+| Diff 0018 apply vs migration source | ✅ corps migration identique (`0018_apply_minimal.sql` contient préflight + 0018 + post-checks) |
+
+### 4. Scripts 0028 / 0018 / activation (état)
+- `supabase/apply/0028_apply_minimal.sql` : PRÉ-FLIGHT (dépendances 0009/0010/RPC) + 0028 byte-identique + POST-CHECKS. **NON EXÉCUTÉ.**
+- `supabase/apply/0018_apply_minimal.sql` : PRÉ-FLIGHT + 0018 byte-identique + POST-CHECKS. **NON EXÉCUTÉ.**
+- `supabase/functions/onboard-tenant/index.ts` : corrigé et prêt au déploiement **après** application contrôlée de 0028. **NON DÉPLOYÉ.**
+- Procédure d'activation : `docs/validation/ACTIVATION_SUPABASE.md` (ordre, résultats attendus, conditions STOP).
+
+### 5. Ce qui reste hors de portée locale (actions externes indispensables)
+- **Sauvegarde/PITR vérifiée** et confirmation explicite avant toute mutation distante.
+- **Exécution SQL** de `FINAL_0028_PREFLIGHT_READONLY.sql` puis, si GO autorisé, `0028_apply_minimal.sql` dans Supabase SQL Editor.
+- **Déploiement** de l'Edge Function `onboard-tenant` (`supabase functions deploy onboard-tenant` ou Dashboard) après 0028 appliquée.
+- **Application séparée** de `0018_apply_minimal.sql` (CRM) si autorisée, après sauvegarde.
+- **Tests authentifiés de bout en bout** (création abonné réelle, invitation Manager reçue/acceptée, connexion Manager, isolation multi-tenant, parcours CRM réel) avec un compte Super Admin de test — impossibles sans backend distant actif et session autorisée.
+
+### 6. Verdict de cette session (distingué)
+- **Code livré** : P0 Edge Function corrigé (caller/admin, contexte JWT pour RPC `is_saas_admin`), validation alignée, build/tests/tsc/lint OK localement, scripts 0018/0028 préparés et vérifiés cohérents.
+- **Déploiement vérifié** : à vérifier sur le commit poussé (GitHub Actions / routes) après push.
+- **Fonctions métier réellement opérationnelles en production** : **non démontrables sans activation distante** (0028/0018/Edge Function) et sans test authentifié — aucun faux succès déclaré.
+
