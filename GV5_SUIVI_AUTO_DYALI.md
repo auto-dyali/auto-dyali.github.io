@@ -4159,3 +4159,62 @@ Seule la préparation est en place (migrations, fonction, UI, scripts, preuves).
 
 ### Protections respectées
 Comptes `a.naji`/`r.bami`, établissement `000…001`, abonnement `47b1c71e…` : **non modifiés, non lus autrement qu'en information_schema** ; aucun secret demandé/affiché/utilisé ; aucune migration appliquée.
+
+---
+
+## 3 ter — Analyse ciblée des migrations 0009 / 0010 / 0012 / 0028 et plan minimal
+**Date** : 2026-11-13
+**Statut** : 0028 NON APPLIQUÉE. Aucun objet distant modifié. Plan d'application minimal préparé (non exécuté).
+
+### 1. Objets créés par chaque migration (audit local intégral)
+| Migration | Tables | Colonnes | Fonctions / RPC | Policies | Données | Idempotente |
+|---|---|---|---|---|---|---|
+| 0009 plans/entitlements | plans, plan_features, subscriptions | establishments + trial_ends_at, suspended_at, logo_url | has_feature, my_features | plans/plan_features/subscriptions (drop+create) | seeds 3 forfaits + ~96 lignes plan_features (on conflict do nothing), abonnements manquants (NOT EXISTS) | OUI |
+| 0010 super-admin RPC | — | — | admin_create_establishment, admin_change_plan, admin_set_establishment_status, admin_save_plan, admin_set_feature | saas_admin_insert_establishments + 3 policies audit_log (drop+create) | — | OUI (create or replace) |
+| 0012 POS stock | — | — | decrement_product_stock | — | — | OUI (create or replace) |
+| 0028 onboarding | onboarding_requests | — | admin_find_user_id_by_email, admin_find_onboarding_request, admin_onboard_tenant, admin_attach_manager, admin_tenant_integrity | onboarding_requests_saas_admin (create) | — | OUI (create if not exists / create or replace) |
+
+### 2. Comparaison avec les résultats SQL fournis (Supabase, rôle postgres)
+| Objet | Supabase (info_schema) | Origine | Conclusion |
+|---|---|---|---|
+| establishments, profiles, plans, subscriptions, audit_log | PRÉSENTS | 0001/0009 | confirmés |
+| establishments.trial_ends_at, suspended_at | PRÉSENTS | 0009 | confirmés |
+| is_saas_admin(), autoplus_current_role(), current_establishment_id() | PRÉSENTES | 0001/0002/0007 | confirmés |
+| admin_onboard_tenant / admin_tenant_integrity / admin_attach_manager | NON DÉTECTÉES | 0028 | attendu (0028 non appliquée) |
+| onboarding_requests | ABSENTE | 0028 | conforme |
+| **crm_leads** | **ABSENTE** | **0018** | **0018 (CRM) JAMAIS APPLIQUÉE à distance** |
+| RLS / grants / sections §5-§7-§8 / fonctions 0009-0010 | **non fournis** | — | **à fournir pour conclusion définitive** |
+
+### 3. 0010 et 0012 sont-elles nécessaires AVANT 0028 ?
+**Non.** 0028 ne référence ni `admin_create_establishment`, ni `decrement_product_stock`, ni `products`, ni aucun objet de 0010/0012 (vérifié par inspection des corps de fonctions). Aucun FK, aucun appel, aucun prérequis partagé.
+- **0010** : requise par l'application existante (création établissement, changer forfait, suspendre, plans) mais **hors dépendance 0028**. GO possible séparément (idempotente, aucun DDL destructif) — risque unique : écrasement silencieux si une définition distante divergente existe (à vérifier §3 du script de vérification : `pg_get_function_arguments`).
+- **0012** : requise uniquement par le POS (decrement_product_stock) ; colonne `stock` ajoutée par 0008 ; hors périmètre onboarding.
+- **0018 (CRM, ABSENTE)** : le CRM livré en 2.15-C est **cassé en production** (tables absentes). Pas un prérequis 0028 ; décision séparée requise ; ne pas appliquer sans sauvegarde + backup vérifié.
+
+### 4. Risques identifiés
+- Aucune suppression/remplacement de table, aucune cascade dans 0009/0010/0012/0028.
+- `create or replace function` réécrit le corps distants des fonctions ciblées : vérifier que les définitions distantes (si elles existent) sont identiques (md5 via `pg_get_functionhash`) ou absentes avant application.
+- `drop policy if exists` + `create policy` : restaure les définitions du dépôt — conforme si le dépôt est la référence.
+- Aucune donnée modifiée ; la table 0028 vide est créée.
+- **crm_leads absente** : ne pas "corriger" à l'aveugle — c'est une décision produit (fixer 0018 avec backup). Aucune action sans autorisation.
+
+### 5. Tableau GO / STOP par migration (pour la décision à venir)
+| Migration | Statut distant connu | GO/STOP |
+|---|---|---|
+| 0009 | partielle (tables+colonnes présentes ; has_feature/my_features non confirmées) | GO (sûre : idempotente) si confirmation §3 OK ; sinon appliquer avant 0028 |
+| 0010 | inconnu (§3 à fournir) | GO si absente/conforme ; STOP seulement si définition distante divergente détectée |
+| 0012 | absente (db:check) | GO si POS requis, sinon inutile |
+| 0018 CRM | **ABSENTE** | STOP pour l'instant (décision backup requise) |
+| **0028 (cible onboarding)** | absente (attendu) | **GO si §1-§8 OK + backup vérifié + base saine** — voir script minimal |
+
+### 6. Plan d'application strictement minimal — `supabase/apply/0028_apply_minimal.sql`
+1. **PRÉ-FLIGHT** `DO`-block : avorte AVANT toute écriture si `is_saas_admin`/`current_establishment_id`/tables/colonnes/forfaits manquent ;
+2. **0028 intégral** (contenu identique octet pour octet au fichier préparé) ;
+3. **POST-CHECKS** lecture seule : fonctions présentes, table `onboarding_requests` créée.
+AUCUNE donnée existante n'est supprimée, recréée ou modifiée. Script NON EXÉCUTÉ (local uniquement).
+
+### 7. Go/Stop final — la 0028
+**GO** uniquement si : backup/PITR confirmé + résultats §1/§3/§4/§7/§8 fournis et conformes (comptes de test et ressources partagées intacts, `onboarding_requests` absente). **STOP** si un élément ci-dessus manque ou anomalie détectée.
+
+### 8. Runbook mis à jour
+`docs/onboarding/RUNBOOK_ONBOARDING_SUPER_ADMIN.md` §4 pointe désormais vers le script minimal auto-contrôlé (au lieu de la copie manuelle du fichier seul).

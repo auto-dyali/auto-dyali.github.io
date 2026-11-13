@@ -33,13 +33,18 @@ Rien d'autre n'est nécessaire : **exécuter ce fichier, puis analyser les résu
 - `service_role` : JAMAIS dans le navigateur ; uniquement dans l'Edge Function (secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, fournis automatiquement aux Edge Functions Supabase).
 
 ## 4. Appliquer la migration 0028 (après §1 et §2)
-**Option A — SQL Editor (recommandé)** : ouvrir `supabase/migrations/0028_mission_2_15_onboarding_prepared_NOT_APPLIED.sql`, copier son contenu intégral, exécuter dans le SQL Editor.
+**Méthode recommandée — un seul script auto-contrôlé** :
+`supabase/apply/0028_apply_minimal.sql`
+Il enchaîne (1) un **PRÉ-FLIGHT lecture seule** (tables/colonnes/forfaits indispensables — sinon exécution annulée *avant toute écriture*), (2) le contenu intégral de la migration 0028, (3) des **POST-CHECKS** de lecture seule (fonctions créées, table présente).
+Aucune donnée existante n'est supprimée, recréée ni modifiée.
+
+**Option A — SQL Editor** : ouvrir le fichier ci-dessus, copier intégralement, exécuter.
 **Option B — CLI** :
 ```bash
 brew install supabase/tap/supabase
 supabase login                                  # ouvre un navigateur, token personnel
 supabase link --project-ref nxmsqqoflskfajqrqddw
-supabase db push                                # applique supabase/migrations/* (0026/0027 inclus, tous idempotents)
+supabase db push --include-all                  # applique supabase/migrations/* (0026/0027 inclus, tous idempotents)
 ```
 **Option C — psql** : coller le fichier avec `psql` ou le SQL Editor.
 
