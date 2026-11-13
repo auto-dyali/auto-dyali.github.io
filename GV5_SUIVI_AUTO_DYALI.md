@@ -4218,3 +4218,36 @@ AUCUNE donnée existante n'est supprimée, recréée ou modifiée. Script NON EX
 
 ### 8. Runbook mis à jour
 `docs/onboarding/RUNBOOK_ONBOARDING_SUPER_ADMIN.md` §4 pointe désormais vers le script minimal auto-contrôlé (au lieu de la copie manuelle du fichier seul).
+
+---
+
+## 3 quater — FINAL GO/STOP sur 0028 : audit local final, vérification read-only, verdict
+**Date** : 2026-11-13
+**Statut** : 0028 NON APPLIQUÉE. Edge Function NON DÉPLOYÉE. Aucune donnée distante touchée.
+
+### 1. Preuves locales
+- `supabase/apply/0028_apply_minimal.sql` : 0028 présente **identique octet pour octet** (`src in app = True`) ; aucun opcode destructif caché (`insert/update` uniquement DANS les corps des RPC, `drop policy` limité à la nouvelle table `onboarding_requests`).
+- PRÉ-FLIGHT affinement couvert par `FINAL_0028_PREFLIGHT_READONLY.sql` (tables, colonnes, fonctions+définitions, policies, RLS, grants, contraintes/FK, enum, comptages, comptes ciblés, ressources partagées, absence 0028).
+
+### 2. Verdics par migration
+| Migration | Verdict |
+|---|---|
+| 0009 | DÉJÀ APPLIQUÉE À CONFIRMER (tables/colonnes présentes côté info_schema ; fonctions/policies/seeds à confirmer via sections 2/4/7) |
+| 0010 | DÉJÀ APPLIQUÉE À CONFIRMER — HORS 0028 |
+| 0012 | HORS PÉRIMÈTRE onboarding |
+| 0018 CRM | STOP — décision séparée (crm_leads absente à distance) |
+| 0028 | **GO CONDITIONNEL** ; gates : backup/PITR confirmé + vérification read-only conforme + ressources partagées intactes + forfaits standard/silver/gold |
+
+### 3. Sauvegarde
+`STOP — SAUVEGARDE NON CONFIRMÉE` (aucune preuve Dashboard/PITR/pg_dump fournie). Aucune migration appliquée, aucun compte créé/supprimé.
+
+### 4. Livrables
+- `supabase/verification/FINAL_0028_PREFLIGHT_READONLY.sql` (11 sections, read-only, aucune dépendance à `crm_leads`)
+- `FINAL_GO_STOP_0028.md` (audit A → verdict C → gates D → livrables E)
+- Ce GV5 (append, historique conservé)
+
+### 5. Pour lever la condition GO
+1. Exécuter intégralement `FINAL_0028_PREFLIGHT_READONLY.sql` dans le SQL Editor ;
+2. Confirmer backup/PITR actif (ou pg_dump/exports) ;
+3. Me transmettre les 11 résultats + la confirmation de sauvegarde ;
+4. Feu vert explicite pour appliquer 0028 (et seulement 0028 sauf décision séparée pour 0010/0018).
