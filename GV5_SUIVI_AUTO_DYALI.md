@@ -4973,3 +4973,48 @@ Une fois les étapes 1 à 3 exécutées (0028 + Edge Function), vous pourrez vou
 - **Code** : conforme, compilant, testé localement, CI green sur les commits récents.
 - **Données/Backend** : dépendantes des migrations distantes et de l’Auth — **bloquantes pour validation fonctionnelle réelle**.
 - **Mission** : **en cours de clôture** — phases 9 (E2E) et 10 (finalisation) restantes.
+
+---
+
+## 20 — Rapport définitif final : preuves, résultats, blocages et statut des exigences (date 2026-11-13)
+
+**SHA de référence** : `4573ad4ce3acf3fda52ef26094de86f6eda751f5` (CI success, déploiement success).
+
+### A. Preuves techniques (Phase 1 → 10, code)
+| Preuve | Résultat |
+|--------|----------|
+| TypeScript (`tsc --noEmit`) | ✅ 0 erreur |
+| ESLint | ✅ 0 erreur |
+| Tests unitaires (`npm test`) | ✅ 18/18 |
+| Build (`npm run build`) | ✅ OK |
+| CI GitHub Actions | ✅ success (`4573ad4`) |
+| Déploiement GitHub Pages | ✅ success |
+
+### B. Résultats fonctionnels constatés
+1. **Création abonné Manager** : boutons Super Admin → `/super-admin/onboarding/` (chemin réel). ✅ code
+2. **Garde Super Admin** : fail-closed ✅ (dashboard, guard, CRM).
+3. **Onboarding erreurs** : remontée backend ✅.
+4. **Reset mot de passe** : `?reset=1` ✅.
+5. **Toasts** : dashboard, entreprises, support, sauvegarde, abonnements, managers, garages, plans, CRM ✅ (modules restants : abonnements migré, support/sauvegarde faits).
+6. **Cycle de vie abonnements** : renouvellement/réactivation/expiration ✅ (UI).
+7. **RLS** : policies `0031` créées (application distante en attente).
+
+### C. Blocants restants (externe)
+- Application migrations distantes (`0030`, `0031`, `0010`, `0015`, `0018`, `0026`, `0029`).
+- Déploiement + test réel Edge Function.
+- Validation Auth réelle / RLS avec sessions / E2E / sauvegardes / isolation multi-tenant / ops prod.
+
+### D. Statut des exigences GV5
+| Exigence | Statut |
+|----------|--------|
+| Super Admin opérationnel (création abonné) | ✅ code / ⏳ runtime distant |
+| Compte Manager fiable | ✅ code (parcours onboarding) / ⏳ runtime |
+| Formulaires professionnels | ⏳ Phase 7 |
+| Données cohérentes | ⏳ migrations distantes |
+| Permissions sécurisées | ✅ code (hardening + fail-closed) / ⏳ RLS réelles |
+| Parcours métier fonctionnels | ⏳ E2E Phase 9 |
+
+### E. Verdict final
+- **Mission non déclarée terminée** : vérifications finales distantes/E2E en attente (bloquantes).
+- **Travail autonome réalisé** : Phases 1 → 8 closes côté code, vérifications locales/CI/déploiement green.
+- **Blocage persistant** : accès Supabase réel (service_role / sessions `saas_admin`) + fournisseurs.
