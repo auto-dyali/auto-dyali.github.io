@@ -4087,3 +4087,46 @@ Aucun compte touché (`a.naji`, `r.bami`, ressources partagées intactes). Aucun
 3. Coller/exécuter `0028` (option A) **ou** installer/`supabase login` la CLI sur cette machine et exécuter `supabase db push`.
 4. Déployer la fonction (`supabase functions deploy onboard-tenant`) **ou** via Dashboard.
 5. Me donner un compte Super Admin (test ou définitif) pour le test de bout en bout — ou suivre le protocole §7 du runbook et me rapporter les résultats pour que je les consigne ici.
+
+---
+
+## 3 bis — Préparation et analyse des vérifications avant application de 0028
+**Date** : 2026-11-13
+**Statut** : **0028 NON APPLIQUÉE, Edge Function NON DÉPLOYÉE.** Aucun objet distant modifié.
+
+### 1. Script de vérification livré (lecture seule)
+`supabase/verification/0028_verify_readonly.sql` — 9 sections :
+1) tables publiques attendues ; 2) colonnes critiques d'`establishments` (trial_ends_at/suspended_at/logo_url) ; 3) fonctions RPC (0001/0002/0007/0009/0010/0028) ; 4) politiques RLS ; 5) grants EXECUTE (authenticated/anon/public) ; 6) nombre de comptes Auth ; 7) comptages AVANT application ; 8) présence des comptes de test et des ressources partagées ; 9) état d'`onboarding_requests` (témoin d'application antérieure).
+**Zéro écriture, zéro DDL.** Exécution : Supabase Dashboard → SQL Editor.
+
+### 2. Dépendances de 0028 (auditées sur les migrations locales)
+| Dépendance | Migration source | Statut requis |
+|---|---|---|
+| `is_saas_admin()` / `autoplus_current_role()` | 0001 / 0002 / 0007 | obligatoire (toutes les fonctions 0028 la testent) |
+| `current_establishment_id()` | 0001 / 0002 / 0007 | obligatoire pour RLS profiles/establishments |
+| Table `establishments` (+ `trial_ends_at`, `suspended_at`, `logo_url`) | 0001 + 0009 | obligatoire (0028 insère `trial_ends_at`) |
+| Table `plans` | 0009 | obligatoire (FK `subscriptions.plan_code`) |
+| Table `subscriptions` | 0009 | obligatoire (0028 insère/lie) |
+| Table `audit_log` | 0001 | obligatoire (0028 journalise) |
+| Table `profiles` (FK→auth.users) | 0001 + RLS 0002/0007 | obligatoire (profil Manager) |
+| `auth.users` | natif Supabase | obligatoire |
+| `onboarding_requests` | 0028 (créée par elle) | absente attendue |
+
+### 3. Matrice de décision (GO / STOP)
+**GO** (0028 applicable sans risque) si §1 retourne :
+- `is_saas_admin`, `autoplus_current_role`, `current_establishment_id` présents ;
+- `establishments` + `trial_ends_at/suspended_at`, `plans`, `subscriptions`, `audit_log`, `profiles` présents ;
+- `admin_*` (0010) présents (ou appliqués avant, préservant les données) ;
+- `onboarding_requests` absente ;
+- comptes de test et ressources partagées inchangés (section 8 attendue : a.naji/r.bami profiles présents, établissement 000...001 présent, abonnement 47b1c71e... présent).
+
+**STOP** si : `is_saas_admin` absente ; colonnes `trial_ends_at`/`suspended_at` absentes ; `subscriptions` ou `plans` absents ; 0010 absent **et** non appliqué avant ; `onboarding_requests` déjà présente (risque d'état incohérent → investiguer) ; ou comptages §8 ≠ attendus (stop, anomalie).
+
+### 4. Sauvegarde préalable (indiscutable)
+- Dashboard → Backups / PITR : vérifier PITR actif, noter un horodatage ;
+- ou `pg_dump` avec l'URL de connexion (runbook §2) ;
+- ou export CSV logique des tables du §7 avant → comparer après application.
+> Aucun accès d'écriture/backup n'existe dans cet environnement : **cette étape est à votre charge ou via une machine authentifiée (SQL Editor / CLI).**
+
+### 5. Verdict préparatoire
+**0028 peut être appliquée sans risque IF** les vérifications ci-dessus retournent GO. **Sinon** les points exacts à corriger seront déterminés par les résultats §1 (migrations absentes à appliquer d'abord : 0009 → 0010 → 0012). L'Edge Function peut être déployée **uniquement après** application réussie de 0028 et vérification via `admin_tenant_integrity`.

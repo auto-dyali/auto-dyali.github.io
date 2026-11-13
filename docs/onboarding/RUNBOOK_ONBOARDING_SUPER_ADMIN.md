@@ -12,26 +12,15 @@ Ce document liste, dans l'ordre, les opérations que **vous** (ou une session di
 - Aucun secret n'est écrit dans le dépôt ni transmis dans une conversation.
 
 ## 1. Vérifier la vérité du schéma (SQL Editor — rôle postgres/superadmin)
-Exécuter dans le **SQL Editor** de Supabase (ou `psql`) :
+**Script complet de vérification en lecture seule** : `supabase/verification/0028_verify_readonly.sql`
+(9 sections : tables, colonnes critiques, fonctions RPC, politiques RLS, grants, comptages AVANT application,
+comptes de test et ressources partagées, présence d'`onboarding_requests`).
 
-```sql
--- Migrations / objets critiques
-select table_name from information_schema.tables
- where table_schema='public'
-   and table_name in ('plans','plan_features','subscriptions','establishments','profiles','audit_log','onboarding_requests');
+Rien d'autre n'est nécessaire : **exécuter ce fichier, puis analyser les résultats (voir §5).**
 
-select proname from pg_proc join pg_namespace n on n.oid = pronamespace
- where n.nspname='public'
-   and proname in ('is_saas_admin','get_my_profile','has_feature','my_features',
-                   'admin_create_establishment','admin_change_plan','admin_set_establishment_status',
-                   'admin_save_plan','admin_set_feature','admin_find_user_id_by_email',
-                   'admin_find_onboarding_request','admin_onboard_tenant','admin_attach_manager','admin_tenant_integrity')
- order by proname;
-```
-
-**Interprétation** :
-- Si `admin_*` (0010) est absent : **les migrations n'ont pas toutes été appliquées à distance** — voir §5 (application ordonnée). Le code poussé sur GitHub n'a JAMAIS garanti leur présence.
-- Si seulement `0028` est absent : appliquer uniquement 0028 (§4).
+**Interprétation rapide** :
+- Si `admin_*` (0010) est absent : les migrations 0010+ ne sont pas appliquées à distance → voir §5 (application ordonnée). Le code poussé sur GitHub n'a JAMAIS garanti leur présence.
+- Si seulement les objets `0028` sont absents : appliquer uniquement 0028 (§4).
 
 ## 2. Sauvegarde préalable (obligatoire avant toute écriture)
 - **Supabase Dashboard → Backups / PITR** : vérifier que les backups sont actifs et noter un timestamp.
