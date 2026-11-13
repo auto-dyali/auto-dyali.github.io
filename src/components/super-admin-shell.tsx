@@ -37,6 +37,7 @@ const NAV: NavGroup[] = [
     titre: "Pilotage",
     items: [
       { label: "Tableau de bord", href: "/super-admin/", icon: "dashboard", route: true },
+      { label: "Nouvel abonné", href: "/super-admin/onboarding/", icon: "plus", route: true },
       { label: "Entreprises", href: "/super-admin/entreprises/", icon: "building", route: true },
       { label: "Comptes & Managers", href: "/super-admin/managers/", icon: "users", route: true },
       { label: "Garages & Établissements", href: "/super-admin/garages/", icon: "building", route: true },
@@ -83,7 +84,8 @@ type IconName =
   | "spark"
   | "life"
   | "chart"
-  | "gear";
+  | "gear"
+  | "plus";
 
 const PATHS: Record<IconName, ReactNode> = {
   dashboard: (
@@ -156,6 +158,9 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M4 20V4M4 20h16" />
       <path d="M8 16v-4M12 16V8M16 16v-6M20 16V6" />
     </>
+  ),
+  plus: (
+    <path d="M12 5v14M5 12h14" />
   ),
   gear: (
     <>

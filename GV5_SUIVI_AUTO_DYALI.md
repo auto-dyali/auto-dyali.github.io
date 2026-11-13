@@ -3960,3 +3960,81 @@ Après autorisation : appliquer `0028` en environnement contrôlé, déployer l�
 2. Déploiement/vérification GitHub Pages.
 3. Application encadrée de 0028 + Edge Function d’invitation (autorisation explicite).
 4. Sort des fichiers new-pos non suivis (commit, archive ou suppression) — décision utilisateur.
+
+---
+
+## 2.16-production (vérification) — GitHub Actions, déploiement et routes en production
+**Date** : 2026-11-13
+**Statut** : **déploiement vérifié en production** (preuves HTTP + captures).
+
+### 1. Diagnostic initial
+Immédiatement après le push `8a586c9`, les nouvelles routes retournaient **404** : la vérification avait été faite **pendant** l’exécution du workflow Pages (alors que l’ancien build était en ligne), pas après. Ce n’était donc **ni un échec de build ni un mauvais déploiement**, mais une mesure prise en plein déploiement.
+
+### 2. Vérification GitHub Actions (via API, lecture seule)
+Run `43326860108` — branche `main`, événement `push`, commit `8a586c9` :
+| Étape | Résultat |
+|---|---|
+| job `build` | ✅ completed / success |
+| job `deploy` | ✅ completed / success |
+| créé | 2026-11-12T23:12:27Z |
+| mis à jour | 2026-11-12T23:13:46Z |
+
+### 3. Vérification HTTP production (`https://auto-dyali.github.io/`)
+Routes `/super-admin/*` → **toutes en HTTP 200** :
+`/`, `/super-admin/`, `/entreprises/`, `/garages/`, `/managers/`, `/plans/`, `/abonnements/`, `/crm/`, `/paiements/`, `/support/`, `/rapports/`, `/audit/`, `/roles/`, `/sauvegarde/`, `/parametres/`, `/whatsapp/`, `/chatbot/` (+ `/onboarding/` après le commit suivant).
+
+### 4. Preuves visuelles production
+`docs/validation/2.16-production/` — captures Chrome headless du site public (accès anonyme → écran « Vérification de la session… », preuve que la garde est active et qu’aucune donnée n’est exposée) :
+`super-admin-pc.png`, `super-admin-entreprises-pc.png`, `super-admin-plans-pc.png`, `super-admin-support-pc.png`, `super-admin-whatsapp-pc.png`.
+
+### 5. Limites
+Les captures publiques prouvent le routage/le garde, pas l’expérience authentifiée. Vérification des parcours côté Super Admin : voir section suivante.
+
+---
+
+## 2.16 / onboarding — « Création d’un nouvel abonné » : état, preuves, verdict
+**Date** : 2026-11-13
+**Verdict : NON — je ne peux pas encore créer un nouvel abonné depuis le Super Admin en production.**
+
+### 1. Ce qui a été fait
+- **Migration 0028 améliorée** (`0028_mission_2_15_onboarding_prepared_NOT_APPLIED.sql`) : table `onboarding_requests` (idempotence + suivi), `admin_find_user_id_by_email`, `admin_find_onboarding_request`, `admin_onboard_tenant` (transaction atomique entreprise + abonnement + profil Manager + audit ; **idempotent** via `request_id`), `admin_attach_manager` (compensation/re-rattachement), `admin_tenant_integrity` (contrôle lecture seule). Structure vérifiée (parenthèses, corps de fonctions équilibrés). **NON APPLIQUÉE à Supabase.**
+- **Edge Function `supabase/functions/onboard-tenant/index.ts`** (non déployée) : vérifie le JWT utilisateur, exige `profiles.role = 'saas_admin'` côté serveur, valide l’entrée (nom, slug, forfait, essai 0–90 j, email), détecte un compte Auth existant (refus, pas de doublon), invite le Manager via `auth.admin.inviteUserByEmail` (aucun mot de passe en clair), associe via RPC atomique, **compense** en supprimant l’invitation si l’association échoue, retry idempotent.
+- **Interface** : `/super-admin/onboarding/` — wizard en 3 étapes (Entreprise → Manager → Forfait & essai), validation client (`src/lib/onboarding.ts`, tests unitaires), anti double-soumission (`request_id`), messages explicites en cas d’échec ; bouton « Nouvel abonné » dans Entreprises et dans la sidebar.
+- **Prévisualisation locale** : aperçu temporaire (données de démonstration) capturé (PC + mobile, `docs/validation/2.16-onboarding/`), supprimé avant le build final.
+
+### 2. Ce qui a été vérifié
+| Élément | Résultat |
+|---|---|
+| Tests unitaires (slug, email, validation, request_id) | ✅ 9/9 |
+| Build (17 routes `/super-admin/*`) | ✅ |
+| Lint fichiers modifiés | ✅ 0 erreur |
+| Captures wizard PC / mobile (démo) | ✅ `docs/validation/2.16-onboarding/` |
+| Route production après redéploiement | ⏳ à vérifier (commit à pousser) |
+
+### 3. Ce qui ne fonctionne PAS encore / blocages
+1. **Migration 0028 non appliquée** (autorisation + sauvegarde + contrôles de dépendances requis).
+2. **Edge Function non déployée** (accès projet Supabase / secrets serveur requis).
+3. **Aucun test authentifié** de la création (aucun compte saas_admin dans cet environnement) ; aucune invitation réelle n’a été envoyée ; aucun compte n’a été créé ; aucun email reçu.
+4. Vérification production post-déploiement du wizard : impossible tant que le commit n’est pas poussé et que le build Pages n’a pas fini.
+
+### 4. Pour terminer (votre décision requise)
+1. Autoriser l’application de 0028 (sauvegarde préalable + contrôle des dépendances ; procédure documentée au §0028).
+2. Autoriser le déploiement de l’Edge Function `onboard-tenant`.
+3. Fournir (ou désigner) un compte Super Admin pour le test de bout en bout (entreprise créée → email d’invitation reçu → Manager se connecte à son propre dashboard).
+
+### 5. Réponses aux questions posées
+- Bouton « Ajouter un abonné » : **existe désormais** (`/super-admin/onboarding/`), mais **non fonctionnel en production**.
+- Création entreprise + établissement : implémentée côté UI/RPC/Edge Function, **non exécutée**.
+- Compte Manager créé et associé : **non exécuté** (aucun appel distant).
+- Abonnement + droits du plan enregistrés : **non exécuté** (`admin_onboard_tenant` les crée dans la même transaction).
+- Invitation sécurisée : implémentée (invitation email, aucun mot de passe en clair), **non déclenchée**.
+- Parcours testé en local/production : tests unitaires et aperçu visuel uniquement ; **aucun parcours réel testé**.
+- Preuves : voir tableau ci-dessus.
+
+### 6. Les deux réponses autorisées → **NON**
+
+---
+
+## État des fichiers et prochaines étapes
+- Commits : voir historique (`git log`). Les captures `docs/validation/2.16-production/` et `docs/validation/2.16-onboarding/` sont versionnées comme preuves.
+- Fichiers non suivis : inchangés (nouvelles fonctionnalités committées ; fichiers de travail en cours non suivis conservés, aucune suppression sans décision utilisateur).

@@ -25,6 +25,19 @@ export type OnboardingErrors = Partial<Record<keyof OnboardingInput, string>>;
 
 const PLANS = ["standard", "silver", "gold"] as const;
 
+/** Génère un identifiant de demande unique (utilisé pour l'idempotence). */
+export function buildRequestId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  // Repli (navigateurs/anciens runtimes) : entropie suffisante pour un UUID v4.
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 /** Convertit un nom d'entreprise en slug URL sûr. */
 export function slugify(value: string): string {
   return value

@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader, Chargement, Vide, Erreur } from "@/components/super-admin-page";
@@ -39,7 +39,6 @@ const STATUT_ABO: Record<string, string> = {
 };
 
 export default function EntreprisesPage() {
-  const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -136,7 +135,7 @@ export default function EntreprisesPage() {
         action={
           <>
             <button type="button" onClick={exporter} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Exporter CSV</button>
-            <button type="button" onClick={() => router.push("/super-admin/")} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">+ Nouvelle entreprise</button>
+            <Link href="/super-admin/onboarding/" className="btn-or px-4 py-2 text-sm">+ Nouvel abonné</Link>
           </>
         }
       />

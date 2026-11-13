@@ -1,0 +1,264 @@
+"use client";
+
+/**
+ * AUTO DYALI — Super Admin › Nouvel abonné
+ * Parcours complet : entreprise + établissement + Manager (invitation
+ * email) + abonnement + droits du forfait.
+ *
+ * Nécessite la migration 0028 (NON appliquée par défaut) et l'Edge
+ * Function `onboard-tenant` (NON déployée par défaut). Sans elles,
+ * la création échoue avec un message explicite — aucun état fantôme.
+ */
+
+import { useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase-browser";
+import { ModulePage } from "@/components/super-admin-module-page";
+import { ModuleHeader, Erreur } from "@/components/super-admin-page";
+import { buildRequestId, slugify, validateOnboardingInput } from "@/lib/onboarding";
+
+type Form = {
+  companyName: string;
+  slug: string;
+  city: string;
+  phone: string;
+  email: string;
+  plan: string;
+  trialDays: number;
+  managerName: string;
+  managerEmail: string;
+  managerPhone: string;
+};
+
+const ETAPES = [
+  { n: 1, label: "Entreprise" },
+  { n: 2, label: "Manager" },
+  { n: 3, label: "Forfait & essai" },
+] as const;
+
+export default function OnboardingPage() {
+  const [etape, setEtape] = useState<1 | 2 | 3>(1);
+  const [requestId, setRequestId] = useState(() => buildRequestId());
+  const [form, setForm] = useState<Form>({
+    companyName: "",
+    slug: "",
+    city: "",
+    phone: "",
+    email: "",
+    plan: "silver",
+    trialDays: 14,
+    managerName: "",
+    managerEmail: "",
+    managerPhone: "",
+  });
+  const [slugTouche, setSlugTouche] = useState(false);
+  const [enCours, setEnCours] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [resultat, setResultat] = useState<Record<string, unknown> | null>(null);
+
+  const erreurs = useMemo(
+    () =>
+      validateOnboardingInput({
+        companyName: form.companyName,
+        slug: form.slug,
+        city: form.city,
+        phone: form.phone,
+        email: form.email,
+        plan: form.plan,
+        managerName: form.managerName,
+        managerEmail: form.managerEmail,
+        managerPhone: form.managerPhone,
+        trialDays: form.trialDays,
+      }),
+    [form]
+  );
+  const etapeValide = (n: number): boolean => {
+    if (n === 1) return !erreurs.companyName && !erreurs.slug && !erreurs.email;
+    if (n === 2) return !erreurs.managerName && !erreurs.managerEmail;
+    return Object.keys(erreurs).length === 0;
+  };
+
+  function modifier<K extends keyof Form>(cle: K, valeur: Form[K]) {
+    setForm((f) => {
+      const suivant = { ...f, [cle]: valeur };
+      if (cle === "companyName" && !slugTouche) suivant.slug = slugify(String(valeur));
+      return suivant;
+    });
+    setErreur(null);
+  }
+
+  async function soumettre(e: FormEvent) {
+    e.preventDefault();
+    if (!supabase) { setErreur("Supabase n'est pas configuré."); return; }
+    if (Object.keys(erreurs).length > 0) { setErreur("Corrigez les champs en rouge avant de valider."); return; }
+    setEnCours(true);
+    setErreur(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("onboard-tenant", {
+        body: {
+          requestId,
+          companyName: form.companyName.trim(),
+          slug: form.slug.trim(),
+          city: form.city.trim() || null,
+          phone: form.phone.trim() || null,
+          email: form.email.trim() || null,
+          plan: form.plan,
+          trialDays: form.trialDays,
+          managerName: form.managerName.trim(),
+          managerEmail: form.managerEmail.trim(),
+          managerPhone: form.managerPhone.trim() || null,
+        },
+      });
+      if (error) {
+        const contexte = error.message?.includes("Function not found") || error.message?.includes("404")
+          ? "La fonction `onboard-tenant` n'est pas déployée (ou n'existe pas). Déploiement + migration 0028 requis."
+          : error.message;
+        throw new Error(contexte ?? "Erreur inconnue");
+      }
+      const corps = (data ?? {}) as Record<string, unknown>;
+      if (corps.ok === false) {
+        throw new Error(typeof corps.error === "string" ? corps.error : "Échec de l'onboarding.");
+      }
+      setResultat(corps);
+      setRequestId(buildRequestId());
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : "Création impossible.");
+    } finally {
+      setEnCours(false);
+    }
+  }
+
+  if (resultat) {
+    const idempotent = resultat.idempotent === true;
+    return (
+      <ModulePage titre="Nouvel abonné">
+        <ModuleHeader surtitre="AUTO DYALI · Onboarding" titre="Abonné créé" description="L'entreprise, l'abonnement et le compte Manager ont été provisionnés." />
+        <div className="carte-premium mt-6 border-l-4 border-[#5D9E7F] p-6">
+          <h2 className="font-bold text-[#E8ECE8]">{idempotent ? "Demande déjà traitée (idempotence)" : "Création terminée"}</h2>
+          <p className="mt-2 text-sm text-[#A7B7A8]">
+            {idempotent
+              ? "Cette demande était déjà enregistrée : aucune donnée n'a été dupliquée."
+              : "Une invitation email a été envoyée au Manager pour définir son mot de passe. Aucun mot de passe n'est transmis en clair."}
+          </p>
+          <dl className="mt-4 grid gap-2 text-xs text-[#A7B7A8] sm:grid-cols-2">
+            <div><dt className="uppercase">Établissement</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.establishment_id ?? "—")}</dd></div>
+            <div><dt className="uppercase">Abonnement</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.subscription_id ?? "—")}</dd></div>
+            <div><dt className="uppercase">Manager Auth</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.manager_user_id ?? "—")}</dd></div>
+            <div><dt className="uppercase">Requête</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.request_id ?? "—")}</dd></div>
+          </dl>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Link href="/super-admin/entreprises/" className="btn-or px-4 py-2 text-sm">Voir les entreprises</Link>
+            <Link href="/super-admin/onboarding/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]" onClick={() => setResultat(null)}>Créer un autre abonné</Link>
+          </div>
+        </div>
+      </ModulePage>
+    );
+  }
+
+  return (
+    <ModulePage titre="Nouvel abonné">
+      <ModuleHeader
+        surtitre="AUTO DYALI · Onboarding"
+        titre="Nouvel abonné"
+        description="Création complète et sécurisée : entreprise, établissement, Manager (invitation email) et abonnement aux droits du forfait choisi."
+      />
+
+      {erreur && <div className="mt-4"><Erreur message={erreur} /></div>}
+
+      <form onSubmit={soumettre} className="carte-premium mt-6 p-6">
+        {/* Étapes */}
+        <ol className="flex items-center gap-2 sm:gap-6">
+          {ETAPES.map((e) => (
+            <li key={e.n} className="flex items-center gap-2">
+              <button type="button" onClick={() => setEtape(e.n as 1 | 2 | 3)} aria-current={etape === e.n ? "step" : undefined} className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${etape === e.n ? "bg-[#8FB59B] text-[#252D2D]" : "bg-[#344440] text-[#A7B7A8]"}`}>{e.n}</button>
+              <span className={`text-xs uppercase tracking-wide ${etape === e.n ? "text-[#E8ECE8]" : "text-[#A7B7A8]"}`}>{e.label}</span>
+            </li>
+          ))}
+        </ol>
+
+        {/* Étape 1 — Entreprise */}
+        {etape === 1 && (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Nom de l&apos;entreprise *
+              <input required value={form.companyName} onChange={(e) => modifier("companyName", e.target.value)} className="champ mt-1 min-h-11" placeholder="Garage Atlas SARL" />
+            </label>
+            <label className="text-xs text-[#A7B7A8]">Slug *
+              <input required value={form.slug} onChange={(e) => { setSlugTouche(true); modifier("slug", e.target.value.toLowerCase()); }} className="champ mt-1 min-h-11" placeholder="garage-atlas" aria-describedby="slug-aide" />
+              <span id="slug-aide" className="mt-1 block text-[10px] text-[#A7B7A8]">Généré automatiquement, modifiable.</span>
+              {erreurs.slug && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.slug}</span>}
+            </label>
+            <label className="text-xs text-[#A7B7A8]">Ville
+              <input value={form.city} onChange={(e) => modifier("city", e.target.value)} className="champ mt-1 min-h-11" placeholder="Casablanca" />
+            </label>
+            <label className="text-xs text-[#A7B7A8]">Téléphone
+              <input value={form.phone} onChange={(e) => modifier("phone", e.target.value)} className="champ mt-1 min-h-11" placeholder="0522000000" inputMode="tel" />
+            </label>
+            <label className="text-xs text-[#A7B7A8]">Email de l&apos;entreprise (optionnel)
+              <input type="email" value={form.email} onChange={(e) => modifier("email", e.target.value)} className="champ mt-1 min-h-11" placeholder="contact@garage-atlas.ma" />
+              {erreurs.email && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.email}</span>}
+            </label>
+          </div>
+        )}
+
+        {/* Étape 2 — Manager */}
+        {etape === 2 && (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Nom complet du Manager *
+              <input required value={form.managerName} onChange={(e) => modifier("managerName", e.target.value)} className="champ mt-1 min-h-11" placeholder="Youssef Alami" />
+              {erreurs.managerName && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.managerName}</span>}
+            </label>
+            <label className="text-xs text-[#A7B7A8]">Email professionnel *
+              <input required type="email" value={form.managerEmail} onChange={(e) => modifier("managerEmail", e.target.value)} className="champ mt-1 min-h-11" placeholder="y.alami@garage-atlas.ma" />
+              {erreurs.managerEmail && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.managerEmail}</span>}
+            </label>
+            <label className="text-xs text-[#A7B7A8]">Téléphone
+              <input value={form.managerPhone} onChange={(e) => modifier("managerPhone", e.target.value)} className="champ mt-1 min-h-11" placeholder="0600000000" inputMode="tel" />
+            </label>
+            <p className="text-[11px] leading-5 text-[#A7B7A8] sm:col-span-2">
+              Le Manager recevra un email d’invitation pour définir son mot de passe — aucun mot de passe ne transite par cette interface. L’invitation est créée côté serveur (Edge Function sécurisée).
+            </p>
+          </div>
+        )}
+
+        {/* Étape 3 — Forfait */}
+        {etape === 3 && (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <label className="text-xs text-[#A7B7A8]">Forfait *
+              <select value={form.plan} onChange={(e) => modifier("plan", e.target.value)} className="champ mt-1 min-h-11">
+                <option value="standard">STANDARD</option>
+                <option value="silver">SILVER</option>
+                <option value="gold">GOLD</option>
+              </select>
+            </label>
+            <label className="text-xs text-[#A7B7A8]">Durée d&apos;essai (jours)
+              <input type="number" min={0} max={90} value={form.trialDays} onChange={(e) => modifier("trialDays", Number(e.target.value))} className="champ mt-1 min-h-11" />
+              {erreurs.trialDays && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.trialDays}</span>}
+            </label>
+
+            {/* Récapitulatif */}
+            <div className="rounded-xl border border-[#8FB59B]/15 bg-[#2C3735] p-4 text-xs text-[#A7B7A8] sm:col-span-2">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#D0C6AE]">Récapitulatif</p>
+              <ul className="mt-2 space-y-1">
+                <li><span className="text-[#E8ECE8]">Entreprise :</span> {form.companyName || "—"} ({form.slug || "—"})</li>
+                <li><span className="text-[#E8ECE8]">Manager :</span> {form.managerName || "—"} — {form.managerEmail || "—"}</li>
+                <li><span className="text-[#E8ECE8]">Forfait :</span> {form.plan.toUpperCase()} · {form.trialDays} j d’essai</li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex gap-2">
+            {etape > 1 && <button type="button" onClick={() => setEtape((etape - 1) as 1 | 2 | 3)} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Précédent</button>}
+            {etape < 3 && <button type="button" onClick={() => etapeValide(etape) && setEtape((etape + 1) as 1 | 2 | 3)} disabled={!etapeValide(etape)} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440] disabled:opacity-40">Suivant</button>}
+          </div>
+          <button type="submit" disabled={enCours || !etapeValide(3)} className="btn-or px-6 py-2 text-sm">{enCours ? "Création…" : "Créer l'abonné"}</button>
+        </div>
+
+        <p className="mt-4 text-[11px] leading-5 text-[#A7B7A8]">
+          Cette création nécessite la migration <code>0028</code> (préparée, non appliquée par défaut) et l’Edge Function <code>onboard-tenant</code> (non déployée par défaut). Sans elles, la demande échouera avec un message explicite — aucune donnée fantôme ne sera créée. Identifiant de demande : <span className="font-mono">{requestId}</span>
+        </p>
+      </form>
+    </ModulePage>
+  );
+}

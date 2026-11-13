@@ -10,6 +10,7 @@ import {
   isValidSlug,
   validateOnboardingInput,
   isOnboardingValid,
+  buildRequestId,
 } from "../src/lib/onboarding.ts";
 
 const base = {
@@ -78,4 +79,12 @@ test("une durée d'essai hors bornes est rejetée", () => {
   assert.ok(validateOnboardingInput({ ...base, trialDays: 91 }).trialDays);
   assert.equal(validateOnboardingInput({ ...base, trialDays: 0 }).trialDays, undefined);
   assert.equal(validateOnboardingInput({ ...base, trialDays: 90 }).trialDays, undefined);
+});
+
+test("buildRequestId génère des identifiants uniques au format UUID", () => {
+  const a = buildRequestId();
+  const b = buildRequestId();
+  assert.match(a, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+  assert.match(b, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+  assert.notEqual(a, b);
 });

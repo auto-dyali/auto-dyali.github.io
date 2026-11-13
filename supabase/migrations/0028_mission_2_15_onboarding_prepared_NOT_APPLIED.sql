@@ -10,14 +10,36 @@
 -- Principe de sécurité :
 --   - La création du compte Auth (invitation email) se fait côté serveur
 --     via une Edge Function utilisant la clé service_role (jamais le navigateur).
---   - Cette migration fournit uniquement les RPC transactionnelles qui
---     associent un utilisateur Auth déjà invité à une entreprise + abonnement.
---   - Toute action vérifie public.is_saas_admin() et est journalisée.
+--   - Cette migration fournit les RPC transactionnelles sécurisées.
+--   - Idempotence : chaque demande porte un request_id unique (uuid généré
+--     par le client) ; un retry retourne le résultat déjà créé au lieu de
+--     dupliquer l'entreprise, l'abonnement ou le profil.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
+-- 0. TABLE DE SUIVI DES DEMANDES D'ONBOARDING (idempotence)
+-- ---------------------------------------------------------------------
+create table if not exists public.onboarding_requests (
+  request_id       text primary key,
+  company_name     text not null,
+  slug             text not null,
+  plan             text not null,
+  company_email    text,
+  manager_user_id  uuid references auth.users(id) on delete set null,
+  establishment_id uuid references public.establishments(id) on delete set null,
+  status           text not null default 'started' check (status in ('started','completed','failed')),
+  created_at       timestamptz not null default now(),
+  completed_at     timestamptz
+);
+
+alter table public.onboarding_requests enable row level security;
+drop policy if exists onboarding_requests_saas_admin on public.onboarding_requests;
+create policy onboarding_requests_saas_admin on public.onboarding_requests
+  for all using (public.is_saas_admin()) with check (public.is_saas_admin());
+grant select on public.onboarding_requests to authenticated;
+
+-- ---------------------------------------------------------------------
 -- 1. Retrouver l'identifiant Auth d'un email (sans exposer l'email).
---    Réservé au Super Admin. Sert à détecter les doublons avant invitation.
 -- ---------------------------------------------------------------------
 create or replace function public.admin_find_user_id_by_email(p_email text)
 returns uuid
@@ -49,9 +71,41 @@ comment on function public.admin_find_user_id_by_email(text) is
   'Retourne l''UUID Auth pour un email (Super Admin uniquement). Aucun email renvoyé.';
 
 -- ---------------------------------------------------------------------
--- 2. Onboarding atomique : entreprise + abonnement + Manager.
---    Le compte Auth doit déjà exister (invitation Edge Function).
---    En cas d'erreur, la transaction PL/pgSQL est annulée intégralement.
+-- 2. Consulter une demande d'onboarding (idempotence côté Edge Function)
+-- ---------------------------------------------------------------------
+create or replace function public.admin_find_onboarding_request(p_request_id text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v public.onboarding_requests%rowtype;
+begin
+  if not public.is_saas_admin() then
+    raise exception 'Accès refusé : réservé au Super Admin.';
+  end if;
+  select * into v from public.onboarding_requests where request_id = p_request_id;
+  if not found then
+    return null;
+  end if;
+  return jsonb_build_object(
+    'request_id', v.request_id,
+    'status', v.status,
+    'establishment_id', v.establishment_id,
+    'manager_user_id', v.manager_user_id
+  );
+end;
+$$;
+
+revoke all on function public.admin_find_onboarding_request(text) from public;
+grant execute on function public.admin_find_onboarding_request(text) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 3. Onboarding atomique : entreprise + abonnement + Manager.
+--    Le compte Auth doit déjà exister (invitation Edge Function) ou
+--    être omis (p_manager_user_id null) pour une création sans Manager.
+--    Idempotent via p_request_id : un retry retourne le résultat existant.
 -- ---------------------------------------------------------------------
 create or replace function public.admin_onboard_tenant(
   p_company_name    text,
@@ -63,7 +117,8 @@ create or replace function public.admin_onboard_tenant(
   p_manager_user_id uuid default null,
   p_manager_name    text default null,
   p_manager_phone   text default null,
-  p_trial_days      integer default 14
+  p_trial_days      integer default 14,
+  p_request_id      text default null
 )
 returns jsonb
 language plpgsql
@@ -73,12 +128,27 @@ as $$
 declare
   v_etab_id uuid;
   v_sub_id  uuid;
-  v_existing_profile public.profiles%rowtype;
+  v_existing public.onboarding_requests%rowtype;
+  v_manager_profile public.profiles%rowtype;
   v_slug    text;
+  v_request text;
 begin
-  -- Contrôle d'accès serveur.
   if not public.is_saas_admin() then
     raise exception 'Accès refusé : réservé au Super Admin.';
+  end if;
+
+  -- Idempotence : si la demande existe déjà, retourner le résultat enregistré.
+  v_request := nullif(trim(coalesce(p_request_id, '')), '');
+  if v_request is not null then
+    select * into v_existing from public.onboarding_requests where request_id = v_request;
+    if found then
+      return jsonb_build_object(
+        'idempotent', true,
+        'status', v_existing.status,
+        'establishment_id', v_existing.establishment_id,
+        'manager_user_id', v_existing.manager_user_id
+      );
+    end if;
   end if;
 
   -- Validations d'entrée.
@@ -100,7 +170,6 @@ begin
     raise exception 'Slug invalide : minuscules, chiffres et tirets uniquement.';
   end if;
 
-  -- Anti-doublon entreprise.
   if exists (select 1 from public.establishments e where e.slug = v_slug) then
     raise exception 'Une entreprise avec le slug « % » existe déjà.', v_slug;
   end if;
@@ -111,18 +180,22 @@ begin
       raise exception 'Compte Manager introuvable dans Auth.';
     end if;
 
-    select * into v_existing_profile
-      from public.profiles pr
-     where pr.id = p_manager_user_id;
-
+    select * into v_manager_profile from public.profiles where id = p_manager_user_id;
     if found then
-      if v_existing_profile.establishment_id is not null then
+      if v_manager_profile.establishment_id is not null then
         raise exception 'Ce compte est déjà rattaché à une entreprise.';
       end if;
-      if v_existing_profile.role not in ('manager') then
-        raise exception 'Ce compte possède déjà un rôle incompatible (%).', v_existing_profile.role;
+      if v_manager_profile.role <> 'manager' then
+        raise exception 'Ce compte possède déjà un rôle incompatible (%).', v_manager_profile.role;
       end if;
     end if;
+  end if;
+
+  -- Enregistrement de la demande AVANT insertion (traçabilité + verrou idempotence).
+  if v_request is not null then
+    insert into public.onboarding_requests (request_id, company_name, slug, plan, company_email, manager_user_id, status)
+    values (v_request, trim(p_company_name), v_slug, p_plan, p_email, p_manager_user_id, 'started')
+    on conflict (request_id) do nothing;
   end if;
 
   -- 1) Entreprise.
@@ -175,26 +248,95 @@ begin
       'plan', p_plan,
       'trial_days', p_trial_days,
       'manager_user_id', p_manager_user_id,
-      'subscription_id', v_sub_id
+      'subscription_id', v_sub_id,
+      'request_id', v_request
     )
   );
 
+  -- 5) Clôture de la demande.
+  if v_request is not null then
+    update public.onboarding_requests
+       set establishment_id = v_etab_id, status = 'completed', completed_at = now()
+     where request_id = v_request;
+  end if;
+
   return jsonb_build_object(
+    'idempotent', false,
+    'status', 'completed',
     'establishment_id', v_etab_id,
     'subscription_id', v_sub_id,
-    'manager_user_id', p_manager_user_id
+    'manager_user_id', p_manager_user_id,
+    'request_id', v_request
   );
 end;
 $$;
 
-revoke all on function public.admin_onboard_tenant(text,text,text,text,text,text,uuid,text,text,integer) from public;
-grant execute on function public.admin_onboard_tenant(text,text,text,text,text,text,uuid,text,text,integer) to authenticated;
+revoke all on function public.admin_onboard_tenant(text,text,text,text,text,text,uuid,text,text,integer,text) from public;
+grant execute on function public.admin_onboard_tenant(text,text,text,text,text,text,uuid,text,text,integer,text) to authenticated;
 
-comment on function public.admin_onboard_tenant(text,text,text,text,text,text,uuid,text,text,integer) is
-  'Onboarding atomique entreprise + abonnement + Manager. Compte Auth créé au préalable via Edge Function sécurisée.';
+comment on function public.admin_onboard_tenant(text,text,text,text,text,text,uuid,text,text,integer,text) is
+  'Onboarding atomique entreprise + abonnement + Manager. Idempotent via request_id (UUID client).';
 
 -- ---------------------------------------------------------------------
--- 3. Vérification de cohérence (lecture seule) — utile avant activation.
+-- 4. Rattacher un Manager à une entreprise existante (compensation).
+--    Utilisé si l'invitation a réussi mais l'association a échoué :
+--    l'admin ré-invite/réutilise le même compte sans recréer l'entreprise.
+-- ---------------------------------------------------------------------
+create or replace function public.admin_attach_manager(
+  p_establishment_id uuid,
+  p_user_id          uuid,
+  p_full_name        text,
+  p_phone            text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_etab public.establishments%rowtype;
+  v_profile public.profiles%rowtype;
+begin
+  if not public.is_saas_admin() then
+    raise exception 'Accès refusé : réservé au Super Admin.';
+  end if;
+
+  select * into v_etab from public.establishments where id = p_establishment_id;
+  if not found then
+    raise exception 'Entreprise introuvable.';
+  end if;
+
+  if not exists (select 1 from auth.users u where u.id = p_user_id) then
+    raise exception 'Compte Manager introuvable dans Auth.';
+  end if;
+
+  select * into v_profile from public.profiles where id = p_user_id;
+  if found and v_profile.establishment_id is not null and v_profile.establishment_id <> p_establishment_id then
+    raise exception 'Ce compte est déjà rattaché à une autre entreprise.';
+  end if;
+
+  insert into public.profiles (id, full_name, phone, establishment_id, role, is_active)
+  values (p_user_id, coalesce(nullif(trim(p_full_name), ''), 'Manager'), p_phone, p_establishment_id, 'manager', true)
+  on conflict (id) do update
+    set full_name = excluded.full_name,
+        phone = coalesce(excluded.phone, profiles.phone),
+        establishment_id = excluded.establishment_id,
+        role = 'manager',
+        is_active = true;
+
+  insert into public.audit_log (establishment_id, actor_id, action, entity, entity_id, payload_json)
+  values (p_establishment_id, auth.uid(), 'attach_manager', 'profile', p_user_id,
+          jsonb_build_object('full_name', p_full_name));
+
+  return jsonb_build_object('status', 'attached', 'establishment_id', p_establishment_id, 'manager_user_id', p_user_id);
+end;
+$$;
+
+revoke all on function public.admin_attach_manager(uuid,uuid,text,text) from public;
+grant execute on function public.admin_attach_manager(uuid,uuid,text,text) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 5. Vérification de cohérence (lecture seule)
 -- ---------------------------------------------------------------------
 create or replace function public.admin_tenant_integrity(p_establishment_id uuid)
 returns jsonb
