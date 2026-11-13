@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader, Chargement, Vide, Erreur } from "@/components/super-admin-page";
 import { downloadCsv, dateFrCourte } from "@/lib/csv-export";
+import { useNotification } from "@/lib/use-notification";
 
 type Manager = {
   id: string;
@@ -34,6 +35,7 @@ export default function ManagersPage() {
   const [recherche, setRecherche] = useState("");
   const [filtreEtat, setFiltreEtat] = useState<"tous" | "actifs" | "inactifs">("tous");
   const [traitement, setTraitement] = useState<string | null>(null);
+  const { success: notifySuccess, error: notifyError, info: notifyInfo } = useNotification();
 
   useEffect(() => {
     void charger();
@@ -49,7 +51,7 @@ export default function ManagersPage() {
       supabase.from("clients").select("code, email, phone"),
     ]);
     if (profiles.error) {
-      setErreur(profiles.error.message);
+      notifyError({ title: "Erreur de chargement", message: profiles.error.message });
       setLoading(false);
       return;
     }
@@ -107,7 +109,7 @@ export default function ManagersPage() {
         entity_id: row.id,
         payload_json: { full_name: row.full_name },
       });
-      setNotice(row.is_active ? `« ${row.full_name} » désactivé.` : `« ${row.full_name} » réactivé.`);
+      notifySuccess({ title: "Statut modifié", message: row.is_active ? `« ${row.full_name} » désactivé.` : `« ${row.full_name} » réactivé.` });
       await charger();
     }
     setTraitement(null);

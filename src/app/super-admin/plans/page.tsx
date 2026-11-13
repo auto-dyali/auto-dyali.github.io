@@ -13,6 +13,7 @@ import { FEATURE_LABEL } from "@/lib/features";
 import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader, Chargement, Erreur } from "@/components/super-admin-page";
 import { downloadCsv } from "@/lib/csv-export";
+import { useNotification } from "@/lib/use-notification";
 
 type Plan = {
   code: string;
@@ -41,6 +42,7 @@ export default function PlansPage() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [traitement, setTraitement] = useState<string | null>(null);
+  const { success: notifySuccess, error: notifyError, info: notifyInfo } = useNotification();
   const [brouillon, setBrouillon] = useState<Record<string, Plan>>({});
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export default function PlansPage() {
     setErreur(null);
     setNotice(null);
     const { error } = await supabase.rpc("admin_set_feature", { p_plan_code: planCode, p_feature: featureKey, p_enabled: next });
-    if (error) setErreur(error.message);
+    if (error) notifyError({ title: "Erreur", message: error.message });
     else {
       setFeatures((current) => current.map((r) => (r.plan_code === planCode && r.feature_key === featureKey ? { ...r, enabled: next } : r)));
       setNotice(`${FEATURE_LABEL[featureKey] ?? featureKey} — ${next ? "activé" : "désactivé"} pour ${planCode.toUpperCase()}.`);
@@ -100,7 +102,7 @@ export default function PlansPage() {
       p_max_sites: b.max_sites,
       p_storage_mb: b.storage_mb,
     });
-    if (error) setErreur(error.message);
+    if (error) notifyError({ title: "Erreur", message: error.message });
     else {
       setPlans((current) => current.map((p) => (p.code === code ? { ...b } : p)));
       setNotice(`Forfait ${code.toUpperCase()} enregistré et journalisé.`);
