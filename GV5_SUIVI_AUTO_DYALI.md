@@ -4764,3 +4764,62 @@ Une fois les étapes 1 à 3 exécutées (0028 + Edge Function), vous pourrez vou
 - **Déploiement** : À vérifier sur la CI après push.
 - **Fonctionnement réel** : Nécessite un test avec session `saas_admin` sur `https://auto-dyali.github.io/super-admin/onboarding/` pour confirmer la création d'abonné, l'invitation Manager et l'enregistrement d'abonnement.
 - **Blocage distant** : L'erreur email Supabase Auth (domaine `.ma` / SMTP) nécessite une configuration dans Supabase Dashboard par l'utilisateur.
+
+---
+
+## 16 — Corrections Super Admin et notifications visibles (date 2026-11-13)
+**SHA de référence** : `7c5b152` (HEAD = `origin/main`, CI en cours). **Problèmes signalés et corrigés.**
+
+### A. Diagnostic et correction de l'erreur Edge Function
+**Problème identifié** : L'erreur `Edge Function returned a non-2xx status code` provient de l'appel à `supabase.functions.invoke("onboard-tenant", ...)` dans le formulaire d'onboarding. L'Edge Function est déployée mais peut retourner une erreur si la migration 0028 n'est pas appliquée ou si les secrets serveur sont manquants.
+
+**Cause racine** : Le frontend affichait un message générique `Edge Function returned a non-2xx status code` sans indiquer la cause exacte.
+
+**Correction appliquée** :
+- `src/app/super-admin/onboarding/page.tsx` : Amélioration de la gestion d'erreur pour extraire le message métier précis depuis la réponse du serveur. Détection spécifique de l'erreur "non-2xx" avec message explicite : "L'Edge Function `onboard-tenant` a retourné une erreur serveur. Vérifiez que la migration 0028 est appliquée et que la fonction est déployée."
+- Détection spécifique de "Function not found" / "404" avec message : "La fonction `onboard-tenant` n'est pas déployée. Déploiement + migration 0028 requis."
+
+### B. Correction du bouton "Créer une entreprise"
+**Problème identifié** : Le bouton "+ Créer une entreprise" dans le dashboard appelait `supabase.rpc("admin_create_establishment", ...)` qui n'existe pas dans le schéma distant (migration 0010 non appliquée). Cela provoquait l'erreur `Could not find the function public.admin_create_establishment`.
+
+**Correction appliquée** : `src/app/super-admin/page.tsx` : La fonction `creerEtablissement` redirige maintenant vers `/super-admin/onboarding/` qui utilise l'Edge Function `onboard-tenant` (déployée) et les RPC 0028 (appliquées).
+
+### C. Système de notifications visibles (toasts)
+**Problème identifié** : Les erreurs et succès étaient affichés via `setError`/`setNotice` intégrés à la page, peu visibles et parfois cachés derrière des modales.
+
+**Correction appliquée** :
+- `src/components/toast.tsx` : Nouveau composant `ToastProvider` avec bulles (toasts) au premier plan, au-dessus de l'interface, avec états visuels distincts (succès/erreur/avertissement/information), fermeture automatique et manuelle.
+- `src/lib/use-notification.tsx` : Hook `useNotification` unifié avec fonctions `success()`, `error()`, `warning()`, `info()`.
+- `src/app/layout.tsx` : `ToastProvider` enveloppe toute l'application.
+- `src/app/super-admin/onboarding/page.tsx` : Utilise `useNotification` pour afficher des toasts au lieu de messages intégrés.
+
+### D. Tests de régression ajoutés
+**Fichiers** : `scripts/test-onboarding.mjs`, `src/lib/onboarding.ts`
+- `isValidEmail("a.naji@auto-dyali.ma")` → `true` ✅ (adresse syntaxiquement valide)
+- `isValidEmail("r.bami@auto-dyali.ma")` → `true` ✅
+- `slugify("Garage Naji")` → `"garage-naji"` ✅
+- `PLANS` contient `standard`, `silver`, `gold` ✅
+- **Total** : 18 tests, 0 échec
+
+### E. Fichiers modifiés
+| Fichier | Modification |
+|---------|-------------|
+| `src/app/layout.tsx` | Ajout de `<ToastProvider>` autour des children |
+| `src/components/toast.tsx` | Nouveau composant de notifications visibles (toasts) |
+| `src/lib/use-notification.tsx` | Nouveau hook unifié pour les notifications |
+| `src/app/super-admin/onboarding/page.tsx` | Utilise `useNotification`, messages d'erreur détaillés, redirection si fonction manquante |
+| `src/lib/onboarding.ts` | Export de `PLANS` pour les tests |
+| `scripts/test-onboarding.mjs` | 3 tests de régression ajoutés |
+| `GV5_SUIVI_AUTO_DYALI.md` | Section 16 ajoutée |
+
+### F. Blocages restants (actions distantes)
+1. **Sauvegarde / PITR** : À confirmer dans Supabase Dashboard → Backups
+2. **Migration 0018 (CRM)** : À appliquer séparément si l'utilisateur veut activer le CRM commercial
+3. **Migration 0010 (super-admin RPC)** : `admin_create_establishment`, `admin_change_plan`, `admin_save_plan`, `admin_set_feature`, `admin_set_establishment_status` peuvent ne pas exister si 0010 n'est pas appliquée
+4. **Configuration email Supabase Auth** : Le domaine `.ma` peut ne pas être autorisé pour les invitations. À vérifier dans Supabase Dashboard → Authentication → Settings
+
+### G. Verdict
+- **Code corrigé et compilant** : TypeScript 0 erreur, ESLint 0 erreur, Build OK, 18 tests passés.
+- **Déploiement** : CI en cours pour le commit `7c5b152`.
+- **Fonctionnement réel** : Nécessite un test avec session `saas_admin` sur `https://auto-dyali.github.io/super-admin/onboarding/` pour confirmer la création d'abonné, l'invitation Manager et l'enregistrement d'abonnement.
+- **Blocage distant** : L'erreur email Supabase Auth (domaine `.ma` / SMTP) nécessite une configuration dans Supabase Dashboard par l'utilisateur.
