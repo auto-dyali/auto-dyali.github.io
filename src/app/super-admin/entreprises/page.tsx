@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader, Chargement, Vide, Erreur } from "@/components/super-admin-page";
 import { downloadCsv, dateFrCourte } from "@/lib/csv-export";
+import { useNotification } from "@/lib/use-notification";
 
 type Sub = { status: string | null; plan_code: string | null; trial_ends_at: string | null; current_period_end: string | null };
 type Row = {
@@ -47,6 +48,7 @@ export default function EntreprisesPage() {
   const [filtreEtat, setFiltreEtat] = useState<"tous" | "actifs" | "suspendus">("tous");
   const [filtrePlan, setFiltrePlan] = useState<string>("tous");
   const [traitement, setTraitement] = useState<string | null>(null);
+  const { success: toastSuccess, error: toastError } = useNotification();
 
   useEffect(() => {
     void charger();
@@ -87,8 +89,8 @@ export default function EntreprisesPage() {
       p_establishment_id: row.id,
       p_active: !row.is_active,
     });
-    if (error) setErreur(error.message);
-    else setNotice(row.is_active ? `« ${row.name} » suspendue (données conservées).` : `« ${row.name} » réactivée.`);
+    if (error) toastError({ title: "Erreur suspension", message: error.message });
+    else toastSuccess({ title: "Établissement mis à jour", message: row.is_active ? `« ${row.name} » suspendue (données conservées).` : `« ${row.name} » réactivée.` });
     await charger();
     setTraitement(null);
   }
@@ -99,8 +101,8 @@ export default function EntreprisesPage() {
     setNotice(null);
     setErreur(null);
     const { error } = await supabase.rpc("admin_change_plan", { p_establishment_id: row.id, p_plan: plan });
-    if (error) setErreur(error.message);
-    else setNotice(`Forfait de « ${row.name} » mis à jour et journalisé.`);
+    if (error) toastError({ title: "Erreur changement de forfait", message: error.message });
+    else toastSuccess({ title: "Forfait mis à jour", message: `Forfait de « ${row.name} » mis à jour et journalisé.` });
     await charger();
     setTraitement(null);
   }
