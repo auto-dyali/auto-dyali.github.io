@@ -4318,3 +4318,24 @@ L'application se construit proprement en local et se déploie (2026-11-13), mais
 5. Exécuter/coller les vérifications post-application (POST-CHECKS dans le fichier) ;
 6. Décider séparément pour 0018 (CRM) ;
 7. Me fournir le compte Super Admin de test pour un test de bout en bout et la consigne des preuves dans GV5.
+
+---
+
+## 7 — Renforcement CI et checklist de validation finale
+**Date** : 2026-11-13
+**Statut** : amélioration locale livrée — aucune action distante effectuée.
+
+### 1. GitHub Actions (`deploy-pages.yml`)
+Avant le build : **400/CI** vérifie maintenant `npx tsc --noEmit` + `npm test` + `npm run lint` ; le déploiement n’est possible que si toutes passent. Les routes production restent HTTP 200.
+
+### 2. Checklist de validation de production livrée
+`docs/validation/PRODUCTION_CHECKLIST.md` : backup/PITR, commande de vérification (FINAL_0028_PREFLIGHT_READONLY.sql), application de `0028`, déploiement de la fonction `onboard-tenant`, vérifications post-application, test de bout en bout, isolation, non-régression (test/tsc/lint/build).
+
+### 3. État global
+- 17/17 routes production : HTTP 200 (curl).
+- 0028 : NON appliquée. Edge Function : NON déployée. 0018 (CRM) : non appliquée. 0029 : préparée.
+- Aucun compte modifié ; établissement/abonnement partagés préservés ; 0029 préparée non appliquée.
+- Protections respectées (pas de suppression, pas d’écriture distante, pas de service_role frontend).
+
+### 4. Blocage unique restant
+Validation distante vérifiée (backup + vérification SQL + application autorisée + session saas_admin) : **uniquement nécessaire pour passer de « livrable local » à « opérationnel »**.
