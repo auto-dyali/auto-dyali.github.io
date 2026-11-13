@@ -50,6 +50,8 @@ export function slugify(value: string): string {
     .replace(/-{2,}/g, "-");
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 /** Vérifie un email simple (le serveur Auth reste l'autorité finale). */
 export function isValidEmail(value: string): boolean {
   const v = value.trim();
@@ -62,6 +64,11 @@ export function isValidSlug(value: string): boolean {
   return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(value);
 }
 
+/** Vérifie un UUID (identifiant de demande idempotente). */
+export function isValidRequestId(value: string): boolean {
+  return UUID_REGEX.test(value.trim());
+}
+
 /**
  * Valide les champs de l'onboarding avant tout appel serveur.
  * Retourne un objet d'erreurs vide si tout est valide.
@@ -69,8 +76,11 @@ export function isValidSlug(value: string): boolean {
 export function validateOnboardingInput(input: OnboardingInput): OnboardingErrors {
   const errors: OnboardingErrors = {};
 
-  if (!input.companyName.trim()) {
+  const company = input.companyName.trim();
+  if (!company) {
     errors.companyName = "Le nom de l'entreprise est obligatoire.";
+  } else if (company.length < 2) {
+    errors.companyName = "Le nom de l'entreprise doit contenir au moins 2 caractères.";
   }
 
   const slug = input.slug.trim();
@@ -88,8 +98,11 @@ export function validateOnboardingInput(input: OnboardingInput): OnboardingError
     errors.trialDays = "Durée d'essai invalide (0 à 90 jours).";
   }
 
-  if (!input.managerName.trim()) {
+  const managerName = input.managerName.trim();
+  if (!managerName) {
     errors.managerName = "Le nom du Manager est obligatoire.";
+  } else if (managerName.length < 2) {
+    errors.managerName = "Le nom du Manager doit contenir au moins 2 caractères.";
   }
 
   if (!input.managerEmail.trim()) {
