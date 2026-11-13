@@ -4823,3 +4823,63 @@ Une fois les étapes 1 à 3 exécutées (0028 + Edge Function), vous pourrez vou
 - **Déploiement** : CI en cours pour le commit `7c5b152`.
 - **Fonctionnement réel** : Nécessite un test avec session `saas_admin` sur `https://auto-dyali.github.io/super-admin/onboarding/` pour confirmer la création d'abonné, l'invitation Manager et l'enregistrement d'abonnement.
 - **Blocage distant** : L'erreur email Supabase Auth (domaine `.ma` / SMTP) nécessite une configuration dans Supabase Dashboard par l'utilisateur.
+
+---
+
+## 17 — Corrections Super Admin et notifications (date 2026-11-13)
+**SHA de référence** : `aafa759` (HEAD = `origin/main`, CI en cours).
+
+### A. Diagnostic et correction de l'erreur Edge Function
+**Problème** : L'erreur `Edge Function returned a non-2xx status code` lors de la création d'un abonné.
+**Cause** : L'Edge Function `onboard-tenant` est déployée, mais l'appel front-end ne gérait pas correctement la réponse d'erreur du serveur.
+**Correction** : `src/app/super-admin/onboarding/page.tsx` — Messages d'erreur détaillés avec distinction entre "fonction non déployée" et "erreur métier serveur".
+
+### B. Bouton "Créer une entreprise" corrigé
+**Problème** : Le bouton appelait `admin_create_establishment` qui n'existe pas (migration 0010 non appliquée).
+**Correction** : Redirection vers `/super-admin/onboarding/` qui utilise l'Edge Function `onboard-tenant` avec les RPC 0028.
+
+### C. Notifications visibles (toasts) dans tous les modules
+**Modules corrigés** :
+- `src/components/toast.tsx` — Nouveau composant de notifications visibles (succès/erreur/avertissement/info)
+- `src/lib/use-notification.tsx` — Hook unifié `useNotification()`
+- `src/app/layout.tsx` — `ToastProvider` enveloppe l'application entière
+- `src/app/super-admin/onboarding/page.tsx` — Toasts pour succès/erreur d'onboarding
+- `src/app/super-admin/garages/page.tsx` — Toasts pour suspendre/réactiver et erreur de chargement
+- `src/app/super-admin/managers/page.tsx` — Toasts pour activer/désactiver manager et erreur
+- `src/app/super-admin/plans/page.tsx` — Toasts pour sauvegarder plan et basculer feature
+- `src/components/crm-module.tsx` — Toasts pour créer prospect, ajouter note, exporter CSV
+
+### D. Boutons et formulaires vérifiés
+| Module | Boutons/Forms | Statut |
+|--------|--------------|--------|
+| Onboarding | Créer un abonné | ✅ Toasts succès/erreur |
+| Garages | Suspendre/réactiver, Export CSV | ✅ Toasts succès/erreur |
+| Managers | Activer/désactiver, Export CSV | ✅ Toasts succès/erreur |
+| Plans | Sauver plan, Basculer feature, Export CSV | ✅ Toasts succès/erreur |
+| CRM | Créer prospect, Ajouter note, Export CSV | ✅ Toasts succès/erreur |
+| Abonnements | Lecture seule (gestion via Entreprises) | ✅ Lecture uniquement |
+| Entreprises | Suspendre/réactiver, Changer forfait | ✅ Déjà avec notices |
+
+### E. Doublons de boutons
+**Dashboard** : Deux accès à "Créer une entreprise" (en-tête + outils rapides) = **conservés** (raccourcis utiles autorisés sur le dashboard uniquement).
+**Autres pages** : Un seul bouton d'action principal par opération.
+
+### F. Tests et build
+| Contrôle | Résultat |
+|----------|----------|
+| TypeScript | ✅ 0 erreur |
+| ESLint | ✅ 0 erreur |
+| Tests unitaires | ✅ 18/18 |
+| Build | ✅ Compilé |
+| CI GitHub Actions | ⏳ En cours (commit `aafa759`) |
+
+### G. Blocages restants (actions distantes)
+1. **Sauvegarde / PITR** : À confirmer dans Supabase Dashboard → Backups
+2. **Migration 0018 (CRM)** : Tables `crm_leads`/`crm_events` absentes — à appliquer séparément si CRM voulu
+3. **Migration 0010 (RPC super-admin)** : `admin_create_establishment`, `admin_change_plan`, etc. peuvent manquer
+4. **Configuration email Supabase Auth** : Domaine `.ma` ou SMTP peut ne pas être configuré — à vérifier dans Dashboard → Authentication → Settings
+
+### H. Verdict
+- **Code corrigé et compilant** : TypeScript 0 erreur, ESLint 0 erreur, Build OK, 18 tests passés.
+- **Déploiement** : CI en cours pour le commit `aafa759`.
+- **Fonctionnement réel** : Nécessite un test avec session `saas_admin` sur `https://auto-dyali.github.io/super-admin/onboarding/` pour confirmer la création d'abonné, l'invitation Manager et l'enregistrement d'abonnement.
