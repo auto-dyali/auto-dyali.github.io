@@ -4280,3 +4280,41 @@ AUCUNE donnée existante n'est supprimée, recréée ou modifiée. Script NON EX
 
 ### 6. Bloquants restants (inchangés)
 1) Backup/PITR confirmé ; 2) 0028 appliquée (GO conditionnel) ; 3) Edge Function déployée ; 4) décision/authorisation 0018 ; 5) session saas_admin pour tests réels.
+
+---
+
+## 6 — Exécution du feu vert : état réel de la mission et verdict honnête
+**Date** : 2026-11-13 · commit `f829338` poussé/
+**Statut** : poursuite maximale locale effectuée ; **aucun accès d'écriture Supabase disponible** dans cet environnement.
+
+### 1. Travaux réellement réalisés cette session
+- Wizard « Nouvel abonné » : forfaits réels Supabase (prix/limites/fonctions) à l'étape 3.
+- KPI du Dashboard cliquables (Entreprises/Managers/Forfaits/Suspendues).
+- CRM : message explicite et actionnable si `crm_leads` absent (renvoie vers la vérification et 0018).
+- Scripts d'application contrôlés : `supabase/apply/0018_apply_minimal.sql` (CRM, non exécuté) ; `0029_crm_extension_prepared_NOT_APPLIED.sql` (préparée) ; `0028_apply_minimal.sql` (PRÉ-FLIGHT + 0028 + POST-CHECKS ; non exécuté).
+- `docs/SUPER_ADMIN_MODULE_MATRIX.md` : 16 modules avec états honnêtes.
+
+### 2. Blocages P0/P1 restants (aucun ne peut être levé sans accès)
+| # | Blocage | Exigences pour levée |
+|---|---|---|
+| P0 | Backup/PITR non confirmé | Capture/validation « Backups » Dashboard ou pg_dump/export |
+| P0 | Migration 0028 non appliquée | Backup + GO §1–§11 + autorisation + application via SQL Editor |
+| P0 | Edge Function `onboard-tenant` non déployée | 0028 appliquée (au préalable) + déploiement autorisé |
+| P0 | CRM inopérant en prod (`crm_leads`/`crm_events` absents) | Backup + autorisation d'appliquer 0018 + tests bout en bout |
+| P1 | Tests en session authentifiée impossibles ici | Compte saas_admin (ou test autorisé) |
+| P1 | Paiements SaaS / WhatsApp / Chatbot | Intégration externe + secrets serveur — non opérationnels, annoncés comme tels |
+
+### 3. Interdictions respectées
+Aucune migration appliquée, aucune Edge Function déployée, aucun compte modifié/supprimé, aucune donnée lue/écrite autrement que métadonnée RLS, aucun secret demandé/affiché, aucun résultat inventé.
+
+### 4. Verdict : PARTIELLEMENT OPÉRATIONNEL (locales, code) / NON OPÉRATIONNEL en production pour la création d'un abonné et le CRM
+L'application se construit proprement en local et se déploie (2026-11-13), mais les parkings fonctionnels qui dépendent de Supabase (0028/0018) restent inactifs tant que l'accès distraire n'est pas prouvé.
+
+### 5. Pour finir en UNE séquence (vos actions, dans l'ordre)
+1. Dashboard Supabase → **Backups** : vérifier que PITR est actif et confirmer (capture) ;
+2. Exécuter `supabase/verification/FINAL_0028_PREFLIGHT_READONLY.sql` (lecture seule) → me retourner les 11 résultats ;
+3. Exécuter `supabase/apply/0028_apply_minimal.sql` (PRÉ-FLIGHT s'auto-annule si échec) ;
+4. Déployer l'Edge Function `onboard-tenant` (`supabase functions deploy onboard-tenant`, ou via Dashboard) ;
+5. Exécuter/coller les vérifications post-application (POST-CHECKS dans le fichier) ;
+6. Décider séparément pour 0018 (CRM) ;
+7. Me fournir le compte Super Admin de test pour un test de bout en bout et la consigne des preuves dans GV5.
