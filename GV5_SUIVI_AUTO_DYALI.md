@@ -4339,3 +4339,31 @@ Avant le build : **400/CI** vérifie maintenant `npx tsc --noEmit` + `npm test` 
 
 ### 4. Blocage unique restant
 Validation distante vérifiée (backup + vérification SQL + application autorisée + session saas_admin) : **uniquement nécessaire pour passer de « livrable local » à « opérationnel »**.
+
+---
+
+## 8 — Contrôle final commit f74dea4 : preuves, vérification et procédure d'activation
+**Date** : 2026-11-13
+**Statut** : code livré + déploiement vérifié ; blocage persistant = exécution distante 0028/0018/Edge Function.
+
+### 1. Vérifs immuables
+- `f74dea4` existe sur `origin/main` (ls-remote : `f74dea4805300b1e2d6f0dbfe9778941ccc694d0`).
+- `f74dea4` est un descendant de `ed35bb6` ; git tree clean (fichiers étrangers non suivis préservés).
+- Registre GV5 contient la présente section (append ; historique intact).
+- GitHub Actions sur `f74dea4` (run 43409761204) : jobs build & deploy → **success** (steps : checkout/setup/install/TS/tests/lint/build/upload/deploy/environment URL).
+- Déploiement GitHub Pages environnement `github-pages` : dernier déploiement `f74dea48` (2026-11-13T10:33:37Z).
+- 17/17 routes `https://auto-dyali.github.io/...` → HTTP 200 (curl).
+
+### 2. Audit onBoarding/crm/rpc/function (relus)
+- `src/lib/onboarding.ts` : `slugify`, `isValidEmail`/`isValidSlug`, `buildRequestId` (UUID v4), `validateOnboardingInput`, `buildRequestId` → tests unitaires **9/9**.
+- `src/app/super-admin/onboarding/page.tsx` : wizard ; charge `plans` + `plan_features` ; anti double-soumission ; fallback forfait par défaut (`plans[0].code` si défaut absent).
+- `supabase/functions/onboard-tenant/index.ts` : JWT vérifié → `profiles.role == saas_admin` → validation entrée → `admin_find_onboarding_request` (idempotence) → `admin_find_user_id_by_email` (anti-doublon) → `inviteUserByEmail` → `admin_onboard_tenant` → compensation deleteUser si échec RPC.
+- `supabase/migrations/0028_...sql` : `onboarding_requests`, `admin_onboard_tenant` (transaction atomique, slug unique, anti-doublon), `admin_attach_manager()` (réparation), `admin_tenant_integrity()`, `admin_find_user_id_by_email()`. Contient `drop policy if exists` **restreint à la table créée**, zéro opération destructive.
+- `supabase/apply/0028_apply_minimal.sql` : PRÉ-FLIGHT read-only (is_saas_admin, current_establishment_id, establishments+cols, plans, subscriptions, audit_log, profiles, seed standard/silver/gold) → contenu 0028 byte-identique → POST-CHECKS lecture seule.
+- `supabase/apply/0018_apply_minimal.sql` : PRÉ-FLIGHT + 0018 byte-identique (tables `crm_leads`, `crm_events`, policies saas_admin, grants) → POST-CHECKS lecture seule.
+
+### 3. Procédure d'activation
+`docs/validation/ACTIVATION_SUPABASE.md` (étapes 0 à 7 + conditions STOP).
+
+### 4. Protections
+Inchangées : aucun compte modifié/supprimé, établissement 00000000-0000-0000-0000-000000000001 et abonnement 47b1c71e-cf73-46a5-b0a4-b3f4ac762e22 intacts ; `service_role` uniquement côté serveur ; aucune écriture distante exécutée.
