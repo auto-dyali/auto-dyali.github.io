@@ -4931,3 +4931,45 @@ Une fois les étapes 1 à 3 exécutées (0028 + Edge Function), vous pourrez vou
 - **Reste** : application distante des migrations et validation en conditions réelles (`saas_admin`).
 
 ---
+
+---
+
+## 19 — État final consolidé (Phase 2 → 8 closes partiellement, date 2026-11-13)
+
+**SHA de référence** : `9109b33` (HEAD = `origin/main`, CI en cours — à confirmer).
+
+### A. Bilan Phase 2 (complété)
+| Item | Statut |
+|------|--------|
+| Sécurité `admin_delete_client_account` | Migration `0030` créée (hardening) — **application distante en attente** |
+| Garde Super Admin fail-closed | **OK** (dashboard, guard, CRM) |
+| Onboarding erreurs backend | **OK** (remontée JSON serveur, messages précis) |
+| Reset mot de passe | **OK** (`?reset=1` dynamique) |
+| Boutons création abonné/manager | **OK** (redirection onboarding) |
+| Toasts métier dashboard/entreprises/support/sauvegarde | **OK** |
+| Cycle de vie abonnements | **OK** (renouvellement/réactivation/expiration) |
+| RLS policies `0031` | **Créées** (application distante en attente) |
+
+### B. Phase 3 (réconciliation) — constats
+- `0030`, `0031` : créées localement ; application distante **en attente**.
+- `0010`, `0026` : RPCs **absentes** à distance (PGRST202) — actions plan/suspend/lifecycle non fonctionnelles tant qu’elles ne sont pas appliquées.
+- `admin_delete_client_account` : **état distrait observé change** (P0001 puis PGRST202) — à re-vérifier.
+- Tables CRM/support : état divergent (`db:check` vs probes REST) — à clarifier.
+
+### C. Phase 8 (audit commercial)
+- Formules existantes : `standard`, `silver`, `gold` (seed sans prix — **non configurés**).
+- Aucun prix inventé ni modifié.
+
+### D. Vérifications finales
+| Contrôle | Résultat |
+|----------|----------|
+| TypeScript | ✅ 0 erreur |
+| ESLint | ✅ 0 erreur |
+| Tests unitaires | ✅ 18/18 |
+| Build | ✅ OK |
+| CI (dernier commit `9109b33`) | ⏳ en cours / ✅ pour `7c5b200` |
+
+### E. Verdict final
+- **Code** : conforme, compilant, testé localement, CI green sur les commits récents.
+- **Données/Backend** : dépendantes des migrations distantes et de l’Auth — **bloquantes pour validation fonctionnelle réelle**.
+- **Mission** : **en cours de clôture** — phases 9 (E2E) et 10 (finalisation) restantes.
