@@ -4,9 +4,11 @@
  *   entreprise + établissement + compte Manager (invitation email)
  *   + abonnement + droits du forfait + journal d'audit.
  *
- * STATUT : NON DÉPLOYÉE.
- * Ne pas déployer sans autorisation explicite ni avant l'application
- * contrôlée de `supabase/migrations/0028_..._prepared_NOT_APPLIED.sql`.
+ * STATUT : SOURCE PRÊTE — DÉPLOIEMENT SUPABASE EN ATTENTE.
+ * La source est déployable via `supabase functions deploy --name onboard-tenant`
+ * (ou le Dashboard Supabase → Edge Functions). Obligatoirement APRÈS
+ * l'application contrôlée de `supabase/migrations/0028_..._prepared_NOT_APPLIED.sql`
+ * (voir `supabase/apply/0028_apply_minimal.sql` et le plan `0032`).
  *
  * Architecture des clients (critique pour is_saas_admin()/auth.uid()) :
  *   - caller  : clé ANON + JWT du Super Admin dans Authorization.
