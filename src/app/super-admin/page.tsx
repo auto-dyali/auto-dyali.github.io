@@ -55,6 +55,7 @@ import { Icone } from "@/components/icones";
 
 
 import { supabase } from "@/lib/supabase-browser";
+import { useNotification } from "@/lib/use-notification";
 
 
 
@@ -519,6 +520,7 @@ export default function SuperAdminPage() {
 
 
 
+  const { success: toastSuccess, error: toastError, warning: toastWarning, info: toastInfo } = useNotification();
   const [traitement, setTraitement] = useState<string | null>(null);
 
 
@@ -1383,15 +1385,8 @@ export default function SuperAdminPage() {
 
 
 
-    if (rpcError) setError(rpcError.message);
-
-
-
-
-
-
-
-    else setNotice("Forfait mis à jour et journalisé.");
+    if (rpcError) toastError({ title: "Erreur changement de forfait", message: rpcError.message });
+    else toastSuccess({ title: "Forfait mis à jour", message: "Forfait mis à jour et journalisé." });
 
 
 
@@ -1495,15 +1490,8 @@ export default function SuperAdminPage() {
 
 
 
-    if (rpcError) setError(rpcError.message);
-
-
-
-
-
-
-
-    else setNotice(etab.is_active ? "Établissement suspendu (données conservées)." : "Établissement réactivé.");
+    if (rpcError) toastError({ title: "Erreur suspension", message: rpcError.message });
+    else toastSuccess({ title: "Établissement mis à jour", message: etab.is_active ? "Établissement suspendu (données conservées)." : "Établissement réactivé." });
 
 
 
@@ -1707,23 +1695,9 @@ export default function SuperAdminPage() {
 
 
 
-    if (rpcError) setError(rpcError.message);
-
-
-
-
-
-
-
+    if (rpcError) toastError({ title: "Erreur enregistrement forfait", message: rpcError.message });
     else {
-
-
-
-
-
-
-
-      setNotice(`Offre ${plan.label} enregistrée.`);
+      toastSuccess({ title: `Offre ${plan.label} enregistrée.`, message: "Offre enregistrée et journalisée." });
 
 
 
@@ -1835,22 +1809,8 @@ export default function SuperAdminPage() {
 
 
 
-    if (rpcError) setError(rpcError.message);
-
-
-
-
-
-
-
+    if (rpcError) toastError({ title: "Erreur fonctionnalité", message: rpcError.message });
     else {
-
-
-
-
-
-
-
       setFeatures((current) =>
 
 
@@ -1868,6 +1828,7 @@ export default function SuperAdminPage() {
 
 
       );
+      toastSuccess({ title: "Fonctionnalité mise à jour", message: `Droit ${feature} ${enabled ? "activé" : "désactivé"} pour ${planCode}.` });
 
 
 
