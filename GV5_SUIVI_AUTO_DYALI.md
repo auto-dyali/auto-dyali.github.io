@@ -4038,3 +4038,52 @@ Les captures publiques prouvent le routage/le garde, pas l’expérience authent
 ## État des fichiers et prochaines étapes
 - Commits : voir historique (`git log`). Les captures `docs/validation/2.16-production/` et `docs/validation/2.16-onboarding/` sont versionnées comme preuves.
 - Fichiers non suivis : inchangés (nouvelles fonctionnalités committées ; fichiers de travail en cours non suivis conservés, aucune suppression sans décision utilisateur).
+
+---
+
+## 3 / Onboarding — Tentative d'exécution encadrée : arrêt à l'étape « accès d'écriture »
+**Date** : 2026-11-13
+**Statut** : **migration 0028 NON APPLIQUÉE, Edge Function NON DÉPLOYÉE, aucun test distant effectuée.** Sauvegarde non réalisable depuis cet environnement (aucun accès base/service). Runbook livré (`docs/onboarding/RUNBOOK_ONBOARDING_SUPER_ADMIN.md`).
+
+### 1. État réel de Supabase constaté (lecture seule, clé publishable anon)
+| Objet | Réponse avec la clé anon |
+|---|---|
+| `my_features()` (0009) | ✓ OK |
+| `crm_leads`, `support_tickets` | ✓ lisibles (0 ligne / RLS) |
+| `onboarding_requests` | ✓ table "accessible" (inconclusif — la table n'existe pas encore) |
+| `plans`, `plan_features`, `subscriptions`, `audit_log`, `profiles`, `establishments`, `products`, `payments`, `client_notifications` | ✗ erreur avec la clé anon (RLS/grants ou table absente) |
+| `admin_*` (0010) : `admin_create_establishment`, `admin_find_user_id_by_email`, `admin_find_onboarding_request`, `admin_onboard_tenant`, `admin_attach_manager`, `admin_tenant_integrity` | ✗ `PGRST202` (non visibles via anon — non connus comme appliqués) |
+| `decrement_product_stock` (0012) | ✗ absent (db:check) |
+
+> La clé anonyme est **aveugle** : ces résultats n'établissent pas lesquels des objets manquent côté serveur. Seul le SQL Editor (rôle postgres/superadmin) lit la vérité. **Conséquence directe : la sauvegarde, l'application de 0028, le déploiement de l'Edge Function et le test ne peuvent pas être exécutés depuis cet environnement.**
+
+### 2. Ce qui a été préparé et vérifié localement
+- Migration `0028` v2 revue de bout en bout (structure équilibrée, 5 fonctions + table `onboarding_requests`, idempotence, `is_saas_admin()`, `audit_log`, compensation dans l'Edge Function).
+- Edge Function `supabase/functions/onboard-tenant/index.ts` vérifiée contre l'API installée (`inviteUserByEmail` confirmé présent dans `@supabase/auth-js`).
+- Interface wizard `/super-admin/onboarding/` déployée (route HTTP 200 en production).
+- Tests unitaires : 9/9. Lint fichiers modifiés : 0 erreur.
+
+### 3. Étapes arrêtées et raisons
+| Étape | État | Raison |
+|---|---|---|
+| 1. Lire GV5, état réel | ✅ fait (cette session) | — |
+| 2. Contrôler 0028 | ✅ fait (local) | — |
+| 3. Sauvegarde préalable | ⛔ bloquée | aucun accès Supabase service / CLI / mot de passe DB / token d'accès |
+| 4. Appliquer 0028 | ⛔ bloquée | idem |
+| 5. Déployer l'Edge Function | ⛔ bloquée | idem (la fonction n'a jamais été déployée) |
+| 6. Tester création réelle | ⛔ bloquée | idem + aucune session/ compte Super Admin disponible |
+| 7/8. Vérifier isolation | ⛔ bloquée | idem |
+| 9. GV5 + rapport | ✅ fait | ce document + rapport |
+
+### 4. Runbook livré
+`docs/onboarding/RUNBOOK_ONBOARDING_SUPER_ADMIN.md` : préservation, vérification SQL Editor, sauvegarde, application 0028 (3 options), vérification, déploiement fonction, protocole de test de bout en bout (entreprise `zz-test-onboarding`), isolation, rollback.
+
+### 5. Comptes et données historiques
+Aucun compte touché (`a.naji`, `r.bami`, ressources partagées intactes). Aucune donnée lue/écrite à distance autrement qu'en lecture anonyme (tables nulle, 0 ligne modifiée).
+
+### 6. Pour lever le blocage (vous seule)
+1. Ouvrir Supabase → **SQL Editor** et exécuter le bloc §1 du runbook (bilan des migrations/RPC).
+2. Confirmer/ordonner l'application des migrations absentes (aucune destructive).
+3. Coller/exécuter `0028` (option A) **ou** installer/`supabase login` la CLI sur cette machine et exécuter `supabase db push`.
+4. Déployer la fonction (`supabase functions deploy onboard-tenant`) **ou** via Dashboard.
+5. Me donner un compte Super Admin (test ou définitif) pour le test de bout en bout — ou suivre le protocole §7 du runbook et me rapporter les résultats pour que je les consigne ici.
