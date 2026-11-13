@@ -8,6 +8,7 @@ import { Logo } from "@/components/logo";
 import { supabase } from "@/lib/supabase-browser";
 import { FEATURE_LABEL } from "@/lib/features";
 import { exporterCSV } from "@/lib/crm-csv";
+import { useNotification } from "@/lib/use-notification";
 
 type Lead = {
   id: string;
@@ -47,6 +48,7 @@ export function CrmModule() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [traitement, setTraitement] = useState<string | null>(null);
+  const { success: notifySuccess, error: notifyError, info: notifyInfo } = useNotification();
 
   // --- Nouvel état : filtres ---
   const [filtre, setFiltre] = useState({
@@ -226,7 +228,7 @@ export function CrmModule() {
       .select("id, lead_id, event_type, body, created_at")
       .eq("lead_id", selection.id)
       .order("created_at", { ascending: false });
-    if (eventsError) setError(eventsError.message);
+    if (eventsError) notifyError({ title: "Erreur événements", message: eventsError.message });
     else setEvents((data ?? []) as Evenement[]);
     setEventsChargement(false);
   }, [selection]);
@@ -302,7 +304,7 @@ export function CrmModule() {
       const tous = await recupererTousLesLeadsFiltres();
       const contenu = exporterCSV(tous, owners);
       if (!contenu) {
-        setNotice("Aucun résultat ne correspond aux filtres actuels.");
+        notifyInfo({ title: "Export", message: "Aucun résultat ne correspond aux filtres actuels." });
         return;
       }
       const blob = new Blob(["\ufeff" + contenu], { type: "text/csv;charset=utf-8;" });
@@ -314,9 +316,9 @@ export function CrmModule() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setNotice(`Export CSV terminé — ${tous.length} prospect(s) exportés.`);
+      notifySuccess({ title: "Export CSV terminé", message: `${tous.length} prospect(s) exportés.` });
     } catch (e) {
-      setError(`Erreur lors de l'export : ${e instanceof Error ? e.message : "inconnu"}`);
+      notifyError({ title: "Erreur d'export", message: e instanceof Error ? e.message : "inconnu" });
     } finally {
       setExportEnCours(false);
     }
@@ -421,7 +423,7 @@ export function CrmModule() {
       event_type: typeNote,
       body: note.trim(),
     });
-    if (insertError) setError(insertError.message);
+    if (insertError) notifyError({ title: "Erreur de création", message: insertError.message });
     else {
       setNote("");
       await chargerEvenements();
