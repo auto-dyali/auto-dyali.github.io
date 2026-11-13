@@ -4414,3 +4414,41 @@ Inchangées : aucun compte modifié/supprimé, établissement 00000000-0000-0000
 - **Déploiement vérifié** : à vérifier sur le commit poussé (GitHub Actions / routes) après push.
 - **Fonctions métier réellement opérationnelles en production** : **non démontrables sans activation distante** (0028/0018/Edge Function) et sans test authentifié — aucun faux succès déclaré.
 
+
+---
+
+## 10 — Session de travail finalisée : preuves d'exécution (date 2026-11-13)
+**SHA de référence** : `e6d9276` (HEAD = `origin/main`, synchronisé). **Aucun changement de code depuis** : le dépôt est propre (fichiers untracked hors périmètre conservés). **Aucune mutation distante** effectuée.
+
+### 1. Vérification du code réel (pas des rapports)
+- `supabase/functions/onboard-tenant/index.ts` : séparation caller/admin confirmée. `caller` (ANON + JWT) utilisé pour `auth.getUser(token)` et toutes les RPC 0028 (`admin_find_onboarding_request`, `admin_find_user_id_by_email`, `admin_onboard_tenant`). `admin` (SERVICE_ROLE) utilisé uniquement pour vérification du profil `saas_admin` et opérations Auth Admin (`inviteUserByEmail`, compensation `deleteUser`). Aucun secret côté client.
+- `src/lib/onboarding.ts` : `isValidRequestId` (UUID), durcissement des longueurs minimales, validation alignée avec l'Edge Function.
+- `src/components/crm-module.tsx` : filtres serveur, count exact, pagination, KPI sur résultats filtrés, export CSV complet, gestion explicite de l'absence de table `crm_leads` (message actionnable, pas de donnée simulée).
+- `supabase/migrations/0018_crm_super_admin.sql` : tables `crm_leads`/`crm_events`, RLS `is_saas_admin()`, index. Corps identique dans `supabase/apply/0018_apply_minimal.sql` (précontrôle + post-contrôle).
+
+### 2. Tests réellement exécutés (résultats)
+| Contrôle | Résultat | Preuve |
+|---|---|---|
+| `npm test` | ✅ 15/15 pass, 0 fail | `scripts/test-onboarding.mjs` + `src/lib/crm-csv.ts` |
+| `npx tsc --noEmit` | ✅ exit 0 | TypeScript strict |
+| `npm run lint` | ✅ 0 erreur (36 warnings préexistants hors périmètre) | ESLint |
+| `npm run build` | ✅ Compiled successfully in 5.0s | Export statique Next.js |
+| Routes production `/super-admin/*` | ✅ 17/17 HTTP 200 | curl sur `auto-dyali.github.io` |
+| GitHub Actions CI `e6d9276` | ✅ `completed` / `success` | Run 43446041288 (TS + tests + lint + build + deploy) |
+
+### 3. Ce qui reste strictement bloqué (actions distantes indispensables, aucune ne peut être levée sans accès/autorisation)
+| Action distante | Motif exact du blocage | Prérequis pour lever |
+|---|---|---|
+| Appliquer `supabase/apply/0028_apply_minimal.sql` | Aucun accès SQL Editor / CLI / service_role ; aucune sauvegarde PITR vérifiée depuis cet environnement | Sauvegarde PITR confirmée + autorisation explicite + exécution dans Supabase SQL Editor |
+| Déployer Edge Function `onboard-tenant` (version corrigée caller/admin) | Dépend de 0028 appliquée + aucun accès déploiement Functions | 0028 appliquée + déploiement autorisé (CLI ou Dashboard) |
+| Appliquer `supabase/apply/0018_apply_minimal.sql` (CRM) | Même blocage (accès SQL distant) | Sauvegarde vérifiée + autorisation séparée |
+| Tests authentifiés bout en bout (création abonné, invitation Manager, isolation, CRM réel) | Nécessite backend distant actif + compte saas_admin de test | 0028 + Edge Function déployée + compte Super Admin autorisé |
+
+### 4. Verdict de cette session (distingué, honnête)
+- **Code corrigé et finalisé localement** : Edge Function caller/admin, validation onboarding, CRM server-driven, 16 modules Super Admin, procédures d'activation. Tous les contrôles locaux passent (tests/tsc/lint/build).
+- **Déploiement vérifié** : CI `e6d9276` success, 17 routes HTTP 200 en production.
+- **Fonctions métier réellement opérationnelles en production** : **non démontrables sans activation distante** (0028/0018/Edge Function). Aucun faux succès déclaré, aucune simulation substituée à une fonction absente.
+- **Protections respectées** : `a.naji` / `r.bami` intacts, établissement `00000000-0000-0000-0000-000000000001` et abonnement `47b1c71e-cf73-46a5-b0a4-b3f4ac762e22` non modifiés, `service_role` uniquement côté serveur, aucun secret demandé/affiché.
+
+### 5. Procédure d'activation (prête, ordonnée, avec STOP)
+`docs/validation/ACTIVATION_SUPABASE.md` : 0 préservation → 1 sauvegarde vérifiée → 2 précontrôle read-only → 3 application 0028 → 4 déploiement Edge Function → 5 post-contrôles → 6 application 0018 (séparée) → 7 tests authentifiés bout en bout.
