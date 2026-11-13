@@ -87,8 +87,12 @@ export default function OnboardingPage() {
       ]);
       if (!vivant) return;
       if (p.error || f.error) setErreurPlans(p.error?.message ?? f.error?.message ?? "Plans indisponibles");
-      setPlansReels((p.data ?? []) as Plan[]);
+      const plans = (p.data ?? []) as Plan[];
+      setPlansReels(plans);
       setFeaturesReels((f.data ?? []) as FeatureRow[]);
+      if (plans.length > 0 && !plans.some((pl) => pl.code === form.plan)) {
+        setForm((f) => ({ ...f, plan: plans[0].code }));
+      }
       setChargementPlans(false);
     })();
     return () => { vivant = false; };
