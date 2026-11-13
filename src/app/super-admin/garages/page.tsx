@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader, Chargement, Vide, Erreur } from "@/components/super-admin-page";
 import { downloadCsv, dateFrCourte } from "@/lib/csv-export";
+import { useNotification } from "@/lib/use-notification";
 
 type Etab = {
   id: string;
@@ -38,6 +39,7 @@ export default function GaragesPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [recherche, setRecherche] = useState("");
   const [traitement, setTraitement] = useState<string | null>(null);
+  const { success: notifySuccess, error: notifyError, info: notifyInfo } = useNotification();
 
   useEffect(() => {
     void (async () => {
@@ -47,7 +49,7 @@ export default function GaragesPage() {
         supabase.from("establishments").select("id, name, slug, city, plan, is_active, created_at").order("created_at", { ascending: false }),
         supabase.from("plans").select("code, label, price_monthly, max_users, max_sites, storage_mb").order("price_monthly"),
       ]);
-      if (e.error) setErreur(e.error.message);
+      if (e.error) notifyError({ title: "Erreur de chargement", message: e.error.message });
       else setRows((e.data ?? []) as Etab[]);
       if (p.error) setErreur(p.error.message);
       else setPlans((p.data ?? []) as Plan[]);
@@ -76,8 +78,8 @@ export default function GaragesPage() {
     setNotice(null);
     setErreur(null);
     const { error } = await supabase.rpc("admin_set_establishment_status", { p_establishment_id: row.id, p_active: !row.is_active });
-    if (error) setErreur(error.message);
-    else setNotice(row.is_active ? `« ${row.name} » suspendue.` : `« ${row.name} » réactivée.`);
+    if (error) notifyError({ title: "Erreur", message: error.message });
+    else notifySuccess({ title: "Statut modifié", message: row.is_active ? `« ${row.name} » suspendue.` : `« ${row.name} » réactivée.` });
     const { data } = await supabase.from("establishments").select("id, name, slug, city, plan, is_active, created_at").order("created_at", { ascending: false });
     if (data) setRows(data as Etab[]);
     setTraitement(null);
