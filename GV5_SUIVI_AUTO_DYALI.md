@@ -4251,3 +4251,32 @@ AUCUNE donnée existante n'est supprimée, recréée ou modifiée. Script NON EX
 2. Confirmer backup/PITR actif (ou pg_dump/exports) ;
 3. Me transmettre les 11 résultats + la confirmation de sauvegarde ;
 4. Feu vert explicite pour appliquer 0028 (et seulement 0028 sauf décision séparée pour 0010/0018).
+
+---
+
+## 5 — Accélération : forfaits réels dans l'onboarding, KPIs cliquables, script 0018, CRM "non opérationnel" documenté
+**Date** : 2026-11-13
+**Statut** : développement local + documentation ; aucune écriture distante, aucune migration, aucune suppression.
+
+### 1. Chantier A — Forfaits dynamiques dans le wizard « Nouvel abonné »
+- `src/app/super-admin/onboarding/page.tsx` : l’étape 3 charge désormais **plans et plan_features réels** depuis Supabase (sélect, sans écriture). Badge des droits/fonctions affichés réels (`{count} activées`) ; fallback honnête si plans absents (« migration 0009 non appliquée ? ») ; trial_days synchronisé depuis le forfait choisi ; aucune valeur inventée (prix/limites non configurés affichés « non configuré »).
+- Build/tsc : ✅. Tests : ✅ 9/9. Lint fichiers modifiés : ✅ 0 erreur.
+
+### 2. Chantier B — Backend CRM (documentation + préparation)
+- `supabase/apply/0018_apply_minimal.sql` : application contrôlée 0018 (PRÉ-FLIGHT lecture seule + 0018 byte-identique + POST-CHECKS). **NON EXÉCUTÉ.**
+- `supabase/migrations/0029_crm_extension_prepared_NOT_APPLIED.sql` : extension CRM (source, priority, estimated_value, index, comments) — **NON APPLIQUÉE.**
+- Constat : production CRM casse sur `crm_leads`/`crm_events` absents (vérification SQL Editor). Le code CRM (filtres/count/export/KPI, 2.15-C) est prêt pour l’appliquer dès autorisation + sauvegarde.
+- 0028 (onboarding) ≠ 0018 (CRM) : conservés séparés.
+
+### 3. Chantier C — KPI du Dashboard cliquables + matrice modules
+- 4 cartes KPI (Entreprises, Managers, Forfaits, Suspendues) sont désormais des liens vers les modules correspondants (`/super-admin/entreprises|managers|plans|entreprises`).
+- `docs/SUPER_ADMIN_MODULE_MATRIX.md` : matrice exhaustive 16 modules — état honnête (aucun « opérationnel » sans test réel ; WhatsApp/Chatbot : non opérationnels assumés ; CRM : non opérationnel en production ; paiements : estimé seulement).
+
+### 4. Protections
+`a.naji`, `r.bami`, établissement `000…001`, abonnement `47b1c71e…` : non touchés (non lus autrement que métadonnées). Aucun secret demandé/affiché. Aucune migration distante.
+
+### 5. Livraison & déploiement
+- Commit local : voir git log de la mission ; poussé sur main ; GitHub Pages : déploiement relancé par le push (vérification post-push à confirmer).
+
+### 6. Bloquants restants (inchangés)
+1) Backup/PITR confirmé ; 2) 0028 appliquée (GO conditionnel) ; 3) Edge Function déployée ; 4) décision/authorisation 0018 ; 5) session saas_admin pour tests réels.

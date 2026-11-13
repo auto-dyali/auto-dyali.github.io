@@ -10,7 +10,7 @@
  * la création échoue avec un message explicite — aucun état fantôme.
  */
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
@@ -55,6 +55,47 @@ export default function OnboardingPage() {
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [resultat, setResultat] = useState<Record<string, unknown> | null>(null);
+
+  type Plan = {
+    code: string;
+    label: string;
+    description: string | null;
+    price_monthly: number | null;
+    price_yearly: number | null;
+    trial_days: number;
+    max_users: number;
+    max_sites: number;
+    storage_mb: number;
+  };
+  type FeatureRow = { plan_code: string; feature_key: string; enabled: boolean };
+
+  const [plansReels, setPlansReels] = useState<Plan[]>([]);
+  const [featuresReels, setFeaturesReels] = useState<FeatureRow[]>([]);
+  const [chargementPlans, setChargementPlans] = useState(true);
+  const [erreurPlans, setErreurPlans] = useState<string | null>(null);
+
+  useEffect(() => {
+    let vivant = true;
+    void (async () => {
+      if (!supabase) {
+        if (vivant) setChargementPlans(false);
+        return;
+      }
+      const [p, f] = await Promise.all([
+        supabase.from("plans").select("code, label, description, price_monthly, price_yearly, trial_days, max_users, max_sites, storage_mb").order("price_monthly"),
+        supabase.from("plan_features").select("plan_code, feature_key, enabled"),
+      ]);
+      if (!vivant) return;
+      if (p.error || f.error) setErreurPlans(p.error?.message ?? f.error?.message ?? "Plans indisponibles");
+      setPlansReels((p.data ?? []) as Plan[]);
+      setFeaturesReels((f.data ?? []) as FeatureRow[]);
+      setChargementPlans(false);
+    })();
+    return () => { vivant = false; };
+  }, []);
+
+  const planActif = plansReels.find((p) => p.code === form.plan);
+  const featuresDuPlan = (code: string) => featuresReels.filter((f) => f.plan_code === code && f.enabled).map((f) => f.feature_key);
 
   const erreurs = useMemo(
     () =>
@@ -220,16 +261,40 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Étape 3 — Forfait */}
+        {/* Étape 3 — Forfait (données réelles depuis Supabase) */}
         {etape === 3 && (
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <label className="text-xs text-[#A7B7A8]">Forfait *
-              <select value={form.plan} onChange={(e) => modifier("plan", e.target.value)} className="champ mt-1 min-h-11">
-                <option value="standard">STANDARD</option>
-                <option value="silver">SILVER</option>
-                <option value="gold">GOLD</option>
-              </select>
+            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Forfait *
+              {chargementPlans ? (
+                <p className="champ mt-1 min-h-11 pt-3 text-[#A7B7A8]">Chargement des forfaits…</p>
+              ) : plansReels.length === 0 ? (
+                <p role="alert" className="mt-1 rounded-lg bg-[#D6A34D]/10 px-4 py-3 text-xs text-[#D6A34D]">Aucun forfait détecté (migration 0009 non appliquée ?) — vérifiez les accès plans dans Supabase.</p>
+              ) : (
+                <select value={form.plan} onChange={(e) => { const p = plansReels.find((x) => x.code === e.target.value); modifier("plan", e.target.value); if (p) modifier("trialDays", p.trial_days); }} className="champ mt-1 min-h-11">
+                  {plansReels.map((p) => <option key={p.code} value={p.code}>{p.label}</option>)}
+                </select>
+              )}
             </label>
+
+            {planActif && (
+              <div className="rounded-xl border border-[#8FB59B]/20 bg-[#2C3735] p-4 text-xs text-[#A7B7A8] sm:col-span-2">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#D0C6AE]">{planActif.label} — caractéristiques réelles</p>
+                <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+                  <li>Prix mensuel : <span className="text-[#E8ECE8]">{planActif.price_monthly != null ? `${planActif.price_monthly} MAD` : "non configuré"}</span></li>
+                  <li>Prix annuel : <span className="text-[#E8ECE8]">{planActif.price_yearly != null ? `${planActif.price_yearly} MAD` : "non configuré"}</span></li>
+                  <li>Essai : <span className="text-[#E8ECE8]">{planActif.trial_days} j</span></li>
+                  <li>Utilisateurs max : <span className="text-[#E8ECE8]">{planActif.max_users}</span></li>
+                  <li>Établissements max : <span className="text-[#E8ECE8]">{planActif.max_sites}</span></li>
+                  <li>Stockage : <span className="text-[#E8ECE8]">{planActif.storage_mb} Mo</span></li>
+                </ul>
+                {planActif.description && <p className="mt-2 text-[11px] leading-5">{planActif.description}</p>}
+                {featuresDuPlan(planActif.code).length > 0 && (
+                  <p className="mt-2 text-[11px]">Fonctionnalités : <span className="text-[#E8ECE8]">{featuresDuPlan(planActif.code).length}</span> activées pour ce forfait.</p>
+                )}
+              </div>
+            )}
+            {erreurPlans && <p role="alert" className="text-[11px] text-[#C5716B]">Erreur plans : {erreurPlans}</p>}
+
             <label className="text-xs text-[#A7B7A8]">Durée d&apos;essai (jours)
               <input type="number" min={0} max={90} value={form.trialDays} onChange={(e) => modifier("trialDays", Number(e.target.value))} className="champ mt-1 min-h-11" />
               {erreurs.trialDays && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.trialDays}</span>}

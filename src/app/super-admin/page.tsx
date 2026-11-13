@@ -3839,20 +3839,20 @@ export default function SuperAdminPage() {
         {/* ===== Command Center premium — données Supabase réelles ===== */}
         <section id="vue-generale" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Entreprises", value: totalEntreprises, sub: `${entreprisesActives} actives · ${entreprisesSuspendues} suspendues`, icon: "client" as const },
-            { label: "Managers", value: managersCount, sub: "Comptes professionnels", icon: "profil" as const },
-            { label: "Forfaits", value: plansCount, sub: `${featuresCount} droits configurés`, icon: "carton" as const },
-            { label: "Suspendues", value: entreprisesSuspendues, sub: "Entreprises inactives", icon: "deconnexion" as const },
+            { label: "Entreprises", value: totalEntreprises, sub: `${entreprisesActives} actives · ${entreprisesSuspendues} suspendues`, icon: "client" as const, href: "/super-admin/entreprises/" },
+            { label: "Managers", value: managersCount, sub: "Comptes professionnels", icon: "profil" as const, href: "/super-admin/managers/" },
+            { label: "Forfaits", value: plansCount, sub: `${featuresCount} droits configurés`, icon: "carton" as const, href: "/super-admin/plans/" },
+            { label: "Suspendues", value: entreprisesSuspendues, sub: "Entreprises inactives", icon: "deconnexion" as const, href: "/super-admin/entreprises/" },
           ].map((card) => (
-            <article key={card.label} className="carte-premium relative overflow-hidden p-5">
+            <Link key={card.label} href={card.href} className="carte-premium group relative overflow-hidden p-5 transition hover:border-[#8FB59B]/50" aria-label={`Ouvrir ${card.label}`}>
               <span className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-[#8FB59B]/10" aria-hidden />
               <div className="flex items-center justify-between">
                 <p className="text-xs uppercase tracking-[0.18em] text-[#A7B7A8]">{card.label}</p>
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#344440]"><Icone nom={card.icon} taille={20} /></span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#344440] transition group-hover:bg-[#8FB59B]/30"><Icone nom={card.icon} taille={20} /></span>
               </div>
               <p className="titre-or mt-3 text-3xl font-extrabold">{loading ? "…" : card.value}</p>
               <p className="mt-1 text-xs text-[#A7B7A8]">{loading ? "Chargement…" : card.sub}</p>
-            </article>
+            </Link>
           ))}
         </section>
 
