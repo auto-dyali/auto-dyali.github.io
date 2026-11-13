@@ -4570,3 +4570,61 @@ Dans **Supabase Dashboard → SQL Editor** :
 3. Déployer `supabase/functions/onboard-tenant/index.ts` (Edge Function, secrets serveur standards).
 4. (Séparément) coller et exécuter `supabase/apply/0018_apply_minimal.sql` (CRM).
 5. Puis créer les 2 abonnés depuis l'interface Super Admin et me rapporter les preuves pour consignation dans GV5.
+
+---
+
+## 13 — Bilan final et actions distantes restantes (date 2026-11-13)
+**SHA de référence** : `13d0df1` (HEAD = `origin/main`, synchronisé). CI GitHub Actions run `43454820582` → **completed / success**. Working tree propre.
+
+### 1. Tout le travail réalisable localement est TERMINÉ
+
+| Domaine | Tâche | Statut | Preuve |
+|---|---|---|---|
+| Code | Edge Function `onboard-tenant` (caller/admin, JWT, idempotence, compensation, pas de secret exposé) | ✅ Corrigé et testé | `supabase/functions/onboard-tenant/index.ts` |
+| Code | Validation onboarding client (UUID, durcissement, alignée serveur) | ✅ Corrigé et testé | `src/lib/onboarding.ts` |
+| Code | CRM Super Admin (filtres serveur, count exact, pagination, KPI, export CSV complet) | ✅ Implémenté et testé | `src/components/crm-module.tsx`, `src/lib/crm-csv.ts` |
+| Code | Super Admin premium (16 modules, shell, navigation, KPIs, gardes `saas_admin`) | ✅ Implémenté | 16 routes `/super-admin/*` |
+| Modules tiers | WhatsApp, Chatbot, Paiements — état honnête, aucune simulation | ✅ Implémenté | `whatsapp/`, `chatbot/`, `paiements/` |
+| Migrations | 0028 (onboarding RPC + table) — préparée, script d'application contrôlé | ✅ Préparé, non appliqué | `supabase/migrations/0028_..._NOT_APPLIED.sql` + `supabase/apply/0028_apply_minimal.sql` |
+| Migrations | 0018 (CRM tables) — préparée, script d'application contrôlé | ✅ Préparé, non appliqué | `supabase/migrations/0018_crm_super_admin.sql` + `supabase/apply/0018_apply_minimal.sql` |
+| Vérification | Précontrôle read-only 0028 (11 sections, zéro écriture) | ✅ Préparé | `supabase/verification/FINAL_0028_PREFLIGHT_READONLY.sql` |
+| Procédure | Activation Supabase ordonnée avec conditions STOP | ✅ Mis à jour | `docs/validation/ACTIVATION_SUPABASE.md` |
+| Qualité | `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build` | ✅ Tous verts | 15/15 tests, tsc 0, lint 0, build OK |
+| Déploiement | CI GitHub Actions + GitHub Pages, 17 routes HTTP 200 | ✅ Vérifié | Run 43454820582 success, curl 17/17 |
+| Comptes | `a.naji` / `r.bami` : supprimés par l'utilisateur, **non recréés** | ✅ Respecté | Aucun profil créé pour ces UUID |
+| Ressources partagées | Établissement `00000000-0000-0000-0000-000000000001`, abonnement `47b1c71e-cf73-46a5-b0a4-b3f4ac762e22` : préservés | ✅ Respecté | Aucune modification |
+
+### 2. Ce que l'utilisateur pourra faire une fois le backend activé
+Depuis `https://auto-dyali.github.io/super-admin/onboarding/` (connecté en `saas_admin`) :
+1. Cliquer « Créer l'abonné » → wizard 3 étapes (Entreprise → Manager → Forfait & essai).
+2. Créer le premier abonné : entreprise → Manager invité par email → établissement propre → abonnement propre.
+3. Créer le second abonné : même parcours, établissement indépendant, aucun partage.
+4. Vérifier l'idempotence (même `requestId` → aucun doublon) et l'isolation multi-entreprise.
+5. Puis décider séparément pour le CRM (0018).
+
+### 3. Actions distantes RESTANTES — uniquement indispensables, à exécuter par l'utilisateur sur Supabase
+**Aucune ne peut être levée depuis cet environnement** (pas d'accès SQL Editor / CLI / service_role, pas de sauvegarde PITR vérifiée, pas de compte saas_admin).
+
+| # | Action distante | Script / fichier | Prérequis exact |
+|---|---|---|---|
+| 1 | **Sauvegarde / PITR vérifiée** | Dashboard → Backups ou `pg_dump` | Votre confirmation (capture ou export) |
+| 2 | **Appliquer 0028** (onboarding entreprise + Manager + abonnement) | `supabase/apply/0028_apply_minimal.sql` | Sauvegarde confirmée + votre autorisation + exécution dans SQL Editor (le PRÉ-FLIGHT s'auto-annule si échec) |
+| 3 | **Déployer Edge Function `onboard-tenant`** | `supabase/functions/onboard-tenant/index.ts` | 0028 appliquée + déploiement autorisé (`supabase functions deploy onboard-tenant` ou Dashboard → Edge Functions) |
+| 4 | **(Séparément) Appliquer 0018** (CRM `crm_leads`/`crm_events`) | `supabase/apply/0018_apply_minimal.sql` | Sauvegarde vérifiée + votre autorisation séparée |
+| 5 | **Tests authentifiés bout en bout** (création des 2 abonnés, invitation Manager reçue/acceptée, connexion Manager, isolation multi-entreprise, parcours CRM réel) | Interface Super Admin + compte `saas_admin` | 0028 + Edge Function déployée + compte Super Admin de test fourni par vous |
+
+**Étape 0 de la procédure** vérifie que l'établissement partagé et l'abonnement partagé sont intacts, et que les anciens comptes `a.naji`/`r.bami` ne sont pas recréés.
+
+### 4. Verdict final (distingué, honnête)
+- **Code livré et finalisé localement** : OUI — tout le code nécessaire à la création d'abonnés depuis le Super Admin est prêt, testé, cohérent, et déployé en production (routes HTTP 200, CI success).
+- **Déploiement vérifié** : OUI — commit `13d0df1` déployé, CI `43454820582` success.
+- **Fonctionnalité « créer un abonné » opérationnelle en production** : **NON** tant que les actions distantes 1→5 ne sont pas exécutées (0028 appliquée + Edge Function déployée). Aucun faux succès déclaré, aucune simulation substituée à une fonction absente.
+- **Protections respectées** : `a.naji`/`r.bami` non recréés, établissement/abonnement partagés intacts, `service_role` uniquement côté serveur, aucun secret exposé, aucune migration distante appliquée, aucune donnée supprimée.
+
+### 5. Scripts exacts à exécuter (par l'utilisateur, dans l'ordre)
+Dans **Supabase Dashboard → SQL Editor** :
+1. Coller et exécuter `supabase/verification/FINAL_0028_PREFLIGHT_READONLY.sql` (lecture seule) → me transmettre les 11 résultats + confirmation sauvegarde/PITR.
+2. Si GO : coller et exécuter `supabase/apply/0028_apply_minimal.sql` (PRÉ-FLIGHT + 0028 + POST-CHECKS).
+3. Déployer `supabase/functions/onboard-tenant/index.ts` (Edge Function, secrets serveur standards `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`).
+4. (Séparément, décision à part) coller et exécuter `supabase/apply/0018_apply_minimal.sql` (CRM).
+5. Puis créer les 2 abonnés depuis l'interface Super Admin et me rapporter les preuves pour consignation dans GV5.
