@@ -4508,3 +4508,65 @@ Les deux comptes ont **déjà été supprimés par l'utilisateur** et ne doivent
 
 ### 6. Procédure d'activation (prête, ordonnée, avec STOP)
 `docs/validation/ACTIVATION_SUPABASE.md` : 0 préservation → 1 sauvegarde vérifiée → 2 précontrôle read-only → 3 application 0028 → 4 déploiement Edge Function → 5 post-contrôles → 6 application 0018 (séparée) → 7 tests authentifiés bout en bout.
+
+---
+
+## 12 — Finalisation avant création des deux comptes (date 2026-11-13)
+**SHA de référence** : `1014718` (HEAD = `origin/main`, synchronisé, CI `43454057129` success). Working tree propre (fichiers untracked hors périmètre conservés). **Aucune mutation distante** effectuée.
+
+### 1. Objectif de cette session
+Rendre le Super Admin opérationnel afin que l'utilisateur puisse créer lui-même, depuis l'interface, deux abonnés professionnels indépendants (`a.naji@auto-dyali.ma` et `r.bami@auto-dyali.ma`), chacun avec son entreprise, son Manager, son établissement et son abonnement.
+
+### 2. Ce qui a été vérifié comme terminé (code cohérent et prêt)
+| Élément | Fichier | Statut | Preuve |
+|---|---|---|---|
+| Wizard « Nouvel abonné » (3 étapes : entreprise → Manager → forfait & essai) | `src/app/super-admin/onboarding/page.tsx` | ✅ Terminé | Formulaire complet, validation client, anti double-soumission (`requestId`), forfaits réels depuis Supabase, message explicite si backend absent |
+| Accès à l'onboarding depuis le Super Admin | `src/components/super-admin-shell.tsx` (ligne 40) + `src/app/super-admin/entreprises/page.tsx` (ligne 138) | ✅ Terminé | Bouton « Nouvel abonné » dans sidebar + page Entreprises |
+| Edge Function `onboard-tenant` (caller/admin, JWT, idempotence, compensation, pas de secret exposé) | `supabase/functions/onboard-tenant/index.ts` | ✅ Corrigé, prêt au déploiement | Séparation caller (ANON+JWT pour RPC `is_saas_admin`) / admin (SERVICE_ROLE uniquement Auth Admin) |
+| Migration 0028 (onboarding RPC + table `onboarding_requests`) | `supabase/migrations/0028_..._prepared_NOT_APPLIED.sql` | ✅ Préparée, non appliquée | 5 RPC (`admin_find_user_id_by_email`, `admin_find_onboarding_request`, `admin_onboard_tenant`, `admin_attach_manager`, `admin_tenant_integrity`), idempotence, transaction atomique, pas d'opcode destructif |
+| Script d'application 0028 contrôlé (PRÉ-FLIGHT + POST-CHECKS) | `supabase/apply/0028_apply_minimal.sql` | ✅ Préparé, non exécuté | PRÉ-FLIGHT avorte si dépendance manquante ; POST-CHECKS lecture seule |
+| Migration 0018 (CRM `crm_leads`/`crm_events`) | `supabase/migrations/0018_crm_super_admin.sql` | ✅ Préparée, non appliquée | Tables + RLS `is_saas_admin()` + index + grants |
+| Script d'application 0018 contrôlé | `supabase/apply/0018_apply_minimal.sql` | ✅ Préparé, non exécuté | PRÉ-FLIGHT + 0018 byte-identique + POST-CHECKS |
+| Vérification read-only avant 0028 | `supabase/verification/FINAL_0028_PREFLIGHT_READONLY.sql` | ✅ Préparé | 11 sections, zéro écriture |
+| Procédure d'activation Supabase (ordonnée, avec STOP) | `docs/validation/ACTIVATION_SUPABASE.md` | ✅ Mis à jour | Étape 0 adaptée (comptes a.naji/r.bami supprimés, pas de recréation) ; étapes 1-8 documentées |
+
+### 3. Ce que l'utilisateur pourra faire une fois le backend activé
+Depuis `https://auto-dyali.github.io/super-admin/onboarding/` (connecté en tant que `saas_admin`) :
+1. Cliquer « Créer l'abonné » (wizard 3 étapes).
+2. Saisir entreprise (nom, slug, ville, téléphone, email) → établissement créé.
+3. Saisir Manager (nom, email professionnel) → compte Auth invité par email (aucun mot de passe en clair), profil `manager` créé.
+4. Choisir forfait (standard/silver/gold) + durée d'essai → abonnement créé avec droits du forfait.
+5. Cliquer « Créer l'abonné » → transaction atomique entreprise + abonnement + Manager + audit.
+6. Répéter pour le second abonné (établissement indépendant, pas de réutilisation de l'établissement partagé).
+7. Vérifier l'idempotence (même `requestId` → aucun doublon) et l'isolation multi-entreprise.
+
+### 4. Comptes `a.naji` / `r.bami` (conforme à l'instruction utilisateur)
+- Déjà supprimés par l'utilisateur ; **non recréés** dans cette session.
+- Aucun profil `public.profiles` créé pour ces UUID.
+- L'établissement partagé `00000000-0000-0000-0000-000000000001` et l'abonnement `47b1c71e-cf73-46a5-b0a4-b3f4ac762e22` sont **préservés** et ne seront pas réutilisés pour les nouveaux abonnés.
+- Chaque nouvel abonné aura son propre établissement et son propre abonnement.
+
+### 5. Actions distantes RESTANTES (indispensables, à exécuter par l'utilisateur sur Supabase)
+Aucune ne peut être levée depuis cet environnement (pas d'accès SQL Editor / CLI / service_role, pas de sauvegarde PITR vérifiée).
+
+| # | Action distante | Script / fichier | Prérequis exact |
+|---|---|---|---|
+| 1 | Sauvegarde/PITR vérifiée | Dashboard → Backups ou `pg_dump` | Votre confirmation (capture) |
+| 2 | Appliquer 0028 (onboarding) | `supabase/apply/0028_apply_minimal.sql` | Sauvegarde confirmée + votre autorisation + SQL Editor |
+| 3 | Déployer Edge Function `onboard-tenant` | `supabase/functions/onboard-tenant/index.ts` | 0028 appliquée + déploiement autorisé (CLI ou Dashboard) |
+| 4 | Appliquer 0018 (CRM) | `supabase/apply/0018_apply_minimal.sql` | Sauvegarde vérifiée + votre autorisation séparée |
+| 5 | Tests authentifiés bout en bout (création des 2 abonnés, invitation, isolation) | Interface Super Admin | 0028 + Edge Function déployée + compte `saas_admin` |
+
+### 6. Verdict (distingué, honnête)
+- **Code livré et finalisé localement** : oui — tout le code nécessaire à la création d'abonnés depuis le Super Admin est prêt, testé, et cohérent (Edge Function, migrations, scripts d'activation, procédure).
+- **Déploiement vérifié** : CI `43454057129` success sur `1014718`, 17 routes HTTP 200 en production.
+- **Fonctionnalité « créer un abonné » opérationnelle en production** : **non** tant que les actions distantes 1-5 ne sont pas exécutées (0028 appliquée + Edge Function déployée). Aucun faux succès déclaré.
+- **Protections respectées** : `a.naji`/`r.bami` non recréés, établissement/abonnement partagés intacts, `service_role` uniquement côté serveur, aucun secret exposé, aucune migration distante appliquée.
+
+### 7. Scripts exacts à exécuter (par l'utilisateur, dans l'ordre)
+Dans **Supabase Dashboard → SQL Editor** :
+1. Coller et exécuter `supabase/verification/FINAL_0028_PREFLIGHT_READONLY.sql` (lecture seule) → me transmettre les résultats + confirmation sauvegarde/PITR.
+2. Si GO : coller et exécuter `supabase/apply/0028_apply_minimal.sql` (PRÉ-FLIGHT s'auto-annule si échec).
+3. Déployer `supabase/functions/onboard-tenant/index.ts` (Edge Function, secrets serveur standards).
+4. (Séparément) coller et exécuter `supabase/apply/0018_apply_minimal.sql` (CRM).
+5. Puis créer les 2 abonnés depuis l'interface Super Admin et me rapporter les preuves pour consignation dans GV5.
