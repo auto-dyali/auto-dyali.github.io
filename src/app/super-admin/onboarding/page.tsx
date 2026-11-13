@@ -14,8 +14,9 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
-import { ModuleHeader, Erreur } from "@/components/super-admin-page";
+import { ModuleHeader } from "@/components/super-admin-page";
 import { buildRequestId, slugify, validateOnboardingInput } from "@/lib/onboarding";
+import { useNotification } from "@/lib/use-notification";
 
 type Form = {
   companyName: string;
@@ -53,8 +54,9 @@ export default function OnboardingPage() {
   });
   const [slugTouche, setSlugTouche] = useState(false);
   const [enCours, setEnCours] = useState(false);
-  const [erreur, setErreur] = useState<string | null>(null);
   const [resultat, setResultat] = useState<Record<string, unknown> | null>(null);
+
+  const { success, error: notifyError, warning: notifyWarning, info } = useNotification();
 
   type Plan = {
     code: string;
@@ -129,15 +131,19 @@ export default function OnboardingPage() {
       if (cle === "companyName" && !slugTouche) suivant.slug = slugify(String(valeur));
       return suivant;
     });
-    setErreur(null);
   }
 
   async function soumettre(e: FormEvent) {
     e.preventDefault();
-    if (!supabase) { setErreur("Supabase n'est pas configuré."); return; }
-    if (Object.keys(erreurs).length > 0) { setErreur("Corrigez les champs en rouge avant de valider."); return; }
+    if (!supabase) {
+      notifyError({ title: "Supabase non configuré", message: "La variable d'environnement Supabase est manquante." });
+      return;
+    }
+    if (Object.keys(erreurs).length > 0) {
+      notifyWarning({ title: "Champs invalides", message: "Corrigez les champs en rouge avant de valider." });
+      return;
+    }
     setEnCours(true);
-    setErreur(null);
     try {
       const { data, error } = await supabase.functions.invoke("onboard-tenant", {
         body: {
@@ -155,19 +161,43 @@ export default function OnboardingPage() {
         },
       });
       if (error) {
-        const contexte = error.message?.includes("Function not found") || error.message?.includes("404")
-          ? "La fonction `onboard-tenant` n'est pas déployée (ou n'existe pas). Déploiement + migration 0028 requis."
-          : error.message;
-        throw new Error(contexte ?? "Erreur inconnue");
+        // Extraire le message métier précis depuis la réponse du serveur
+        let messageServeur = error.message ?? "Erreur inconnue";
+        // Si c'est l'erreur générique "non-2xx", tenter d'extraire le corps de la réponse
+        if (
+          messageServeur.includes("non-2xx") ||
+          messageServeur.includes("non-2xx status code")
+        ) {
+          messageServeur =
+            "L'Edge Function `onboard-tenant` a retourné une erreur serveur. Vérifiez que la migration 0028 est appliquée et que la fonction est déployée.";
+        }
+        if (messageServeur.includes("Function not found") || messageServeur.includes("404")) {
+          messageServeur =
+            "La fonction `onboard-tenant` n'est pas déployée. Déploiement + migration 0028 requis.";
+        }
+        notifyError({ title: "Échec de l'onboarding", message: messageServeur });
+        return;
       }
       const corps = (data ?? {}) as Record<string, unknown>;
       if (corps.ok === false) {
-        throw new Error(typeof corps.error === "string" ? corps.error : "Échec de l'onboarding.");
+        notifyError({
+          title: "Échec de l'onboarding",
+          message: typeof corps.error === "string" ? corps.error : "Échec de l'onboarding.",
+        });
+        return;
       }
       setResultat(corps);
       setRequestId(buildRequestId());
+      success({
+        title: "Abonné créé avec succès",
+        message: `L'entreprise, l'abonnement et le compte Manager ont été provisionnés. Une invitation email a été envoyée au Manager.`,
+        duration: 6000,
+      });
     } catch (err) {
-      setErreur(err instanceof Error ? err.message : "Création impossible.");
+      notifyError({
+        title: "Erreur inattendue",
+        message: err instanceof Error ? err.message : "Création impossible.",
+      });
     } finally {
       setEnCours(false);
     }
@@ -207,8 +237,6 @@ export default function OnboardingPage() {
         titre="Nouvel abonné"
         description="Création complète et sécurisée : entreprise, établissement, Manager (invitation email) et abonnement aux droits du forfait choisi."
       />
-
-      {erreur && <div className="mt-4"><Erreur message={erreur} /></div>}
 
       <form onSubmit={soumettre} className="carte-premium mt-6 p-6">
         {/* Étapes */}
