@@ -1102,22 +1102,10 @@ export default function SuperAdminPage() {
 
 
 
-      if (roleData?.[0]?.role && roleData[0].role !== "saas_admin") {
-
-
-
-
-
-
-
+      const role = Array.isArray(roleData) ? roleData[0]?.role : undefined;
+      // Fail-closed : profil absent ou rôle indéterminé => refus.
+      if (role !== "saas_admin") {
         setAccesRefuse(true);
-
-
-
-
-
-
-
         setLoading(false);
 
 
@@ -2791,7 +2779,7 @@ export default function SuperAdminPage() {
 
 
 
-        redirectTo: `${window.location.origin}/mot-de-passe-traite`,
+        redirectTo: `${window.location.origin}/mot-de-passe-traite?reset=1`,
 
 
 

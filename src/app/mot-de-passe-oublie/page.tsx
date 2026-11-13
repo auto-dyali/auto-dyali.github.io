@@ -31,7 +31,7 @@ export default function MotDePasseOubliePage() {
         // En développement : http://localhost:3000/mot-de-passe-traite?reset=1
         // En production : configurer dans Supabase Dashboard l'URL de l'application
         // Ne jamais utiliser NEXT_PUBLIC_SUPABASE_URL comme origine application
-        redirectTo: `http://localhost:3000/mot-de-passe-traite?reset=1`,
+        redirectTo: `${window.location.origin}/mot-de-passe-traite?reset=1`,
       }
     );
 

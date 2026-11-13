@@ -17,7 +17,9 @@ export default function CrmPage() {
       if (!sessionData.session) { router.replace("/connexion/"); return; }
       const { data: roleData } = await supabase.rpc("get_my_profile");
       if (!vivant) return;
-      if (roleData?.[0]?.role && roleData[0].role !== "saas_admin") {
+      const role = Array.isArray(roleData) ? roleData[0]?.role : undefined;
+      // Fail-closed : profil absent ou rôle indéterminé => refus.
+      if (role !== "saas_admin") {
         setEtat("refuse");
         return;
       }

@@ -161,15 +161,21 @@ export default function OnboardingPage() {
         },
       });
       if (error) {
-        // Extraire le message métier précis depuis la réponse du serveur
+        // Extraire le message métier précis depuis la réponse JSON du serveur
         let messageServeur = error.message ?? "Erreur inconnue";
-        // Si c'est l'erreur générique "non-2xx", tenter d'extraire le corps de la réponse
-        if (
-          messageServeur.includes("non-2xx") ||
-          messageServeur.includes("non-2xx status code")
-        ) {
-          messageServeur =
-            "L'Edge Function `onboard-tenant` a retourné une erreur serveur. Vérifiez que la migration 0028 est appliquée et que la fonction est déployée.";
+        try {
+          const ctx = (error as { context?: { json?: () => Promise<unknown> } }).context;
+          const corpsResponse = await ctx?.json?.();
+          const corpsErreur = (corpsResponse ?? {}) as { error?: string | { message?: string } };
+          const messageBrut =
+            typeof corpsErreur.error === "string"
+              ? corpsErreur.error
+              : corpsErreur.error && typeof corpsErreur.error === "object"
+                ? (corpsErreur.error as { message?: string }).message
+                : null;
+          if (messageBrut) messageServeur = messageBrut;
+        } catch {
+          // Corps indisponible : on conserve le message standard.
         }
         if (messageServeur.includes("Function not found") || messageServeur.includes("404")) {
           messageServeur =
@@ -190,7 +196,7 @@ export default function OnboardingPage() {
       setRequestId(buildRequestId());
       success({
         title: "Abonné créé avec succès",
-        message: `L'entreprise, l'abonnement et le compte Manager ont été provisionnés. Une invitation email a été envoyée au Manager.`,
+        message: `L'entreprise, l'abonnement et le compte Manager ont été provisionnés (réponse serveur acceptée). L'invitation doit être confirmée côté fournisseur.`,
         duration: 6000,
       });
     } catch (err) {
@@ -213,7 +219,7 @@ export default function OnboardingPage() {
           <p className="mt-2 text-sm text-[#A7B7A8]">
             {idempotent
               ? "Cette demande était déjà enregistrée : aucune donnée n'a été dupliquée."
-              : "Une invitation email a été envoyée au Manager pour définir son mot de passe. Aucun mot de passe n'est transmis en clair."}
+              : "L'invitation doit être confirmée côté fournisseur. Aucun mot de passe n'est transmis en clair."}
           </p>
           <dl className="mt-4 grid gap-2 text-xs text-[#A7B7A8] sm:grid-cols-2">
             <div><dt className="uppercase">Établissement</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.establishment_id ?? "—")}</dd></div>
