@@ -3551,8 +3551,8 @@ export default function SuperAdminPage() {
               <p className="mt-2 max-w-2xl text-sm text-[#A7B7A8]">Pilotage des entreprises, managers, forfaits et droits de la plateforme. Données Supabase en temps réel.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => { setNotice(null); setError(null); setEtabOpen(true); }} className="btn-or px-4 py-2 text-sm">+ Nouvelle entreprise</button>
-              <button type="button" onClick={() => { setNotice(null); setError(null); setClientOpen(true); }} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">+ Nouveau manager</button>
+              <button type="button" onClick={() => { setNotice(null); setError(null); router.push("/super-admin/onboarding/"); }} className="btn-or px-4 py-2 text-sm">+ Nouvelle entreprise</button>
+              <button type="button" onClick={() => { setNotice(null); setError(null); router.push("/super-admin/onboarding/"); }} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">+ Nouveau manager</button>
               <Link href="/super-admin/crm" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Ouvrir le CRM</Link>
             </div>
           </div>
@@ -3703,8 +3703,8 @@ export default function SuperAdminPage() {
             <article className="carte-premium p-5">
               <h2 className="font-bold">Outils rapides</h2>
               <div className="mt-3 grid gap-2">
-                <button type="button" onClick={() => { setNotice(null); setError(null); setEtabOpen(true); }} className="rounded-xl border border-[#8FB59B]/25 px-3 py-2 text-left text-sm text-[#E8ECE8] hover:bg-[#344440]">+ Créer une entreprise</button>
-                <button type="button" onClick={() => { setNotice(null); setError(null); setClientOpen(true); }} className="rounded-xl border border-[#8FB59B]/25 px-3 py-2 text-left text-sm text-[#E8ECE8] hover:bg-[#344440]">+ Créer un manager</button>
+                <button type="button" onClick={() => { setNotice(null); setError(null); router.push("/super-admin/onboarding/"); }} className="rounded-xl border border-[#8FB59B]/25 px-3 py-2 text-left text-sm text-[#E8ECE8] hover:bg-[#344440]">+ Créer une entreprise</button>
+                <button type="button" onClick={() => { setNotice(null); setError(null); router.push("/super-admin/onboarding/"); }} className="rounded-xl border border-[#8FB59B]/25 px-3 py-2 text-left text-sm text-[#E8ECE8] hover:bg-[#344440]">+ Créer un manager</button>
                 <Link href="/super-admin/crm" className="rounded-xl border border-[#8FB59B]/25 px-3 py-2 text-left text-sm text-[#E8ECE8] hover:bg-[#344440]">CRM commercial</Link>
                 <a href="#plans" className="rounded-xl border border-[#8FB59B]/25 px-3 py-2 text-left text-sm text-[#E8ECE8] hover:bg-[#344440]">Plans &amp; fonctionnalités</a>
               </div>
@@ -3784,7 +3784,7 @@ export default function SuperAdminPage() {
 
 
 
-              <button type="button" onClick={() => { setNotice(null); setError(null); setEtabOpen(true); }} className="btn-or px-4 py-2 text-sm">+ Nouvel établissement</button>
+              <button type="button" onClick={() => { setNotice(null); setError(null); router.push("/super-admin/onboarding/"); }} className="btn-or px-4 py-2 text-sm">+ Nouvel établissement</button>
 
 
 
