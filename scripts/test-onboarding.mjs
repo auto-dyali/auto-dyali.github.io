@@ -11,6 +11,7 @@ import {
   validateOnboardingInput,
   isOnboardingValid,
   buildRequestId,
+  PLANS,
 } from "../src/lib/onboarding.ts";
 
 const base = {
@@ -87,4 +88,21 @@ test("buildRequestId génère des identifiants uniques au format UUID", () => {
   assert.match(a, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
   assert.match(b, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
   assert.notEqual(a, b);
+});
+
+// Test de regression : verifier que l'adresse email .ma est syntaxiquement valide
+test("adresse email .ma est valide selon le validateur frontend", () => {
+  assert.equal(isValidEmail("a.naji@auto-dyali.ma"), true);
+  assert.equal(isValidEmail("r.bami@auto-dyali.ma"), true);
+});
+
+test("slug est genere correctement depuis le nom d'entreprise", () => {
+  assert.equal(slugify("Garage Naji"), "garage-naji");
+  assert.equal(slugify("Garage Bami"), "garage-bami");
+});
+
+test("forfaits valides sont standard, silver, gold", () => {
+  assert.equal(PLANS.includes("standard"), true);
+  assert.equal(PLANS.includes("silver"), true);
+  assert.equal(PLANS.includes("gold"), true);
 });

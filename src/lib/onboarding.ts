@@ -23,7 +23,7 @@ export type OnboardingInput = {
 
 export type OnboardingErrors = Partial<Record<keyof OnboardingInput, string>>;
 
-const PLANS = ["standard", "silver", "gold"] as const;
+export const PLANS = ["standard", "silver", "gold"] as const;
 
 /** Génère un identifiant de demande unique (utilisé pour l'idempotence). */
 export function buildRequestId(): string {

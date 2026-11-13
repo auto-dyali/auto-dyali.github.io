@@ -1556,229 +1556,15 @@ export default function SuperAdminPage() {
 
 
   async function creerEtablissement(event: FormEvent) {
-
-
-
-
-
-
-
     event.preventDefault();
 
-
-
-
-
-
-
-    if (!supabase) return;
-
-
-
-
-
-
-
-    setEtabSaving(true);
-
-
-
-
-
-
-
-    setError(null);
-
-
-
-
-
-
-
+    // Redirection vers l'onboarding securise (Edge Function onboard-tenant + migration 0028)
+    // admin_create_establissement n'existe pas dans le schema distant (migration 0010 non appliquee).
     setNotice(null);
-
-
-
-
-
-
-
-    const slugBase = (etabForm.slug || etabForm.name)
-
-
-
-
-
-
-
-      .toLowerCase()
-
-
-
-
-
-
-
-      .normalize("NFD")
-
-
-
-
-
-
-
-      .replace(/[\u0300-\u036f]/g, "")
-
-
-
-
-
-
-
-      .replace(/[^a-z0-9]+/g, "-")
-
-
-
-
-
-
-
-      .replace(/(^-|-$)/g, "");
-
-
-
-
-
-
-
-    const { data, error: rpcError } = await supabase.rpc("admin_create_establishment", {
-
-
-
-
-
-
-
-      p_name: etabForm.name.trim(),
-
-
-
-
-
-
-
-      p_slug: `${slugBase}-${String(Date.now()).slice(-4)}`,
-
-
-
-
-
-
-
-      p_city: etabForm.city.trim() || null,
-
-
-
-
-
-
-
-      p_phone: etabForm.phone.trim() || null,
-
-
-
-
-
-
-
-      p_email: etabForm.email.trim() || null,
-
-
-
-
-
-
-
-      p_plan: etabForm.plan,
-
-
-
-
-
-
-
-    });
-
-
-
-
-
-
-
-    if (rpcError) setError(rpcError.message);
-
-
-
-
-
-
-
-    else {
-
-
-
-
-
-
-
-      setNotice(`Établissement créé (id ${String(data).slice(0, 8)}…). Essai 14 jours ouvert.`);
-
-
-
-
-
-
-
-      setEtabForm({ name: "", slug: "", city: "", phone: "", email: "", plan: "standard" });
-
-
-
-
-
-
-
-      setEtabOpen(false);
-
-
-
-
-
-
-
-      await charger();
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
+    setError(null);
+    setEtabOpen(false);
     setEtabSaving(false);
-
-
-
-
-
-
-
+    router.replace("/super-admin/onboarding/");
   }
 
 
@@ -1788,21 +1574,7 @@ export default function SuperAdminPage() {
 
 
 
-
-
-
-
-
-
-
   async function enregistrerPlan(plan: PlanRow) {
-
-
-
-
-
-
-
     if (!supabase) return;
 
 
@@ -7570,6 +7342,7 @@ export default function SuperAdminPage() {
 
 
   );
+
 
 
 
