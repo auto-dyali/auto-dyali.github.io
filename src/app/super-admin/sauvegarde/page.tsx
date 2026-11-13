@@ -12,11 +12,13 @@ import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader, Erreur } from "@/components/super-admin-page";
 import { downloadCsv } from "@/lib/csv-export";
+import { useNotification } from "@/lib/use-notification";
 
 export default function SauvegardePage() {
   const [enCours, setEnCours] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const { success: toastSuccess, error: toastError } = useNotification();
 
   async function exporter(quoi: "entreprises" | "abonnements" | "audit" | "plans") {
     if (!supabase) return;
@@ -45,9 +47,9 @@ export default function SauvegardePage() {
         if (f.error) throw new Error(f.error.message);
         downloadCsv(`auto-dyali-plans-${new Date().toISOString().slice(0, 10)}.csv`, ["Forfait", "Libellé", "Prix mensuel", "Essai", "Utilisateurs max", "Sites max", "Stockage Mo"], (p.data ?? []).map((r) => [r.code, r.label, r.price_monthly ?? "", r.trial_days, r.max_users, r.max_sites, r.storage_mb]));
       }
-      setNotice("Export terminé.");
+      toastSuccess({ title: "Export terminé", message: "Export CSV terminé." });
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "Export impossible.");
+      toastError({ title: "Erreur export", message: e instanceof Error ? e.message : "Export impossible." });
     } finally {
       setEnCours(null);
     }

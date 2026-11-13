@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader, Chargement, Vide, Erreur } from "@/components/super-admin-page";
 import { dateFrCourte } from "@/lib/csv-export";
+import { useNotification } from "@/lib/use-notification";
 
 type Ticket = {
   id: string;
@@ -39,6 +40,7 @@ export default function SupportPage() {
   const [chargementMsgs, setChargementMsgs] = useState(false);
   const [reponse, setReponse] = useState("");
   const [enCours, setEnCours] = useState(false);
+  const { success: toastSuccess, error: toastError } = useNotification();
 
   useEffect(() => {
     void chargerTickets();
@@ -107,11 +109,11 @@ export default function SupportPage() {
       is_staff: true,
       body: reponse.trim(),
     });
-    if (error) setErreur(error.message);
+    if (error) toastError({ title: "Erreur réponse ticket", message: error.message });
     else {
       await supabase.from("support_tickets").update({ status: "waiting_reply", updated_at: new Date().toISOString() }).eq("id", selection.id);
       setReponse("");
-      setNotice("Réponse envoyée.");
+      toastSuccess({ title: "Réponse envoyée", message: "La réponse a été envoyée au client." });
       const { data: msgs } = await supabase.from("ticket_messages").select("id, author_id, is_staff, body, created_at").eq("ticket_id", selection.id).order("created_at", { ascending: true });
       setMessages((msgs ?? []) as Msg[]);
       setSelection((s) => (s ? { ...s, status: "waiting_reply" } : s));
@@ -124,9 +126,9 @@ export default function SupportPage() {
     if (!supabase || !selection) return;
     setErreur(null);
     const { error } = await supabase.from("support_tickets").update({ status: statut, updated_at: new Date().toISOString(), ...(["resolved", "closed"].includes(statut) ? { closed_at: new Date().toISOString() } : {}) }).eq("id", selection.id);
-    if (error) setErreur(error.message);
+    if (error) toastError({ title: "Erreur mise à jour ticket", message: error.message });
     else {
-      setNotice(`Ticket passé en « ${statut} ».`);
+      toastSuccess({ title: "Ticket mis à jour", message: `Ticket passé en « ${statut} ».` });
       setSelection((s) => (s ? { ...s, status: statut } : s));
       await chargerTickets();
     }
