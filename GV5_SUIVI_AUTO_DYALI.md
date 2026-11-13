@@ -5018,3 +5018,60 @@ Une fois les étapes 1 à 3 exécutées (0028 + Edge Function), vous pourrez vou
 - **Mission non déclarée terminée** : vérifications finales distantes/E2E en attente (bloquantes).
 - **Travail autonome réalisé** : Phases 1 → 8 closes côté code, vérifications locales/CI/déploiement green.
 - **Blocage persistant** : accès Supabase réel (service_role / sessions `saas_admin`) + fournisseurs.
+
+---
+
+## 21 — État final de la mission — Phases A → M (date 2026-11-13, SHA `0446c5c`)
+
+**SHA de référence** : `0446c5c` (branche `main`, HEAD local = HEAD distant après push).
+
+### A. Synthèse par phase
+
+| Phase | Exigence | Statut | Fichier(s) concerné(s) | Commit | Tests / Preuve | Blocage |
+|-------|----------|--------|------------------------|--------|----------------|---------|
+| A | État de référence et continuité | **CONFORME ET VÉRIFIÉ** | git, CI | `0446c5c` | HEAD local = `origin/main` = `0446c5c` ; CI success ; déploiement success | — |
+| B | Finalisation formulaires (Phase 7) | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | `super-admin/onboarding`, `super-admin/managers`, modules manager | `5b235cb`, `a2c6eb4`, `9109b33`, `0446c5c` | tsc/lint/tests/build/CI green | Validation E2E runtime en attente |
+| C | Architecture multisectorielle | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | modules existants | — | Audit code-level | Données métier réelles en attente |
+| D | Réconciliation Supabase | **PARTIAL** | `supabase/apply/0032_PLAN_PENDING_MIGRATIONS.sql`, `supabase/apply/GUIDE_EXECUTION_MIGRATIONS_PENDING.md` | `98c0247`, `0446c5c` | Plan SQL validé ; application distante en attente | SQL Editor / accès owner requis |
+| E | Edge Function `onboard-tenant` | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | `supabase/functions/onboard-tenant/index.ts` | `0446c5c` | Source checkée (caller/admin, secrets serveur, validations) | Déploiement Dashboard réel en attente |
+| F | Authentification et AUTO-001 | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | `src/app/connexion`, reset, invitation | `5b235cb`, `305497a` | Code checké | Config Auth/SMTP/Redirect URLs en attente |
+| G | Super Admin et cycle de vie | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | dashboard, abonnements, entreprises, plans, support, sauvegarde | `305497a`…`a2c6eb4`, `9109b33` | UI code checkée | Runtime avec sessions `saas_admin` en attente |
+| H | Sécurité et isolation multi-tenant | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | `0030`, `0031`, guard, RPC | `305497a`, `7c5b200` | Policies locales créées ; RLS réelles en attente | Sessions authentifiées / application migrations |
+| I | Tests E2E et validation métier | **BLOQUÉ PAR ACCÈS EXTERNE** | — | — | Aucun E2E réel exécuté | Accès Supabase réel / sessions / fournisseurs |
+| J | Qualité et déploiement | **CONFORME ET VÉRIFIÉ** | tsc, lint, test, build, CI, deploy | `0446c5c` | tsc ✅ · lint ✅ · tests 18/18 ✅ · build ✅ · CI ✅ · deploy ✅ | — |
+| K | Registre GV5 | **CONFORME ET VÉRIFIÉ** | `GV5_SUIVI_AUTO_DYALI.md` | `22f36c1`, `4573ad4`, `0446c5c` | Append-only respecté (sections §17→§21) | — |
+| L | Rapport final | **EN COURS** | ce document | `0446c5c` | Rapport final remis | Clôture différée à la validation E2E |
+
+### B. Exigences GV5 — dernier état
+
+| Exigence | Statut |
+|----------|--------|
+| Super Admin opérationnel (création abonné) | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (code ✅ — runtime distante ⏳) |
+| Compte Manager fiable | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (parcours onboarding + gestion) |
+| Formulaires professionnels | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (audit + finalisation code-level) |
+| Données cohérentes (migrations) | PARTIAL (plan prêt — application distante en attente) |
+| Permissions sécurisées | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (hardening code ✅ — RLS réelles en attente) |
+| Parcours métier fonctionnels | BLOQUÉ PAR ACCÈS EXTERNE (E2E Phase I) |
+
+### C. Décisions de continuité
+
+1. Aucun travail déjà validé n'a été refait.
+2. Aucune écriture distante Supabase n'a été effectuée par l'agent.
+3. Aucune clé `service_role`, mot de passe ou secret n'a été exposé ou demandé.
+4. Aucune politique RLS n'a été affaiblie.
+5. Aucun prix, paiement, email ou WhatsApp n'a été inventé.
+
+### D. État actuel de la mission
+
+- **Blocage externe persistant** : accès Supabase réel (SQL Editor appliqué, sessions
+  `saas_admin`, service_role non exposé), fournisseurs email/WhatsApp, logs.
+- **Travail autonome achevé** : Phases 1 → 8 (code), vérifications locales/CI/déploiement green,
+  plan SQL + guide d'exécution prêts, EF source prête.
+- **Travail autonome en cours** : finalisation formulaires (Phase B), audits indépendants (C/H/J/K).
+
+### E. Verdict final provisoire
+
+**Mission non déclarée terminée.** Conformément aux exigences : la validation fonctionnelle
+réelle (migrations appliquées, Edge Function déployée/testée, Auth, RLS authentifiées, E2E
+critiques, sauvegardes, isolation multi-tenant, ops production) reste à lever par l'accès externe
+décrit ci-dessus. Le code livré est compilable, testé, CI-green et déployé (`0446c5c`).
