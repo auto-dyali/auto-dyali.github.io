@@ -30,6 +30,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: Unit tests (CRM + onboarding)
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
       - name: Build static site
         env:
           NEXT_PUBLIC_SITE_BASE_PATH: ""
