@@ -4130,3 +4130,32 @@ Aucun compte touché (`a.naji`, `r.bami`, ressources partagées intactes). Aucun
 
 ### 5. Verdict préparatoire
 **0028 peut être appliquée sans risque IF** les vérifications ci-dessus retournent GO. **Sinon** les points exacts à corriger seront déterminés par les résultats §1 (migrations absentes à appliquer d'abord : 0009 → 0010 → 0012). L'Edge Function peut être déployée **uniquement après** application réussie de 0028 et vérification via `admin_tenant_integrity`.
+
+---
+
+## 4 — Exécution d'onboarding demandée : verdict « NON OPÉRATIONNEL — accès manquant »
+**Date** : 2026-11-13 · **Branche** `main` · HEAD `84b1c8a` (déployé ✅ success)
+
+### PHASE 1 — Exécutée (résultats ci-dessous)
+| Élément | État |
+|---|---|
+| Commit courant, branche, dépôt | `84b1c8a`, `main`, HEAD poussé, working tree sans modifications suivies |
+| Script `0028_verify_readonly.sql` | présent (9 sections, purement lecture/information_schema) |
+| Runbook | présent (`docs/onboarding/RUNBOOK_ONBOARDING_SUPER_ADMIN.md`) |
+| Tests locaux (`npm test`) | ✅ 9/9 |
+| Routes production | ✅ HTTP 200 pour `/super-admin/onboarding/` et `/super-admin/` |
+| **Accès SQL authentifié dans cet environnement** | **INEXISTANT** (pas de CLI, pas de token, pas de `~/.supabase`, pas de mot de passe DB ; clé publishable anon = aveugle) |
+
+### PHASES 2–5 — NON LANCÉES (accès manquant)
+- Sauvegarde (§2), dépendances (§3), application 0028 (§4), Edge Function (§5), test bout en bout (§6-8) : **non exécutées**. Aucune preuve distante n'existe ; aucune écriture n'a eu lieu.
+
+### Verdict final : **NON OPÉRATIONNEL**
+Seule la préparation est en place (migrations, fonction, UI, scripts, preuves). Le parcours « Nouvel abonné » en production échoue actuellement faute de backend déployé.
+
+### Action minimale pour relancer immédiatement
+1. Ouvrir **Supabase Dashboard → SQL Editor** et exécuter l'intégralité de `supabase/verification/0028_verify_readonly.sql` ;
+2. Me transmettre les résultats (ou une capture) + confirmation que Backups/PITR est actif ;
+3. Sur votre feu vert après analyse : sauvegarde vérifiée → appliquer migrations manquantes (ordre certifié par les résultats) → appliquer 0028 → déployer `onboard-tenant` → test bout en bout avec un compte de test autorisé → consigner les preuves ici.
+
+### Protections respectées
+Comptes `a.naji`/`r.bami`, établissement `000…001`, abonnement `47b1c71e…` : **non modifiés, non lus autrement qu'en information_schema** ; aucun secret demandé/affiché/utilisé ; aucune migration appliquée.
