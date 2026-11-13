@@ -4452,3 +4452,59 @@ Inchangées : aucun compte modifié/supprimé, établissement 00000000-0000-0000
 
 ### 5. Procédure d'activation (prête, ordonnée, avec STOP)
 `docs/validation/ACTIVATION_SUPABASE.md` : 0 préservation → 1 sauvegarde vérifiée → 2 précontrôle read-only → 3 application 0028 → 4 déploiement Edge Function → 5 post-contrôles → 6 application 0018 (séparée) → 7 tests authentifiés bout en bout.
+
+---
+
+## 11 — État final de session et corrections de compte (date 2026-11-13)
+**SHA de référence** : `f5c781a` (HEAD = `origin/main`, synchronisé). Working tree propre (fichiers untracked hors périmètre conservés, non modifiés). **Aucune mutation distante** effectuée.
+
+### 1. Preuves d'exécution de cette session (contrôles réellement passés)
+| Contrôle | Résultat | Preuve |
+|---|---|---|
+| `npm test` | ✅ 15/15 pass, 0 fail | `scripts/test-onboarding.mjs` + `src/lib/crm-csv.ts` |
+| `npx tsc --noEmit` | ✅ exit 0 | TypeScript strict |
+| `npm run lint` | ✅ 0 erreur | ESLint (36 warnings préexistants hors périmètre) |
+| `npm run build` | ✅ Compiled successfully en 4,9s | Export statique Next.js |
+| Routes production `/super-admin/*` | ✅ 17/17 HTTP 200 | curl sur `auto-dyali.github.io` |
+| GitHub Actions CI `e6d9276` | ✅ `completed` / `success` | Run 43446041288 (TS + tests + lint + build + deploy) |
+
+### 2. Correction concernant les comptes `a.naji` et `r.bami` (nouvelle instruction utilisateur)
+Les deux comptes ont **déjà été supprimés par l'utilisateur** et ne doivent **pas** être recréés maintenant :
+
+| Compte | UUID historique | Statut | Instruction |
+|---|---|---|---|
+| `a.naji@auto-dyali.ma` | `31b0ca43-413b-4559-ab93-bc0637e97bde` | **Supprimé** | Ne pas préserver, ne pas restaurer, ne pas recréer maintenant |
+| `r.bami@auto-dyali.ma` | `72b8d0a6-c4b8-4b35-a5ab-9aca5ee84da2` | **Supprimé** | Ne pas préserver, ne pas restaurer, ne pas recréer maintenant |
+
+**Conséquences pour le système :**
+- Aucun profil `public.profiles` ne doit être créé pour ces UUID dans l'immédiat.
+- L'établissement partagé `00000000-0000-0000-0000-000000000001` et l'abonnement `47b1c71e-cf73-46a5-b0a4-b3f4ac762e22` ne doivent **pas** être réutilisés automatiquement pour ces anciens comptes.
+- Le système est préparé pour créer **ultérieurement deux entreprises abonnées indépendantes**, chacune avec son propre Manager, son propre établissement et son propre abonnement — via le flux onboarding sécurisé (0028 + Edge Function `onboard-tenant`) une fois activé à distance.
+- Aucune référence à ces anciens comptes n'est utilisée dans les guards ou redirections du code (vérification rôle uniquement via `get_my_profile()`).
+
+### 3. État des tâches réalisables localement — TOUTES TERMINÉES
+| Domaine | Statut | Preuve |
+|---|---|---|
+| Edge Function `onboard-tenant` (caller/admin, JWT, idempotence, compensation) | ✅ Corrigé, testé localement | `supabase/functions/onboard-tenant/index.ts` + tests 15/15 |
+| Validation onboarding client (UUID, durcissement) | ✅ Corrigé, testé localement | `src/lib/onboarding.ts` |
+| CRM Super Admin (filtres serveur, count exact, pagination, KPI, export CSV) | ✅ Implémenté, testé localement | `src/components/crm-module.tsx`, `src/lib/crm-csv.ts` |
+| Super Admin premium (16 modules, shell, navigation, KPIs, guards) | ✅ Implémenté, build OK | 16 routes `/super-admin/*`, `super-admin-shell.tsx`, `super-admin-module-page.tsx` |
+| Qualité (tsc/lint/tests/build) | ✅ Tous verts | Preuves tableau ci-dessus |
+| Déploiement production (GitHub Pages, 17 routes 200) | ✅ Vérifié | CI run 43446041288 + curl |
+
+### 4. Actions distantes RESTANTES (uniquement indispensables, aucune ne peut être levée localement)
+| Action distante | Motif du blocage | Prérequis exact pour lever |
+|---|---|---|
+| Appliquer `supabase/apply/0028_apply_minimal.sql` (onboarding) | Aucun accès SQL Editor / CLI / service_role ; aucune sauvegarde PITR vérifiée | Sauvegarde PITR confirmée + autorisation explicite + exécution SQL Editor |
+| Déployer Edge Function `onboard-tenant` (version caller/admin corrigée) | Dépend de 0028 appliquée + aucun accès déploiement Functions | 0028 appliquée + déploiement autorisé (CLI ou Dashboard) |
+| Appliquer `supabase/apply/0018_apply_minimal.sql` (CRM `crm_leads`/`crm_events`) | Même blocage (accès SQL distant) | Sauvegarde vérifiée + autorisation séparée |
+| Tests authentifiés bout en bout (création abonné, invitation Manager, isolation, CRM réel) | Nécessite backend distant actif + compte saas_admin de test | 0028 + Edge Function déployée + compte Super Admin autorisé |
+
+### 5. Verdict final (distingué, honnête)
+- **Code livré et finalisé localement** : Edge Function caller/admin, validation onboarding, CRM server-driven, 16 modules Super Admin, procédures d'activation. Tous les contrôles locaux passent (tests/tsc/lint/build).
+- **Déploiement vérifié** : CI success, 17 routes HTTP 200 en production.
+- **Fonctions métier réellement opérationnelles en production** : **non démontrables sans activation distante** (0028/0018/Edge Function déployées + tests authentifiés). Aucun faux succès déclaré, aucune simulation substituée à une fonction absente.
+- **Protections respectées** : `a.naji` / `r.bami` supprimés par l'utilisateur et non recréés ; établissement `00000000-0000-0000-0000-000000000001` et abonnement `47b1c71e-cf73-46a5-b0a4-b3f4ac762e22` non modifiés ; `service_role` uniquement côté serveur ; aucun secret demandé/affiché ; aucune migration distante appliquée.
+
+### 6. Procédure d'activation (prête, ordonnée, avec STOP)
+`docs/validation/ACTIVATION_SUPABASE.md` : 0 préservation → 1 sauvegarde vérifiée → 2 précontrôle read-only → 3 application 0028 → 4 déploiement Edge Function → 5 post-contrôles → 6 application 0018 (séparée) → 7 tests authentifiés bout en bout.
