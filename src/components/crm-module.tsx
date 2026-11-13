@@ -148,8 +148,13 @@ export function CrmModule() {
       .order("updated_at", { ascending: false })
       .range(start, end);
 
-    if (pageError && !pageError.message.includes("does not exist")) {
-      setError(pageError.message);
+    if (pageError) {
+      const manquant = /schema cache|PGRST205|Could not find/i.test(pageError.message);
+      setError(
+        manquant
+          ? "Le CRM n'est pas activé sur la production : la table crm_leads est absente. Exécutez FINAL_0028_PREFLIGHT_READONLY.sql pour l'état exact, puis appliquez supabase/apply/0018_apply_minimal.sql dans le SQL Editor (sauvegarde requise)."
+          : pageError.message
+      );
       setLoading(false);
       return;
     }
