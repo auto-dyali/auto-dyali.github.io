@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase-browser";
 import { useProfil } from "@/lib/features";
 import { versCentimes } from "../core/money.ts";
 import { calculerTicket } from "../core/pricing-engine.ts";
-import type { Client, LignePanier, ModePaiement, Prestation, Produit, Reglement, Totalities, Vehicule } from "../types";
+import type { Client, LignePanier, Prestation, Produit, Reglement, Totalities, Vehicule } from "../types";
 import {
   panierVide, ajouterProduit, ajouterPrestation, ajouterPrestationLibre,
   incrementerQuantite, majQuantite, majRemiseLigne, majLigneTva, majPrixUnitaire,
@@ -21,7 +21,7 @@ import {
   type EtatPanier,
 } from "../core/cart-engine.ts";
 import {
-  totalEncaisseCertainCent, monnaieARendreCent, validerReglements,
+ validerReglements,
 } from "../core/payment-engine.ts";
 import { construirePayloadVente, tailleFile } from "../core/sales-engine.ts";
 import { chargerCatalogue, rechercherProduits, type ResultatCatalogue } from "../services/products.service.ts";
@@ -166,7 +166,7 @@ export function usePos() {
     if (r.synchronisees.length === 0 && r.echecs.length === 0) {
       setSyncInfo("Aucune vente en attente de synchronisation.");
     }
-  }, [synchroniserFile]);
+  }, []);
 
   // Retour réseau : synchronise automatiquement (pas de setState dans l'effet
   // proprement dit : la mise à jour d'état se fait dans le gestionnaire d'événement).

@@ -10,7 +10,6 @@ import type { EtatPanier } from "./cart-engine.ts";
 import type { LignePanier, Reglement } from "../types";
 import { calculerTicket } from "./pricing-engine.ts";
 import { statutDeVente } from "./payment-engine.ts";
-import { arrondiCent } from "./money.ts";
 
 export type ItemsPayload = {
   product_id: string | null;

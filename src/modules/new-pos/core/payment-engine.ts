@@ -38,7 +38,6 @@ export const MODE_BDD: Record<ModePaiement, ModePaiementBdd> = {
   avoir: "avoir",
 };
 
-const MODES_NON_ESPECES = new Set<ModePaiement>(["cheque", "virement", "credit", "avoir", "mobile"]);
 
 /** Un règlement est-il un encaissement immédiat et certain ? */
 export function estEncaissementCertain(r: Reglement): boolean {

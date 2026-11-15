@@ -90,8 +90,6 @@ export function AtelierModule() {
   const [clients, setClients] = useState<{ id: string; full_name: string }[]>([]);
   const [form, setForm] = useState({ vehicleId: "", clientId: "", diagnosis: "" });
   const [filtreStatut, setFiltreStatut] = useState("actifs");
-  const [openDevis, setOpenDevis] = useState(false);
-  const [devisForm, setDevisForm] = useState({ clientId: "", vehicleId: "", diagnosis: "", reference: "" });
 
   // Détail d’un ordre : tâches + historique du véhicule
   const [selection, setSelection] = useState<WorkOrder | null>(null);
@@ -316,75 +314,6 @@ export function AtelierModule() {
   /* ---------------------------------------------------------------
    * Workflow Devis → Ordre de réparation
    * --------------------------------------------------------------- */
-  async function creerDevis(event: FormEvent) {
-    event.preventDefault();
-    if (!supabase || !devisForm.clientId || !devisForm.vehicleId) return;
-    setSaving(true);
-    setError(null);
-    const { data: profile } = await supabase.rpc("get_my_profile");
-    const establishmentId = profile?.[0]?.establishment_id;
-    const reference = `DEV-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`;
-    const { error: insertError } = await supabase
-      .from("work_orders")
-      .insert({
-        establishment_id: establishmentId,
-        vehicle_id: devisForm.vehicleId,
-        client_id: devisForm.clientId,
-        reference,
-        diagnosis: devisForm.diagnosis.trim() || null,
-        status: "devis_en_attente",
-        total_amount: 0,
-      });
-    if (insertError) setError(insertError.message);
-    else {
-      setNotice(`Devis ${reference} créé, en attente de validation client.`);
-      setOpenDevis(false);
-      setDevisForm({ clientId: "", vehicleId: "", diagnosis: "", reference: "" });
-      await loadOrders();
-    }
-    setSaving(false);
-  }
-
-  async function accepterDevis(order: WorkOrder) {
-    if (!supabase || !order) return;
-    setTraitement(order.id);
-    setError(null);
-    
-    // Mise à jour du statut en pending (ordre de réparation actif)
-    const { error: majError } = await supabase
-      .from("work_orders")
-      .update({ status: "pending" })
-      .eq("id", order.id);
-    
-    if (majError) {
-      setError(majError.message);
-    } else {
-      setNotice(`Ordre ${order.reference} créé, devis validé.`);
-      // Note : consommation de stock peut être déclenchée séparément
-      // ou via l'interface de gestion de pièces
-    }
-    setTraitement(null);
-    await loadOrders();
-  }
-
-  async function refuserDevis(order: WorkOrder) {
-    if (!supabase || !order) return;
-    setTraitement(order.id);
-    setError(null);
-    const { error: majError } = await supabase
-      .from("work_orders")
-      .update({ status: "pending" })
-      .eq("id", order.id);
-    if (majError) setError(majError.message);
-    else setNotice(`Devis ${order.reference} refusé, retour à l'état précédent.`);
-    setTraitement(null);
-    await loadOrders();
-  }
-
-  /** Bon d'intervention imprimable — thermique (58/80) ou A4/PDF.
-   *  Ce document N'EST NI une facture NI un ticket de paiement (mention
-   *  en pied de page). Imprimable à l'ouverture, en suivi comme à la
-   *  clôture : le statut courant figure sur le document. */
   async function imprimerBon(order: WorkOrder, format: "80mm" | "A4") {
     if (!supabase || traitement === order.id) return;
     setTraitement(order.id);

@@ -15,6 +15,7 @@ export function Logo({
   const basePath = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
   return (
     <div className={cn("flex flex-col items-center select-none", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`${basePath}/images/branding/logo.webp`} alt="AUTO DYALI" className={cn("object-contain", compact ? "h-10 w-10" : "h-32 w-32")} />
 
       {!compact && (

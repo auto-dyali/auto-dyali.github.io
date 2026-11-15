@@ -28,12 +28,6 @@ type Client = {
   prochaineEcheance: string | null;
 };
 
-type EntrepriseInfo = {
-  ice: string | null;
-  raison_sociale: string | null;
-  rc: string | null;
-};
-
 type VehiculeClient = { id: string; plate: string; brand: string; model: string; year: number | null };
 
 type VenteClient = {

@@ -8,6 +8,7 @@ import {
   slugify,
   isValidEmail,
   isValidSlug,
+  isValidRequestId,
   validateOnboardingInput,
   isOnboardingValid,
   buildRequestId,
@@ -105,4 +106,32 @@ test("forfaits valides sont standard, silver, gold", () => {
   assert.equal(PLANS.includes("standard"), true);
   assert.equal(PLANS.includes("silver"), true);
   assert.equal(PLANS.includes("gold"), true);
+});
+
+test("isValidRequestId valide un UUID v4 et rejette les formats invalides", () => {
+  const id = buildRequestId();
+  assert.equal(isValidRequestId(id), true);
+  assert.equal(isValidRequestId("not-a-uuid"), false);
+  assert.equal(isValidRequestId(""), false);
+  assert.equal(isValidRequestId("11111111-1111-1111-1111-111111111111"), false);
+});
+
+test("un email d'entreprise invalide est signalé quand renseigné", () => {
+  const errors = validateOnboardingInput({ ...base, email: "contact@garage" });
+  assert.ok(errors.email);
+});
+
+test("un email d'entreprise vide est accepté (champ optionnel)", () => {
+  const errors = validateOnboardingInput({ ...base, email: "" });
+  assert.equal(errors.email, undefined);
+});
+
+test("une durée d'essai non finie est rejetée", () => {
+  const errors = validateOnboardingInput({ ...base, trialDays: Number.NaN });
+  assert.ok(errors.trialDays);
+});
+
+test("le slug est trimé avant validation", () => {
+  const errors = validateOnboardingInput({ ...base, slug: "  garage-atlas  " });
+  assert.equal(errors.slug, undefined);
 });

@@ -37,6 +37,7 @@ const NAV: NavGroup[] = [
     titre: "Pilotage",
     items: [
       { label: "Tableau de bord", href: "/super-admin/", icon: "dashboard", route: true },
+      { label: "Pré-achats", href: "/super-admin/pre-achats/", icon: "card", route: true },
       { label: "Nouvel abonné", href: "/super-admin/onboarding/", icon: "plus", route: true },
       { label: "Entreprises", href: "/super-admin/entreprises/", icon: "building", route: true },
       { label: "Comptes & Managers", href: "/super-admin/managers/", icon: "users", route: true },

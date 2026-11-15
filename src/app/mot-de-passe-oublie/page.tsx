@@ -68,11 +68,17 @@ export default function MotDePasseOubliePage() {
             Après réception, vous serez redirigé vers la page de définition du nouveau
             mot de passe.
           </p>
+          <button type="button" onClick={() => router.push("/connexion/")} className="mt-3 text-sm font-medium underline">
+            Retour à la connexion
+          </button>
         </div>
       )}
       {erreur && (
         <div className="bg-red-100 border-red-400 text-red-700 p-4 rounded-md mb-6">
           <p>{erreur}</p>
+          <button type="button" onClick={() => router.push("/connexion/")} className="mt-3 text-sm font-medium underline">
+            Retour à la connexion
+          </button>
         </div>
       )}
       {!succès && !erreur && !enCours && (
@@ -97,6 +103,9 @@ export default function MotDePasseOubliePage() {
             disabled={enCours}
           >
             Envoyer le lien de récupération
+          </button>
+          <button type="button" onClick={() => router.push("/connexion/")} className="block w-full text-center text-sm text-[#A7B7A8] underline">
+            Retour à la connexion
           </button>
         </form>
       )}

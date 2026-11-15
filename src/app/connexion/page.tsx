@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { supabase } from "@/lib/supabase-browser";
@@ -172,7 +173,7 @@ export default function ConnexionPage() {
                 />
                 Se souvenir de moi
               </label>
-              <a href="#" className="text-[#8FB59B] underline underline-offset-2">
+              <a href="/mot-de-passe-oublie/" className="text-[#8FB59B] underline underline-offset-2">
                 Mot de passe oublié ?
               </a>
             </div>
@@ -196,6 +197,11 @@ export default function ConnexionPage() {
             <span className="h-px flex-1 bg-white/15" />
             <span>ou</span>
             <span className="h-px flex-1 bg-white/15" />
+          </div>
+
+          <div className="mt-4 grid gap-2 text-center text-sm">
+            <Link href="/offres/" className="rounded-lg border border-[#8FB59B]/30 px-4 py-2.5 text-[#DFE7E2] transition hover:bg-[#344440]">Découvrir les offres AUTO DYALI</Link>
+            <Link href="/pre-achat/" className="btn-or px-4 py-2.5">Demander un pré-achat</Link>
           </div>
 
           {/* Signature marque */}

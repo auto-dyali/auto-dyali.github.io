@@ -8,6 +8,7 @@
 export function prochaineEcheance(
   derniereInterventionIso: string | null,
   derniereVerificationIso: string | null,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _creationClientIso: string | null,
 ): string | null {
   const ref = derniereVerificationIso ?? derniereInterventionIso;

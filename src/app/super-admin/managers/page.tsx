@@ -35,10 +35,11 @@ export default function ManagersPage() {
   const [recherche, setRecherche] = useState("");
   const [filtreEtat, setFiltreEtat] = useState<"tous" | "actifs" | "inactifs">("tous");
   const [traitement, setTraitement] = useState<string | null>(null);
-  const { success: notifySuccess, error: notifyError, info: notifyInfo } = useNotification();
+  const { success: notifySuccess, error: notifyError } = useNotification();
 
   useEffect(() => {
     void charger();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function charger() {

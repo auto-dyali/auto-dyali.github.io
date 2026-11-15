@@ -39,7 +39,7 @@ export default function GaragesPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [recherche, setRecherche] = useState("");
   const [traitement, setTraitement] = useState<string | null>(null);
-  const { success: notifySuccess, error: notifyError, info: notifyInfo } = useNotification();
+  const { success: notifySuccess, error: notifyError } = useNotification();
 
   useEffect(() => {
     void (async () => {
@@ -55,6 +55,7 @@ export default function GaragesPage() {
       else setPlans((p.data ?? []) as Plan[]);
       setLoading(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const synthese = useMemo(

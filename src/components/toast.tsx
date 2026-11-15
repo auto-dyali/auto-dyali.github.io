@@ -6,7 +6,7 @@
  * avec un état visuel distinct pour succès, erreur, avertissement et information.
  */
 
-import { createContext, useCallback, useContext, useState, useEffect, useRef } from "react";
+import { createContext, useCallback, useContext, useState, useEffect } from "react";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 

@@ -7,10 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test scripts/test-crm-csv.mjs scripts/test-onboarding.mjs",
-    "test:crm": "node --test scripts/test-crm-csv.mjs",
+    "test": "node --test scripts/test-crm-csv.mjs scripts/test-onboarding.mjs scripts/test-csv-export.mjs scripts/test-crm.mjs scripts/test-pre-purchase.mjs",
+    "test:crm": "node --test scripts/test-crm-csv.mjs scripts/test-crm.mjs",
     "test:onboarding": "node --test scripts/test-onboarding.mjs",
-    "db:check": "node scripts/check-db.mjs"
+    "db:check": "node scripts/check-db.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:preachat": "node --test scripts/test-pre-purchase.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
@@ -22,6 +25,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

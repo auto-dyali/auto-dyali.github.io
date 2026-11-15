@@ -56,7 +56,7 @@ export default function OnboardingPage() {
   const [enCours, setEnCours] = useState(false);
   const [resultat, setResultat] = useState<Record<string, unknown> | null>(null);
 
-  const { success, error: notifyError, warning: notifyWarning, info } = useNotification();
+  const { success, error: notifyError, warning: notifyWarning } = useNotification();
 
   type Plan = {
     code: string;
@@ -98,6 +98,7 @@ export default function OnboardingPage() {
       setChargementPlans(false);
     })();
     return () => { vivant = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const planActif = plansReels.find((p) => p.code === form.plan);

@@ -32,7 +32,6 @@ export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [recherche, setRecherche] = useState("");
   const [filtreStatut, setFiltreStatut] = useState<string>("tous");
   const [selection, setSelection] = useState<Ticket | null>(null);
@@ -162,7 +161,6 @@ export default function SupportPage() {
         </label>
       </div>
 
-      {notice && <p role="status" className="mt-4 rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
       {erreur && <div className="mt-4"><Erreur message={erreur} /></div>}
 
       {loading ? (

@@ -8,8 +8,7 @@
 
 import type { LignePanier, RemiseGlobale, Totalities } from "../types";
 import { baseLigneNetteCent, remiseLigneCent, remiseGlobaleEffectiveCent, repartitionRemiseGlobale } from "./discount-engine.ts";
-import { depuisCentimes } from "./money.ts";
-import { groupesTva, tvaLigneCent } from "./tax-engine.ts";
+import { groupesTva } from "./tax-engine.ts";
 
 export const REMISE_GLOBALE_VIDE: RemiseGlobale = { pourcent: 0, montantCent: 0 };
 

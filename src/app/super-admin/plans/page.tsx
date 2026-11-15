@@ -42,7 +42,7 @@ export default function PlansPage() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [traitement, setTraitement] = useState<string | null>(null);
-  const { success: notifySuccess, error: notifyError, info: notifyInfo } = useNotification();
+  const { error: notifyError } = useNotification();
   const [brouillon, setBrouillon] = useState<Record<string, Plan>>({});
 
   useEffect(() => {

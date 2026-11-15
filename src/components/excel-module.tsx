@@ -369,9 +369,9 @@ export function ExcelModule() {
       const vin = getCol("vin") || "";
       const marque = getCol("marque") || getCol("Marque") || "";
       const modele = getCol("modele") || getCol("Modèle") || "";
-      const version = getCol("version") || "";
+      void getCol("version");
       const anneeStr = getCol("annee") || getCol("Annee") || "";
-      const motorisation = getCol("motorisation") || getCol("Motorisation") || "";
+      void (getCol("motorisation") || getCol("Motorisation"));
       const carburant = getCol("carburant") || getCol("Carburant") || "";
       const cylindreeStr = getCol("cylindree") || getCol("Cylindree") || "";
       const boite_vitesses = getCol("boite_vitesses") || getCol("Boite_vitesses") || getCol("Boîte_vitesses") || "";
@@ -432,19 +432,18 @@ export function ExcelModule() {
 
       // Rapprochement client
       let clientId = "";
-      let clientInconnu = true;
+
       const clientPhone = getCol("client_phone") || "";
       if (clientPhone && clientsParTelephone.has(clientPhone.toLowerCase())) {
         clientId = clientsParTelephone.get(clientPhone.toLowerCase()) ?? "";
-        clientInconnu = false;
+
         rapportCalcule.clients_rapproches += 1;
       } else if (clientPhone && clientsParCode.has(clientPhone.toLowerCase())) {
         clientId = clientsParCode.get(clientPhone.toLowerCase()) ?? "";
-        clientInconnu = false;
+
         rapportCalcule.clients_rapproches += 1;
       } else if (!clientPhone) {
         clientId = "";
-        clientInconnu = true;
         rapportCalcule.clients_inconnus += 1;
       } else {
         rapportCalcule.clients_inconnus += 1;
@@ -452,7 +451,7 @@ export function ExcelModule() {
 
       // Parsing des champs numériques
       const annee = anneeStr ? Number(anneeStr) : null;
-      const cylindree = cylindreeStr ? Number(cylindreeStr) : null;
+      void cylindreeStr;
       const kilometrage = kilometrageStr ? Math.max(0, Number(kilometrageStr)) : 0;
 
       // Insertion véhicule

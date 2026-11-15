@@ -59,7 +59,7 @@ export default function MotDePasseTraitePage({ searchParams }: { searchParams: {
       // Après mise à jour réussie, déconnexion automatique et retour à la connexion
       await supabase.auth.signOut();
       router.replace("/connexion/");
-    } catch (err) {
+    } catch {
       setErreur("Une erreur est survenue. Veuillez réessayer plus tard.");
       setEnCours(false);
     }
