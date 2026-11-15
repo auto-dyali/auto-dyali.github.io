@@ -5673,3 +5673,59 @@ Conclusion addendum : ré-exécution E2E impossible dans cet environnement en ra
 7. Intégrer et tester réellement paiements (preuves), emails, WhatsApp, IA, sauvegardes.
 
 **Conclusion §31** : livrables commerciaux locaux (pré-achat) et correctifs ciblés (câblage dashboard, diagnostics Playwright) réalisés et vérifiés par `tsc/lint/test(40)/build` ; tests E2E ajoutés mais non exécutables dans l’environnement courant ; opérations réelles serveur/intégrations/comptes de production **non réalisées** (gel P0/dépendances). **AUTO DYALI non déclaré 100 % opérationnel.**
+
+## 32 — Reprise achèvement post-autorisation globale, commit local et audit état réel (session) — 2026-11-15
+
+**Reprise** : lecture GV5 §22–§31 et du runbook `docs/RUNBOOK_ACHVEMENT_OPERATIONS_DISTANTES.md` ; historique intégral conservé (append-only). Autorisation globale d’achèvement prise en compte ; protections Supabase obligatoires respectées (aucune suppression/récréation/vidage de projet/tables/données/Auth/Storage/utilisateurs, aucun reset global/migration destructive, aucun remplacement d’URL prod, aucun secret exposé). Aucune opération distante Supabase/GitHub Pages effectuée faute de prérequis sûrs.
+
+### 1) Audit de l’état réel (sans mutation)
+
+| Élément | Observation factuelle | Statut |
+|---|---|---|
+| Dépôt / git | Branche `main` @ base `717acbc...origin/main` avant session ; 70 fichiers modifiés/ajoutés en staging (travaux locaux préexistants). Commit local créé : **`7ed9a4a`** — « GV5 §31-32: pré-achat, durcissement P0 préparé, docs runbook, validations locales » (70 files changed, 6940 insertions, 2047 deletions). État après commit : `main...origin/main [ahead 1]`. | **FAIT ET VÉRIFIÉ** |
+| Push / déploiement GitHub Pages | `git push origin main` → `fatal: unable to access 'https://github.com/auto-dyali/auto-dyali.github.io.git/': Could not resolve host: github.com` ; `PUSH_EXIT=128`. CI `.github/workflows/deploy-pages.yml` non déclenchée depuis cet environnement. | **BLOQUÉ PAR DÉPENDANCE EXTERNE / RÉSEAU** |
+| Credentials / outils Supabase | `.env.local` : uniquement `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (publics). Absents : `SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_SECRET_KEY`/DB URL/access token. CLI `supabase` et `gh` non disponibles. `supabase/config.toml` absent. | **BLOQUÉ PAR SERVICE OU SECRET EXTERNE** (accès privilégié requis) |
+| État Supabase distant (lecture seule, anon) | `npm run db:check` (`DBCHECK_EXIT=1`) : **16 élément(s) manquant(s)** côté anon — 0008 (products.stock/colonnes catalogue, `plans`), 0009 (`plan_features`, `subscriptions`, RPC `my_features()` absente), 0011 (payments.method `mobile`), 0013 (`tire_specs`, `quotes`, `quote_items`), 0015 (`support_tickets`, `ticket_messages`), 0016 (`vehicle_catalog`, `part_compatibilities`), 0017 (`client_notifications.channel`), 0018 (`crm_leads`, `crm_events`). `decrement_product_stock()` ✓ présente. Tables/réconciliation réelles (dont 0028/0033/0034/0035, RLS/policies/grants/propriétaires/overloads/auth/config) **non vérifiables** sans accès SQL/admin. | **FAIT ET VÉRIFIÉ (vue anon)** ; état réel admin **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** |
+| Sauvegarde / PITR | Non vérifiables sans accès Dashboard/infra. Aucune opération destructive/irréversible lancée. | **BLOQUÉ PAR AUTORISATION/ACCÈS** (prérequis non prouvable) |
+| E2E Playwright | Non ré-exécuté avec succès dans cette session (environnement connu pour crash navigateur au lancement, cf. §30–§31). Référence antérieure simulée : §29 `29 passed (1.8m)`, `PW_EXIT=0` (mocks). | **BLOQUÉ PAR DÉPENDANCE EXTERNE / ENVIRONNEMENT** |
+
+### 2) Actions réalisées (locales, sûres)
+
+- Ré-exécution des validations locales sur l’état commité : `npx tsc --noEmit` **TSC=0** ; `npm run lint` **LINT=0** ; `npm test` **TEST=0** (40 tests, 0 échec) ; `npm run build` **BUILD=0** (export statique). **FAIT ET VÉRIFIÉ**.
+- Vérification staging : aucune correspondance évidente de fichier secret (`.env`, clé service role, mot de passe, pem) dans l’index avant commit. **FAIT ET VÉRIFIÉ**.
+- Commit local `7ed9a4a` incluant (notamment) : parcours pré-achat (`/offres`, `/pre-achat`, `/super-admin/pre-achats`, `src/lib/pre-purchase.ts`), câblage dashboard SA (section Comptes & profils, modale détail), migrations préparées non appliquées `0033/0034/0035`, tests `scripts/test-pre-purchase.mjs` + specs E2E ajoutées, docs (runbook, scénarios 15 modules, onboarding 12 étapes, sauvegarde/restauration, intégrations, corrections P0 préparées), registre GV5. **FAIT ET VÉRIFIÉ**.
+- `npm run db:check` exécuté en lecture seule (résultat ci-dessus). **FAIT ET VÉRIFIÉ**.
+
+### 3) Non réalisé (conformément aux protections/blocages)
+
+- **Aucune** migration/RPC/RLS/ACL/policy/fonction SECURITY DEFINER/Edge Function/Auth/Storage/config distante appliquée ou modifiée (pas d’accès privilégié, sauvegarde/PITR non vérifiée).
+- **Aucune** création/modification/suppression de données, comptes, utilisateurs, relations, établissements, abonnements réels.
+- **Aucun** push/déploiement effectué (réseau GitHub indisponible).
+- **Aucune** intégration externe réelle activée/prouvée (paiement, email/SMTP, WhatsApp, IA, sauvegardes) ; aucune simulation présentée comme réelle.
+- Découpage exhaustif dashboard, correction/validation bout-en-bout des 15 modules SA, responsive complet, parcours Manager/permissions/isolation réels, E2E réussis en exécution courante : **non achevés/non prouvés**.
+
+### 4) Classification synthétique (état courant)
+
+| Domaine | Statut |
+|---|---|
+| Code pré-achat (UI, validation, module SA, RPC/insert contrôlé côté client avec refus d’affirmer un enregistrement si indisponible) | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** en conditions serveur réelles |
+| Migrations 0033/0034/0035 (et autres préparées listées au runbook) | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** / **NON APPLIQUÉE** |
+| Durcissement P0 RPC admin (0034) / onboarding 0028+EF / RPC pré-achat 0035 | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** (application/déploiement/config bloqués) |
+| Validations locales tsc/lint/test/build | **CONFORME ET VÉRIFIÉ** (local) |
+| db:check (vue anon) | **CONFORME ET VÉRIFIÉ** (lecture seule, 16 manquants signalés) |
+| Push GitHub / déploiement Pages / site publié vérifié | **BLOQUÉ PAR DÉPENDANCE EXTERNE / RÉSEAU** |
+| Migrations/RLS/RPC/EF/Auth réels, multi-tenant/RLS prouvé, parcours pré-achat→activation→dashboard réel, 15 modules SA validés bout-en-bout | **BLOQUÉ PAR SERVICE OU SECRET EXTERNE / ACCÈS / SAUVEGARDE NON VÉRIFIÉE** |
+| Sauvegarde exploitable / PITR | **BLOQUÉ (non vérifiable)** |
+| E2E ré-exécutés avec succès | **BLOQUÉ PAR ENVIRONNEMENT** (réf. §29 simulée 29/29) |
+| Intégrations paiements/emails/WhatsApp/IA/sauvegardes réelles | **BLOQUÉ PAR SERVICE OU SECRET EXTERNE** (ou ABSENT si non configurées) |
+
+### 5) Prochaines actions sûres (dès accès disponibles, ordre contrôlé)
+
+1. **Push** `main` (incl. `7ed9a4a`) depuis environnement réseau/CI autorisé → vérifier exécution workflow Pages et site publié (preuves URL/build).
+2. **Supabase (accès privilégié, lecture seule d’abord)** : audit réel schéma/définitions/grants/propriétaires/`search_path`/SECURITY DEFINER/overloads/RLS-policies/helpers Auth, réconciliation avec migrations locales ; **vérifier sauvegarde/PITR** et consigner point de restauration.
+3. **Application contrôlée** (après sauvegarde vérifiée) selon runbook : migrations manquantes/base, `0034` (P0), onboarding `0028` + déploiement EF + Auth/SMTP/Redirect URLs, `0033`+`0035` pré-achat, puis 0026/0029/0030/0031/0032 selon état réel ; vérifications après chaque étape (grants, RLS, appels autorisés/refusés, audit, idempotence, non-régression).
+4. **Validation fonctionnelle réelle** (comptes test isolés) : Auth/invitations (usage unique/expiration, pas de mot de passe en clair), parcours pré-achat→validation→abonné→Manager→invitation→activation→dashboard, 15 modules SA, multi-tenant/RLS, RPC/Edge Functions.
+5. **E2E** en navigateur/CI compatible ; correction des défauts révélés ; preuve déploiement.
+6. Mettre à jour GV5 avec preuves, hashes, et statut final par élément (**CONFORME ET VÉRIFIÉ / IMPLÉMENTÉ MAIS NON VÉRIFIÉ / PARTIEL / ABSENT / BLOQUÉ**).
+
+**Conclusion §32** : audit local/distant-anon réalisé, validations locales vertes, commit `7ed9a4a` créé ; push et toute opération Supabase distante restent bloqués par accès réseau/credentials/sauvegarde non vérifiée. **AUTO DYALI n’est pas déclaré terminé ni opérationnel à 100 %** faute de preuves réelles serveur, déploiement, sécurité multi-tenant effective, parcours bout-en-bout et intégrations.
