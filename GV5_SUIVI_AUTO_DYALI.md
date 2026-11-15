@@ -5776,3 +5776,55 @@ Conclusion addendum : ré-exécution E2E impossible dans cet environnement en ra
 - Valider parcours réels (pré-achat→abonné→Manager→invitation→activation→dashboard), 15 modules SA, Auth, RLS/multi-tenant, RPC/EF sur comptes test isolés ; exécuter E2E en environnement compatible ; corriger et re-tester.
 
 **Conclusion §33** : toutes les vérifications/tentatives sûres réalisables dans l’environnement courant ont été effectuées (réseau, auth, push, db:check anon, smoke E2E, validations locales vertes). Aucun blocage n’a été masqué ni contourné ; aucune preuve inventée. **AUTO DYALI ne peut être déclaré terminé/opérationnel** sans accès réseau+GitHub valide, accès Supabase privilégié avec sauvegarde/PITR vérifiée, exécution E2E réussie, validations réelles serveur/Auth/multi-tenant/parcours critiques et déploiement vérifié.
+
+## 34 — Préparation urgente des comptes de test AUTO DYALI (P0, livraison demain matin) — 2026-11-15
+
+**Contexte** : demande urgente P0 de préparer 6 comptes de test fonctionnels pour les testeurs demain matin. Reprise directe de l'état §33, aucun audit général recommencé, historique GV5 préservé (append-only).
+
+### 1) Contrainte absolue respectée
+**Aucun compte n'est déclaré prêt sans test réel de connexion et de permissions.** Dans l'environnement courant, je n'ai **aucun accès à Supabase** (pas de credentials privilégiés, pas de CLI, réseau vers github.com et supabase.co bloqué). Par conséquent :
+- Aucun compte Auth n'a pu être créé.
+- Aucun profil/établissement n'a pu être inséré en base.
+- Aucune connexion réelle n'a pu être testée.
+- Aucun résultat de test n'est encore enregistré.
+
+Tous les comptes ci-dessous sont **PRÉPARÉS mais NON CRÉÉS ni NON TESTÉS** à ce stade. Ils seront créés et testés dès qu'un accès Supabase privilégié sera disponible.
+
+### 2) Fichiers de préparation créés (commis, sans secrets)
+
+| Fichier | Contenu | Secret ? | Statut |
+|---|---|---|---|
+| `supabase/00_test_comptes_preparation.sql` | SQL idempotent, non destructif : 2 établissements (Garage 1/2), 6 profils liés aux Auth, 6 fiches employés, permissions modules (caisse/stock). Pré-contrôles schéma. **Ne contient pas de mots de passe.** | Non | **COMMITÉ** (`b925587`) |
+| `docs/COMPTES_TEST_PREPARATION.md` | Méthode, liste des comptes (emails, rôles, établissements, modules), ordre d'exécution (Étape A Auth / Étape B SQL / Étape C tests), procédure de vérification par compte, isolation Garage 1 vs 2, données de démo, règles absolues. **Ne contient pas de mots de passe.** | Non | **COMMITÉ** (`b925587`) |
+| `TMP/opencode/FICHE_CONFIDENTIELLE_COMPTES_TEST_AUTODYALI.md` | Fiche confidentielle avec **mots de passe temporaires uniques** (hors dépôt, jamais commité). À remettre aux testeurs après création/test réel. | **OUI** | LOCAL uniquement, non commité |
+
+### 3) Comptes de test à créer (dès accès Supabase disponible)
+
+| Compte | Email | Rôle | Établissement | Modules accessibles | Espace après connexion | Mot de passe |
+|---|---|---|---|---|---|---|
+| SAAS_ADMIN | admin.saas@autodyali.test | saas_admin | — (plateforme) | Tous (portail Super Admin) | /super-admin/ | fiche confidentielle |
+| MANAGER_GARAGE_1 | manager.garage1@autodyali.test | manager | Garage 1 | Tableau de bord complet G1 | /tableau-de-bord/ | fiche confidentielle |
+| MANAGER_GARAGE_2 | manager.garage2@autodyali.test | manager | Garage 2 | Tableau de bord complet G2 | /tableau-de-bord/ | fiche confidentielle |
+| EMPLOYEE_CAISSE | caisse.garage1@autodyali.test | employee | Garage 1 | Point de vente + Caisse | /employe/ | fiche confidentielle |
+| EMPLOYEE_STOCK | stock.garage1@autodyali.test | employee | Garage 1 | Stock uniquement | /employe/ | fiche confidentielle |
+| EMPLOYEE_CAISSE_STOCK | caisse-stock.garage1@autodyali.test | employee | Garage 1 | Point de vente + Caisse + Stock | /employe/ | fiche confidentielle |
+
+### 4) Ordre d'exécution (dès accès Supabase)
+- **Étape A** : Créer les 6 utilisateurs Auth (email + mot de passe temporaire) via Supabase Dashboard → Authentication → Users, ou `auth.admin.createUser` côté serveur (clé service_role, jamais exposée).
+- **Étape B** : Exécuter `supabase/00_test_comptes_preparation.sql` (éditeur SQL Supabase, service role) — crée établissements, profils, employés, permissions (idempotent, non destructif).
+- **Étape C** : Tester chaque compte (procédure dans `docs/COMPTES_TEST_PREPARATION.md`) et consigner les résultats réels dans la fiche confidentielle + le registre GV5.
+
+### 5) Procédure de vérification par compte (à exécuter réellement)
+Pour chaque compte : authentification réelle → redirection vers le bon espace → rôle/permissions corrects → modules accessibles conformes aux droits → opérations interdites refusées (EMPLOYEE_CAISSE pas de Stock, EMPLOYEE_STOCK pas de Caisse/POS, pas d'accès /super-admin/ pour un employee) → isolation Garage 1 vs Garage 2 → déconnexion/reconnexion.
+
+### 6) Validations locales (état courant, inchangé)
+`npx tsc --noEmit` **0** ; `npm run lint` **0** ; `npm test` **40 pass / 0 fail** ; `npm run build` **0** (export statique).
+
+### 7) Git / déploiement
+- Commits locaux prêts et non poussés : `7ed9a4a`, `0d49222`, `080b7d0`, `b925587` → `main...origin/main [ahead 4]`.
+- `git push origin main` → `Could not resolve host: github.com` (`PUSH_EXIT=128`). Déploiement GitHub Pages non déclenché, site publié non vérifié.
+
+### 8) Blocage résiduel (factuel)
+Création et test réels des comptes bloqués par l'absence d'accès à Supabase (credentials privilégiés + réseau) et l'impossibilité de pousser sur GitHub. Dès que ces dépendances sont disponibles, les comptes peuvent être créés et testés en suivant `docs/COMPTES_TEST_PREPARATION.md`, puis la fiche confidentielle complétée avec les résultats réels.
+
+**Conclusion §34** : kit de comptes de test entièrement préparé (SQL, docs, fiche confidentielle avec passwords hors dépôt). Aucun compte n'est créé ni déclaré prêt sans test réel, conformément à la règle absolue. Création et vérification effectives requièrent un accès Supabase privilégié et le réseau GitHub.
