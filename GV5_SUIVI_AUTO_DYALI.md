@@ -5729,3 +5729,50 @@ Conclusion addendum : ré-exécution E2E impossible dans cet environnement en ra
 6. Mettre à jour GV5 avec preuves, hashes, et statut final par élément (**CONFORME ET VÉRIFIÉ / IMPLÉMENTÉ MAIS NON VÉRIFIÉ / PARTIEL / ABSENT / BLOQUÉ**).
 
 **Conclusion §32** : audit local/distant-anon réalisé, validations locales vertes, commit `7ed9a4a` créé ; push et toute opération Supabase distante restent bloqués par accès réseau/credentials/sauvegarde non vérifiée. **AUTO DYALI n’est pas déclaré terminé ni opérationnel à 100 %** faute de preuves réelles serveur, déploiement, sécurité multi-tenant effective, parcours bout-en-bout et intégrations.
+
+## 33 — Poursuite autonome (continuité) — 2026-11-15
+
+**Contexte** : reprise immédiate après §32, sans demande de validation intermédiaire. Commits locaux conservés : `7ed9a4a`, `0d49222`. Historique GV5 intégralement préservé (append-only). Aucune opération destructive/irréversible, aucune mutation Supabase distante, aucune exposition de secret.
+
+### 1) Vérifications d’accès / tentatives (réseau, GitHub, Supabase, E2E)
+
+| Action | Résultat exact | Statut |
+|---|---|---|
+| Résolution/accès réseau GitHub | `curl -I -sS --max-time 8 https://github.com` → `Could not resolve host: github.com` (`CURL_GH=0`). | **BLOQUÉ PAR RÉSEAU/DÉPENDANCE EXTERNE** |
+| Résolution/accès réseau Supabase | `curl -sS --max-time 8 ... https://nxmsqqoflskfajqrqddw.supabase.co/rest/v1/` → `Could not resolve host` (`HTTP 000`). | **BLOQUÉ PAR RÉSEAU/DÉPENDANCE EXTERNE** |
+| Outils disponibles | `supabase` CLI absent ; `gh` présent (`~/.local/bin/gh`) ; `npx` présent ; Playwright 1.65.1, navigateurs installés localement (`chromium-1255`, `chromium_headless_shell-1255`, `ffmpeg-1013`). | **FAIT ET VÉRIFIÉ** |
+| Auth GitHub CLI | `gh auth status` → tokens invalides pour comptes configurés (`auto-dyali`, `meachbani-tech`), ré-authentification requise (`gh auth login`). Aucune tentative d’exfiltration/affichage de secret. | **BLOQUÉ PAR SERVICE OU SECRET EXTERNE** (auth invalide) |
+| `git push origin main` (réessayé) | `fatal: unable to access 'https://github.com/auto-dyali/auto-dyali.github.io.git/': Could not resolve host: github.com` ; `PUSH_EXIT=128`. État git : `main...origin/main [ahead 2]`. | **BLOQUÉ PAR RÉSEAU** (commits conservés) |
+| État Supabase (lecture seule, anon) | `npm run db:check` → `DBCHECK_EXIT=1`, **16 élément(s) manquant(s)** inchangés (0008/0009/0011/0013/0015/0016/0017/0018, `my_features()` absente, `decrement_product_stock()` présente). | **FAIT ET VÉRIFIÉ (vue anon, inchangé)** |
+| E2E smoke (tentative de résolution environnement) | Build `out/` servi localement (`http://localhost:4173`, HTTP 200 sur `/connexion/`), puis `PLAYWRIGHT_BASE_URL=http://localhost:4173 npx playwright test tests/e2e/smoke-public.spec.ts --reporter=line --workers=1` → **2 failed / 0 passed**. Cause : `browserType.launch: Target page, context or browser has been closed` ; Chromium headless shell `FATAL base/apple/mach_port_rendezvous_mac.cc:159 ... bootstrap_check_in ... unknown error code (141)` (SIGTRAP) au lancement (pid 21933, 21935). Artefacts temporaires de test nettoyés. | **BLOQUÉ PAR ENVIRONNEMENT** (crash navigateur reproductible ; non imputé au code applicatif) |
+
+### 2) Validations locales (état courant, inchangé)
+
+| Commande | Résultat | Statut |
+|---|---|---|
+| `npx tsc --noEmit` | `TSC=0` | **CONFORME ET VÉRIFIÉ** |
+| `npm run lint` | `LINT=0` | **CONFORME ET VÉRIFIÉ** |
+| `npm test` | 40 tests, 0 échec ; `TEST=0` | **CONFORME ET VÉRIFIÉ** |
+| `npm run build` | export statique OK ; `BUILD=0` | **CONFORME ET VÉRIFIÉ** |
+
+### 3) Opérations non réalisées (raisons factuelles)
+
+- **Supabase distant** (audit SQL privilégié, sauvegarde/PITR, migrations/RPC/RLS/ACL/SECURITY DEFINER/grants, EF `onboard-tenant`, Auth/SMTP/Redirect URLs/secrets, données/comptes réels) : **non réalisé** — absence d’accès privilégié/credentials/CLI et impossibilité de vérifier sauvegarde/PITR (prérequis obligatoire) ; réseau vers hôte Supabase non résolu dans l’environnement.
+- **Push/déploiement GitHub Pages/vérification site publié** : **non réalisé** — DNS GitHub non résolu, auth `gh` invalide.
+- **E2E exécutés avec succès / parcours Auth-invitations-rôles-multi-tenant-RPC-EF réels bout-en-bout** : **non réalisé** — crash navigateur en environnement local ; dépendances serveur/accès manquantes pour tests réels.
+
+### 4) Interventions humaines / dépendances réellement indispensables
+
+1. **Réseau/egress** fonctionnel vers `github.com` et `https://nxmsqqoflskfajqrqddw.supabase.co` (ou exécution depuis CI/poste autorisé).
+2. **GitHub** : authentification valide (SSH/token/`gh auth login`) pour push `main` (`7ed9a4a`, `0d49222`) et déclenchement/vérification workflow Pages.
+3. **Supabase** : accès privilégié sécurisé (Dashboard/SQL owner ou credentials service/DB gérés hors dépôt) + **sauvegarde exploitable/PITR vérifiée** avant toute modification sensible.
+4. **Environnement d’exécution E2E** compatible (CI ou machine où Playwright/Chromium peut se lancer) pour rejouer la suite complète et corriger les défauts éventuels.
+5. **Secrets/config fournisseurs** (SMTP/Auth, paiement, WhatsApp, IA, etc.) fournis et configurés de façon sécurisée pour tests/intégrations réels — sans jamais être exposés.
+
+### 5) Préparation de reprise directe (dès dépendances disponibles)
+
+- Pousser les 2 commits, vérifier CI Pages et site publié (hash/URL).
+- Audit read-only Supabase complet → sauvegarde/PITR vérifiée → appliquer migrations/runbook (`0034`, `0028`+EF+Auth, `0033`+`0035`, réconciliation 0008+ et 0026/0029/0030/0031/0032) avec contrôles avant/après.
+- Valider parcours réels (pré-achat→abonné→Manager→invitation→activation→dashboard), 15 modules SA, Auth, RLS/multi-tenant, RPC/EF sur comptes test isolés ; exécuter E2E en environnement compatible ; corriger et re-tester.
+
+**Conclusion §33** : toutes les vérifications/tentatives sûres réalisables dans l’environnement courant ont été effectuées (réseau, auth, push, db:check anon, smoke E2E, validations locales vertes). Aucun blocage n’a été masqué ni contourné ; aucune preuve inventée. **AUTO DYALI ne peut être déclaré terminé/opérationnel** sans accès réseau+GitHub valide, accès Supabase privilégié avec sauvegarde/PITR vérifiée, exécution E2E réussie, validations réelles serveur/Auth/multi-tenant/parcours critiques et déploiement vérifié.
