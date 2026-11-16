@@ -6089,3 +6089,137 @@ Aucune migration n'a été appliquée sur la base distante (pas d'accès).
 Tous les fichiers de préparation sont prêts pour exécution immédiate dès que les dépendances externes seront disponibles.
 
 **Aucune donnée existante n'a été modifiée ni supprimée. Aucun secret n'a été exposé.**
+
+## 37 — Création du premier abonné professionnel (Super Admin + invitation e-mail + WhatsApp) — 2026-11-16
+
+**Objectif GV5 §37** : Permettre au Super Admin de créer un premier abonné professionnel (établissement + manager + abonnement + modules) avec invitation sécurisée par e-mail et WhatsApp, puis activation du compte par le manager.
+
+**Règles respectées** : historique GV5 préservé (append-only), 14 commits locaux conservés, aucun secret exposé, aucune migration destructive, aucune donnée existante modifiée, aucune déclaration de succès sans preuve réelle.
+
+---
+
+### 1. FICHIERS CRÉÉS (§37)
+
+| Fichier | Contenu | Statut |
+|---------|---------|--------|
+| `supabase/migrations/0036_invitations_manager_prepared_NOT_APPLIED.sql` | Table `invitations` (jeton, statut, expiration, établissement), table `invitation_events` (historique envois), fonction `gen_invitation_token()`, RPC `admin_invite_manager` (création transactionnelle), RPC `admin_accept_invitation` (activation), RLS saas_admin/manager | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (migration non appliquée, pas d'accès Supabase) |
+| `src/app/activer/[token]/page.tsx` | Page d'activation : validation jeton via RPC `admin_accept_invitation`, formulaire définition mot de passe (8+ carrés), `signUp` Supabase Auth, redirection connexion, gestion états expiré/invalide/erreur/succès | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (sans Supabase réel) |
+| `src/lib/invitation.ts` | Service d'invitation : adaptateurs e-mail + WhatsApp (interchangeables), normalisation téléphone marocain (06/07/+212/00212), validation input, construction messages e-mail/WhatsApp (sans mot de passe), URL d'activation `buildActivationUrl` | CONFORME ET VÉRIFIÉ (tsc/lint OK, 26 tests unitaires) |
+| `scripts/test-invitations.mjs` | 26 tests unitaires : validation input, normalisation téléphone, email, URL d'activation, messages e-mail/WhatsApp, absence de mot de passe transmis | CONFORME ET VÉRIFIÉ (26/26 pass) |
+
+### 2. FICHIERS MODIFIÉS (§37)
+
+| Fichier | Modification |
+|---------|--------------|
+| `src/app/super-admin/onboarding/page.tsx` | + Champ `sendWhatsApp` dans le type Form, checkbox "Envoyer aussi l'invitation par WhatsApp" à l'étape 2, inclusion dans le corps de requête `supabase.functions.invoke("onboard-tenant", ...)` |
+| `src/app/super-admin/page.tsx` | + Lien "Invitations" (`/super-admin/invitations`) dans le menu modules SaaS du Command Center |
+| `src/app/super-admin/invitations/page.tsx` | Nouvelle page : affichage du composant `SuperAdminInvitationsList` |
+| `src/components/super-admin-invitations-list.tsx` | Nouveau composant : liste invitations avec statut, établissement, forfait, expiration, bouton renvoyer (si échec/expiré/annulé), gestion table absente avec message explicite |
+| `package.json` | Ajout `scripts/test-invitations.mjs` à la commande `npm test` |
+
+### 3. VALIDATIONS LOCALES (§37)
+
+| Commande | Résultat |
+|----------|----------|
+| `npx tsc --noEmit` | 0 erreur |
+| `npm run lint` | 0 erreur (7 avertissements non bloquants) |
+| `npm test` | 41 suites, 41 pass, 0 fail (incluant 26 tests invitations) |
+| `npm run build` | Export statique OK |
+
+### 4. PARCOURS FONCTIONNEL IMPLÉMENTÉ (code, non vérifié en réel)
+
+| Étape | Composant | Statut |
+|-------|-----------|--------|
+| 1. Création établissement | `onboarding/page.tsx` étape 1 | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 2. Création manager (nom, email, téléphone) | `onboarding/page.tsx` étape 2 | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 3. Option envoi WhatsApp | `onboarding/page.tsx` checkbox étape 2 | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 4. Forfait et durée d'essai | `onboarding/page.tsx` étape 3 | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 5. Appel Edge Function `onboard-tenant` | `onboarding/page.tsx` soumission | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (EF non déployée) |
+| 6. Génération jeton d'activation | Migration 0036 RPC `admin_invite_manager` | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (non appliquée) |
+| 7. Envoi invitation e-mail | `invitation.ts` adaptateur Email | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (fournisseur non configuré) |
+| 8. Envoi invitation WhatsApp | `invitation.ts` adaptateur WhatsApp | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (fournisseur non configuré) |
+| 9. Suivi des statuts d'invitation | `super-admin-invitations-list.tsx` | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 10. Activation du compte (lien sécurisé) | `activer/[token]/page.tsx` | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 11. Définition mot de passe par le manager | `activer/[token]/page.tsx` | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 12. Connexion après activation | Page `/connexion/` existante | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 13. Isolation multi-tenant | RLS sur `invitations` (saas_admin uniquement) | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+
+### 5. SÉCURITÉ DES INVITATIONS
+
+| Règle | Mise en œuvre | Statut |
+|-------|--------------|--------|
+| Aucun mot de passe en clair | Les messages e-mail/WhatsApp ne contiennent que le lien d'activation, jamais de mot de passe | CONFORME (code) / NON VÉRIFIÉ (serveur) |
+| Lien à durée limitée | Jeton expiré après 7 jours (via `expires_at` dans table invitations) | CONFORME (code) / NON VÉRIFIÉ (serveur) |
+| Lien à usage unique | Statut `acceptee` empêche la réutilisation | CONFORME (code) / NON VÉRIFIÉ (serveur) |
+| Jetons non exposés dans les logs | Le jeton est généré côté base, transmis uniquement via le lien d'activation | CONFORME (code) / NON VÉRIFIÉ (serveur) |
+| RLS sur les invitations | Seul `saas_admin` peut créer/lire les invitations | CONFORME (code) / NON VÉRIFIÉ (serveur) |
+| Possibilité de renvoi | Bouton "Renvoyer" pour statuts échec/expiré/annulé | CONFORME (code) / NON VÉRIFIÉ (serveur) |
+| Suivi des envois | Table `invitation_events` avec canal, type d'événement, référence fournisseur | CONFORME (code) / NON VÉRIFIÉ (serveur) |
+
+### 6. COMPTES DE TEST (non créés)
+
+| Compte | Email | Rôle | Créé ? | Testé ? |
+|--------|-------|------|--------|---------|
+| SAAS_ADMIN | admin.saas@autodyali.test | saas_admin | NON | NON |
+| MANAGER_GARAGE_1 | manager.garage1@autodyali.test | manager | NON | NON |
+| MANAGER_GARAGE_2 | manager.garage2@autodyali.test | manager | NON | NON |
+| EMPLOYEE_CAISSE | caisse.garage1@autodyali.test | employee | NON | NON |
+| EMPLOYEE_STOCK | stock.garage1@autodyali.test | employee | NON | NON |
+| EMPLOYEE_CAISSE_STOCK | caisse-stock.garage1@autodyali.test | employee | NON | NON |
+
+**Aucun compte n'a été créé ni testé.** Nécessite un accès à Supabase Auth et à la base de données.
+
+### 7. BLOCAGES RESTANTS (intervention humaine requise)
+
+| Blocage | Détail | Action requise |
+|---------|--------|----------------|
+| Réseau | `github.com` et `nxmsqqoflskfajqrqddw.supabase.co` non résolus depuis cet environnement | Rétablir l'accès réseau OU basculer sur un poste/CI avec accès |
+| Supabase privilégié | Pas de `SUPABASE_SERVICE_ROLE_KEY`, pas de CLI supabase, pas d'accès Dashboard owner | Fournir credentials sécurisés |
+| Sauvegarde/PITR | Non vérifiable sans accès Dashboard | Vérifier sauvegarde avant toute migration |
+| Migrations 0028–0036 non appliquées | Tables `invitations`, `onboarding_requests`, RPC `admin_*` absentes en base | Appliquer après vérification sauvegarde + compatibilité |
+| Edge Function `onboard-tenant` non déployée | Pas de CLI supabase, pas de secrets serveur | Déployer après application migration 0028 |
+| Comptes de test non créés | Pas d'accès à Supabase Auth | Créer 6 comptes via Dashboard ou `auth.admin.createUser` |
+| E2E non exécutables | Navigateur Playwright crash (mach_port_rendezvous SIGTRAP) | Utiliser un environnement CI avec navigateur compatible |
+| Fournisseurs e-mail/WhatsApp non configurés | Aucune clé API SMTP/WhatsApp Business disponible | Fournir clés/config (jamais exposées) |
+| Déploiement GitHub Pages | Push impossible (réseau bloqué) | Pousser les 14 commits locaux, vérifier CI Pages |
+
+### 8. ÉTAT GIT FINAL (§37)
+
+| Élément | Valeur |
+|---------|--------|
+| Branche | `main` |
+| Commits locaux | 14 (`main...origin/main [ahead 14]`) |
+| Dernier commit | `c6e5f8e` |
+
+### 9. STATUT FINAL (§37)
+
+| Domaine | Statut |
+|---------|--------|
+| Code TypeScript (tsc) | CONFORME ET VÉRIFIÉ |
+| Lint (eslint) | CONFORME ET VÉRIFIÉ |
+| Tests unitaires (41 suites dont 26 invitations) | CONFORME ET VÉRIFIÉ |
+| Build production | CONFORME ET VÉRIFIÉ |
+| Service d'invitation e-mail + WhatsApp (architecture) | CONFORME ET VÉRIFIÉ (code pur) |
+| Page d'activation `/activer/[token]` | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| Migration 0036 (invitations, RPC) | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (non appliquée) |
+| Option WhatsApp dans onboarding | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| Page suivi invitations Super Admin | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 6 comptes de test | ABSENT (non créés, non testés) |
+| Migration 0028 (onboarding) | ABSENT (non appliquée) |
+| Edge Function `onboard-tenant` | ABSENT (non déployée) |
+| Comptes Auth réels | ABSENT |
+| Tests E2E réels | ABSENT (environnement bloqué) |
+| Déploiement GitHub Pages | ABSENT (réseau bloqué) |
+| Site publié vérifié | ABSENT |
+
+### 10. CONCLUSION §37
+
+Le parcours de création du premier abonné professionnel est **implémenté en code** (formulaire Super Admin, invitation e-mail + WhatsApp, page d'activation, suivi des statuts, tests unitaires 26/26), mais **non vérifié en conditions réelles** car :
+- Aucun accès à Supabase (pas de réseau, pas de credentials privilégiés)
+- Aucune migration n'a pu être appliquée
+- Aucun compte Auth n'a pu être créé
+- Aucun envoi réel d'e-mail/WhatsApp n'a pu être effectué
+
+**Aucune donnée existante n'a été modifiée ni supprimée. Aucun secret n'a été exposé. Aucun résultat n'a été inventé.**
+
+Pour terminer GV5 §37, il faudra : accès réseau, accès Supabase privilégié, sauvegarde/PITR vérifiée, application des migrations, déploiement des Edge Functions, création et test réel des comptes, et déploiement GitHub Pages.
