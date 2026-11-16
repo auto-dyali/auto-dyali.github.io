@@ -6590,3 +6590,37 @@ Accès privilégié Supabase · sauvegarde/PITR vérifiée · fournisseurs · E2
 
 ---
 
+
+---
+
+## 44 — Audit direct Supabase après authentification (MCP) — 2026-11-16
+
+**Contexte** : mission **GV5 §44** — audit direct Supabase après authentification MCP.
+
+### 1. Phase 1 — Connexion MCP
+
+- Outils MCP Supabase (`mcp.supabase.*`) : ❌ **NON VÉRIFIABLE** depuis cet agent (catalogue Code Mode sans outils MCP ; tentative → `Unknown tool 'mcp.supabase.listProjects'`).
+
+### 2. Phase 2 — Migrations 0028→0036
+
+- Audit local ✅ ; état distant ❌ **NON VÉRIFIABLE** ; aucune application.
+
+### 3. Phase 3 — Base/RLS
+
+- État distant ❌ **NON VÉRIFIABLE** ; audits locaux partiels.
+
+### 4. Phase 4 — EF
+
+- Déploiement distant ❌ **NON VÉRIFIABLE**.
+
+### 5. Phase 5 — Sauvegardes/PITR
+
+- ❌ PITR **NON VÉRIFIABLE** ; dump local partiel OK.
+
+### 6. Phase 6 — Bilan
+
+- Accès privilégié : ❌ **BLOQUÉ**.
+- Aucune modification de production effectuée.
+
+---
+
