@@ -5828,3 +5828,264 @@ Pour chaque compte : authentification réelle → redirection vers le bon espace
 Création et test réels des comptes bloqués par l'absence d'accès à Supabase (credentials privilégiés + réseau) et l'impossibilité de pousser sur GitHub. Dès que ces dépendances sont disponibles, les comptes peuvent être créés et testés en suivant `docs/COMPTES_TEST_PREPARATION.md`, puis la fiche confidentielle complétée avec les résultats réels.
 
 **Conclusion §34** : kit de comptes de test entièrement préparé (SQL, docs, fiche confidentielle avec passwords hors dépôt). Aucun compte n'est créé ni déclaré prêt sans test réel, conformément à la règle absolue. Création et vérification effectives requièrent un accès Supabase privilégié et le réseau GitHub.
+
+## 36 — RAPPORT FINAL — Reprise, correction et finalisation AUTO DYALI — 2026-11-16
+
+**Point de départ** : GV5 §32–§34. Les 5 commits locaux (`7ed9a4a`, `0d49222`, `080b7d0`, `b925587`, `969e671`) sont conservés et analysés. 3 commits supplémentaires ajoutés durant cette session (`5025084`, `3ed9d18`, `e28924b`). Total : 8 commits locaux, `main...origin/main [ahead 8]`.
+
+---
+
+### 1. FICHIERS EXAMINÉS
+
+| Fichier | Observation | Statut |
+|---------|-------------|--------|
+| `src/app/super-admin/page.tsx` (5 737+ lignes) | Command Center Super Admin avec établissements, plans, features, audit, comptes, journal d'audit. `SuperAdminClientDetailModal` présent. `basculerEtat`, `admin_set_establishment_status`, `clientsAffiches` ABSENTS → corrigés. | PARTIEL (corrigé en partie) |
+| `src/app/super-admin/garages/page.tsx` | Établissements, `basculer` (RPC `admin_set_establishment_status`), export CSV. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/entreprises/page.tsx` | Entreprises, `basculer`, `changerPlan` (RPC `admin_change_plan`), export. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/managers/page.tsx` | Comptes managers, activation/désactivation directe sur `profiles`. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/plans/page.tsx` | Plans, `enregistrerPlan`, `basculerFeature` (RPC `admin_save_plan`, `admin_set_feature`). | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/abonnements/page.tsx` | Cycle de vie abonnements, RPC `admin_renew_subscription`/`reactivate`/`expire`. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/crm/page.tsx` | CRM commercial. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/roles/page.tsx` | Rôles et permissions. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/audit/page.tsx` | Journal d'audit. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/sauvegarde/page.tsx` | Sauvegarde et export. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/rapports/page.tsx` | Rapports et analyses. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/whatsapp/page.tsx` | WhatsApp Business. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/chatbot/page.tsx` | Chatbot IA. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/parametres/page.tsx` | Paramètres système. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/support/page.tsx` | Support et assistance. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/onboarding/page.tsx` | Onboarding nouvel abonné (dépend migration 0028 + EF onboard-tenant). | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/pre-achats/page.tsx` | Pré-achats et demandes commerciales. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/super-admin/paiements/page.tsx` | Paiements et facturation. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/app/connexion/page.tsx` | Connexion `signInWithPassword` + `rpc("get_my_profile")`, routage par rôle. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| `src/lib/supabase-browser.ts` | Client Supabase (clés publiques uniquement). | CONFORME ET VÉRIFIÉ |
+| `src/lib/features.ts` | Moteur de droits `useFeatures` + `useProfil`, rôles `saas_admin|manager|employee|client`. | CONFORME ET VÉRIFIÉ |
+| `src/lib/onboarding.ts` | Validation onboarding, `buildRequestId`, `slugify`. | CONFORME ET VÉRIFIÉ |
+| `src/lib/pre-purchase.ts` | Validation pré-achat, idempotence, aucun tarif inventé. | CONFORME ET VÉRIFIÉ |
+| `supabase/migrations/0001_init_schema.sql` | Schéma initial : `establishments`, `profiles`, `employees`, `permissions`, `audit_log`, rôles `user_role`. | CONFORME ET VÉRIFIÉ (local) |
+| `supabase/migrations/0003_manager_profile_rpc.sql` | RPC `get_my_profile()` (security definer). | CONFORME ET VÉRIFIÉ (local) |
+| `supabase/migrations/0006_auto_profile_new_users.sql` | Trigger auto-profil, `complete_client_account`, `complete_employee_account`. | CONFORME ET VÉRIFIÉ (local) |
+| `supabase/migrations/0034_harden_admin_p0_rpcs_prepared_NOT_APPLIED.sql` | Durcissement RPC P0 (signatures conservées, `is_saas_admin`, `search_path`, REVOKE PUBLIC). | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (non appliquée) |
+| `supabase/migrations/0033_pre_purchase_requests_prepared_NOT_APPLIED.sql` | Tables `pre_purchase_requests`/`pre_purchase_events`, RLS, idempotence. | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (non appliquée) |
+| `supabase/migrations/0035_pre_purchase_submit_rpc_prepared_NOT_APPLIED.sql` | RPC `submit_pre_purchase_request` (soumission publique contrôlée). | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (non appliquée) |
+| `supabase/functions/onboard-tenant/index.ts` | Edge Function onboarding (appelant `auth.admin.createUser` côté service_role). | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (non déployée) |
+| `supabase/00_test_comptes_preparation.sql` | SQL idempotent non destructif (6 comptes test, 2 établissements, permissions). | IMPLÉMENTÉ MAIS NON VÉRIFIÉ (non exécuté) |
+| `docs/COMPTES_TEST_PREPARATION.md` | Méthode, ordre d'exécution, procédure de vérification par compte. | CONFORME ET VÉRIFIÉ (doc) |
+| `scripts/exec-comptes-test-p0.sh` | Script d'exécution P0 (étapes documentées). | CONFORME ET VÉRIFIÉ (doc) |
+| `GV5_SUIVI_AUTO_DYALI.md` | Registre append-only (§22–§36). | CONFORME ET VÉRIFIÉ |
+
+---
+
+### 2. FICHIERS MODIFIÉS (cette session)
+
+| Fichier | Modification |
+|---------|--------------|
+| `.gitignore` | Ajout `backups/`, `*.dump`, `*.backup`, `*.sql.dump` (protection dépôt public) |
+| `backups/2026-11-09/auto_dyali_avant_migration_0025.dump` | Retiré du suivi git (`git rm --cached`), fichier LOCAL préservé |
+| `src/app/super-admin/page.tsx` | +38 lignes : `clientsAffiches` (filtrage), `basculerEtat` (RPC `admin_set_establishment_status`), bouton activer/suspendre dans tableau établissements, utilisation `clientsAffiches` dans tableau comptes |
+| `scripts/exec-comptes-test-p0.sh` | Créé : script d'exécution P0 |
+| `supabase/00_test_comptes_preparation.sql` | Créé : SQL idempotent comptes test |
+| `docs/COMPTES_TEST_PREPARATION.md` | Créé : méthode comptes test |
+| `GV5_SUIVI_AUTO_DYALI.md` | §33, §34, §36 ajoutés (append-only) |
+
+---
+
+### 3. FONCTIONNALITÉS RESTAURÉES OU CORRIGÉES
+
+| Fonctionnalité | Correction | Statut |
+|----------------|------------|--------|
+| `basculerEtat` (Super Admin) | Ajout : fonction appelant `admin_set_establishment_status` pour activer/suspendre un établissement | CORRIGÉ (code) / NON VÉRIFIÉ (serveur) |
+| `clientsAffiches` (Super Admin) | Ajout : variable filtrée des comptes par recherche globale | CORRIGÉ (code) / NON VÉRIFIÉ (serveur) |
+| Bouton activer/suspendre établissements | Ajout : bouton dans colonne Actions du tableau établissements | CORRIGÉ (code) / NON VÉRIFIÉ (serveur) |
+| Protection dump BDD | Retiré du suivi git, `.gitignore` mis à jour, fichier local préservé | CONFORME ET VÉRIFIÉ |
+| Absence de secrets dans les commits | Vérifié : aucun `.env`, clé service_role, mot de passe dans les diffs | CONFORME ET VÉRIFIÉ |
+
+---
+
+### 4. FONCTIONNALITÉS ENCORE ABSENTES
+
+| Fonctionnalité | Statut | Raison |
+|----------------|--------|--------|
+| 6 comptes de test réellement créés | ABSENT | Aucun accès à Supabase (pas de réseau, pas de credentials privilégiés) |
+| Migration 0028 (onboarding) appliquée | ABSENT | Nécessite accès Supabase privilégié + sauvegarde/PITR vérifiée |
+| Migration 0034 (durcissement RPC) appliquée | ABSENT | Idem |
+| Migration 0033/0035 (pré-achat) appliquée | ABSENT | Idem |
+| Edge Function `onboard-tenant` déployée | ABSENT | Nécessite CLI supabase + secrets serveur + accès réseau |
+| Configuration Auth/SMTP/Redirect URLs | ABSENT | Nécessite accès Dashboard Supabase |
+| Déploiement GitHub Pages | ABSENT | Réseau GitHub bloqué (DNS non résolu) |
+| Tests E2E réels | ABSENT | Navigateur Playwright/Chromium crash au lancement (mach_port_rendezvous SIGTRAP) |
+| Tests Auth/invitations réels | ABSENT | Nécessite comptes Auth créés + accès Supabase |
+| Tests multi-tenant/RLS réels | ABSENT | Nécessite base de données avec RLS activée et données de test |
+| Parcours pré-achat→activation→dashboard réel | ABSENT | Nécessite toute la chaîne ci-dessus |
+
+---
+
+### 5. ÉTAT DES 8 COMMITS LOCAUX
+
+| Commit | Message | Fichiers | Statut |
+|--------|---------|----------|--------|
+| `7ed9a4a` | GV5 §31-32: pré-achat, durcissement P0 préparé, docs runbook | 70 files, +6940/-2047 | CONFORME ET VÉRIFIÉ (local) |
+| `0d49222` | GV5 §32: audit reprise, preuves locales, blocages distants | 1 file (GV5) | CONFORME ET VÉRIFIÉ (doc) |
+| `080b7d0` | GV5 §33: poursuite autonome, tentatives accès/e2e | 1 file (GV5) | CONFORME ET VÉRIFIÉ (doc) |
+| `b925587` | GV5 §34: kit comptes de test P0 (SQL + docs, sans secrets) | 2 files | CONFORME ET VÉRIFIÉ (doc/SQL) |
+| `969e671` | GV5 §34: préparation comptes de test P0, registre | 1 file (GV5) | CONFORME ET VÉRIFIÉ (doc) |
+| `5025084` | PROTECTION: exclure dump BDD du dépôt public | 2 files | CONFORME ET VÉRIFIÉ |
+| `3ed9d18` | SUPER ADMIN P0: basculerEtat, clientsAffiches, bouton activer/suspendre | 1 file | CONFORME ET VÉRIFIÉ (code) |
+| `e28924b` | GV5 §35: corrections Super Admin P0, validations locales | 1 file | CONFORME ET VÉRIFIÉ (code) |
+
+Tous les 8 commits sont **locaux, non poussés** (`main...origin/main [ahead 8]`).
+
+---
+
+### 6. ÉTAT DE LA SAUVEGARDE LOCALE
+
+| Élément | État |
+|---------|------|
+| `backups/2026-11-09/auto_dyali_avant_migration_0025.dump` | Préservé localement (413 Ko, PostgreSQL custom dump v1.16-0) |
+| Suivi git | Retiré du suivi (`git rm --cached`), ajouté à `.gitignore` |
+| Risque publication | NUL — le fichier ne sera jamais poussé sur le dépôt public |
+
+---
+
+### 7. ÉTAT DE SÉCURITÉ DU DÉPÔT PUBLIC
+
+| Vérification | Résultat |
+|--------------|----------|
+| Fichiers `.env` dans les commits | AUCUN |
+| Clés `service_role` / `SUPABASE_SECRET_KEY` | AUCUN |
+| Mots de passe en clair | AUCUN |
+| Dumps de base de données | Retirés du suivi, préservés localement |
+| Tokens GitHub | AUCUN |
+| Dépôt public | `auto-dyali/auto-dyali.github.io` — aucun secret publié |
+
+---
+
+### 8. MIGRATIONS EXAMINÉES
+
+| Migration | Statut réel | Observation |
+|-----------|-------------|-------------|
+| 0001–0026 | Déjà dans l'historique Git | Présentes localement, état distant inconnu |
+| 0027 (managers préparée) | NOT_APPLIED | Dans `supabase/migrations/` |
+| 0028 (onboarding préparée) | NOT_APPLIED | Dépend EF `onboard-tenant` + Auth |
+| 0029 (CRM extension) | NOT_APPLIED | |
+| 0030 (hardening) | Appliquée localement | Dans l'historique Git |
+| 0031 (profiles RLS) | Appliquée localement | Dans l'historique Git |
+| 0032 (plan pending) | PLAN uniquement | `supabase/apply/0032_PLAN_PENDING_MIGRATIONS.sql` |
+| 0033 (pré-achat) | NOT_APPLIED | Table `pre_purchase_requests`/`pre_purchase_events` |
+| 0034 (durcissement P0) | NOT_APPLIED | RPC `admin_*`, REVOKE PUBLIC, `is_saas_admin` |
+| 0035 (RPC pré-achat) | NOT_APPLIED | `submit_pre_purchase_request` |
+
+Aucune migration n'a été appliquée sur la base distante (pas d'accès).
+
+---
+
+### 9. COMPTES DE TEST
+
+| Compte | Email | Rôle | Créé ? | Testé ? |
+|--------|-------|------|--------|---------|
+| SAAS_ADMIN | admin.saas@autodyali.test | saas_admin | NON | NON |
+| MANAGER_GARAGE_1 | manager.garage1@autodyali.test | manager | NON | NON |
+| MANAGER_GARAGE_2 | manager.garage2@autodyali.test | manager | NON | NON |
+| EMPLOYEE_CAISSE | caisse.garage1@autodyali.test | employee | NON | NON |
+| EMPLOYEE_STOCK | stock.garage1@autodyali.test | employee | NON | NON |
+| EMPLOYEE_CAISSE_STOCK | caisse-stock.garage1@autodyali.test | employee | NON | NON |
+
+**Aucun compte n'a été créé ni testé.** Aucun accès à Supabase n'est disponible depuis cet environnement (pas de réseau vers `nxmsqqoflskfajqrqddw.supabase.co`, pas de credentials privilégiés, pas de CLI supabase).
+
+---
+
+### 10. RÉSULTATS DES TESTS
+
+| Test | Résultat | Statut |
+|------|----------|--------|
+| `npx tsc --noEmit` | 0 erreur | CONFORME ET VÉRIFIÉ |
+| `npm run lint` | 0 erreur | CONFORME ET VÉRIFIÉ |
+| `npm test` | 40 pass / 0 fail | CONFORME ET VÉRIFIÉ |
+| `npm run build` | Export statique OK | CONFORME ET VÉRIFIÉ |
+| `npm run db:check` (anon) | 16 manquants, `my_features()` absente | CONFORME ET VÉRIFIÉ (lecture seule) |
+| E2E Playwright | 2 failed (crash navigateur) | BLOQUÉ PAR ENVIRONNEMENT |
+| Tests Auth/invitations réels | Non exécutés | BLOQUÉ PAR ACCÈS |
+| Tests 15 modules SA réels | Non exécutés | BLOQUÉ PAR ACCÈS |
+| Tests multi-tenant/RLS réels | Non exécutés | BLOQUÉ PAR ACCÈS |
+| Tests RPC/Edge Functions réels | Non exécutés | BLOQUÉ PAR ACCÈS |
+| Parcours pré-achat→dashboard réel | Non exécuté | BLOQUÉ PAR ACCÈS |
+
+---
+
+### 11. ÉTAT GITHUB
+
+| Élément | État |
+|---------|------|
+| Dépôt distant | `https://github.com/auto-dyali/auto-dyali.github.io.git` |
+| Branche | `main` |
+| Commits locaux non poussés | 8 commits (`ahead 8`) |
+| Push | ÉCHEC — `Could not resolve host: github.com` |
+| CI `.github/workflows/deploy-pages.yml` | Présente, non déclenchée |
+| Site publié | Non vérifié |
+
+---
+
+### 12. ÉTAT DU DÉPLOIEMENT
+
+| Élément | État |
+|---------|------|
+| GitHub Pages | Non déployé |
+| URL de production | `https://auto-dyali.github.io/` (non vérifiée) |
+| Build statique | OK (dossier `out/` généré localement) |
+| Edge Functions | Non déployées |
+
+---
+
+### 13. BLOCAGES NÉCESSITANT UNE INTERVENTION HUMAINE
+
+| Blocage | Détail | Action requise |
+|---------|--------|----------------|
+| Réseau | `github.com` et `nxmsqqoflskfajqrqddw.supabase.co` non résolus depuis cet environnement | Rétablir l'accès réseau OU basculer sur un poste/CI avec accès |
+| Supabase privilégié | Pas de `SUPABASE_SERVICE_ROLE_KEY`, pas de CLI supabase, pas de Dashboard owner | Fournir credentials sécurisés (service_role ou accès owner) |
+| Sauvegarde/PITR | Non vérifiable sans accès Dashboard | Vérifier sauvegarde exploitable avant toute migration |
+| GitHub auth | `gh auth status` → tokens invalides | Ré-authentifier (`gh auth login`) |
+| Navigateur E2E | Chromium `mach_port_rendezvous` SIGTRAP, Chrome SIGABRT, Firefox non installable | Utiliser un environnement CI avec navigateur compatible |
+| Services externes | SMTP, paiement, WhatsApp, IA non configurés | Fournir clés/config fournisseurs (jamais exposées) |
+
+---
+
+### 14. STATUT FINAL (4 statuts uniquement)
+
+| Domaine | Statut |
+|---------|--------|
+| Code TypeScript (tsc) | CONFORME ET VÉRIFIÉ |
+| Lint (eslint) | CONFORME ET VÉRIFIÉ |
+| Tests unitaires (40/40) | CONFORME ET VÉRIFIÉ |
+| Build production (export statique) | CONFORME ET VÉRIFIÉ |
+| Protection données (dump, secrets) | CONFORME ET VÉRIFIÉ |
+| Super Admin (code/câblage) | PARTIEL (corrections appliquées, non vérifiées en réel) |
+| 15 modules Super Admin | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| Comptes de test (6) | ABSENT (non créés, non testés) |
+| Migrations distantes (0028–0035) | ABSENT (non appliquées) |
+| Edge Function onboard-tenant | ABSENT (non déployée) |
+| Auth/invitations réels | ABSENT |
+| Multi-tenant/RLS réel | ABSENT |
+| Parcours pré-achat→dashboard réel | ABSENT |
+| E2E réels | ABSENT (environnement bloqué) |
+| Déploiement GitHub Pages | ABSENT (réseau bloqué) |
+| Site publié vérifié | ABSENT |
+| Application SaaS commercialisable opérationnelle | NON ATTEINTE |
+
+---
+
+### 15. CONCLUSION
+
+**AUTO DYALI n'est pas déclaré terminé.** Toutes les actions locales sûres et réalisables ont été effectuées (code corrigé, validations vertes, protections de sécurité, documentation complète, 8 commits prêts). L'achèvement réel nécessite :
+
+1. Rétablissement de l'accès réseau (GitHub + Supabase)
+2. Accès privilégié à Supabase (service_role ou Dashboard owner)
+3. Vérification sauvegarde/PITR
+4. Application contrôlée des migrations (0028, 0034, 0033, 0035, réconciliation 0008+)
+5. Déploiement Edge Function + configuration Auth
+6. Création et test réel des 6 comptes
+7. Push + déploiement GitHub Pages + vérification site publié
+8. Tests E2E réels en environnement compatible
+
+Tous les fichiers de préparation sont prêts pour exécution immédiate dès que les dépendances externes seront disponibles.
+
+**Aucune donnée existante n'a été modifiée ni supprimée. Aucun secret n'a été exposé.**
