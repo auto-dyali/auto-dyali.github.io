@@ -6332,3 +6332,110 @@ Le nouveau portail Super Admin a été créé avec les 11 rubriques exigées. La
 **Validations locales :** tsc=0, lint=0, test=41/41 pass, build=0.
 
 **État Git :** 18 commits locaux (`main...origin/main [ahead 18]`).
+
+## 38 — Push GitHub et vérification déploiement (suite) — 2026-11-16
+
+**Point de départ** : GV5 §38 partie 1 (nouveau portail Super Admin, 11 rubriques, audit complet).
+
+**Contrainte majeure** : Aucun accès réseau vers `github.com` depuis cet environnement. Le push n'a pas pu être effectué.
+
+---
+
+### 1. Phase 1 — Contrôle avant push (réalisé)
+
+| Vérification | Résultat |
+|--------------|----------|
+| `git status` | `main...origin/main [ahead 21]`, arbre propre |
+| `git branch -vv` | Branche `main`, 19 commits initiaux + 2 de merge/rebase |
+| `git log origin/main..HEAD` | 21 commits locaux (incluant le merge de réconciliation) |
+| Diff avec origin/main | 80 fichiers, +10425 / -7787 (avant rebase) |
+| Fichiers `.env` dans les commits | Aucun |
+| Fichiers `.dump`/`.backup` dans les commits | Aucun (retiré de l'historique via rebase) |
+| Secrets dans les diffs | Aucun |
+| `.gitignore` | Contient `backups/`, `*.dump`, `*.env`, `.env.*` |
+
+### 1.2 Protection du dump BDD (action de sécurité)
+
+Le dump PostgreSQL `backups/2026-11-09/auto_dyali_avant_migration_0025.dump` (413 Ko) était présent dans l'historique des commits `7ed9a4a` et `5025084`. Il a été **retiré de l'historique git** via `git rebase -i` (marquage `edit` des 2 commits concernés, `git rm --cached`, `git commit --amend --no-edit`). Le fichier est **préservé localement** et exclu du dépôt public via `.gitignore`. Les SHA des commits ont été régénérés par le rebase.
+
+### 1.3 Réconciliation avec origin/main
+
+Un `git merge origin/main` a créé un conflit sur `GV5_SUIVI_AUTO_DYALI.md`. Résolu en gardant la version locale (§38 complet). Commit de merge : `417f676`.
+
+État après merge : `main...origin/main [ahead 21]` (plus de `behind`).
+
+---
+
+### 2. Phase 2 — Push (BLOQUÉ)
+
+| Action | Résultat |
+|--------|----------|
+| Test réseau `curl https://github.com` | `Could not resolve host: github.com` |
+| `git push origin main` | `fatal: unable to access 'https://github.com/auto-dyali/auto-dyali.github.io.git/': Could not resolve host: github.com` |
+| Commits poussés | **0** |
+| SHA dernier commit local | `417f676` |
+| SHA dernier commit distant | `717acbc` |
+
+**Le push n'a pas pu être effectué.** Tous les 21 commits locaux sont conservés. Aucun prétendu succès n'est déclaré.
+
+---
+
+### 3. Phase 3 — CI/CD et production (NON DÉCLANCHÉ)
+
+| Élément | État |
+|---------|------|
+| Workflow `.github/workflows/deploy-pages.yml` | Présent, non déclenché (pas de push) |
+| GitHub Actions | Non exécuté |
+| Site publié `https://auto-dyali.github.io/` | Non vérifié |
+| Build local (Next.js/Turbopack) | Échec : `next/font` ne peut pas télécharger Geist depuis Google Fonts (pas de réseau dans cet environnement). Sur CI GitHub avec réseau, le build devrait fonctionner. |
+| Tests en production | Non effectués (pas de déploiement) |
+
+---
+
+### 4. Phase 4 — Supabase (NON RÉALISÉ)
+
+| Élément | État |
+|---------|------|
+| Migrations 0028–0036 | Non appliquées (pas d'accès privilégié, sauvegarde/PITR non vérifiée) |
+| Edge Function `onboard-tenant` | Non déployée |
+| Auth/SMTP/Redirect URLs | Non configurées |
+| Comptes de test | Non créés |
+| Tests multi-tenant/RLS | Non effectués |
+| Sauvegarde/PITR | Non vérifiable sans accès Dashboard |
+
+---
+
+### 5. Phase 5 — Classement final (4 statuts)
+
+| Domaine | Statut |
+|---------|--------|
+| Code TypeScript (tsc) | CONFORME ET VÉRIFIÉ |
+| Lint (eslint) | CONFORME ET VÉRIFIÉ |
+| Tests unitaires (41 suites) | CONFORME ET VÉRIFIÉ |
+| Build production | ABSENT (échec local par absence réseau pour Google Fonts) |
+| Protection données (dump, secrets) | CONFORME ET VÉRIFIÉ |
+| Nouveau portail Super Admin (11 rubriques) | CONFORME ET VÉRIFIÉ (code) / IMPLÉMENTÉ MAIS NON VÉRIFIÉ (en production) |
+| 6 comptes de test | ABSENT |
+| Migrations distantes appliquées | ABSENT |
+| Edge Function onboard-tenant | ABSENT |
+| Déploiement GitHub Pages | ABSENT |
+| Site publié vérifié | ABSENT |
+| E2E réels | ABSENT (environnement bloqué) |
+| Auth/invitations réels | ABSENT |
+| Multi-tenant/RLS réel | ABSENT |
+| Parcours pré-achat→dashboard réel | ABSENT |
+| Intégrations externes réelles | ABSENT |
+| Application SaaS commercialisable opérationnelle | NON ATTEINTE |
+
+---
+
+### 6. Blocages nécessitant intervention humaine
+
+1. **Réseau GitHub** : `github.com` non résolu depuis cet environnement.
+2. **Accès Supabase privilégié** : service role / Dashboard owner requis.
+3. **Sauvegarde/PITR** : à vérifier avant toute migration.
+4. **GitHub auth** : tokens `gh` invalides.
+5. **Navigateur E2E** : Chromium crash (SIGTRAP).
+6. **Fournisseurs externes** : SMTP, WhatsApp, paiement, IA non configurés.
+
+**Conclusion** : Le projet est prêt à être poussé et déployé dès que l'accès réseau et Supabase sera rétabli. Aucun travail n'a été perdu, aucun secret n'a été exposé, aucune donnée n'a été détruite.
