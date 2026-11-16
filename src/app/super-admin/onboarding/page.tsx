@@ -29,6 +29,7 @@ type Form = {
   managerName: string;
   managerEmail: string;
   managerPhone: string;
+  sendWhatsApp: boolean;
 };
 
 const ETAPES = [
@@ -51,6 +52,7 @@ export default function OnboardingPage() {
     managerName: "",
     managerEmail: "",
     managerPhone: "",
+    sendWhatsApp: false,
   });
   const [slugTouche, setSlugTouche] = useState(false);
   const [enCours, setEnCours] = useState(false);
@@ -159,6 +161,7 @@ export default function OnboardingPage() {
           managerName: form.managerName.trim(),
           managerEmail: form.managerEmail.trim(),
           managerPhone: form.managerPhone.trim() || null,
+          sendWhatsApp: form.sendWhatsApp,
         },
       });
       if (error) {
@@ -293,6 +296,15 @@ export default function OnboardingPage() {
             </label>
             <label className="text-xs text-[#A7B7A8]">Téléphone
               <input value={form.managerPhone} onChange={(e) => modifier("managerPhone", e.target.value)} className="champ mt-1 min-h-11" placeholder="0600000000" inputMode="tel" />
+            </label>
+            <label className="text-xs text-[#A7B7A8] flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.sendWhatsApp}
+                onChange={(e) => modifier("sendWhatsApp", e.target.checked)}
+                className="rounded text-[#8FB59B] focus:ring-[#8FB59B]"
+              />
+              <span>Envoyer aussi l’invitation par WhatsApp</span>
             </label>
             <p className="text-[11px] leading-5 text-[#A7B7A8] sm:col-span-2">
               Le Manager recevra un email d’invitation pour définir son mot de passe — aucun mot de passe ne transite par cette interface. L’invitation est créée côté serveur (Edge Function sécurisée).
