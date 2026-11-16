@@ -15,7 +15,8 @@ const strokes = {
 export type NomIcone = | "ca" | "benefice" | "depenses" | "cle" | "commun"
   | "voiture" | "carton" | "client" | "rapport"
   | "resistance" | "pos" | "barcode" | "planning" | "pointage"
-  | "historique" | "cloche" | "profil" | "scanner" | "plus" | "oeil" | "deconnexion" | "imprimante";
+  | "historique" | "cloche" | "profil" | "scanner" | "plus" | "oeil" | "deconnexion" | "imprimante"
+  | "dashboard" | "building" | "users" | "card" | "layers" | "shield";
 
 const chemins: Record<NomIcone, JSX.Element> = {
   // KPIs
@@ -151,6 +152,46 @@ const chemins: Record<NomIcone, JSX.Element> = {
     <>
       <path d="M8 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" />
       <path d="M11 6.5 14.5 10 11 13.5M14 10H7" />
+    </>
+  ),
+  dashboard: (
+    <>
+      <rect width="7" height="7" x="3" y="3" rx="1" />
+      <rect width="7" height="7" x="10" y="3" rx="1" />
+      <rect width="7" height="7" x="10" y="10" rx="1" />
+      <rect width="7" height="7" x="3" y="10" rx="1" />
+    </>
+  ),
+  building: (
+    <>
+      <path d="M3 3v13h2V7h2v8h2V7h2v8h2V7h2v8h2V3z" />
+      <path d="M9 15V7h2v8H9zM13 15V7h2v8h-2z" />
+    </>
+  ),
+  users: (
+    <>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </>
+  ),
+  card: (
+    <>
+      <rect x="2" y="2" width="16" height="16" rx="2" ry="2" />
+      <line x1="2" y1="7" x2="18" y2="7" />
+      <line x1="2" y1="13" x2="18" y2="13" />
+    </>
+  ),
+  layers: (
+    <>
+      <polyline points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+    </>
+  ),
+  shield: (
+    <>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </>
   ),
 };

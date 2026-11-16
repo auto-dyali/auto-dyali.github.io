@@ -1,15 +1,14 @@
 "use client";
 
 /**
- * Shell du Super Admin AUTO DYALI — Control Center premium.
+ * AUTO DYALI — Nouveau shell Super Admin (GV5 §38).
  *
- * Objectif : encadrer le contenu existant (KPI, entreprises, comptes,
- * plans, audit) avec une navigation latérale organisée et une barre
- * supérieure (recherche globale, notifications, profil Super Admin).
+ * Navigation indépendante avec exactement 11 rubriques, conformément au
+ * cahier des charges §38. Chaque rubrique pointe vers des pages réelles
+ * raccordées au backend Supabase (Auth, RLS, RPC, Edge Functions).
  *
- * Aucune donnée n'est inventée ici : le shell est purement présentationnel.
- * Les entrées de navigation pointent vers des sections réellement présentes
- * ou vers la feuille de route honnête des modules à venir.
+ * Rôle autorisé : saas_admin (vérifié par SuperAdminGuard sur chaque page).
+ * Aucun bouton décoratif : chaque entrée est un lien fonctionnel.
  */
 
 import Link from "next/link";
@@ -24,52 +23,77 @@ export type SuperAdminSearch = {
 type NavItem = {
   label: string;
   href: string;
-  icon: IconName;
-  /** Lien interne Next (route) plutôt qu'ancre de section. */
-  route?: boolean;
+  icon: string;
   badge?: string;
+  description?: string;
 };
 
-type NavGroup = { titre: string; items: NavItem[] };
-
-const NAV: NavGroup[] = [
+const NAV_ITEMS: NavItem[] = [
   {
-    titre: "Pilotage",
-    items: [
-      { label: "Tableau de bord", href: "/super-admin/", icon: "dashboard", route: true },
-      { label: "Pré-achats", href: "/super-admin/pre-achats/", icon: "card", route: true },
-      { label: "Nouvel abonné", href: "/super-admin/onboarding/", icon: "plus", route: true },
-      { label: "Entreprises", href: "/super-admin/entreprises/", icon: "building", route: true },
-      { label: "Comptes & Managers", href: "/super-admin/managers/", icon: "users", route: true },
-      { label: "Garages & Établissements", href: "/super-admin/garages/", icon: "building", route: true },
-      { label: "Plans & fonctionnalités", href: "/super-admin/plans/", icon: "layers", route: true },
-      { label: "Abonnements", href: "/super-admin/abonnements/", icon: "card", route: true },
-      { label: "CRM commercial", href: "/super-admin/crm/", icon: "target", route: true },
-    ],
+    label: "Vue générale",
+    href: "/super-admin/",
+    icon: "dashboard",
+    description: "Tableau de bord global du SaaS : abonnés, abonnements, alertes, santé.",
   },
   {
-    titre: "Gestion",
-    items: [
-      { label: "Paiements & Facturation", href: "/super-admin/paiements/", icon: "card", route: true },
-      { label: "Support & Assistance", href: "/super-admin/support/", icon: "life", route: true },
-      { label: "Rapports & Analyses", href: "/super-admin/rapports/", icon: "chart", route: true },
-      { label: "Sauvegarde & Export", href: "/super-admin/sauvegarde/", icon: "shield", route: true },
-    ],
+    label: "Abonnés professionnels",
+    href: "/super-admin/entreprises/",
+    icon: "building",
+    description: "Liste des garages et entreprises abonnés, fiches détaillées, création, activation, suspension.",
   },
   {
-    titre: "Sécurité",
-    items: [
-      { label: "Journal d'audit", href: "/super-admin/audit/", icon: "shield", route: true },
-      { label: "Rôles & Permissions", href: "/super-admin/roles/", icon: "users", route: true },
-      { label: "Paramètres système", href: "/super-admin/parametres/", icon: "gear", route: true },
-    ],
+    label: "Utilisateurs",
+    href: "/super-admin/managers/",
+    icon: "users",
+    description: "Gestion des comptes Manager et Employé, statuts, permissions, accès.",
   },
   {
-    titre: "Intégrations",
-    items: [
-      { label: "WhatsApp Business", href: "/super-admin/whatsapp/", icon: "chat", route: true },
-      { label: "Chatbot IA", href: "/super-admin/chatbot/", icon: "spark", route: true },
-    ],
+    label: "Abonnements & Formules",
+    href: "/super-admin/plans/",
+    icon: "layers",
+    description: "Formules, tarifs, durées, modules inclus, limites, attribution, historique.",
+  },
+  {
+    label: "CRM commercial",
+    href: "/super-admin/crm/",
+    icon: "target",
+    description: "Prospects professionnels, suivi commercial, conversion en abonné.",
+  },
+  {
+    label: "Finance & Facturation",
+    href: "/super-admin/paiements/",
+    icon: "card",
+    description: "Factures, paiements, abonnements facturés, impayés, échéances, exports.",
+  },
+  {
+    label: "Support & Assistance",
+    href: "/super-admin/support/",
+    icon: "life",
+    description: "Tickets, demandes d'assistance, priorités, statuts, suivi de résolution.",
+  },
+  {
+    label: "Intégrations & API",
+    href: "/super-admin/whatsapp/",
+    icon: "chat",
+    description: "État des intégrations, webhooks, services connectés, journaux techniques.",
+  },
+  {
+    label: "Sécurité & Permissions",
+    href: "/super-admin/roles/",
+    icon: "shield",
+    description: "Rôles, permissions, contrôle des accès, politiques RLS, séparation multi-tenant.",
+  },
+  {
+    label: "Journal d'activité",
+    href: "/super-admin/audit/",
+    icon: "scroll",
+    description: "Actions administratives, créations, modifications, activations, suspensions, échecs.",
+  },
+  {
+    label: "Système & Paramètres",
+    href: "/super-admin/parametres/",
+    icon: "gear",
+    description: "Paramètres généraux, notifications, santé technique, sauvegardes, restauration.",
   },
 ];
 
@@ -78,328 +102,309 @@ type IconName =
   | "building"
   | "users"
   | "layers"
-  | "shield"
   | "target"
   | "card"
-  | "chat"
-  | "spark"
   | "life"
-  | "chart"
-  | "gear"
-  | "plus";
+  | "chat"
+  | "shield"
+  | "scroll"
+  | "gear";
 
-const PATHS: Record<IconName, ReactNode> = {
-  dashboard: (
-    <>
-      <rect x="3" y="3" width="7" height="9" rx="1.5" />
-      <rect x="14" y="3" width="7" height="5" rx="1.5" />
-      <rect x="14" y="12" width="7" height="9" rx="1.5" />
-      <rect x="3" y="16" width="7" height="5" rx="1.5" />
-    </>
-  ),
-  building: (
-    <>
-      <path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16" />
-      <path d="M15 9h3a2 2 0 0 1 2 2v10" />
-      <path d="M8 7h3M8 11h3M8 15h3M2 21h20" />
-    </>
-  ),
-  users: (
-    <>
-      <circle cx="9" cy="8" r="3.2" />
-      <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
-      <path d="M16 5.2a3 3 0 0 1 0 5.6M17 14.5a5.5 5.5 0 0 1 3.5 5.5" />
-    </>
-  ),
-  layers: (
-    <>
-      <path d="M12 3 3 7.5 12 12l9-4.5L12 3Z" />
-      <path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5" />
-    </>
-  ),
-  shield: (
-    <>
-      <path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6l-7-3Z" />
-      <path d="m9 12 2 2 4-4" />
-    </>
-  ),
-  target: (
-    <>
-      <circle cx="12" cy="12" r="8" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="12" cy="12" r="1" />
-    </>
-  ),
-  card: (
-    <>
-      <rect x="3" y="5" width="18" height="14" rx="2.5" />
-      <path d="M3 10h18M7 15h4" />
-    </>
-  ),
-  chat: (
-    <>
-      <path d="M4 5h16v11H9l-5 4V5Z" />
-      <path d="M8 9h8M8 12h5" />
-    </>
-  ),
-  spark: (
-    <>
-      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" />
-    </>
-  ),
-  life: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="3.5" />
-      <path d="m5 5 4 4M15 15l4 4M19 5l-4 4M9 15l-4 4" />
-    </>
-  ),
-  chart: (
-    <>
-      <path d="M4 20V4M4 20h16" />
-      <path d="M8 16v-4M12 16V8M16 16v-6M20 16V6" />
-    </>
-  ),
-  plus: (
-    <path d="M12 5v14M5 12h14" />
-  ),
-  gear: (
-    <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 14a1.7 1.7 0 0 0-1.6-1H1a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 3 7a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 8 3a1.7 1.7 0 0 0 1-1.6V1a2 2 0 1 1 4 0v.1A1.7 1.7 0 0 0 15 3a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 8h.1a2 2 0 1 1 0 4H21a1.7 1.7 0 0 0-1.6 1Z" />
-    </>
-  ),
-};
+function IconeNav({ nom, taille = 20 }: { nom: IconName; taille?: number }) {
+  // Icônes inline SVG légères, sans dépendance externe.
+  const svg: Record<string, React.ReactNode> = {
+    dashboard: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <rect width="7" height="7" x="3" y="3" rx="1" />
+        <rect width="7" height="7" x="14" y="3" rx="1" />
+        <rect width="7" height="7" x="14" y="14" rx="1" />
+        <rect width="7" height="7" x="3" y="14" rx="1" />
+      </svg>
+    ),
+    building: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+    ),
+    users: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+    layers: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <polyline points="12 2 2 7 12 12 22 7 12 2" />
+        <polyline points="2 17 12 22 22 17" />
+        <polyline points="2 12 12 17 22 12" />
+      </svg>
+    ),
+    target: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="12" r="6" />
+        <circle cx="12" cy="12" r="2" />
+      </svg>
+    ),
+    card: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <rect x="2" y="2" width="20" height="20" rx="2" ry="2" />
+        <line x1="2" y1="9" x2="22" y2="9" />
+        <line x1="2" y1="15" x2="22" y2="15" />
+      </svg>
+    ),
+    life: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path d="M20 13V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2z" />
+        <polyline points="18 12 18 7 23 7" />
+        <polyline points="6 12 6 7 1 7" />
+      </svg>
+    ),
+    chat: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8.4z" />
+        <line x1="22" y1="12" x2="22" y2="12" />
+      </svg>
+    ),
+    shield: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
+    scroll: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path d="M14 3H6a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3z" />
+        <path d="M10 14L6 18" />
+        <path d="M18 10l4 4" />
+      </svg>
+    ),
+    gear: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+    ),
+  };
 
-function NavIcon({ name }: { name: IconName }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      className="shrink-0"
-    >
-      {PATHS[name]}
-    </svg>
-  );
+  return <span className="flex items-center">{svg[nom]}</span>;
 }
+
+export type SuperAdminShellProps = {
+  children: ReactNode;
+  onLogout: () => void;
+  notifications?: number;
+  search?: SuperAdminSearch;
+};
 
 export function SuperAdminShell({
   children,
-  search,
   onLogout,
   notifications,
-  userName = "Super Admin",
-  userRole = "Administration centrale",
-}: {
-  children: ReactNode;
-  search?: SuperAdminSearch;
-  onLogout: () => void;
-  notifications?: number;
-  userName?: string;
-  userRole?: string;
-}) {
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("auto-dyali-superadmin-sidebar") === "collapsed";
-  });
-  const [drawer, setDrawer] = useState(false);
-
-  function toggle() {
-    setCollapsed((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem("auto-dyali-superadmin-sidebar", next ? "collapsed" : "expanded");
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
-  }
-
-  const initiales = (userName || "AD")
-    .split(" ")
-    .map((mot) => mot[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  const navigation = (
-    <nav className="mt-6 flex flex-1 flex-col gap-5 overflow-y-auto pr-1">
-      {NAV.map((groupe) => (
-        <div key={groupe.titre}>
-          <p className="menu-label px-3 text-[10px] uppercase tracking-[0.22em] text-[#8da298]">
-            {groupe.titre}
-          </p>
-          <ul className="mt-2 space-y-1">
-            {groupe.items.map((item) => {
-              const classe =
-                "group flex min-h-10 items-center gap-3 rounded-xl px-3 py-2 text-sm text-[#E8ECE8]/80 transition hover:bg-[#344440] hover:text-[#E8ECE8]";
-              const contenu = (
-                <>
-                  <NavIcon name={item.icon} />
-                  <span className="menu-label flex-1 truncate">{item.label}</span>
-                  {item.badge && (
-                    <span className="menu-label rounded-full bg-[#8FB59B]/20 px-2 py-0.5 text-[10px] text-[#D0C6AE]">
-                      {item.badge}
-                    </span>
-                  )}
-                </>
-              );
-              return (
-                <li key={item.label}>
-                  {item.route ? (
-                    <Link href={item.href} className={classe} onClick={() => setDrawer(false)}>
-                      {contenu}
-                    </Link>
-                  ) : (
-                    <a href={item.href} className={classe} onClick={() => setDrawer(false)}>
-                      {contenu}
-                    </a>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
-    </nav>
-  );
-
-  const profil = (
-    <div className="mt-4 border-t border-[#8FB59B]/15 pt-4">
-      <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#344440] text-xs font-bold text-[#D0C6AE]">
-          {initiales}
-        </span>
-        <span className="menu-label min-w-0">
-          <span className="block truncate text-xs font-bold text-[#E8ECE8]">{userName}</span>
-          <span className="block truncate text-[10px] text-[#A7B7A8]">{userRole}</span>
-        </span>
-      </div>
-      <button
-        type="button"
-        onClick={onLogout}
-        className="menu-label mt-3 w-full rounded-lg border border-[#8FB59B]/30 px-3 py-2 text-left text-xs text-[#A7B7A8] transition hover:border-[#C5716B]/50 hover:text-[#C5716B]"
-      >
-        Déconnexion
-      </button>
-    </div>
-  );
+  search,
+}: SuperAdminShellProps) {
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-[#1f2626] text-[#E8ECE8]">
-      {/* Sidebar desktop */}
-      <aside
-        className={`carte sticky top-0 hidden h-screen shrink-0 flex-col overflow-y-auto rounded-none border-y-0 border-l-0 p-4 lg:flex app-sidebar ${
-          collapsed ? "is-collapsed" : ""
-        }`}
-        style={{ width: collapsed ? 72 : 250, minWidth: collapsed ? 72 : 250 }}
-      >
-        <div className="flex items-center justify-between gap-2">
-          <Logo compact />
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={collapsed ? "Développer le menu" : "Réduire le menu"}
-            title={collapsed ? "Développer le menu" : "Réduire le menu"}
-            className="rounded-lg border border-[#8FB59B]/30 px-2 py-1 text-xs text-[#A7B7A8] hover:text-[#E8ECE8]"
-          >
-            {collapsed ? "›" : "‹"}
-          </button>
+    <div className="flex h-screen flex-col bg-[#252D2D] text-[#DFE7E2]">
+      {/* Topbar */}
+      <header className="flex items-center justify-between px-5 py-4 bg-[#1A211E] border-b border-[#8FB59B]/20 shrink-0">
+        <div className="flex items-center gap-4 cursor-pointer" onClick={() => setOpen(!open)}>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#344440]">
+            <span className="text-[10px] font-extrabold text-[#E8ECE8]">A</span>
+          </div>
+          <div className="hidden md:block">
+            <p className="text-xs font-bold uppercase tracking-wider text-[#D0C6AE]">AUTO DYALI</p>
+            <p className="text-[10px] text-[#8FB59B]">Super Admin — SaaS Control Center</p>
+          </div>
         </div>
-        {navigation}
-        {profil}
-      </aside>
 
-      {/* Tiroir mobile */}
-      {drawer && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-label="Menu Super Admin">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setDrawer(false)} />
-          <aside className="carte absolute top-0 left-0 flex h-full w-72 flex-col overflow-y-auto rounded-none p-4">
-            <div className="flex items-center justify-between">
-              <Logo compact />
-              <button
-                type="button"
-                onClick={() => setDrawer(false)}
-                aria-label="Fermer le menu"
-                className="rounded-lg bg-[#344440] px-2 py-1 text-[#E8ECE8]"
-              >
-                ✕
-              </button>
-            </div>
-            {navigation}
-            {profil}
-          </aside>
-        </div>
-      )}
-
-      {/* Colonne de contenu */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="carte sticky top-0 z-30 flex items-center gap-3 rounded-none border-x-0 border-t-0 px-4 py-3 lg:px-7">
-          <button
-            type="button"
-            className="min-h-11 min-w-11 touch-manipulation rounded-lg bg-[#344440] p-2.5 lg:hidden"
-            onClick={() => setDrawer(true)}
-            aria-label="Ouvrir le menu"
-            aria-expanded={drawer}
-          >
-            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden>
-              <path d="M3 5h14M3 10h11M3 15h14" stroke="#8FB59B" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
-
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="hidden min-w-0 flex-1 md:flex md:justify-center"
-            role="search"
-          >
-            <label className="flex min-h-11 w-full max-w-xl items-center gap-3 rounded-full border border-[#8FB59B]/25 bg-[#2C3735] px-4">
-              <span aria-hidden className="text-[#8FB59B]">⌕</span>
+        <div className="flex items-center gap-3">
+          {search && (
+            <div className="relative hidden md:block w-64">
               <input
                 type="search"
-                value={search?.value ?? ""}
-                onChange={(e) => search?.onChange(e.target.value)}
-                placeholder="Rechercher une entreprise, un manager, une ville…"
-                aria-label="Recherche globale"
-                className="w-full border-0 bg-transparent text-sm text-[#E8ECE8] outline-none placeholder:text-[#8da298]"
+                value={search.value}
+                onChange={(e) => search.onChange(e.target.value)}
+                placeholder="Rechercher entreprises, managers, abonnés…"
+                className="champ mt-1 min-h-10 w-full rounded-full pl-10 pr-4 text-xs"
               />
-            </label>
-          </form>
+              <svg
+                aria-hidden
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <circle cx="10" cy="10" r="6" />
+                <path d="M20 20l-5-5" />
+              </svg>
+            </div>
+          )}
+          <span className="hidden sm:block border-l border-[#8FB59B]/30 h-5 px-3" />
+          <button
+            type="button"
+            onClick={() => void onLogout()}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#C5716B] hover:bg-[#344440] transition"
+            aria-label="Déconnexion"
+          >
+            <span className="text-[14px]">🚪</span>
+            <span className="hidden sm:inline">Déconnexion</span>
+          </button>
+        </div>
+      </header>
 
-          <div className="ml-auto flex items-center gap-2">
-            <Link
-              href="/super-admin/audit/"
-              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-[#8FB59B]/20 text-[#D0C6AE] hover:bg-[#344440]"
-              aria-label={`Notifications (${notifications ?? 0})`}
-              title={`${notifications ?? 0} action(s) récente(s)`}
-            >
-              <NavIcon name="life" />
-              {typeof notifications === "number" && notifications > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C5716B] px-1 text-[10px] font-bold text-white">
-                  {notifications > 9 ? "9+" : notifications}
-                </span>
-              )}
-            </Link>
-            <div className="hidden items-center gap-2 rounded-xl border border-[#8FB59B]/20 px-2.5 py-1.5 sm:flex">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#344440] text-[10px] font-bold text-[#D0C6AE]">
-                {initiales}
-              </span>
-              <span className="leading-tight">
-                <span className="block text-xs font-bold text-[#E8ECE8]">{userName}</span>
-                <span className="block text-[10px] text-[#A7B7A8]">{userRole}</span>
-              </span>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside
+          className={`w-64 bg-[#2C3735] border-r border-[#8FB59B]/15 shrink-0 transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static`}
+          aria-label="Navigation Super Admin"
+        >
+          <div className="flex h-full flex-col">
+            <div className="p-4 border-b border-[#8FB59B]/10">
+              <Logo compact className="mx-auto h-8 w-auto" />
+              <p className="mt-2 text-[10px] text-[#8FB59B] text-center">
+                Rôle : saas_admin
+              </p>
+            </div>
+
+            <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+              {NAV_ITEMS.map((item) => {
+                const href = item.href;
+                return (
+                  <Link
+                    key={item.label}
+                    href={href}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                      typeof window !== "undefined" &&
+                      window.location.pathname.startsWith(href === "/" ? "/" : href)
+                        ? "bg-[#8FB59B]/20 text-[#E8ECE8]"
+                        : "text-[#A7B7A8] hover:bg-[#344440]/50"
+                    }`}
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded bg-[#344440]">
+                      <IconeNav nom={item.icon as IconName} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{item.label}</p>
+                      <p className="text-[10px] text-[#6B7B73] truncate">{item.description}</p>
+                    </div>
+                    {item.badge && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#D6A34D]/20 text-[#D6A34D]">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="p-4 border-t border-[#8FB59B]/10">
+              <button
+                type="button"
+                onClick={() => void onLogout()}
+                className="w-full flex items-center gap-2 rounded-lg border border-[#C5716B]/40 px-3 py-2 text-sm text-[#C5716B] hover:bg-[#C5716B]/20 transition"
+              >
+                <span className="text-[14px]">🚪</span>
+                Déconnexion
+              </button>
             </div>
           </div>
-        </header>
+        </aside>
 
-        <div className="min-w-0 flex-1">{children}</div>
+        {/* Overlay mobile */}
+        {open && (
+          <div
+            className="fixed inset-0 z-20 bg-black/50 md:hidden"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Contenu principal */}
+        <main className="flex-1 overflow-y-auto bg-[#252D2D]">
+          <div className="mx-auto max-w-7xl p-5 lg:p-10">{children}</div>
+        </main>
       </div>
     </div>
   );
