@@ -38,6 +38,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# sauvegardes de base de données - NE JAMAIS publier (dépôt public)
+backups/
+*.dump
+*.backup
+*.sql.dump
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
