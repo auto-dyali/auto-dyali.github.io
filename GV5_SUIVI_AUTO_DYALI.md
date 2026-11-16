@@ -6223,3 +6223,77 @@ Le parcours de création du premier abonné professionnel est **implémenté en 
 **Aucune donnée existante n'a été modifiée ni supprimée. Aucun secret n'a été exposé. Aucun résultat n'a été inventé.**
 
 Pour terminer GV5 §37, il faudra : accès réseau, accès Supabase privilégié, sauvegarde/PITR vérifiée, application des migrations, déploiement des Edge Functions, création et test réel des comptes, et déploiement GitHub Pages.
+
+## 38 — Refonte complète du Super Admin et opérationnalisation (partie 1) — 2026-11-16
+
+**Objectif GV5 §38** : Construire un nouveau portail Super Admin complet, indépendant de l'ancien menu, et rendre toutes ses fonctionnalités réellement opérationnelles. 11 rubriques obligatoires.
+
+**Règles respectées** : historique GV5 préservé (append-only), 17 commits locaux conservés, aucun secret exposé, aucune migration destructive, aucune donnée existante modifiée, aucune déclaration de succès sans preuve réelle.
+
+---
+
+### 1. FICHIERS CRÉÉS (§38)
+
+| Fichier | Contenu | Statut |
+|---------|---------|--------|
+| `src/components/super-admin-shell.tsx` (remplacé) | Nouveau shell de navigation avec exactement 11 rubriques (Vue générale, Abonnés professionnels, Utilisateurs, Abonnements & Formules, CRM commercial, Finance & Facturation, Support & Assistance, Intégrations & API, Sécurité & Permissions, Journal d'activité, Système & Paramètres). Icônes SVG inline. | CONFORME ET VÉRIFIÉ (tsc/lint OK) |
+| `src/app/super-admin/page.tsx` (remplacé) | Nouvelle page "Vue générale" : KPI réels (abonnés, managers, abonnements, CA estimé), graphiques (répartition forfaits, état abonnements, inscriptions 6 mois), activité récente (audit_log), alertes (établissements sans manager, abonnements expirés, suspensions), santé du SaaS (DB, Auth, moteur de droits). Toutes les données chargées depuis Supabase. | CONFORME ET VÉRIFIÉ (tsc/lint OK) |
+| `src/components/icones.tsx` (modifié) | Ajout des icônes : dashboard, building, users, card, layers, shield. | CONFORME ET VÉRIFIÉ (tsc/lint OK) |
+
+### 2. FICHIERS MODIFIÉS (§38)
+
+| Fichier | Modification |
+|---------|--------------|
+| `src/app/super-admin/onboarding/page.tsx` | + Champs légalName, activityType, professionalId, address, region, notes, modules. + Sélection des modules par cases à cocher (features du forfait). + Validation étendue (etapeValide inclut les nouveaux champs). + Corps de requête étendu pour l'EF onboard-tenant. |
+| `src/lib/onboarding.ts` | + Type `OnboardingInput` étendu (legalName, activityType, professionalId, address, region, notes, modules, sendWhatsApp). + Validation étendue dans `validateOnboardingInput`. |
+| `scripts/test-onboarding.mjs` | + Objet `base` étendu avec les nouveaux champs obligatoires pour le test. |
+
+### 3. VALIDATIONS LOCALES (§38)
+
+| Commande | Résultat |
+|----------|----------|
+| `npx tsc --noEmit` | 0 erreur |
+| `npm run lint` | 0 erreur (12 avertissements non bloquants) |
+| `npm test` | 41 suites, 41 pass, 0 fail |
+| `npm run build` | Export statique OK |
+
+### 4. RUBRIQUES DU NOUVEAU PORTAIL (état courant)
+
+| Rubrique | Page associée | État | Détail |
+|----------|--------------|------|--------|
+| 1. Vue générale | `/super-admin/` | CONFORME ET VÉRIFIÉ (code) | KPI réels, graphiques, activité, alertes, santé |
+| 2. Abonnés professionnels | `/super-admin/entreprises/`, `/super-admin/garages/`, `/super-admin/onboarding/`, `/super-admin/invitations/` | PARTIEL | Pages existent, onboarding étendu, invitations (§37). Création d'entreprise réelle via EF onboard-tenant (non déployée) |
+| 3. Utilisateurs | `/super-admin/managers/` | PARTIEL | Gestion managers réelle. Employés non encore inclus. |
+| 4. Abonnements & Formules | `/super-admin/plans/`, `/super-admin/abonnements/` | PARTIEL | Plans et features réels (RPC). Abonnements réels (RPC). |
+| 5. CRM commercial | `/super-admin/crm/` | PARTIEL | Page existe, utilisation Supabase à vérifier |
+| 6. Finance & Facturation | `/super-admin/paiements/` | PARTIEL | Page existe, utilisation Supabase à vérifier |
+| 7. Support & Assistance | `/super-admin/support/` | PARTIEL | Page existe, utilisation Supabase à vérifier |
+| 8. Intégrations & API | `/super-admin/whatsapp/`, `/super-admin/chatbot/` | PARTIEL | Pages existent, pas de backend réel configuré |
+| 9. Sécurité & Permissions | `/super-admin/roles/`, `/super-admin/parametres/` | PARTIEL | Pages existent, pas de backend réel configuré |
+| 10. Journal d'activité | `/super-admin/audit/` | PARTIEL | Page existe, utilisation Supabase à vérifier |
+| 11. Système & Paramètres | `/super-admin/parametres/`, `/super-admin/sauvegarde/` | PARTIEL | Pages existent, pas de backend réel configuré |
+
+### 5. BLOCAGES RESTANTS
+
+| Blocage | Détail |
+|---------|--------|
+| Edge Function `onboard-tenant` non déployée | Pas de CLI supabase, pas de réseau, pas de secrets serveur |
+| Migration 0028 non appliquée | Pas d'accès Supabase privilégié, sauvegarde/PITR non vérifiée |
+| Tables `invitations` (0036) non appliquées | Idem |
+| Comptes de test non créés | Pas d'accès à Supabase Auth |
+| E2E non exécutables | Navigateur Playwright crash |
+| Fournisseurs e-mail/WhatsApp non configurés | Aucune clé API disponible |
+| Déploiement GitHub Pages | Push impossible (réseau bloqué) |
+
+### 6. ÉTAT GIT (fin partie 1)
+
+| Élément | Valeur |
+|---------|--------|
+| Branche | `main` |
+| Commits locaux | 17 (`main...origin/main [ahead 17]`) |
+
+### 7. CONCLUSION (partie 1)
+
+Le nouveau portail Super Admin a été créé avec les 11 rubriques exigées. La page "Vue générale" est un vrai tableau de bord avec des KPI réels. L'onboarding a été étendu avec tous les champs exigés par §38 §5.1 et §5.2. Cependant, aucune fonctionnalité n'a pu être testée en conditions réelles (pas d'accès Supabase, pas de réseau).
+
+**Aucune donnée existante n'a été modifiée ni supprimée. Aucun secret n'a été exposé.**
