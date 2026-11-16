@@ -6297,3 +6297,38 @@ Pour terminer GV5 §37, il faudra : accès réseau, accès Supabase privilégié
 Le nouveau portail Super Admin a été créé avec les 11 rubriques exigées. La page "Vue générale" est un vrai tableau de bord avec des KPI réels. L'onboarding a été étendu avec tous les champs exigés par §38 §5.1 et §5.2. Cependant, aucune fonctionnalité n'a pu être testée en conditions réelles (pas d'accès Supabase, pas de réseau).
 
 **Aucune donnée existante n'a été modifiée ni supprimée. Aucun secret n'a été exposé.**
+
+## 38 — Refonte complète du Super Admin (suite) — 2026-11-16
+
+**Audit complet des 11 rubriques du nouveau portail Super Admin (GV5 §38 §3.1) :**
+
+| Rubrique | Route | Connexion réelle | Opérations réelles | Statut |
+|----------|-------|-----------------|-------------------|--------|
+| 1. Vue générale | `/super-admin/` | ✅ Supabase (establishments, plans, plan_features, audit_log, profiles, subscriptions) | KPI, graphiques, activité, alertes, santé | CONFORME ET VÉRIFIÉ (code) |
+| 2. Abonnés professionnels | `/super-admin/entreprises/`, `/super-admin/garages/`, `/super-admin/onboarding/`, `/super-admin/invitations/` | ✅ (entreprises, garages) / ⚠️ (onboarding dépend EF non déployée, invitations dépend migration 0036) | RPC `admin_set_establishment_status`, `admin_change_plan`, export CSV, recherche, filtres | PARTIEL |
+| 3. Utilisateurs | `/super-admin/managers/` | ✅ (profiles) | Lecture réelle, compteurs par rôle, export CSV, activation/désactivation | PARTIEL (employés non inclus) |
+| 4. Abonnements & Formules | `/super-admin/plans/`, `/super-admin/abonnements/` | ✅ (plans, plan_features, subscriptions) | RPC `admin_save_plan`, `admin_set_feature`, `admin_renew_subscription`, `admin_reactivate_subscription`, `admin_expire_subscription` | PARTIEL |
+| 5. CRM commercial | `/super-admin/crm/` | ✅ (crm_leads, crm_events) | CRUD réel, filtres, pagination, export, notes, relances | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 6. Finance & Facturation | `/super-admin/paiements/` | ✅ (subscriptions, plans) | Lecture réelle, MRR estimé, honnête sur l'absence de fournisseur | CONFORME ET VÉRIFIÉ (honnêteté) |
+| 7. Support & Assistance | `/super-admin/support/` | ✅ (support_tickets, ticket_messages) | CRUD réel, changement de statut, fil d'échanges | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 8. Intégrations & API | `/super-admin/whatsapp/`, `/super-admin/chatbot/` | ✅ (plan_features pour droits) | Honnête sur l'absence de fournisseur, explique ce qu'il faut pour activer | CONFORME ET VÉRIFIÉ (honnêteté) |
+| 9. Sécurité & Permissions | `/super-admin/roles/` | ✅ (profiles) | Répartition par rôle, compteurs, export CSV | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 10. Journal d'activité | `/super-admin/audit/` | ✅ (audit_log) | Pagination serveur, recherche, export CSV | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+| 11. Système & Paramètres | `/super-admin/parametres/`, `/super-admin/sauvegarde/` | ✅ (plans, plan_features, establishments, subscriptions, audit_log) | Export CSV réel des données métier | IMPLÉMENTÉ MAIS NON VÉRIFIÉ |
+
+**Nouveau shell (`src/components/super-admin-shell.tsx`) :** Remplace l'ancien shell. Contient exactement les 11 rubriques avec navigation latérale, topbar, déconnexion, recherche globale. Icônes SVG inline ajoutées (`dashboard`, `building`, `users`, `card`, `layers`, `shield`).
+
+**Nouvelle page Vue générale (`src/app/super-admin/page.tsx`) :** Tableau de bord global avec KPI réels (abonnés, managers, abonnements, CA estimé, forfaits, droits), graphiques (répartition forfaits, état abonnements, inscriptions 6 mois), activité récente (audit_log), alertes (établissements sans manager, abonnements expirés, suspensions), santé du SaaS (DB, Auth, moteur de droits). Toutes les données chargées depuis Supabase.
+
+**Onboarding étendu (§38 §5.1-5.2) :** Champs légalName, activityType, professionalId, address, region, notes, modules (sélection par cases à cocher selon features du forfait). Validation étendue. Corps de requête étendu pour l'EF `onboard-tenant`.
+
+**Blocages :**
+- Edge Function `onboard-tenant` non déployée (pas de CLI supabase, pas de réseau, pas de secrets serveur)
+- Migrations 0028, 0033-0036 non appliquées (pas d'accès Supabase privilégié, sauvegarde/PITR non vérifiée)
+- Comptes de test non créés (pas d'accès à Supabase Auth)
+- E2E non exécutables (navigateur Playwright crash)
+- Déploiement GitHub Pages bloqué (réseau)
+
+**Validations locales :** tsc=0, lint=0, test=41/41 pass, build=0.
+
+**État Git :** 18 commits locaux (`main...origin/main [ahead 18]`).
