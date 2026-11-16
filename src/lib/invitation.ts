@@ -70,7 +70,7 @@ export type InvitationCreated = {
  */
 export function buildActivationUrl(token: string, baseUrl: string): string {
   const cleanBase = baseUrl.replace(/\/$/, "");
-  return `${cleanBase}/activer/${encodeURIComponent(token)}`;
+  return `${cleanBase}/actiter?token=${encodeURIComponent(token)}`;
 }
 
 /**

@@ -5,7 +5,7 @@
  *
  * Parcours :
  *  1. Le Super Admin crée une invitation (jeton généré côté base).
- *  2. Le manager reçoit le lien /activer/[token] par e-mail et/ou WhatsApp.
+ *  2. Le manager reçoit le lien /actiter?token=<token> par e-mail et/ou WhatsApp.
  *  3. Cette page valide le jeton via RPC admin_accept_invitation().
  *  4. Le manager définit son propre mot de passe (jamais transmis en clair).
  *  5. Le compte Auth est créé, le profil est associé à l'établissement.
@@ -18,9 +18,9 @@
  *  - Si le jeton est invalide ou expiré, message clair sans révéler de détail.
  */
 
-import { useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase-browser";
 import { Logo } from "@/components/logo";
 
@@ -32,9 +32,9 @@ interface InvitationValide {
   email: string;
 }
 
-export default function ActiverPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
-  const rawToken = searchParams.token;
-  const token = Array.isArray(rawToken) ? rawToken[0] : rawToken ?? "";
+function ActiverPage() {
+  const params = useSearchParams();
+  const token = params.get("token") ?? "";
   const router = useRouter();
 
   const [etat, setEtat] = useState<Etat>("chargement");
@@ -363,5 +363,13 @@ export default function ActiverPage({ searchParams }: { searchParams: { [key: st
         </form>
       </div>
     </main>
+  );
+}
+
+export default function ActiverActivationPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-[#252D2D] p-8 text-[#A7B7A8]">Chargement…</main>}>
+      <ActiverPage />
+    </Suspense>
   );
 }

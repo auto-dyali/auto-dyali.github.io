@@ -165,12 +165,12 @@ test("email : sans domaine", () => {
 // ------------------------------------------------------------------
 test("activation URL : construction correcte", () => {
   const url = buildActivationUrl("abc123", "https://auto-dyali.github.io");
-  assert.strictEqual(url, "https://auto-dyali.github.io/activer/abc123");
+  assert.strictEqual(url, "https://auto-dyali.github.io/actiter?token=abc123");
 });
 
 test("activation URL : slash final enleve", () => {
   const url = buildActivationUrl("abc123", "https://auto-dyali.github.io/");
-  assert.strictEqual(url, "https://auto-dyali.github.io/activer/abc123");
+  assert.strictEqual(url, "https://auto-dyali.github.io/actiter?token=abc123");
 });
 
 // ------------------------------------------------------------------
@@ -180,7 +180,7 @@ test("email : sujet contient le nom de l'etablissement", () => {
   const { subject } = buildEmailInvitationMessage({
     managerFullName: "Youssef Alami",
     establishmentName: "Garage Atlas SARL",
-    activationUrl: "https://auto-dyali.github.io/activer/abc123",
+    activationUrl: "https://auto-dyali.github.io/activer?token=abc123",
   });
   assert.ok(subject.includes("Garage Atlas SARL"), "sujet doit contenir le nom de l'etablissement");
 });
@@ -189,16 +189,16 @@ test("email : lien d'activation present", () => {
   const { body } = buildEmailInvitationMessage({
     managerFullName: "Youssef Alami",
     establishmentName: "Garage Atlas SARL",
-    activationUrl: "https://auto-dyali.github.io/activer/abc123",
+    activationUrl: "https://auto-dyali.github.io/activer?token=abc123",
   });
-  assert.ok(body.includes("https://auto-dyali.github.io/activer/abc123"), "lien d'activation doit etre present");
+  assert.ok(body.includes("https://auto-dyali.github.io/activer?token=abc123"), "lien d'activation doit etre present");
 });
 
 test("email : aucun mot de passe valeur transmise", () => {
   const { body } = buildEmailInvitationMessage({
     managerFullName: "Youssef Alami",
     establishmentName: "Garage Atlas SARL",
-    activationUrl: "https://auto-dyali.github.io/activer/abc123",
+    activationUrl: "https://auto-dyali.github.io/activer?token=abc123",
   });
   const lower = body.toLowerCase();
   // Le texte peut mentionner "mot de passe" comme instruction, mais ne doit
@@ -214,7 +214,7 @@ test("whatsapp : message contient le nom de l'etablissement", () => {
   const msg = buildWhatsAppInvitationMessage({
     managerFullName: "Youssef Alami",
     establishmentName: "Garage Atlas SARL",
-    activationUrl: "https://auto-dyali.github.io/activer/abc123",
+    activationUrl: "https://auto-dyali.github.io/activer?token=abc123",
   });
   assert.ok(msg.includes("Garage Atlas SARL"), "message WhatsApp doit contenir le nom de l'etablissement");
 });
@@ -223,16 +223,16 @@ test("whatsapp : lien d'activation present", () => {
   const msg = buildWhatsAppInvitationMessage({
     managerFullName: "Youssef Alami",
     establishmentName: "Garage Atlas SARL",
-    activationUrl: "https://auto-dyali.github.io/activer/abc123",
+    activationUrl: "https://auto-dyali.github.io/activer?token=abc123",
   });
-  assert.ok(msg.includes("https://auto-dyali.github.io/activer/abc123"), "lien d'activation doit etre present");
+  assert.ok(msg.includes("https://auto-dyali.github.io/activer?token=abc123"), "lien d'activation doit etre present");
 });
 
 test("whatsapp : aucun mot de passe valeur transmis", () => {
   const msg = buildWhatsAppInvitationMessage({
     managerFullName: "Youssef Alami",
     establishmentName: "Garage Atlas SARL",
-    activationUrl: "https://auto-dyali.github.io/activer/abc123",
+    activationUrl: "https://auto-dyali.github.io/activer?token=abc123",
   });
   const lower = msg.toLowerCase();
   assert.ok(!lower.includes("password:"), "aucun champ password ne doit etre dans le message WhatsApp");
