@@ -6500,3 +6500,43 @@ Un `git merge origin/main` a créé un conflit sur `GV5_SUIVI_AUTO_DYALI.md`. R�
 
 ---
 
+
+---
+
+## 42 — Finalisation GV5 §41 — phases B/C closes (accès Supabase, sauvegarde, audit migrations 0028–0036) — 2026-11-16
+
+**Contexte** : continuation directe de la mission **GV5 §41 — FINALISATION SUPABASE, MIGRATIONS ET VALIDATION RÉELLE DU SAAS**.
+
+### 1. Phase B — Accès Supabase et sauvegarde (complétée ce jour)
+
+| Contrôle | Résultat |
+|---|---|
+| Accès privilégié réel (service_role / Dashboard owner / CLI / tokens) | ❌ **BLOQUÉ** — absent (confirmé) |
+| Backup local (`backups/2026-11-09/`) | ✅ `auto_dyali_avant_migration_0025.dump` (413 872 octets, 2026-11-09) |
+| Sauvegarde post-0025 / PITR vérifiée | ❌ **BLOQUÉ** (non trouvée / non vérifiable) |
+
+### 2. Phase C — Audit individuel des migrations 0028 → 0036 (complété ce jour)
+
+| N° | Fichier | Objet | Statut prod |
+|---|---|---|---|
+| 0028 | `0028_mission_2_15_onboarding_prepared_NOT_APPLIED.sql` | Onboarding entreprise+Manager | ❌ Préparée, non appliquée |
+| 0029 | `0029_crm_extension_prepared_NOT_APPLIED.sql` | CRM enrichi (source/priority/valeur) | ❌ Préparée, non appliquée |
+| 0030 | `0030_super_admin_security_hardening.sql` | Hardening `admin_delete_client_account` | ❓ Inconnu (Phase 2) |
+| 0031 | `0031_profiles_rls_admin_access.sql` | Policies RLS profiles/clients | ❓ Inconnu (Phase 2) |
+| 0033 | `0033_pre_purchase_requests_prepared_NOT_APPLIED.sql` | Table `pre_purchase_requests` | ❌ Préparée, non appliquée |
+| 0034 | `0034_harden_admin_p0_rpcs_prepared_NOT_APPLIED.sql` | Durcissement RPC admin P0 | ❌ Préparée, non appliquée |
+| 0035 | `0035_pre_purchase_submit_rpc_prepared_NOT_APPLIED.sql` | RPC public `submit_pre_purchase_request` | ❌ Préparée, non appliquée |
+| 0036 | `0036_invitations_manager_prepared_NOT_APPLIED.sql` | Invitations Manager (`invitations`, `invitation_events`) | ❌ Préparée, non appliquée |
+
+> Plan unique : `supabase/apply/0032_PLAN_PENDING_MIGRATIONS.sql`.
+
+### 3. État final consolidé (GV5 §41 — point culminant de la phase)
+
+- HEAD : `9927bd2bbf7d2b7822c9546eab7cbc1530bcb5e4` — `GV5 §41: rapport final — phases B/C completes (acces Supabase, sauvegarde, audit migrations 0028-0036)` — synchronisé avec `origin/main`, arbre propre.
+- Push : ✅ `cab712c..9927bd2 main -> main`.
+- CI : ✅ run #174 (SHA `9927bd236711…`) → **success** (jobs build+deploy).
+- Déploiement : ✅ — site `https://auto-dyali.github.io/` → **HTTP 200**.
+- Blocages persistant : accès Supabase privilégié, sauvegarde/PITR vérifiée, fournisseurs, E2E réel, comptes test réels.
+
+---
+
