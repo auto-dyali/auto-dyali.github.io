@@ -89,6 +89,8 @@ export function normalizePhoneMA(value: string): string | null {
     normalized = normalized.slice(3);
   else if (normalized.startsWith("06") && normalized.length === 10)
     normalized = normalized.slice(1);
+  else if (normalized.startsWith("07") && normalized.length === 10)
+    normalized = normalized.slice(1);
   else if (normalized.startsWith("6") && normalized.length === 9) {
     // déjà sans le 0
   } else return null;
