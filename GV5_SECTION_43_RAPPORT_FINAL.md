@@ -7,7 +7,7 @@
 **Dépôt** : `auto-dyali/auto-dyali.github.io`.
 **Branche** : `main`.
 **Commit initial (état de référence §42)** : `35aa2fc886601395038051bb61dce195f8d91abf` — `GV5 §42: registre mis a jour — phases B/C closes (acces Supabase, sauvegarde, audit migrations 0028-0036)`.
-**Commit final (en cours)** : `…` (ce rapport).
+**Commit final** : `b6ae9a7bbf7d2b7822c9546eab7cbc1530bcb5e4` — `GV5 §43: rapport final — deblocage securise Supabase, sauvegardes, migrations 0028-0036 et preparation mise en production` (ce rapport).
 
 ---
 
@@ -16,7 +16,7 @@
 | Point | Valeur |
 |---|---|
 | Commit initial | `35aa2fc886601395038051bb61dce195f8d91abf` |
-| Commit final | `…` (créé par la session GV5 §43) |
+| Commit final | `b6ae9a7bbf7d2b7822c9546eab7cbc1530bcb5e4` — rapport final GV5 §43 |
 | État Git au début de la session | `## main...origin/main`, HEAD = `35aa2fc…`, arbre propre |
 
 ## 2. État Git local et distant
