@@ -6540,3 +6540,53 @@ Un `git merge origin/main` a créé un conflit sur `GV5_SUIVI_AUTO_DYALI.md`. R�
 
 ---
 
+
+---
+
+## 43 — Déblocage sécurisé Supabase, sauvegardes, migrations 0028–0036 et préparation de la mise en production — 2026-11-16
+
+**Contexte** : mission **GV5 §43** — continuation immédiate de GV5 §42 (finalisation Supabase).
+
+### 1. Phase A — Audit initial et état réel
+
+| Contrôle | Résultat |
+|---|---|
+| Git | ✅ `main`, HEAD = `origin/main` = `35aa2fc8866…`, arbre propre, synchronisé |
+| CI | ✅ run #175 (SHA `35aa2fc88660…`) → **success** |
+| Déploiement / site | ✅ deploy success, `https://auto-dyali.github.io/` → **HTTP 200** |
+| Build / TSC / Lint / Tests | ✅ exit 0 / 0 error / 0 error / **41/41** |
+| Accès Supabase privilégié | ❌ **BLOQUÉ** |
+| Backups | ⚠️ partiel (`0025`, 2026-11-09) / PITR ❌ |
+| EF | source OK / déploiement ❌ non confirmé |
+
+### 2. Phase B — Accès Supabase
+
+- **État** : ❌ **BLOQUÉ** (accès `service_role`/Dashboard owner/CLI indisponible dans l'environnement local).
+- Procédure d'ouverture du projet existant (`nxmsqqoflskfajqrqddw`) par le propriétaire : ouvrir le projet via Dashboard owner → exécuter les opérations autorisées (SQL Editor / service role) → notifier l'agent.
+- Aucune tentative de récupération/devin de credentials effectuée. Aucune clé privilégiée demandée ou transmise.
+
+### 3. Phase C — Sauvegardes/PITR
+
+- ✅ dump local `backups/2026-11-09/auto_dyali_avant_migration_0025.dump` (413 872 octets).
+- ⚠️ Couverture partielle (pré-0025). ❌ PITR non vérifiable.
+- Aucune migration appliquée sans sauvegarde exploitable.
+
+### 4. Phase D — Migrations 0028–0036
+
+- ✅ Audit complet (matrice dans `GV5_SECTION_43_RAPPORT_FINAL.md`).
+- Aucune migration appliquée. Aucun reset/diff/drop effectué.
+
+### 5. Phase E–I — États fonctionnels
+
+- EF : source OK / déploiement ❌.
+- Onboarding : ❌ bloqué.
+- Invitations : code OK / envoi réel ❌ fournisseur.
+- RLS/multi-tenant : tests réels ❌ bloqués.
+- Livraison : ✅ CONFORME ET VÉRIFIÉ.
+
+### 6. Blocages persistants (cause exacte)
+
+Accès privilégié Supabase · sauvegarde/PITR vérifiée · fournisseurs · E2E réel / comptes test réels.
+
+---
+
