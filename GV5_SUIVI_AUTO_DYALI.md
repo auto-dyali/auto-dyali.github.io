@@ -6439,3 +6439,64 @@ Un `git merge origin/main` a créé un conflit sur `GV5_SUIVI_AUTO_DYALI.md`. R�
 6. **Fournisseurs externes** : SMTP, WhatsApp, paiement, IA non configurés.
 
 **Conclusion** : Le projet est prêt à être poussé et déployé dès que l'accès réseau et Supabase sera rétabli. Aucun travail n'a été perdu, aucun secret n'a été exposé, aucune donnée n'a été détruite.
+
+---
+
+## 38 — Suite immédiate : push RÉUSSI, CI SUCCESS, déploiement OK, build corrigé — 2026-11-16
+
+**Contexte** : suite de la mission GV5 §38 après le diagnostic réseau GV5 §39 (résolution DNS rétablie dans l'environnement OpenCode).
+
+### 1. Push effectué — RÉUSSI
+
+| Action | Résultat |
+|---|---|
+| `git push origin main` | ✅ **RÉUSSI** — `c6176ce..1b9c556 main -> main` (exit 0) |
+| HEAD local | `1b9c556` — `GV5 §37-38: correction build Next.js static export — activation par query param ?token= (route /actiter statique)` |
+| HEAD distant (origin/main) | `1b9c556` |
+| Synchronisation | ✅ `## main...origin/main` (aucun écart) |
+
+### 2. GitHub Actions — run #170 (SHA `1b9c55645f3c…`)
+
+| Élément | Résultat |
+|---|---|
+| Workflow `Deploy AUTO DYALI to GitHub Pages` | ✅ **SUCCESS** (run ID `43939803257`) |
+| Job `build` | ✅ success |
+| Job `deploy` | ✅ success |
+
+### 3. Déploiement — OK
+
+| Élément | Résultat |
+|---|---|
+| Site `https://auto-dyali.github.io/` | ✅ **HTTP 200** (HTML avec assets Next.js, nouvelle version déployée) |
+| Workflow précédent (run #169, SHA `c6176ce`) | ❌ failure (build) — cause identifiée et corrigée |
+
+### 4. Correction du build (régression introduite par les commits GV5 §37-38)
+
+| Point | Détail |
+|---|---|
+| Erreur constatée (run #169) | `Error: Page "/actiter/[token]" is missing "generateStaticParams()" so it cannot be used with "output: export" config.` |
+| Cause racine | Route dynamique `/actiter/[token]` incompatible avec `output: "export"` (GitHub Pages, hébergement statique). |
+| Correctif appliqué | Route dynamique remplacée par route statique `/actiter` (token via query param `?token=<token>`), composant client dans `<Suspense>` avec `useSearchParams`. |
+| Correctif code | `src/app/actiter/page.tsx`, `src/lib/invitation.ts`, `scripts/test-invitations.mjs`. |
+| Validation post-correctif | `npx tsc --noEmit` ✅ · `npm run lint` ✅ (0 error) · `npm test` ✅ (41/41, dont 26 invitations) · `npm run build` ✅ (exit 0, route `○ /actiter` générée). |
+
+### 5. État final de la livraison (au 2026-11-16, soir)
+
+| Élément | Statut |
+|---|---|
+| Push GitHub | ✅ **RÉUSSI** (`1b9c556`) |
+| CI GitHub Actions | ✅ **SUCCESS** (run #170) |
+| Déploiement GitHub Pages | ✅ **SUCCESS** |
+| Site publié vérifié | ✅ **LIVE** (`https://auto-dyali.github.io/`, HTTP 200) |
+| Build production | ✅ **SUCCESS** (localement re-vérifié après correction) |
+| Commits poussés | ✅ **23** (22 + fix `1b9c556`) |
+
+### 6. Bloccants résiduels (hors périmètre immédiat)
+
+1. **Supabase privilégié** : toujours sans accès service_role / Dashboard owner — migrations 0028–0036, Edge Function, comptes de test, multi-tenant/RLS réels : **BLOQUÉ**.
+2. **Sauvegarde / PITR** : non vérifiée.
+3. **Fournisseurs externes** (SMTP, WhatsApp, paiement, IA) : non configurés.
+4. **E2E réel** : navigateur Playwright crash (SIGTRAP) dans cet environnement.
+
+---
+
