@@ -1302,6 +1302,35 @@ export default function SuperAdminPage() {
       )
     : establishments;
 
+  const clientsAffiches = recherche
+    ? clients.filter((c) =>
+        [c.full_name, c.email, c.phone, c.code, c.role].filter(Boolean).some((v) => String(v).toLowerCase().includes(recherche))
+      )
+    : clients;
+
+  /* -----------------------------------------------------------------
+   * Activation / suspension d'un établissement (RPC admin_set_establishment_status)
+   * ----------------------------------------------------------------- */
+  async function basculerEtat(etablissementId: string, actifActuel: boolean) {
+    if (!supabase) return;
+    setTraitement(etablissementId);
+    setNotice(null);
+    setError(null);
+    try {
+      const { error } = await supabase.rpc("admin_set_establishment_status", {
+        p_establishment_id: etablissementId,
+        p_active: !actifActuel,
+      });
+      if (error) throw new Error(error.message);
+      setTraitement(null);
+      await charger();
+      setNotice(!actifActuel ? "Établissement réactivé." : "Établissement suspendu.");
+    } catch (e) {
+      setTraitement(null);
+      setError(e instanceof Error ? e.message : "Modification du statut de l'établissement impossible.");
+    }
+  }
+
   /* -----------------------------------------------------------------
    * Agrégats du Command Center — calculés uniquement sur des données
    * réellement chargées depuis Supabase. Aucune valeur inventée.
@@ -3758,6 +3787,14 @@ export default function SuperAdminPage() {
 
 
                     <td className="px-5 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => void basculerEtat(establishment.id, establishment.is_active)}
+                        disabled={traitement === establishment.id}
+                        className={`rounded-lg border px-3 py-1.5 text-xs ${establishment.is_active ? "border-[#C5716B]/40 text-[#C5716B] hover:bg-[#C5716B]/10" : "border-[#5D9E7F]/40 text-[#5D9E7F] hover:bg-[#5D9E7F]/10"}`}
+                      >
+                        {establishment.is_active ? "Suspendre" : "Réactiver"}
+                      </button>
                     </td>
 
 
@@ -4400,7 +4437,7 @@ export default function SuperAdminPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#8FB59B]/10">
-                  {clients.map((c) => (
+                  {clientsAffiches.map((c) => (
                     <tr key={c.id}>
                       <td className="px-5 py-4">
                         <p className="font-semibold">{c.full_name}</p>
