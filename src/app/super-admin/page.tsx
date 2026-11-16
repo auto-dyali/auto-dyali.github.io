@@ -4647,6 +4647,7 @@ export default function SuperAdminPage() {
               { label: "Abonnements", href: "/super-admin/abonnements" },
               { label: "Paiements & facturation", href: "/super-admin/paiements" },
               { label: "Support & assistance", href: "/super-admin/support" },
+              { label: "Invitations", href: "/super-admin/invitations" },
               { label: "Rapports & analyses", href: "/super-admin/rapports" },
               { label: "Sauvegarde & export", href: "/super-admin/sauvegarde" },
               { label: "Journal d'audit", href: "/super-admin/audit" },
