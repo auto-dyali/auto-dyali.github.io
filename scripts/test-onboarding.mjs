@@ -26,6 +26,11 @@ const base = {
   managerEmail: "y.alami@garage-atlas.ma",
   managerPhone: "0600000000",
   trialDays: 14,
+  legalName: "Garage Atlas SARL",
+  activityType: "Garage mécanique générale",
+  professionalId: "RC123456",
+  address: "12 Rue Mohammed V",
+  region: "Casablanca-Settat",
 };
 
 test("slugify normalise accents, espaces et majuscules", () => {

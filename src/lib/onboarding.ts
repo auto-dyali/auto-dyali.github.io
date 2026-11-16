@@ -10,15 +10,23 @@
 
 export type OnboardingInput = {
   companyName: string;
+  legalName?: string;
   slug: string;
+  activityType?: string;
+  professionalId?: string;
+  address?: string;
   city?: string;
+  region?: string;
   phone?: string;
   email?: string;
+  notes?: string;
   plan: string;
+  trialDays: number;
+  modules?: string[];
   managerName: string;
   managerEmail: string;
   managerPhone?: string;
-  trialDays: number;
+  sendWhatsApp?: boolean;
 };
 
 export type OnboardingErrors = Partial<Record<keyof OnboardingInput, string>>;
@@ -81,6 +89,31 @@ export function validateOnboardingInput(input: OnboardingInput): OnboardingError
     errors.companyName = "Le nom de l'entreprise est obligatoire.";
   } else if (company.length < 2) {
     errors.companyName = "Le nom de l'entreprise doit contenir au moins 2 caractères.";
+  }
+
+  const legal = input.legalName?.trim();
+  if (!legal) {
+    errors.legalName = "La raison sociale est obligatoire.";
+  }
+
+  const activity = input.activityType?.trim();
+  if (!activity) {
+    errors.activityType = "Le type d'activité est obligatoire.";
+  }
+
+  const profId = input.professionalId?.trim();
+  if (!profId) {
+    errors.professionalId = "L'identifiant professionnel est obligatoire.";
+  }
+
+  const address = input.address?.trim();
+  if (!address) {
+    errors.address = "L'adresse est obligatoire.";
+  }
+
+  const region = input.region?.trim();
+  if (!region) {
+    errors.region = "La région est obligatoire.";
   }
 
   const slug = input.slug.trim();

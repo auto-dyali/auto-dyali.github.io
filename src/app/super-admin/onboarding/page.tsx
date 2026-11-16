@@ -20,12 +20,19 @@ import { useNotification } from "@/lib/use-notification";
 
 type Form = {
   companyName: string;
+  legalName: string;
   slug: string;
+  activityType: string;
+  professionalId: string;
+  address: string;
   city: string;
+  region: string;
   phone: string;
   email: string;
+  notes: string;
   plan: string;
   trialDays: number;
+  modules: string[];
   managerName: string;
   managerEmail: string;
   managerPhone: string;
@@ -43,12 +50,19 @@ export default function OnboardingPage() {
   const [requestId, setRequestId] = useState(() => buildRequestId());
   const [form, setForm] = useState<Form>({
     companyName: "",
+    legalName: "",
     slug: "",
+    activityType: "",
+    professionalId: "",
+    address: "",
     city: "",
+    region: "",
     phone: "",
     email: "",
+    notes: "",
     plan: "silver",
     trialDays: 14,
+    modules: [],
     managerName: "",
     managerEmail: "",
     managerPhone: "",
@@ -123,7 +137,17 @@ export default function OnboardingPage() {
     [form]
   );
   const etapeValide = (n: number): boolean => {
-    if (n === 1) return !erreurs.companyName && !erreurs.slug && !erreurs.email;
+    if (n === 1)
+      return (
+        !erreurs.companyName &&
+        !erreurs.legalName &&
+        !erreurs.activityType &&
+        !erreurs.professionalId &&
+        !erreurs.address &&
+        !erreurs.region &&
+        !erreurs.slug &&
+        !erreurs.email
+      );
     if (n === 2) return !erreurs.managerName && !erreurs.managerEmail;
     return Object.keys(erreurs).length === 0;
   };
@@ -133,6 +157,18 @@ export default function OnboardingPage() {
       const suivant = { ...f, [cle]: valeur };
       if (cle === "companyName" && !slugTouche) suivant.slug = slugify(String(valeur));
       return suivant;
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Sélection/désélection d'un module                                  */
+  /* ------------------------------------------------------------------ */
+  function toggleModule(feature: string) {
+    setForm((f) => {
+      const suivant = f.modules.includes(feature)
+        ? f.modules.filter((m) => m !== feature)
+        : [...f.modules, feature];
+      return { ...f, modules: suivant };
     });
   }
 
@@ -152,12 +188,19 @@ export default function OnboardingPage() {
         body: {
           requestId,
           companyName: form.companyName.trim(),
+          legalName: form.legalName.trim() || null,
           slug: form.slug.trim(),
+          activityType: form.activityType.trim() || null,
+          professionalId: form.professionalId.trim() || null,
+          address: form.address.trim() || null,
           city: form.city.trim() || null,
+          region: form.region.trim() || null,
           phone: form.phone.trim() || null,
           email: form.email.trim() || null,
+          notes: form.notes.trim() || null,
           plan: form.plan,
           trialDays: form.trialDays,
+          modules: form.modules,
           managerName: form.managerName.trim(),
           managerEmail: form.managerEmail.trim(),
           managerPhone: form.managerPhone.trim() || null,
@@ -280,6 +323,29 @@ export default function OnboardingPage() {
               <input type="email" value={form.email} onChange={(e) => modifier("email", e.target.value)} className="champ mt-1 min-h-11" placeholder="contact@garage-atlas.ma" />
               {erreurs.email && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.email}</span>}
             </label>
+            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Raison sociale *
+              <input required value={form.legalName} onChange={(e) => modifier("legalName", e.target.value)} className="champ mt-1 min-h-11" placeholder="Garage Atlas SARL" />
+              {erreurs.legalName && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.legalName}</span>}
+            </label>
+            <label className="text-xs text-[#A7B7A8]">Type d&apos;activité *
+              <input required value={form.activityType} onChange={(e) => modifier("activityType", e.target.value)} className="champ mt-1 min-h-11" placeholder="Garage mécanique générale" />
+              {erreurs.activityType && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.activityType}</span>}
+            </label>
+            <label className="text-xs text-[#A7B7A8]">Identifiant professionnel *
+              <input required value={form.professionalId} onChange={(e) => modifier("professionalId", e.target.value)} className="champ mt-1 min-h-11" placeholder="RC123456" />
+              {erreurs.professionalId && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.professionalId}</span>}
+            </label>
+            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Adresse *
+              <input required value={form.address} onChange={(e) => modifier("address", e.target.value)} className="champ mt-1 min-h-11" placeholder="12 Rue Mohammed V" />
+              {erreurs.address && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.address}</span>}
+            </label>
+            <label className="text-xs text-[#A7B7A8]">Région *
+              <input required value={form.region} onChange={(e) => modifier("region", e.target.value)} className="champ mt-1 min-h-11" placeholder="Casablanca-Settat" />
+              {erreurs.region && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.region}</span>}
+            </label>
+            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Informations complémentaires
+              <textarea value={form.notes} onChange={(e) => modifier("notes", e.target.value)} className="champ mt-1 min-h-11" placeholder="Précisions sur l&apos;activité, horaires, etc." />
+            </label>
           </div>
         )}
 
@@ -351,6 +417,29 @@ export default function OnboardingPage() {
               {erreurs.trialDays && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.trialDays}</span>}
             </label>
 
+            {/* Sélection des modules */}
+            {planActif && featuresDuPlan(planActif.code).length > 0 && (
+              <div className="rounded-xl border border-[#8FB59B]/15 bg-[#2C3735] p-4 text-xs text-[#A7B7A8] sm:col-span-2">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#D0C6AE]">Modules autorisés ({form.modules.length} sélectionnés)</p>
+                <div className="mt-2 grid gap-1 sm:grid-cols-2">
+                  {featuresDuPlan(planActif.code).map((feature) => {
+                    const actif = form.modules.includes(feature);
+                    return (
+                      <label key={feature} className="flex items-center gap-2 p-2 rounded border border-[#8FB59B]/20 hover:border-[#8FB59B]/40 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={actif}
+                          onChange={() => toggleModule(feature)}
+                          className="rounded text-[#8FB59B] focus:ring-[#8FB59B]"
+                        />
+                        <span className="text-[10px]">{feature}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Récapitulatif */}
             <div className="rounded-xl border border-[#8FB59B]/15 bg-[#2C3735] p-4 text-xs text-[#A7B7A8] sm:col-span-2">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#D0C6AE]">Récapitulatif</p>
@@ -358,6 +447,7 @@ export default function OnboardingPage() {
                 <li><span className="text-[#E8ECE8]">Entreprise :</span> {form.companyName || "—"} ({form.slug || "—"})</li>
                 <li><span className="text-[#E8ECE8]">Manager :</span> {form.managerName || "—"} — {form.managerEmail || "—"}</li>
                 <li><span className="text-[#E8ECE8]">Forfait :</span> {form.plan.toUpperCase()} · {form.trialDays} j d’essai</li>
+                <li><span className="text-[#E8ECE8]">Modules :</span> {form.modules.length > 0 ? form.modules.join(", ") : "Aucun"}</li>
               </ul>
             </div>
           </div>
