@@ -121,6 +121,10 @@ export default function OnboardingPage() {
   // GV5 §83 — confirmation supplémentaire quand l'unicité n'a pas pu être
   // vérifiée côté serveur avant le récapitulatif.
   const [confirmerSansVerification, setConfirmerSansVerification] = useState(false);
+  // GV5 §84 — préflight : l'environnement cible doit posséder les objets 0039.
+  // Tant que le diagnostic n'est pas positif, la création définitive est bloquée.
+  const [santeEnv, setSanteEnv] = useState<Record<string, boolean> | null>(null);
+  const [santeEnvErreur, setSanteEnvErreur] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -296,6 +300,34 @@ export default function OnboardingPage() {
     paidDurationToMonths(form.paidDuration, form.paidMonths),
     trialDurationToDays(form.trialDuration, form.trialDays),
   );
+
+  /* ------------------------------------------------------------------ */
+  /* GV5 §84 — préflight environnement (migration 0039 et dépendances)   */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    let vivant = true;
+    void (async () => {
+      if (!supabase) return;
+      const { data, error } = await supabase.rpc("admin_identity_v2_health");
+      if (!vivant) return;
+      if (error) {
+        const absent = /PGRST202|could not find the function/i.test(error.message);
+        setSanteEnvErreur(
+          absent
+            ? "Environnement non compatible : la RPC de diagnostic est absente. La création est bloquée tant que la migration 0039 n'est pas appliquée sur cet environnement."
+            : `Diagnostic d'environnement indisponible : ${error.message}`,
+        );
+        return;
+      }
+      const sante = (data ?? {}) as Record<string, boolean>;
+      setSanteEnv(sante);
+      const manquants = Object.entries(sante).filter(([, ok]) => !ok).map(([cle]) => cle);
+      if (manquants.length > 0) setSanteEnvErreur(`Objets manquants : ${manquants.join(", ")}.`);
+    })();
+    return () => {
+      vivant = false;
+    };
+  }, []);
 
   /* ------------------------------------------------------------------ */
   /* Plans + fonctionnalités réels                                       */
@@ -597,6 +629,11 @@ export default function OnboardingPage() {
       />
 
       <form onSubmit={soumettre} className="sa3d-root sa3d-panel mt-6 p-6 lg:p-8" noValidate>
+        {(santeEnvErreur || (santeEnv && Object.values(santeEnv).some((ok) => !ok))) && (
+          <p role="alert" className="sa3d-alert sa3d-alert--erreur mb-4">
+            Environnement non prêt : {santeEnvErreur ?? "objets requis absents"}. La création est bloquée.
+          </p>
+        )}
         <div className="flex items-center justify-between mb-6">
           <span className="text-sm font-semibold text-[#E8ECE8]">
             Étape {etape} / 6 — {ETAPES[etape - 1]}
@@ -956,7 +993,14 @@ export default function OnboardingPage() {
             </Section3D>
             <div className="mt-8 flex justify-between">
               <button type="button" onClick={etapePrecedente} className="sa3d-btn sa3d-btn-fantome">Précédent</button>
-              {dispoErreur && (
+              {(santeEnvErreur || (santeEnv && Object.values(santeEnv).some((ok) => !ok))) && (
+                <div className="sa3d-alert sa3d-alert--erreur mb-3" role="alert">
+                  <p className="font-semibold">Environnement non prêt pour la création</p>
+                  <p className="mt-1">{santeEnvErreur}</p>
+                  <p className="mt-1">Aucun établissement ni Manager ne sera créé. Appliquez les migrations validées sur l&apos;environnement cible puis réessayez.</p>
+                </div>
+              )}
+              {dispoErreur && !santeEnvErreur && (
                 <div className="sa3d-alert sa3d-alert--erreur mb-3" role="alert">
                   <p className="font-semibold">Unicité non vérifiée à l’avance</p>
                   <p className="mt-1">{dispoErreur} La création revalidera les identifiants côté serveur ; elle sera refusée en cas de doublon.</p>
@@ -974,7 +1018,14 @@ export default function OnboardingPage() {
               <button
                 type="submit"
                 className="sa3d-btn sa3d-btn-vert px-6"
-                disabled={enCours || !validation.valid || (Boolean(dispoErreur) && !confirmerSansVerification)}
+                disabled={
+                  enCours ||
+                  !validation.valid ||
+                  !santeEnv ||
+                  Boolean(santeEnvErreur) ||
+                  Object.values(santeEnv).some((ok) => !ok) ||
+                  (Boolean(dispoErreur) && !santeEnvErreur && !confirmerSansVerification)
+                }
               >
                 {enCours ? "Création en cours…" : "Créer l'abonné"}
               </button>
