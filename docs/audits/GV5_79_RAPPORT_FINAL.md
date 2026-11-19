@@ -125,7 +125,9 @@ Captures : `docs/audits/screenshots-79/` (connexion desktop/mobile, confirmation
 
 - `b66eaba` — *GV5 §75-§79: Super Admin premium unifié, sécurité et intégrations* (104 fichiers code/migrations/tests).
 - `05b8fd8` — *GV5 §45-§79: rapport de finalisation, audits et preuves staging* (175 fichiers documentation).
-- **Push effectué** : `64359da..05b8fd8 main -> main`, sans conflit (dry-run puis push réels réussis).
+- `bff042b` — *GV5 §79: rapport final, pourcentages et preuves staging*.
+- `55a9dcd` — *GV5 §79: captures E2E régénérées (desktop, tablette, mobile)*.
+- **Push effectué** : `64359da..55a9dcd main -> main`, sans conflit (dry-run puis 4 pushes réels réussis).
 - Branche locale et distante synchronisées (`## main...origin/main`). Deux fichiers de sauvegarde locale (`opencode.json.bak`, `opencode.json.save`) restent non suivis volontairement.
 
 ---
