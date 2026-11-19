@@ -130,7 +130,7 @@ Ces pourcentages mesurent la **préparation**, pas l'exécution en production : 
 ## 12. Commits GitHub et état final
 
 - Commits vérifiés : `6ddf761`, `024258f` sur `origin/main`.
-- Nouveaux fichiers §85 à committer en fin de mission (section mise à jour après push).
+- Commit créé et poussé : **`0183a10`** — *GV5 §85: rapport d'autorisation production et contrôle de préparation* (`024258f..0183a10`), sans conflit. `HEAD` local == `origin/main`. Fichiers : `GV5_85_RAPPORT_FINAL.md`, `GV5_85_AUTORISATION_PRODUCTION.md`, `scripts/check-production-readiness.mjs`. Deux sauvegardes locales restent non suivies volontairement.
 - `.env.local` restauré vers la production ; aucun process résiduel ; dépôt local synchrone avant modifications.
 
 ---

@@ -7759,3 +7759,21 @@ POURCENTAGES : audit 94%, developpement 70%, validation staging 96%, commercial 
 GIT : commit 6ddf761 pousse (ac01d56..6ddf761). Rapport docs/audits/GV5_84_RAPPORT_FINAL.md.
 
 BLOQUES : autorisation production + PITR, secrets Resend/Meta/Stripe, tarifs NULL, versions EF production inconnues, appareil physique.
+
+=== GV5 §85 — MISE A NIVEAU CONTROLEE PRODUCTION (19/11/2026) ===
+
+Etat initial : main 024258f = origin/main, commits 6ddf761/024258f verifies, .env.local production, depot propre sauf 2 sauvegardes.
+
+SAUVEGARDE : dump local backups/2026-11-09/auto_dyali_avant_migration_0025.dump (408 Ko) mais origine et restaurabilite NON VERIFIEES. PITR NON VERIFIE (aucun outil). CLI supabase absente. Condition de sauvegarde non remplie => aucune ecriture production.
+
+AUDIT PRODUCTION LECTURE SEULE : outil scripts/check-production-readiness.mjs -> 0/24 objets presents (14 RPC, 7 colonnes, 3 tables). Staging conforme. Resume §84 confirme (42703/PGRST202/PGRST205). Versions EF production non verifiables.
+
+RAPPORT D AUTORISATION : docs/audits/GV5_85_AUTORISATION_PRODUCTION.md avec 12 operations detaillees (objet/source/dependances/etat prod/attendu/compatibilite/risque/verification/rollback), ordre strict, impact utilisateur, tests post-migration, 6 actions necessitant autorisation proprietaire. Arret production obligatoire.
+
+TESTS : tsc 0, lint 0/8, unit 158/158, EF 13/13, stripe 5/5, build OK, audit 0 vuln ; E2E staging ciblees 8/8 (gv583+gv584 3/3, activation+comptes 5/5) ; production 0/24.
+
+POURCENTAGES : audit 94%, developpement 71%, validation staging 96%, commercial 50%, preparation production 76%, ergonomie 85%, comptes 100%, creation 85%, activation 88%. Execution production : 0%.
+
+GIT : commit 0183a10 pousse. Rapport docs/audits/GV5_85_RAPPORT_FINAL.md.
+
+BLOCS : PITR/sauvegarde verifiee, autorisation explicite production, 24 objets manquants, secrets Resend/Meta/Stripe, tarifs NULL, versions EF production, appareil physique, PSR etat reel inconnu.
