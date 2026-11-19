@@ -7709,3 +7709,19 @@ TESTS : tsc 0, lint 0/8, build OK, unit 158/158, EF 13/13, audit 0 vuln. E2E 27/
 POURCENTAGES : perimeter 94%, developpement 67%, validation 94%, commercial 50%, production 64%, ergonomie 85% (153/180), comptes 100%.
 
 BLOQUES : tarifs (decision proprietaire), secrets Stripe/Resend/Meta + destinataire, PITR/autorisation production, appareil physique, donnees metier staging.
+
+=== GV5 §82 — DEBLOCAGE COMMERCIAL, VALIDATION SAAS ET PREPARATION PRODUCTION (19/11/2026) ===
+
+Etat initial : main fc6017d synchronise origin/main, commits 1cca90b et fc6017d verifies sur origin, MCP cible staging, .env.local production restaure apres tests, sauvegarde gv581-backup-20261119-061055.
+
+REALISE : test local HMAC webhook Stripe scripts/test-stripe-webhook.mjs 5/5 avec secret SYNTHETIQUE (signature valide, corps modifie refuse, horodatage perime refuse, comparaison temps constant) ; regle essai/payant verifiee sur staging (12 mois -> 2027-11-19, essai 60j -> 2027-01-18) ; donnees metier synthetiques creees (client/vehicule/ordre/vente/ligne/facture/paiement/fournisseur/achat/employe/produit/mouvement) et verifiees avec jeton Manager : 12 tables lisibles, ecriture client 201, autre tenant [], totaux 480+96=576, stock 10->8 ; checklist docs/audits/GV5_82_DEPLOYMENT_CHECKLIST.md (prerequis, ordre migrations, EF, rollback, controles post-deploiement).
+
+ADVISORS : 14 SECURITY DEFINER anon (helpers RLS + 2 intentionnels + rls_auto_enable event trigger non exposable), 39 authenticated, 64 FK non indexees, protection mots de passe fuiTs desactivee. Aucune revocation aveugle appliquee.
+
+TESTS : tsc 0, lint 0/8, unit 158/158, EF 13/13, stripe local 5/5, securite 6/6 staging, build OK, audit 0 vuln, E2E non-regression 5/5 staging (preuve §81 27/27).
+
+POURCENTAGES : audit 94%, developpement 67%, validation staging 95%, maturite commerciale 50%, preparation production 67%, ergonomie 85%, comptes 100%, parcours commercial 87% (13/15, 2 etapes livraison reelle bloquees), modules metier operationnels 89% (8/9).
+
+GIT : commit 073eff1 pousse (fc6017d..073eff1). Production intacte. Rapport docs/audits/GV5_82_RAPPORT_FINAL.md.
+
+BLOQUES : tarifs 3 formules (NULL), secrets Stripe/Resend/Meta + destinataire, autorisation production + PITR, dunning/renouvellement auto, appareil physique, suppression EF create-test-user via dashboard.

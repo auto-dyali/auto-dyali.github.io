@@ -118,7 +118,7 @@ Un module « opérationnel » ici signifie : données réelles en staging, lectu
 
 - **STAGING** : MCP cible `yocufscgninxiihwiepa` ; données synthétiques créées ; 0 migration appliquée dans §82 ; tests 5/5 et security 6/6.
 - **PRODUCTION** : aucune opération ; `.env.local` restauré vers `nxmsqqoflskfajqrqddw` en fin de mission.
-- **GitHub** : local et `origin/main` synchronisés au départ ; nouveaux fichiers §82 à committer (voir état Git final ci-dessous).
+- **GitHub** : commit `073eff1` — *GV5 §82: test HMAC webhook, validation métier staging et checklist production* — créé et poussé (`fc6017d..073eff1`), sans conflit. `HEAD` local == `origin/main`.
 - **Abonnements** : 3 formules actives, essai 14 j, **sans prix** ; règle essai/payant vérifiée.
 - **Stripe** : EF déployée en staging, signature vérifiée, **503 sans secret**, aucun paiement réel.
 - **E-mail / WhatsApp** : non configurés, statuts `non_configure`, aucun envoi simulé.
