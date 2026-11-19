@@ -7693,3 +7693,19 @@ TESTS : tsc 0, lint 0/8 avertissements, unit 158/158, EF 13/13, build OK, audit 
 GIT : aucun commit/push §80 (autorisation de publication non renouvee dans cette mission), travail local pret a committer. .env.local restaure production.
 
 BLOQUES : tarifs NULL, Stripe/Resend/Meta, PITR/autorisation production, 33 pages non ouvertes en navigateur, appareil physique, donnees metier staging.
+
+=== GV5 §81 — FINALISATION COMPTES, 60 PAGES ET COMMERCIALISATION (19/11/2026) ===
+
+Branche main, commit 1cca90b pousse (e75abf5..1cca90b), production intacte, .env.local restaure production. Rapport : docs/audits/GV5_81_RAPPORT_FINAL.md.
+
+PAGES : 33 pages restantes (12 publiques + 21 Manager) auditees sur PC 1440 / tablette 768 / mobile 390 : 99 combinaisons, 0 debordement, 0 erreur console. Cumul 60/60 pages ouvertes en navigateur, 153 combinaisons / 180 attendues.
+
+COMPTES : indicateur 100% (8/8 operations). Menu Actions complet ; Identifiants/MDP ouvre espace Manager ; suppression definitive apres archivage. Roles : anon 401, Manager 400, SA 200. Purge : non archive 400, archive vide 200 audit_conserve, donnees liees 400 (compte synthetique avec produit).
+
+COMMERCIAL : scripts/configure-plans.mjs (prix fournis par variables d environnement, aucuns prix codes en dur, limites et essais preserves). Tarifs toujours NULL, payments/invoices 0, 12 secrets manquants, stripe-webhook 503 sans secret.
+
+TESTS : tsc 0, lint 0/8, build OK, unit 158/158, EF 13/13, audit 0 vuln. E2E 27/27 (suite 24/27 + re-run ciblé 6/6). 3 echecs intermediaires analyses : depassements budgets sous charge suite 20 min -> budgets dimensionnes sur durees mesurees, pas de succes artificially declare.
+
+POURCENTAGES : perimeter 94%, developpement 67%, validation 94%, commercial 50%, production 64%, ergonomie 85% (153/180), comptes 100%.
+
+BLOQUES : tarifs (decision proprietaire), secrets Stripe/Resend/Meta + destinataire, PITR/autorisation production, appareil physique, donnees metier staging.
