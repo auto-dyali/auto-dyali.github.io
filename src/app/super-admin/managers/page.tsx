@@ -6,6 +6,7 @@
  * (email/code par téléphone), activation/désactivation journalisée.
  */
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
@@ -129,8 +130,20 @@ export default function ManagersPage() {
       <ModuleHeader
         surtitre="AUTO DYALI · Comptes professionnels"
         titre="Comptes & Managers"
-        description="Profils managers réels (rôle manager), email et code retrouvés via le répertoire clients — aucune donnée de session exposée."
-        action={<button type="button" onClick={exporter} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Exporter CSV</button>}
+        description="Profils managers et employés (rôles manager et employee), email et code retrouvés via le répertoire clients — aucune donnée de session exposée."
+        action={
+          <>
+            <Link
+              href="/super-admin/employes/"
+              className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440] mr-2"
+            >
+              Gérer les employés
+            </Link>
+            <button type="button" onClick={exporter} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">
+              Exporter CSV
+            </button>
+          </>
+        }
       />
 
       <div className="carte-premium mt-6 grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">

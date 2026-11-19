@@ -885,3 +885,538 @@ label {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* =====================================================================
+   GV5 §57 — BANDEAU D'IDENTITE PAR PAGE SUPER ADMIN
+   Composition distinctive pour chacune des 11 sections. Heritage de la
+   palette graphite/emeraude/champagne, sans degades excessifs.
+   ===================================================================== */
+.ad-page-banner {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1rem;
+  overflow: hidden;
+  min-height: 112px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--ad-accent, #8fb59b);
+  border-left: 4px solid var(--ad-accent, #8fb59b);
+  border-radius: var(--radius-card, 16px);
+  background:
+    radial-gradient(120% 140% at 100% 0%, var(--ad-accent-fond, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, #303a38 0%, #2b3533 100%);
+  box-shadow: var(--shadow-card, 0 8px 24px rgba(0,0,0,0.22));
+}
+.ad-page-banner-main {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}
+.ad-page-numero {
+  font-family: var(--font-geist-mono, ui-monospace, monospace);
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ad-accent, #8fb59b);
+  opacity: 0.9;
+  letter-spacing: -0.05em;
+}
+.ad-page-icone {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  border-radius: 12px;
+  background: var(--ad-accent-fond, rgba(143,181,155,0.12));
+  color: var(--ad-accent, #8fb59b);
+  font-size: 1.5rem;
+  border: 1px solid var(--ad-accent, #8fb59b);
+}
+.ad-page-banner-texte { flex: 1 1 auto; min-width: 0; width: 100%; }
+.ad-fil {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a7b7a8;
+}
+.ad-fil-sep { padding: 0 0.4rem; color: #6b7b73; }
+.ad-fil-actif { color: var(--ad-accent, #8fb59b); font-weight: 700; }
+.ad-page-titre {
+  margin: 0.3rem 0 0.2rem;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-weight: 800;
+  color: #e8ece8;
+  letter-spacing: -0.02em;
+}
+.ad-page-blurb {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #aeb9b2;
+}
+.ad-page-motif {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  align-self: flex-end;
+  height: 56px;
+  opacity: 0.5;
+}
+.ad-page-motif span {
+  display: block;
+  width: 8px;
+  border-radius: 3px 3px 0 0;
+  background: var(--ad-accent, #8fb59b);
+}
+.ad-page-motif span:nth-child(1) { height: 30%; }
+.ad-page-motif span:nth-child(2) { height: 55%; }
+.ad-page-motif span:nth-child(3) { height: 80%; }
+.ad-page-motif span:nth-child(4) { height: 45%; }
+.ad-page-motif span:nth-child(5) { height: 100%; }
+.ad-page-motif span:nth-child(6) { height: 65%; }
+.ad-motif-columns span { width: 14px; border-radius: 3px; }
+.ad-motif-dots span { width: 10px; height: 10px !important; border-radius: 50%; align-self: center; }
+.ad-motif-lines span { width: 24px; height: 4px !important; border-radius: 2px; align-self: center; }
+.ad-motif-shield span { border-radius: 12px 12px 2px 2px; }
+.ad-motif-grid { display: grid; grid-template-columns: repeat(3, 8px); }
+.ad-motif-grid span { width: 8px; height: 8px !important; border-radius: 2px; }
+@media (max-width: 640px) {
+  .ad-page-banner { min-height: 96px; padding: 1rem; }
+  .ad-page-numero { font-size: 1.75rem; }
+  .ad-page-motif { display: none; }
+}
+
+/* GV5 §57 — KPI tile avec profondeur visuelle maitrisee */
+.ad-kpi-tile {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card, 16px);
+  border: 1px solid rgba(143,181,155,0.22);
+  background: linear-gradient(180deg, #303a38 0%, #2b3533 100%);
+  box-shadow: var(--shadow-card, 0 8px 24px rgba(0,0,0,0.22));
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.ad-kpi-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ad-accent, #8fb59b), transparent 70%);
+}
+.ad-kpi-tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--ad-accent, #8fb59b);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+}
+
+/* GV5 §58 — Eviter le titre duplique : le bandeau §57 porte deja le titre.
+   On masque le surtitre + h1 du ModuleHeader quand un bandeau le precede,
+   tout en conservant sa description et ses actions. */
+.ad-page-banner ~ * .ad-mh-surtitre,
+.ad-page-banner ~ * .ad-mh-titre { display: none; }
+
+/* GV5 §58 — Le motif decoratif ne doit pas écraser le texte sur tablette.
+   Masqué sous 1024px, il reste visible sur grand écran. */
+@media (max-width: 1023px) {
+  .ad-page-motif { display: none !important; }
+}
+.ad-motif-lines span { width: 14px; }
+
+/* =====================================================================
+   GV5 §75 — ESPACE SAAS TOP PREMIUM 3D (Abonné professionnel)
+   Couche additive et SCOPÉE sous .sa3d-root : aucun impact sur les
+   espaces Manager / Garage / POS / Stock / Fournisseurs / Employés.
+   Palette : pétrole, noir profond, vert foncé, or champagne.
+   Profondeur obtenue par couches, dégradés, reflets et ombres — sans WebGL.
+   ===================================================================== */
+.sa3d-root {
+  --sa3d-nuit: #0b1513;
+  --sa3d-petrole: #102520;
+  --sa3d-vert: #1c3a30;
+  --sa3d-vert-clair: #2c5344;
+  --sa3d-or: #d8bd86;
+  --sa3d-or-clair: #f0dcae;
+  --sa3d-texte: #eef2ec;
+  --sa3d-second: #a9bdb1;
+  --sa3d-ligne: rgba(216, 189, 134, 0.22);
+  position: relative;
+  isolation: isolate;
+  color: var(--sa3d-texte);
+}
+.sa3d-root::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(90% 60% at 8% -10%, rgba(216, 189, 134, 0.13), transparent 60%),
+    radial-gradient(70% 50% at 100% 0%, rgba(74, 138, 108, 0.16), transparent 60%),
+    linear-gradient(155deg, var(--sa3d-petrole) 0%, var(--sa3d-nuit) 55%, #0d1e19 100%);
+}
+.sa3d-root::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.32;
+  background-image:
+    linear-gradient(rgba(216, 189, 134, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 189, 134, 0.05) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(180deg, black, transparent 72%);
+  -webkit-mask-image: linear-gradient(180deg, black, transparent 72%);
+}
+
+/* Panneau à relief : plusieurs couches de profondeur + reflet supérieur */
+.sa3d-panel {
+  position: relative;
+  border: 1px solid var(--sa3d-ligne);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 22%),
+    linear-gradient(158deg, rgba(28, 58, 48, 0.92) 0%, rgba(16, 37, 32, 0.95) 58%, rgba(11, 21, 19, 0.97) 100%);
+  box-shadow:
+    0 2px 0 rgba(216, 189, 134, 0.10),
+    0 18px 42px rgba(0, 0, 0, 0.42),
+    0 2px 10px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(240, 220, 174, 0.12);
+}
+.sa3d-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: linear-gradient(90deg, transparent, var(--sa3d-or), transparent);
+  opacity: 0.55;
+}
+
+/* KPI avec vraie profondeur 3D : reflet, halo, arête lumineuse */
+.sa3d-kpi {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(216, 189, 134, 0.26);
+  border-radius: 1.1rem;
+  padding: 1rem 1.15rem;
+  background:
+    radial-gradient(120% 90% at 15% 0%, rgba(216, 189, 134, 0.16), transparent 52%),
+    linear-gradient(155deg, rgba(44, 83, 68, 0.9), rgba(11, 21, 19, 0.96));
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.38),
+    0 3px 0 rgba(216, 189, 134, 0.14),
+    inset 0 1px 0 rgba(240, 220, 174, 0.18);
+  transform-style: preserve-3d;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.sa3d-kpi::after {
+  content: "";
+  position: absolute;
+  right: -1.8rem;
+  bottom: -3rem;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(216, 189, 134, 0.24), transparent 68%);
+  pointer-events: none;
+}
+.sa3d-kpi:hover {
+  transform: translateY(-3px) rotateX(2deg);
+  border-color: rgba(216, 189, 134, 0.55);
+  box-shadow:
+    0 20px 38px rgba(0, 0, 0, 0.46),
+    0 5px 0 rgba(216, 189, 134, 0.18),
+    inset 0 1px 0 rgba(240, 220, 174, 0.24);
+}
+.sa3d-kpi-valeur {
+  color: var(--sa3d-or-clair);
+  text-shadow: 0 0 20px rgba(216, 189, 134, 0.24);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bouton 3D — or champagne / émeraude, enfoncement au toucher */
+.sa3d-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 0.8rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #10241d;
+  border: 1px solid rgba(240, 220, 174, 0.55);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 42%),
+    linear-gradient(180deg, #f0dcae 0%, #d8bd86 52%, #a8864c 100%);
+  box-shadow:
+    0 4px 0 #6f5a33,
+    0 12px 24px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+  touch-action: manipulation;
+}
+.sa3d-btn:hover { filter: brightness(1.07); }
+.sa3d-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #6f5a33, 0 4px 10px rgba(0, 0, 0, 0.32), inset 0 2px 6px rgba(0, 0, 0, 0.16);
+}
+.sa3d-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.sa3d-btn-vert {
+  color: #04130d;
+  border-color: rgba(141, 255, 206, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 40%),
+    linear-gradient(180deg, #4fd7a5 0%, #1f9c73 55%, #0d6348 100%);
+  box-shadow: 0 4px 0 #144233, 0 12px 24px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.sa3d-btn-vert:active { box-shadow: 0 1px 0 #144233, 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 2px 6px rgba(0, 0, 0, 0.18); }
+.sa3d-btn-fantome {
+  color: var(--sa3d-or-clair);
+  border-color: rgba(216, 189, 134, 0.35);
+  background: linear-gradient(180deg, rgba(44, 83, 68, 0.55), rgba(11, 21, 19, 0.6));
+  box-shadow: 0 3px 0 rgba(6, 14, 12, 0.75), inset 0 1px 0 rgba(240, 220, 174, 0.12);
+  text-shadow: none;
+}
+.sa3d-btn-fantome:active { box-shadow: 0 1px 0 rgba(6, 14, 12, 0.75), inset 0 2px 6px rgba(0, 0, 0, 0.25); }
+.sa3d-btn-danger {
+  color: #fff3f1;
+  border-color: rgba(214, 122, 118, 0.45);
+  background: linear-gradient(180deg, #c97a76 0%, #9d4f4c 100%);
+  box-shadow: 0 4px 0 #5b2c2a, 0 10px 22px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+/* Champs — puits 3D, focus lumineux, labels structurés */
+.sa3d-champ {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.7rem;
+  color: var(--sa3d-texte);
+  background: rgba(8, 20, 17, 0.72);
+  border: 1px solid rgba(216, 189, 134, 0.2);
+  box-shadow: inset 3px 3px 9px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(240, 220, 174, 0.08);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  touch-action: manipulation;
+}
+.sa3d-champ::placeholder { color: rgba(238, 242, 236, 0.35); }
+.sa3d-champ:focus {
+  border-color: rgba(216, 189, 134, 0.7);
+  transform: translateY(-1px);
+  box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(216, 189, 134, 0.18);
+}
+.sa3d-champ:disabled { opacity: 0.55; cursor: default; transform: none; }
+.sa3d-champ[aria-invalid="true"] { border-color: rgba(214, 122, 118, 0.8); }
+.sa3d-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--sa3d-second);
+  margin-bottom: 0.35rem;
+}
+.sa3d-requis { color: var(--sa3d-or); }
+.sa3d-erreur { color: #e59b96; font-size: 0.68rem; margin-top: 0.25rem; }
+
+/* Section structurée avec numéro et arête dorée */
+.sa3d-section {
+  position: relative;
+  border: 1px solid rgba(216, 189, 134, 0.14);
+  border-radius: 1rem;
+  background: linear-gradient(165deg, rgba(28, 58, 48, 0.42), rgba(11, 21, 19, 0.55));
+  padding: 1.1rem;
+}
+.sa3d-section-titre {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+.sa3d-section-num {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: none;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(216, 189, 134, 0.4);
+  background: rgba(216, 189, 134, 0.12);
+  color: var(--sa3d-or-clair);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.sa3d-section h4 { margin: 0; font-size: 0.9rem; font-weight: 750; color: #f3efe3; }
+.sa3d-section p.sa3d-section-sous { margin: 0.1rem 0 0; font-size: 0.7rem; color: var(--sa3d-second); }
+
+/* Onglets / navigation des cinq espaces */
+.sa3d-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  border-radius: 0.9rem;
+  background: rgba(8, 20, 17, 0.6);
+  border: 1px solid rgba(216, 189, 134, 0.14);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.sa3d-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.35rem;
+  padding: 0 0.75rem;
+  border-radius: 0.65rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--sa3d-second);
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+.sa3d-tab:hover { color: var(--sa3d-or-clair); background: rgba(216, 189, 134, 0.08); }
+.sa3d-tab[aria-selected="true"] {
+  color: #0e201a;
+  background: linear-gradient(180deg, #f0dcae, #c9a869);
+  box-shadow: 0 3px 0 #6f5a33, 0 6px 14px rgba(0, 0, 0, 0.3);
+}
+
+/* Pastilles de statut */
+.sa3d-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 1.5rem;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  border: 1px solid currentColor;
+  background: rgba(0, 0, 0, 0.22);
+}
+.sa3d-pill--ok { color: #7ee0ac; }
+.sa3d-pill--attente { color: var(--sa3d-or); }
+.sa3d-pill--stop { color: #e59b96; }
+.sa3d-pill--neutre { color: var(--sa3d-second); }
+.sa3d-point {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* Ligne d'information et séparateur */
+.sa3d-ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba(216, 189, 134, 0.1);
+  font-size: 0.82rem;
+}
+.sa3d-ligne:last-child { border-bottom: 0; }
+.sa3d-ligne > span:first-child { color: var(--sa3d-second); }
+.sa3d-ligne > span:last-child { color: var(--sa3d-texte); font-weight: 650; text-align: right; }
+
+/* Bandeau d'en-tête de la fiche */
+.sa3d-hero {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(216, 189, 134, 0.2);
+  padding: 1.25rem 1.4rem;
+  background:
+    radial-gradient(80% 140% at 100% 0%, rgba(216, 189, 134, 0.14), transparent 60%),
+    linear-gradient(160deg, rgba(44, 83, 68, 0.55), rgba(11, 21, 19, 0.7));
+}
+.sa3d-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0 62%, rgba(216, 189, 134, 0.07) 62.2%, transparent 62.4%, transparent 78%, rgba(216, 189, 134, 0.05) 78.2%, transparent 78.4%);
+}
+.sa3d-titre {
+  margin: 0.2rem 0;
+  font-size: clamp(1.15rem, 2.2vw, 1.5rem);
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  background: linear-gradient(120deg, #f6ecd4, #d8bd86 55%, #a9bdb1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.sa3d-surtitre {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sa3d-or);
+}
+
+/* Indicateur de sauvegarde et alertes */
+.sa3d-sauvegarde {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--sa3d-second);
+}
+.sa3d-spinner {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  border: 2px solid rgba(216, 189, 134, 0.25);
+  border-top-color: var(--sa3d-or);
+  animation: sa3d-spin 0.8s linear infinite;
+}
+@keyframes sa3d-spin { to { transform: rotate(360deg); } }
+.sa3d-alert {
+  border-radius: 0.8rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.78rem;
+  border: 1px solid rgba(216, 189, 134, 0.25);
+  background: rgba(216, 189, 134, 0.08);
+  color: var(--sa3d-or-clair);
+}
+.sa3d-alert--erreur { border-color: rgba(214, 122, 118, 0.4); background: rgba(214, 122, 118, 0.1); color: #e9a7a3; }
+.sa3d-alert--succes { border-color: rgba(126, 224, 172, 0.35); background: rgba(126, 224, 172, 0.09); color: #9fe8bf; }
+
+/* Grille et défilement internes */
+.sa3d-grid { display: grid; gap: 0.85rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sa3d-scroll { max-height: 62vh; overflow-y: auto; overscroll-behavior: contain; }
+.sa3d-plein { grid-column: 1 / -1; }
+
+@media (max-width: 720px) {
+  .sa3d-grid { grid-template-columns: 1fr; }
+  .sa3d-scroll { max-height: 68vh; }
+  .sa3d-hero { padding: 1rem; }
+  .sa3d-section { padding: 0.85rem; }
+  .sa3d-tab { padding: 0 0.55rem; font-size: 0.7rem; }
+  .sa3d-ligne { align-items: flex-start; flex-direction: column; gap: 0.15rem; }
+  .sa3d-ligne > span:last-child { text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sa3d-kpi, .sa3d-btn, .sa3d-champ, .sa3d-tab { transition: none; }
+  .sa3d-kpi:hover { transform: none; }
+}

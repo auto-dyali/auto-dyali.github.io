@@ -15,11 +15,11 @@ export function ModuleHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="ad-module-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.25em] text-[#D0C6AE]">{surtitre}</p>
-        <h1 className="titre-or mt-1 text-2xl font-extrabold">{titre}</h1>
-        <p className="mt-1 max-w-2xl text-sm text-[#A7B7A8]">{description}</p>
+        <p className="ad-mh-surtitre text-[11px] uppercase tracking-[0.25em] text-[#D0C6AE]">{surtitre}</p>
+        <h1 className="ad-mh-titre titre-or mt-1 text-2xl font-extrabold">{titre}</h1>
+        <p className="ad-mh-desc mt-1 max-w-2xl text-sm text-[#A7B7A8]">{description}</p>
       </div>
       {action && <div className="flex flex-wrap gap-2">{action}</div>}
     </div>

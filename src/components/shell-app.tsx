@@ -174,6 +174,14 @@ export function ShellApp({
         const { data } = (await supabase?.auth.getSession()) ?? { data: { session: null } };
         if (!vivant) return;
         if (!data.session) { router.replace("/connexion/"); return; }
+        // Rotation obligatoire : tant que le mot de passe temporaire n'a pas
+        // été changé, aucune donnée de l'établissement n'est accessible.
+        const { data: securite, error: securiteError } = await supabase!.rpc("get_my_security_state");
+        if (!vivant) return;
+        if (!securiteError && (securite as { must_change_password?: boolean } | null)?.must_change_password === true) {
+          router.replace("/changer-mot-de-passe/");
+          return;
+        }
         setEstConnecte(true);
       } catch {
         // Échec réseau / extension de blocage : ne JAMAIS rester bloqué sur

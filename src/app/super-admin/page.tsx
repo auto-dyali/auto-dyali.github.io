@@ -22,6 +22,7 @@ import { supabase } from "@/lib/supabase-browser";
 import { useNotification } from "@/lib/use-notification";
 import { SuperAdminShell } from "@/components/super-admin-shell";
 import { Icone, type NomIcone } from "@/components/icones";
+import { getPageIdentity, PageIdentityBanner } from "@/components/super-admin-page-identity";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                              */
@@ -86,19 +87,20 @@ export default function SuperAdminPage() {
   const [features, setFeatures] = useState<FeatureRow[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [managers, setManagers] = useState<ManagerProfileRow[]>([]);
-type SubscriptionRow = {
-  id: string;
-  establishment_id: string;
-  plan_code?: string | null;
-  status?: string | null;
-  trial_ends_at?: string | null;
-  current_period_end?: string | null;
-};
+  type SubscriptionRow = {
+    id: string;
+    establishment_id: string;
+    plan_code?: string | null;
+    status?: string | null;
+    trial_ends_at?: string | null;
+    current_period_end?: string | null;
+  };
 
   const [subscriptions, setSubscriptions] = useState<SubscriptionRow[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [periodeMois, setPeriodeMois] = useState<1 | 3 | 6 | 12>(6);
 
   /* ------------------------------------------------------------------ */
   /* Chargement des données réelles depuis Supabase                     */
@@ -223,31 +225,25 @@ type SubscriptionRow = {
   const maxForfait = Math.max(1, ...repartitionForfaits.map((p) => p.count));
 
   /* ------------------------------------------------------------------ */
-/* Activité mensuelle (inscriptions par mois sur 6 mois)              */
-/* ------------------------------------------------------------------ */
+  /* Activité (inscriptions par mois, filtre temporel)                  */
+  /* ------------------------------------------------------------------ */
   const maintenant = new Date();
-  const inscriptionsParMois = Array.from({ length: 6 }).map((_, i) => {
-    const mois = new Date(
-      maintenant.getFullYear(),
-      maintenant.getMonth() - (5 - i),
-      1
-    );
-    const moisSuivant = new Date(
-      maintenant.getFullYear(),
-      maintenant.getMonth() - (4 - i),
-      1
-    );
+  const inscriptionsParMois = Array.from({ length: periodeMois }).map((_, i) => {
+    const offset = periodeMois - 1 - i;
+    const mois = new Date(maintenant.getFullYear(), maintenant.getMonth() - offset, 1);
+    const moisSuivant = new Date(maintenant.getFullYear(), maintenant.getMonth() - offset + 1, 1);
     const count = establishments.filter((e) => {
       if (!e.created_at) return false;
       const d = new Date(e.created_at);
       return d >= mois && d < moisSuivant;
     }).length;
     return {
-      label: mois.toLocaleDateString("fr-FR", { month: "short" }),
+      label: mois.toLocaleDateString("fr-FR", periodeMois > 6 ? { month: "2-digit", year: "2-digit" } : { month: "short" }),
       count,
     };
   });
   const maxInscription = Math.max(1, ...inscriptionsParMois.map((m) => m.count));
+  const nouveauxPeriode = inscriptionsParMois.reduce((acc, m) => acc + m.count, 0);
 
   /* ------------------------------------------------------------------ */
 /* État des abonnements                                               */
@@ -354,17 +350,8 @@ type SubscriptionRow = {
 
   return (
     <SuperAdminShell onLogout={() => router.replace("/connexion/")}>
-      {/* En-tête de page */}
-      <div className="mb-8">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-[#A7B7A8]">
-          AUTO DYALI · Super Admin
-        </p>
-        <h1 className="titre-or text-3xl font-extrabold">Vue générale</h1>
-        <p className="mt-2 max-w-2xl text-sm text-[#A7B7A8]">
-          Tableau de bord global du SaaS. Toutes les données sont chargées
-          en temps réel depuis Supabase.
-        </p>
-      </div>
+      {/* Bandeau d'identite GV5 §57 */}
+      <PageIdentityBanner identite={getPageIdentity("/super-admin/")} titre="Vue générale" />
 
       {/* KPI */}
       <section id="kpi" className="mb-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
@@ -425,7 +412,7 @@ type SubscriptionRow = {
                       ? "/super-admin/plans/"
                       : "/super-admin/"
             }
-            className="carte p-5 rounded-xl border border-[#8FB59B]/20 hover:border-[#8FB59B]/40 transition group"
+            className="ad-kpi-tile p-5 group"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -510,11 +497,28 @@ type SubscriptionRow = {
       {/* Activité mensuelle */}
       <section className="mb-8">
         <article className="carte p-5">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold">Nouvelles inscriptions (6 mois)</h2>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-[#A7B7A8]">
-              Réel
-            </span>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
+            <div>
+              <h2 className="font-bold">Nouvelles inscriptions</h2>
+              <p className="text-xs text-[#A7B7A8]">{nouveauxPeriode} inscription(s) sur la période sélectionnée — données réelles.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-xs text-[#A7B7A8]">
+                Période
+                <select
+                  value={periodeMois}
+                  onChange={(e) => setPeriodeMois(Number(e.target.value) as 1 | 3 | 6 | 12)}
+                  className="champ ml-2 min-h-9 py-1 text-xs"
+                  aria-label="Période du graphique des inscriptions"
+                >
+                  <option value={1}>1 mois</option>
+                  <option value={3}>3 mois</option>
+                  <option value={6}>6 mois</option>
+                  <option value={12}>12 mois</option>
+                </select>
+              </label>
+              <button type="button" onClick={() => void charger()} className="rounded-lg border border-[#8FB59B]/40 px-3 py-1.5 text-xs text-[#DFE7E2] hover:bg-[#344440]">Actualiser</button>
+            </div>
           </div>
           <div className="mt-6 flex h-40 items-end justify-between gap-2">
             {inscriptionsParMois.map((m) => (
@@ -619,6 +623,31 @@ type SubscriptionRow = {
               </li>
             )}
           </ul>
+        </div>
+      </section>
+
+      {/* GV5 §66 — Acces directs WhatsApp Business / Chatbot IA (etats honnetes) */}
+      <section className="mb-8">
+        <h2 className="mb-3 font-bold">Acces directs</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Link href="/super-admin/whatsapp/" className="ad-kpi-tile flex items-center gap-4 p-5 group">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#5D9E7F]/15 text-[#7FBF9E] text-2xl" aria-hidden>&#128172;</div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-[#E8ECE8]">WhatsApp Business</p>
+              <p className="mt-1 text-[11px] text-[#A7B7A8]">Configuration, envois, historique et erreurs du fournisseur Meta.</p>
+              <p className="mt-2 inline-flex rounded-full bg-[#D6A34D]/15 px-2.5 py-1 text-[10px] font-semibold text-[#D6A34D]">Non constatable cote navigateur</p>
+            </div>
+            <span className="shrink-0 text-[#8FB59B]" aria-hidden>&#8594;</span>
+          </Link>
+          <Link href="/super-admin/chatbot/" className="ad-kpi-tile flex items-center gap-4 p-5 group">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#9FB7E0]/15 text-[#9FB7E0] text-2xl" aria-hidden>&#129302;</div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-[#E8ECE8]">Chatbot IA</p>
+              <p className="mt-1 text-[11px] text-[#A7B7A8]">Etat du service, droits par forfait et suivi.</p>
+              <p className="mt-2 inline-flex rounded-full bg-[#C5716B]/15 px-2.5 py-1 text-[10px] font-semibold text-[#C5716B]">Non configure</p>
+            </div>
+            <span className="shrink-0 text-[#8FB59B]" aria-hidden>&#8594;</span>
+          </Link>
         </div>
       </section>
 

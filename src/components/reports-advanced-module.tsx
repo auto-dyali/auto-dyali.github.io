@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import * as XLSX from "xlsx";
+import { writeWorkbook } from "@/lib/excel-safe";
 import { supabase } from "@/lib/supabase-browser";
 import { formatMad } from "@/lib/catalogue-test";
 
@@ -183,19 +183,15 @@ export function ReportsAdvancedModule() {
       "Part (%)": Math.round(c.part * 10) / 10,
     }));
 
-    const wb = XLSX.utils.book_new();
-    const ws1 = XLSX.utils.json_to_sheet(feuilleVentes);
-    ws1["!cols"] = [{ wch: 18 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }];
-    XLSX.utils.book_append_sheet(wb, ws1, "Ventes");
-    const ws2 = XLSX.utils.json_to_sheet(feuilleTop);
-    ws2["!cols"] = [{ wch: 6 }, { wch: 44 }, { wch: 10 }, { wch: 14 }];
-    XLSX.utils.book_append_sheet(wb, ws2, "Top produits");
-    const ws3 = XLSX.utils.json_to_sheet(feuilleCats);
-    ws3["!cols"] = [{ wch: 18 }, { wch: 14 }, { wch: 10 }];
-    XLSX.utils.book_append_sheet(wb, ws3, "Categories");
-
     const label = PERIODES.find((p) => p.cle === periode)?.label.replace(/\s+/g, "-").toLowerCase() ?? "rapport";
-    XLSX.writeFile(wb, `auto-dyali-rapport-${label}.xlsx`);
+    writeWorkbook(
+      [
+        { name: "Ventes", rows: feuilleVentes, cols: [{ wch: 18 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }] },
+        { name: "Top produits", rows: feuilleTop, cols: [{ wch: 6 }, { wch: 44 }, { wch: 10 }, { wch: 14 }] },
+        { name: "Categories", rows: feuilleCats, cols: [{ wch: 18 }, { wch: 14 }, { wch: 10 }] },
+      ],
+      `auto-dyali-rapport-${label}.xlsx`,
+    );
     setNotice(`Rapport exporté : ${feuilleVentes.length} vente(s), ${feuilleTop.length} produit(s) en tête.`);
   }
 

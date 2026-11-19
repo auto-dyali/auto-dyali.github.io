@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
+import {
+  can as permissionAllows,
+  normalizePermission,
+  type PermissionAction,
+  type TenantPermission,
+} from "@/lib/permissions";
 
 /**
  * Moteur central de droits AUTO DYALI.
@@ -71,6 +77,15 @@ export type FeaturesState = {
   plan: PlanCode | null;
   /** Vrai si la fonctionnalité est autorisée pour le forfait courant. */
   allows: (feature: FeatureKey) => boolean;
+  /** Permissions granulaires réellement attribuées (table `permissions`). */
+  permissions: TenantPermission[];
+  /** Vrai si les permissions granulaires ont pu être chargées. */
+  permissionsLoaded: boolean;
+  /**
+   * Vrai si le module est ouvert ET que l'action est autorisée.
+   * Sans permissions chargées, seule l'ouverture du module est vérifiée.
+   */
+  can: (module: FeatureKey, action: PermissionAction) => boolean;
   /** true pendant le chargement des droits. */
   loading: boolean;
   /** Message si les droits n'ont pas pu être chargés. */
@@ -84,6 +99,8 @@ export function useFeatures(): FeaturesState {
     new Set<string>(BASE_FEATURES),
   );
   const [plan, setPlan] = useState<PlanCode | null>(null);
+  const [permissions, setPermissions] = useState<TenantPermission[]>([]);
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -98,8 +115,12 @@ export function useFeatures(): FeaturesState {
         return;
       }
       try {
-        const { data, error: rpcError } = await supabase.rpc("my_features");
+        const [featuresResult, permissionsResult] = await Promise.all([
+          supabase.rpc("my_features"),
+          supabase.rpc("my_permissions"),
+        ]);
         if (!vivant) return;
+        const { data, error: rpcError } = featuresResult;
         if (rpcError) {
           // Ne jamais ouvrir les fonctions premium à l'aveugle.
           setError(rpcError.message);
@@ -119,6 +140,18 @@ export function useFeatures(): FeaturesState {
           setEnabled(actives.size ? actives : new Set<string>(BASE_FEATURES));
           setError(null);
         }
+
+        // Permissions granulaires : leur absence (migration 0039 non appliquée)
+        // ne doit pas ouvrir de droits supplémentaires ni bloquer l'application.
+        if (!permissionsResult.error && Array.isArray(permissionsResult.data)) {
+          setPermissions(
+            (permissionsResult.data as Partial<TenantPermission>[]).map(normalizePermission),
+          );
+          setPermissionsLoaded(true);
+        } else {
+          setPermissions([]);
+          setPermissionsLoaded(false);
+        }
       } catch (e) {
         // Échec réseau : ne jamais rester bloqué sur le chargement des droits.
         setError(e instanceof Error ? e.message : "Chargement des droits impossible.");
@@ -137,12 +170,20 @@ export function useFeatures(): FeaturesState {
     (feature: FeatureKey) => enabled.has(feature),
     [enabled],
   );
+  const can = useCallback(
+    (module: FeatureKey, action: PermissionAction) => {
+      if (!enabled.has(module)) return false;
+      if (!permissionsLoaded) return true;
+      return permissionAllows(permissions, module, action);
+    },
+    [enabled, permissions, permissionsLoaded],
+  );
   const reload = useCallback(() => {
     setLoading(true);
     setTick((t) => t + 1);
   }, []);
 
-  return { plan, allows, loading, error, reload };
+  return { plan, allows, permissions, permissionsLoaded, can, loading, error, reload };
 }
 
 export type Role = "saas_admin" | "manager" | "employee" | "client";

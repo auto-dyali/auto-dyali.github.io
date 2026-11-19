@@ -1,11 +1,12 @@
 /**
- * AUTO DYALI — Validation du parcours d'onboarding entreprise + Manager.
+ * AUTO DYALI — Helpers historiques du parcours d'onboarding.
  *
- * Fonctions pures partagées entre l'interface Super Admin et le futur
- * backend sécurisé (Edge Function / RPC). Aucune dépendance réseau.
- *
- * La création réelle du compte Auth et l'association en base restent
- * côté serveur (service_role jamais exposé au navigateur).
+ * ⚠️ LEGACY : la validation de référence est désormais
+ * `supabase/functions/_shared/contract.ts` (contrat v2), ré-exportée par
+ * `@/lib/onboarding-contract`. Ce module ne sert plus qu'à quelques
+ * utilitaires (`slugify`, `buildRequestId`, `genererIdentifiantProfessionnel`)
+ * et à l'ancienne suite de tests. Ne pas l'utiliser pour valider un payload
+ * destiné à l'Edge Function : les deux validations divergeraient.
  */
 
 export type OnboardingInput = {
@@ -21,12 +22,25 @@ export type OnboardingInput = {
   email?: string;
   notes?: string;
   plan: string;
-  trialDays: number;
+  // Durée d'abonnement : "1mois", "3mois", "6mois", "1an", "2ans", "personnalisee"
+  abonnementDuree: string;
+  abonnementDureePersonnalisee: number;
+  // Durée d'essai : "aucun", "7", "15", "30", "45", "60", "personnalisee"
+  essaiDuree: string;
+  essaiDureePersonnalisee: number;
+  // Dates calculées automatiquement
+  dateDebut?: string;
+  dateFin?: string;
   modules?: string[];
   managerName: string;
   managerEmail: string;
   managerPhone?: string;
   sendWhatsApp?: boolean;
+  // Identifiant de connexion du Manager (choisi manuellement par le SA)
+  managerLoginId?: string;
+  // Mot de passe initial temporaire choisi par le Super Admin
+  managerPassword?: string;
+  managerPasswordConfirm?: string;
 };
 
 export type OnboardingErrors = Partial<Record<keyof OnboardingInput, string>>;
@@ -75,6 +89,18 @@ export function isValidSlug(value: string): boolean {
 /** Vérifie un UUID (identifiant de demande idempotente). */
 export function isValidRequestId(value: string): boolean {
   return UUID_REGEX.test(value.trim());
+}
+
+/** Génère un identifiant professionnel AUTO DYALI PRO unique (format ADY-PRO-XXXXXX). */
+export function genererIdentifiantProfessionnel(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    const uuid = crypto.randomUUID();
+    const hex = uuid.replace(/-/g, "").substring(0, 6).toUpperCase();
+    return `ADY-PRO-${hex}`;
+  }
+  // Repli (navigateurs/anciens runtimes) : entropie aléatoire
+  const hex = Array.from({ length: 6 }, () => Math.floor(Math.random() * 16).toString(16)).join("").toUpperCase();
+  return `ADY-PRO-${hex}`;
 }
 
 /**
@@ -127,8 +153,24 @@ export function validateOnboardingInput(input: OnboardingInput): OnboardingError
     errors.plan = "Forfait invalide (standard, silver ou gold).";
   }
 
-  if (!Number.isFinite(input.trialDays) || input.trialDays < 0 || input.trialDays > 90) {
-    errors.trialDays = "Durée d'essai invalide (0 à 90 jours).";
+  // Validation de la durée d'abonnement
+  const dureesAbonnementValides = ["1mois", "3mois", "6mois", "1an", "2ans", "personnalisee"];
+  if (!dureesAbonnementValides.includes(input.abonnementDuree)) {
+    errors.abonnementDuree = "Durée d'abonnement invalide.";
+  } else if (input.abonnementDuree === "personnalisee") {
+    if (!input.abonnementDureePersonnalisee || input.abonnementDureePersonnalisee < 1 || input.abonnementDureePersonnalisee > 120) {
+      errors.abonnementDureePersonnalisee = "Durée personnalisée invalide (1 à 120 mois).";
+    }
+  }
+
+  // Validation de la durée d'essai
+  const dureesEssaiValides = ["aucun", "7", "15", "30", "45", "60", "personnalisee"];
+  if (!dureesEssaiValides.includes(input.essaiDuree)) {
+    errors.essaiDuree = "Durée d'essai invalide.";
+  } else if (input.essaiDuree === "personnalisee") {
+    if (!input.essaiDureePersonnalisee || input.essaiDureePersonnalisee < 1 || input.essaiDureePersonnalisee > 365) {
+      errors.essaiDureePersonnalisee = "Durée d'essai personnalisée invalide (1 à 365 jours).";
+    }
   }
 
   const managerName = input.managerName.trim();
@@ -146,6 +188,31 @@ export function validateOnboardingInput(input: OnboardingInput): OnboardingError
 
   if (input.email && !isValidEmail(input.email)) {
     errors.email = "Email de l'entreprise invalide.";
+  }
+
+  // Validation de l'identifiant de connexion du Manager
+  const managerLoginId = input.managerLoginId?.trim();
+  if (!managerLoginId) {
+    errors.managerLoginId = "L'identifiant de connexion du Manager est obligatoire.";
+  } else if (managerLoginId.length < 3) {
+    errors.managerLoginId = "L'identifiant de connexion doit contenir au moins 3 caractères.";
+  } else if (!/^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/.test(managerLoginId)) {
+    errors.managerLoginId = "Identifiant invalide : minuscules, chiffres, tirets et points uniquement (pas en début ou fin).";
+  }
+
+  // Validation du mot de passe initial temporaire
+  const managerPassword = input.managerPassword?.trim();
+  if (!managerPassword) {
+    errors.managerPassword = "Le mot de passe initial est obligatoire.";
+  } else if (managerPassword.length < 8) {
+    errors.managerPassword = "Le mot de passe doit contenir au moins 8 caractères.";
+  }
+
+  // Validation de la confirmation du mot de passe
+  if (!input.managerPasswordConfirm?.trim()) {
+    errors.managerPasswordConfirm = "La confirmation du mot de passe est obligatoire.";
+  } else if (input.managerPasswordConfirm.trim() !== managerPassword) {
+    errors.managerPasswordConfirm = "Les mots de passe ne correspondent pas.";
   }
 
   return errors;

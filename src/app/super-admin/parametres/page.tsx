@@ -45,8 +45,8 @@ export default function ParametresPage() {
     <ModulePage titre="Paramètres système">
       <ModuleHeader
         surtitre="AUTO DYALI · Configuration plateforme"
-        titre="Paramètres système"
-        description="Configuration réellement active : forfaits, droits, essai et limites sont en base. Toute édition se fait depuis Plans (RPC journalisées)."
+        titre="Système & paramètres"
+        description="Configuration réellement active : forfaits, droits, essai et limites sont en base. Accès aux outils de rapports, sauvegarde, invitations et demandes pré-achat."
       />
 
       {erreur && <div className="mt-4"><Erreur message={erreur} /></div>}
@@ -93,8 +93,11 @@ export default function ParametresPage() {
 
           <div className="mt-6 flex flex-wrap gap-2">
             <Link href="/super-admin/plans/" className="btn-or px-4 py-2 text-sm">Modifier plans &amp; droits</Link>
-            <Link href="/super-admin/audit/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Voir le journal d’audit</Link>
+            <Link href="/super-admin/rapports/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Rapports & analyses</Link>
             <Link href="/super-admin/sauvegarde/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Exports &amp; sauvegarde</Link>
+            <Link href="/super-admin/invitations/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Invitations</Link>
+            <Link href="/super-admin/pre-achats/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Demandes pré-achat</Link>
+            <Link href="/super-admin/audit/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Journal d’activité</Link>
           </div>
         </>
       )}

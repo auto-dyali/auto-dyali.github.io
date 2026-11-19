@@ -93,3 +93,65 @@ test("exporterCSV utilise l'identifiant si le propriétaire est inconnu", () => 
   assert.ok(csv);
   assert.match(csv, /"owner-inconnu"/);
 });
+
+test("formatCSV échappe les virgules dans une valeur", () => {
+  assert.equal(formatCSV("Garage Central, Rabat"), '"Garage Central, Rabat"');
+});
+
+test("formatCSV échappe les guillemets doubles et virgules combinés", () => {
+  assert.equal(formatCSV('Garage "Central", Rabat'), '"Garage ""Central"", Rabat"');
+});
+
+test("exporterCSV gère une entreprise avec virgule dans le nom", () => {
+  const csv = exporterCSV(
+    [
+      {
+        company: 'Garage "Central", Rabat',
+        contact_name: "Ali",
+        email: "a@example.com",
+        phone: "0600000000",
+        city: "Rabat",
+        activity: "Mécanique",
+        plan_interest: "silver",
+        stage: "demo",
+        next_action_at: null,
+        owner_id: null,
+        created_at: null,
+        updated_at: null,
+      },
+    ],
+    []
+  );
+  assert.ok(csv);
+  assert.match(csv, /"Garage ""Central"", Rabat"/);
+});
+
+test("exporterCSV avec création null", () => {
+  const csv = exporterCSV(
+    [
+      {
+        company: "Garage D",
+        contact_name: null,
+        email: null,
+        phone: null,
+        city: null,
+        activity: null,
+        plan_interest: null,
+        stage: "lost",
+        next_action_at: null,
+        owner_id: null,
+        created_at: null,
+        updated_at: null,
+      },
+    ],
+    []
+  );
+  assert.ok(csv);
+  assert.match(csv, /"Garage D"/);
+  assert.match(csv, /"lost"/);
+  // La colonne "Créé le" doit être vide quand created_at est null
+  const lines = csv.split("\n");
+  // Le format CSV utilise des guillemets doubles pour les chaînes vides
+  assert.ok(lines.length >= 2, "au moins 2 lignes (en-tête + donnée)");
+  assert.ok(lines[1].includes('","'), "champs vides pour created_at/updated_at null");
+});

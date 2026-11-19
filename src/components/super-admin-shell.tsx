@@ -3,8 +3,8 @@
 /**
  * AUTO DYALI — Nouveau shell Super Admin (GV5 §38).
  *
- * Navigation indépendante avec exactement 11 rubriques, conformément au
- * cahier des charges §38. Chaque rubrique pointe vers des pages réelles
+ * Navigation indépendante avec 13 rubriques, conformément au cahier des
+ * charges §38 complété par le §51 (Invitations, WhatsApp Business, Chatbot IA). Chaque rubrique pointe vers des pages réelles
  * raccordées au backend Supabase (Auth, RLS, RPC, Edge Functions).
  *
  * Rôle autorisé : saas_admin (vérifié par SuperAdminGuard sur chaque page).
@@ -12,6 +12,7 @@
  */
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Logo } from "@/components/logo";
 
@@ -39,61 +40,61 @@ const NAV_ITEMS: NavItem[] = [
     label: "Abonnés professionnels",
     href: "/super-admin/entreprises/",
     icon: "building",
-    description: "Liste des garages et entreprises abonnés, fiches détaillées, création, activation, suspension.",
+    description: "Garages abonnés, fiches détaillées, création, activation, suspension.",
   },
   {
     label: "Utilisateurs",
     href: "/super-admin/managers/",
     icon: "users",
-    description: "Gestion des comptes Manager et Employé, statuts, permissions, accès.",
+    description: "Managers et utilisateurs professionnels, rôles, accès, activation.",
   },
   {
-    label: "Abonnements & Formules",
+    label: "Abonnements & formules",
     href: "/super-admin/plans/",
     icon: "layers",
-    description: "Formules, tarifs, durées, modules inclus, limites, attribution, historique.",
+    description: "Formules, prix, durées, modules, limites, cycle de vie des abonnements.",
   },
   {
     label: "CRM commercial",
     href: "/super-admin/crm/",
     icon: "target",
-    description: "Prospects professionnels, suivi commercial, conversion en abonné.",
+    description: "Prospects, suivi commercial, opportunités, historique et conversion.",
   },
   {
-    label: "Finance & Facturation",
+    label: "Finance & facturation",
     href: "/super-admin/paiements/",
     icon: "card",
-    description: "Factures, paiements, abonnements facturés, impayés, échéances, exports.",
+    description: "Facturation SaaS, estimations, montants dus et état réel des paiements.",
   },
   {
-    label: "Support & Assistance",
+    label: "Support & assistance",
     href: "/super-admin/support/",
     icon: "life",
-    description: "Tickets, demandes d'assistance, priorités, statuts, suivi de résolution.",
+    description: "Tickets, priorités, statuts, attribution, échanges et suivi.",
   },
   {
     label: "Intégrations & API",
-    href: "/super-admin/whatsapp/",
+    href: "/super-admin/integrations/",
     icon: "chat",
-    description: "État des intégrations, webhooks, services connectés, journaux techniques.",
+    description: "Inventaire des services, état réel, WhatsApp, Chatbot, webhooks et journaux.",
   },
   {
-    label: "Sécurité & Permissions",
+    label: "Sécurité & permissions",
     href: "/super-admin/roles/",
     icon: "shield",
-    description: "Rôles, permissions, contrôle des accès, politiques RLS, séparation multi-tenant.",
+    description: "Rôles, permissions, RLS, isolation multi-tenant et opérations sensibles.",
   },
   {
     label: "Journal d'activité",
     href: "/super-admin/audit/",
     icon: "scroll",
-    description: "Actions administratives, créations, modifications, activations, suspensions, échecs.",
+    description: "Actions, acteurs, établissements, horodatage, recherche et export.",
   },
   {
-    label: "Système & Paramètres",
+    label: "Système & paramètres",
     href: "/super-admin/parametres/",
     icon: "gear",
-    description: "Paramètres généraux, notifications, santé technique, sauvegardes, restauration.",
+    description: "Paramètres plateforme, santé, sauvegardes, rapports et configuration.",
   },
 ];
 
@@ -108,7 +109,9 @@ type IconName =
   | "chat"
   | "shield"
   | "scroll"
-  | "gear";
+  | "gear"
+  | "whatsapp"
+  | "bot";
 
 function IconeNav({ nom, taille = 20 }: { nom: IconName; taille?: number }) {
   // Icônes inline SVG légères, sans dépendance externe.
@@ -264,6 +267,22 @@ function IconeNav({ nom, taille = 20 }: { nom: IconName; taille?: number }) {
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
       </svg>
     ),
+    whatsapp: (
+      <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
+        <path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l1.9-5.5A8.5 8.5 0 1 1 21 11.5z" />
+        <path d="M8.5 9.5c0 3.6 2.9 6.5 6.5 6.5 0.7 0 1.3-0.6 1.3-1.3 0-0.3-0.1-0.6-0.3-0.8l-1.2-0.6c-0.3-0.1-0.5-0.1-0.7 0l-0.9 0.5a5.4 5.4 0 0 1-2.3-2.3l0.5-0.9c0.1-0.2 0.1-0.4 0-0.7l-0.6-1.2c-0.2-0.2-0.5-0.3-0.8-0.3-0.7 0-1.3 0.6-1.3 1.3z" />
+      </svg>
+    ),
+    bot: (
+      <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
+        <rect x="4" y="8" width="16" height="12" rx="2" />
+        <path d="M12 8V4" />
+        <circle cx="12" cy="3" r="1" />
+        <circle cx="9" cy="14" r="1" />
+        <circle cx="15" cy="14" r="1" />
+        <path d="M9 17h6" />
+      </svg>
+    ),
   };
 
   return <span className="flex items-center">{svg[nom]}</span>;
@@ -276,13 +295,26 @@ export type SuperAdminShellProps = {
   search?: SuperAdminSearch;
 };
 
+function isActive(pathname: string, href: string) {
+  const base = href === "/super-admin/" ? "/super-admin" : href.replace(/\/$/, "");
+  if (base === "/super-admin") return pathname === "/super-admin" || pathname === "/super-admin/";
+  if (pathname === base || pathname === `${base}/`) return true;
+  // Sections avec sous-pages dédiées
+  if (base === "/super-admin/managers" && (pathname.startsWith("/super-admin/employes") || pathname.startsWith("/super-admin/managers"))) return true;
+  if (base === "/super-admin/plans" && (pathname.startsWith("/super-admin/abonnements") || pathname.startsWith("/super-admin/plans"))) return true;
+  if (base === "/super-admin/integrations" && (pathname.startsWith("/super-admin/whatsapp") || pathname.startsWith("/super-admin/chatbot") || pathname.startsWith("/super-admin/integrations") || pathname.startsWith("/super-admin/invitations"))) return true;
+  if (base === "/super-admin/parametres" && (pathname.startsWith("/super-admin/sauvegarde") || pathname.startsWith("/super-admin/rapports") || pathname.startsWith("/super-admin/parametres"))) return true;
+  return pathname.startsWith(`${base}/`);
+}
+
 export function SuperAdminShell({
   children,
   onLogout,
-  notifications,
+  notifications: _notifications,
   search,
 }: SuperAdminShellProps) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname() ?? "";
 
   return (
     <div className="flex h-screen flex-col bg-[#252D2D] text-[#DFE7E2]">
@@ -337,7 +369,7 @@ export function SuperAdminShell({
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside
-          className={`w-64 bg-[#2C3735] border-r border-[#8FB59B]/15 shrink-0 transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static`}
+          className={`absolute inset-y-0 left-0 z-30 w-64 bg-[#2C3735] border-r border-[#8FB59B]/15 shrink-0 transition-transform duration-300 md:relative md:inset-auto md:z-auto md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
           aria-label="Navigation Super Admin"
         >
           <div className="flex h-full flex-col">
@@ -351,13 +383,14 @@ export function SuperAdminShell({
             <nav className="flex-1 overflow-y-auto p-3 space-y-1">
               {NAV_ITEMS.map((item) => {
                 const href = item.href;
+                const active = isActive(pathname, href);
                 return (
                   <Link
                     key={item.label}
                     href={href}
+                    onClick={() => setOpen(false)}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
-                      typeof window !== "undefined" &&
-                      window.location.pathname.startsWith(href === "/" ? "/" : href)
+                      active
                         ? "bg-[#8FB59B]/20 text-[#E8ECE8]"
                         : "text-[#A7B7A8] hover:bg-[#344440]/50"
                     }`}
@@ -377,6 +410,39 @@ export function SuperAdminShell({
                   </Link>
                 );
               })}
+
+              {/* GV5 §66 — Acces directs identifiables (hors 11 sections canoniques) */}
+              <div className="pt-3 mt-3 border-t border-[#8FB59B]/15">
+                <p className="px-3 pb-2 text-[10px] uppercase tracking-[0.2em] text-[#6B7B73]">Acces directs</p>
+                <Link
+                  href="/super-admin/whatsapp/"
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${isActive(pathname, "/super-admin/whatsapp/") ? "bg-[#5D9E7F]/20 text-[#E8ECE8]" : "text-[#A7B7A8] hover:bg-[#344440]/50"}`}
+                  aria-label="WhatsApp Business"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded bg-[#5D9E7F]/15 text-[#7FBF9E]">
+                    <IconeNav nom="whatsapp" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">WhatsApp Business</p>
+                    <p className="text-[10px] text-[#6B7B73] truncate">Configuration, envois, historique</p>
+                  </div>
+                </Link>
+                <Link
+                  href="/super-admin/chatbot/"
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${isActive(pathname, "/super-admin/chatbot/") ? "bg-[#9FB7E0]/20 text-[#E8ECE8]" : "text-[#A7B7A8] hover:bg-[#344440]/50"}`}
+                  aria-label="Chatbot IA"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded bg-[#9FB7E0]/15 text-[#9FB7E0]">
+                    <IconeNav nom="bot" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">Chatbot IA</p>
+                    <p className="text-[10px] text-[#6B7B73] truncate">Etat du service, suivi</p>
+                  </div>
+                </Link>
+              </div>
             </nav>
 
             <div className="p-4 border-t border-[#8FB59B]/10">

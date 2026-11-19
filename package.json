@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test scripts/test-crm-csv.mjs scripts/test-onboarding.mjs scripts/test-csv-export.mjs scripts/test-crm.mjs scripts/test-pre-purchase.mjs scripts/test-invitations.mjs",
+    "test": "node --test scripts/test-crm-csv.mjs scripts/test-onboarding.mjs scripts/test-csv-export.mjs scripts/test-crm.mjs scripts/test-pre-purchase.mjs scripts/test-invitations.mjs scripts/test-employes.mjs scripts/test-onboarding-contract.mjs scripts/test-activation.mjs scripts/test-permissions.mjs scripts/test-providers.mjs scripts/test-migrations-51.mjs scripts/test-edge-functions-51.mjs scripts/test-excel-safe.mjs scripts/test-security-062.mjs scripts/test-contract-rpc-067.mjs",
     "test:crm": "node --test scripts/test-crm-csv.mjs scripts/test-crm.mjs",
     "test:onboarding": "node --test scripts/test-onboarding.mjs",
+    "test:gv551": "node --test scripts/test-onboarding-contract.mjs scripts/test-activation.mjs scripts/test-permissions.mjs scripts/test-providers.mjs scripts/test-migrations-51.mjs scripts/test-edge-functions-51.mjs",
+    "test:employes": "node --test scripts/test-employes.mjs",
     "db:check": "node scripts/check-db.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
@@ -19,10 +21,10 @@
     "@supabase/supabase-js": "^2.118.0",
     "html5-qrcode": "^2.3.8",
     "jsbarcode": "^3.12.3",
-    "next": "16.4.3",
+    "next": "^16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",
@@ -31,7 +33,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "^16.4.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

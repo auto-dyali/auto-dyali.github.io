@@ -102,7 +102,7 @@ test("validation : durée d'essai hors bornes", () => {
     managerFullName: "Youssef Alami",
     managerEmail: "y.alami@garage-atlas.ma",
     planCode: "silver",
-    trialDays: 100,
+    trialDays: 400,
   });
   assert.ok(errors.trialDays, "trialDays doit être en erreur");
 });
@@ -165,12 +165,12 @@ test("email : sans domaine", () => {
 // ------------------------------------------------------------------
 test("activation URL : construction correcte", () => {
   const url = buildActivationUrl("abc123", "https://auto-dyali.github.io");
-  assert.strictEqual(url, "https://auto-dyali.github.io/actiter?token=abc123");
+  assert.strictEqual(url, "https://auto-dyali.github.io/activer/?token=abc123");
 });
 
 test("activation URL : slash final enleve", () => {
   const url = buildActivationUrl("abc123", "https://auto-dyali.github.io/");
-  assert.strictEqual(url, "https://auto-dyali.github.io/actiter?token=abc123");
+  assert.strictEqual(url, "https://auto-dyali.github.io/activer/?token=abc123");
 });
 
 // ------------------------------------------------------------------

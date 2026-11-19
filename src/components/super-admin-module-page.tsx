@@ -3,16 +3,21 @@
 /**
  * Conteneur partagé des modules Super Admin :
  * garde d'accès + shell (sidebar/topbar) + déconnexion + compteur d'audit.
+ *
+ * GV5 §57 : chaque page reçoit un bandeau d'identité distinct (numéro,
+ * icône, accent, fil d'Ariane, motif) dérivé de sa route canonique.
  */
 
 import { useEffect, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase-browser";
 import { SuperAdminGuard } from "@/components/super-admin-guard";
 import { SuperAdminShell } from "@/components/super-admin-shell";
+import { getPageIdentity, PageIdentityBanner } from "@/components/super-admin-page-identity";
 
 export function ModulePage({ children, titre }: { children: ReactNode; titre: string }) {
   const router = useRouter();
+  const pathname = usePathname() || "/super-admin/";
   const [notifications, setNotifications] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -32,10 +37,15 @@ export function ModulePage({ children, titre }: { children: ReactNode; titre: st
     router.replace("/connexion/");
   }
 
+  const identite = getPageIdentity(pathname);
+
   return (
     <SuperAdminGuard titre={titre}>
       <SuperAdminShell onLogout={() => void logout()} notifications={notifications}>
-        <div className="mx-auto max-w-7xl p-5 lg:p-10">{children}</div>
+        <div className="mx-auto max-w-7xl p-5 lg:p-10">
+          <PageIdentityBanner identite={identite} titre={titre} />
+          {children}
+        </div>
       </SuperAdminShell>
     </SuperAdminGuard>
   );

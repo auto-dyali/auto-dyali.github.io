@@ -69,6 +69,9 @@ test.describe('Pré-achat commercial (public)', () => {
     await page.route('https://nxmsqqoflskfajqrqddw.supabase.co/**', async (route) => {
       const req = route.request();
       const url = req.url();
+      if (url.includes('/rest/v1/rpc/submit_pre_purchase_request') && req.method() === 'POST') {
+        return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: 'function public.submit_pre_purchase_request does not exist', code: 'PGRST202' }) });
+      }
       if (url.includes('/rest/v1/pre_purchase_requests') && req.method() === 'POST') {
         return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: "relation \"public.pre_purchase_requests\" does not exist" }) });
       }

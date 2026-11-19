@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import * as XLSX from "xlsx";
+import { readImportRows, validateImportFile, writeSingleSheetWorkbook } from "@/lib/excel-safe";
 import { supabase } from "@/lib/supabase-browser";
 
 /**
@@ -76,12 +76,8 @@ export function ExcelModule() {
       "Prix vente": Number(p.sale_price),
       Stock: Number(p.stock),
     }));
-    const ws = XLSX.utils.json_to_sheet(donnees);
-    ws["!cols"] = [{ wch: 18 }, { wch: 44 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 8 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Produits");
     const date = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, `auto-dyali-produits-${date}.xlsx`);
+    writeSingleSheetWorkbook(donnees, "Produits", `auto-dyali-produits-${date}.xlsx`, [{ wch: 18 }, { wch: 44 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 8 }]);
     setNotice(`Export ${donnees.length} produit(s) généré.`);
     setRapport(null);
   }
@@ -93,23 +89,18 @@ export function ExcelModule() {
       Téléphone: c.phone ?? "",
       Email: c.email ?? "",
     }));
-    const ws = XLSX.utils.json_to_sheet(donnees);
-    ws["!cols"] = [{ wch: 12 }, { wch: 40 }, { wch: 18 }, { wch: 30 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Clients");
     const date = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, `auto-dyali-clients-${date}.xlsx`);
+    writeSingleSheetWorkbook(donnees, "Clients", `auto-dyali-clients-${date}.xlsx`, [{ wch: 12 }, { wch: 40 }, { wch: 18 }, { wch: 30 }]);
     setNotice(`Export ${donnees.length} client(s) généré.`);
   }
 
   function modeleProduits() {
-    const ws = XLSX.utils.json_to_sheet([
-      { SKU: "FIL-001", Nom: "Filtre à huile Bosch", Categorie: "filtre", "Prix achat": 45, "Prix vente": 75, Stock: 12 },
-    ]);
-    ws["!cols"] = [{ wch: 18 }, { wch: 44 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 8 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Produits");
-    XLSX.writeFile(wb, "auto-dyali-modele-import.xlsx");
+    writeSingleSheetWorkbook(
+      [{ SKU: "FIL-001", Nom: "Filtre à huile Bosch", Categorie: "filtre", "Prix achat": 45, "Prix vente": 75, Stock: 12 }],
+      "Produits",
+      "auto-dyali-modele-import.xlsx",
+      [{ wch: 18 }, { wch: 44 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 8 }],
+    );
     setNotice("Modèle téléchargé — remplissez-le puis importez-le.");
   }
 
@@ -123,11 +114,10 @@ export function ExcelModule() {
     setNotice(null);
     setRapport(null);
     try {
+      const validation = validateImportFile(file);
+      if (validation) throw new Error(validation);
       const buffer = await file.arrayBuffer();
-      const classeur = XLSX.read(buffer, { type: "array" });
-      const premiereFeuille = classeur.SheetNames[0];
-      if (!premiereFeuille) throw new Error("Le fichier ne contient aucune feuille.");
-      const lignes = XLSX.utils.sheet_to_json<Record<string, unknown>>(classeur.Sheets[premiereFeuille], { defval: "" });
+      const { rows: lignes, totalRows, truncated } = readImportRows(buffer);
 
       const { data: profileRows } = await supabase.rpc("get_my_profile");
       const establishmentId = profileRows?.[0]?.establishment_id;
@@ -136,7 +126,10 @@ export function ExcelModule() {
       // Référence des SKUs existants → détection de doublons
       const skusExistants = new Set(produits.map((p) => p.sku.toLowerCase()));
 
-      const rapportCalcule: RapportImport = { total: lignes.length, crees: 0, doublons: 0, erreurs: [] };
+      const rapportCalcule: RapportImport = { total: totalRows, crees: 0, doublons: 0, erreurs: [] };
+      if (truncated) {
+        rapportCalcule.erreurs.push({ ligne: 1, motif: `Import limité aux ${lignes.length} premières lignes sur ${totalRows} (limite de sécurité).` });
+      }
 
       for (let i = 0; i < lignes.length; i++) {
         const ligne = lignes[i];

@@ -7,9 +7,13 @@ import { Logo } from "@/components/logo";
 import { supabase } from "@/lib/supabase-browser";
 
 /**
- * Écran 2 de la maquette — Connexion (nouvelle identité verte AUTO DYALI).
- * Validation côté client active. Dès l'arrivée des clés Supabase,
- * submitOAuth() et doLogin() brancheront l'auth serveur réelle.
+ * Écran de connexion AUTO DYALI.
+ *
+ * Accepte un e-mail OU un identifiant de connexion Manager (résolu côté
+ * serveur par `resolve_login_email`, migration 0039 — Supabase Auth reste
+ * l'autorité d'authentification). Si le compte porte encore le mot de passe
+ * temporaire (`must_change_password`), l'utilisateur est redirigé vers
+ * `/changer-mot-de-passe/` avant tout accès aux données.
  */
 export default function ConnexionPage() {
   const router = useRouter();
@@ -24,8 +28,9 @@ export default function ConnexionPage() {
     e.preventDefault();
     setErreur(null);
 
-    if (!email.trim()) {
-      setErreur("Veuillez saisir votre email ou identifiant.");
+    const identifiant = email.trim();
+    if (!identifiant) {
+      setErreur("Veuillez saisir votre e-mail ou identifiant.");
       return;
     }
     if (motPasse.length < 6) {
@@ -39,10 +44,32 @@ export default function ConnexionPage() {
     }
 
     setEnCours(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: motPasse });
+
+    // Résolution identifiant → e-mail (uniquement si aucun « @ »).
+    let emailAuth = identifiant;
+    if (!identifiant.includes("@")) {
+      const { data, error } = await supabase.rpc("resolve_login_email", { p_login: identifiant });
+      if (error) {
+        setEnCours(false);
+        setErreur(
+          /could not find the function|PGRST202/i.test(error.message)
+            ? "Connexion par identifiant indisponible : migration 0039 non appliquée. Utilisez votre e-mail."
+            : "Connexion par identifiant momentanément indisponible.",
+        );
+        return;
+      }
+      if (!data || typeof data !== "string") {
+        setEnCours(false);
+        setErreur("Identifiant ou mot de passe incorrect.");
+        return;
+      }
+      emailAuth = data;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email: emailAuth, password: motPasse });
     if (error) {
       setEnCours(false);
-      setErreur(error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect." : error.message);
+      setErreur(error.message === "Invalid login credentials" ? "Identifiant, e-mail ou mot de passe incorrect." : error.message);
       return;
     }
     if (seSouvenir) localStorage.setItem("autodyali_remember", "1");
@@ -50,10 +77,18 @@ export default function ConnexionPage() {
     const { data: profileRows, error: profileError } = await supabase.rpc("get_my_profile");
     const profile = profileRows?.[0];
 
-    setEnCours(false);
     if (profileError || !profile) {
+      setEnCours(false);
       await supabase.auth.signOut();
       setErreur("Votre profil n’est pas encore configuré. Demandez à l’administrateur de vous associer à un établissement.");
+      return;
+    }
+
+    // Rotation obligatoire du mot de passe temporaire.
+    const { data: etatSecurite } = await supabase.rpc("get_my_security_state");
+    setEnCours(false);
+    if (etatSecurite && (etatSecurite as { must_change_password?: boolean }).must_change_password === true) {
+      router.replace("/changer-mot-de-passe/");
       return;
     }
 
@@ -97,7 +132,7 @@ export default function ConnexionPage() {
 
       {/* Carte verre dépoli — positionnée à droite comme la maquette */}
       <section className="relative z-10 flex min-h-screen w-full items-center justify-center px-4 py-10 sm:px-8 lg:justify-end lg:pr-[7%] xl:pr-[10%]">
-        <div className="panneau-connexion apparaitre w-full max-w-md rounded-[1.75rem] p-7 sm:p-9">
+        <div className="panneau-connexion apparaitre w-full max-w-md rounded-[1.75rem] p-6 sm:p-7">
           <div className="flex justify-center pb-2">
             <Logo />
           </div>
@@ -105,14 +140,14 @@ export default function ConnexionPage() {
           <p className="text-center text-[13px] font-medium tracking-[0.16em] text-[#DFE7E2]/85">
             Votre partenaire automobile de confiance
           </p>
-          <h1 className="titre-or mt-4 text-center text-2xl font-extrabold sm:text-3xl">
+          <h1 className="titre-or mt-2 text-center text-2xl font-extrabold sm:text-3xl">
             Bienvenue !
           </h1>
           <p className="mt-1 text-center text-sm text-[#A7B7A8]">
             Connectez-vous pour accéder à votre espace
           </p>
 
-          <form className="mt-7 flex flex-col gap-4" onSubmit={soumettre} noValidate>
+          <form className="mt-5 flex flex-col gap-3" onSubmit={soumettre} noValidate>
             <div className="relative">
               <svg aria-hidden viewBox="0 0 20 20" className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2">
                 <circle cx="10" cy="6.6" r="3.1" fill="none" stroke="#DFE7E2" strokeWidth="1.6" />
@@ -121,7 +156,7 @@ export default function ConnexionPage() {
               <input
                 style={{ paddingLeft: "2.7rem" }}
                 className="champ champ-3d text-base"
-                type="email"
+                type="text"
                 autoComplete="username"
                 placeholder="Identifiant ou email"
                 value={email}
@@ -193,15 +228,27 @@ export default function ConnexionPage() {
           </form>
 
           {/* Séparateur */}
-          <div className="mt-7 flex items-center gap-3 text-xs text-[#A7B7A8]">
+          <div className="mt-5 flex items-center gap-3 text-xs text-[#A7B7A8]">
             <span className="h-px flex-1 bg-white/15" />
-            <span>ou</span>
+            <span>pas encore abonné ?</span>
             <span className="h-px flex-1 bg-white/15" />
           </div>
 
-          <div className="mt-4 grid gap-2 text-center text-sm">
-            <Link href="/offres/" className="rounded-lg border border-[#8FB59B]/30 px-4 py-2.5 text-[#DFE7E2] transition hover:bg-[#344440]">Découvrir les offres AUTO DYALI</Link>
-            <Link href="/pre-achat/" className="btn-or px-4 py-2.5">Demander un pré-achat</Link>
+          {/* Deux appels à l'action : principal émeraude, secondaire or champagne 3D */}
+          <div className="mt-3 grid gap-2 text-center text-sm sm:grid-cols-1">
+            <Link
+              href="/pre-achat/"
+              className="sa3d-btn flex w-full items-center justify-center gap-2"
+              aria-label="Demander une souscription AUTO DYALI"
+            >
+              <svg aria-hidden viewBox="0 0 20 20" className="h-[17px] w-[17px]">
+                <path d="M10 3v14M3 10h14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              Demander une souscription
+            </Link>
+            <Link href="/offres/" className="px-4 py-1.5 text-xs text-[#A7B7A8] underline underline-offset-2 hover:text-[#D0C6AE]">
+              Comparer les offres AUTO DYALI
+            </Link>
           </div>
 
           {/* Signature marque */}

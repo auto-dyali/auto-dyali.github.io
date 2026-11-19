@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase-browser";
 import { FEATURE_LABEL } from "@/lib/features";
 import { ModulePage } from "@/components/super-admin-module-page";
@@ -126,9 +127,14 @@ export default function PlansPage() {
     <ModulePage titre="Plans & fonctionnalités">
       <ModuleHeader
         surtitre="AUTO DYALI · Entitlements SaaS"
-        titre="Plans & fonctionnalités"
-        description="Forfaits STANDARD / SILVER / GOLD et matrice de droits réellement éditable. Toute modification est journalisée côté serveur via RPC."
-        action={<button type="button" onClick={exporter} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Exporter la matrice CSV</button>}
+        titre="Abonnements & formules"
+        description="Forfaits, prix, durées d’essai, limites et matrice de droits réellement éditables. Toute modification est journalisée côté serveur via RPC. Le cycle de vie des abonnements est géré dans la vue dédiée."
+        action={
+          <>
+            <Link href="/super-admin/abonnements/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Cycle de vie abonnements</Link>
+            <button type="button" onClick={exporter} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Exporter la matrice CSV</button>
+          </>
+        }
       />
 
       {notice && <p role="status" className="mt-4 rounded-lg bg-[#5D9E7F]/10 px-4 py-3 text-sm text-[#7FBF9E]">{notice}</p>}
@@ -152,7 +158,7 @@ export default function PlansPage() {
                     <label>Prix mensuel (MAD)<input type="number" min={0} step="0.01" value={b.price_monthly ?? ""} onChange={(e) => champ(plan.code, "price_monthly", e.target.value === "" ? null : Number(e.target.value))} className="champ mt-1 min-h-10" /></label>
                     <label>Prix annuel (MAD)<input type="number" min={0} step="0.01" value={b.price_yearly ?? ""} onChange={(e) => champ(plan.code, "price_yearly", e.target.value === "" ? null : Number(e.target.value))} className="champ mt-1 min-h-10" /></label>
                     <div className="grid grid-cols-2 gap-3">
-                      <label>Essai (j)<input type="number" min={0} max={90} value={b.trial_days} onChange={(e) => champ(plan.code, "trial_days", Number(e.target.value))} className="champ mt-1 min-h-10" /></label>
+                      <label>Essai (j)<input type="number" min={0} max={365} value={b.trial_days} onChange={(e) => champ(plan.code, "trial_days", Number(e.target.value))} className="champ mt-1 min-h-10" /></label>
                       <label>Utilisateurs max<input type="number" min={1} value={b.max_users} onChange={(e) => champ(plan.code, "max_users", Number(e.target.value))} className="champ mt-1 min-h-10" /></label>
                     </div>
                     <div className="grid grid-cols-2 gap-3">

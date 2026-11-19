@@ -1,16 +1,18 @@
 "use client";
 
 /**
- * AUTO DYALI — Super Admin › Rôles & permissions
- * Répartition réelle des comptes par rôle (profiles). Aucune promotion
- * automatique du rôle n'est possible depuis le navigateur.
+ * AUTO DYALI — Super Admin › Sécurité & permissions
+ * Vue réelle des rôles, droits par forfait, isolation multi-tenant et
+ * contrôles sensibles. Le masquage UI n'est jamais une protection.
  */
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader, Chargement, Vide, Erreur } from "@/components/super-admin-page";
 import { downloadCsv } from "@/lib/csv-export";
+import { FEATURE_LABEL } from "@/lib/features";
 
 const ROLES = ["saas_admin", "manager", "employee", "client"] as const;
 const LIBELLES: Record<string, string> = {
@@ -20,10 +22,12 @@ const LIBELLES: Record<string, string> = {
   client: "Client final",
 };
 
-type Row = { id: string; full_name: string; role: string; is_active: boolean; establishment_id: string | null };
+type ProfileRow = { id: string; full_name: string; role: string; is_active: boolean; establishment_id: string | null };
+type PlanFeature = { plan_code: string; feature_key: string; enabled: boolean };
 
 export default function RolesPage() {
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<ProfileRow[]>([]);
+  const [features, setFeatures] = useState<PlanFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -31,9 +35,14 @@ export default function RolesPage() {
     void (async () => {
       if (!supabase) return;
       setLoading(true);
-      const { data, error } = await supabase.from("profiles").select("id, full_name, role, is_active, establishment_id").order("role");
-      if (error) setErreur(error.message);
-      else setRows((data ?? []) as Row[]);
+      const [p, f] = await Promise.all([
+        supabase.from("profiles").select("id, full_name, role, is_active, establishment_id").order("role"),
+        supabase.from("plan_features").select("plan_code, feature_key, enabled"),
+      ]);
+      if (p.error) setErreur(p.error.message);
+      else setRows((p.data ?? []) as ProfileRow[]);
+      if (f.error) setErreur((prev) => prev ?? f.error.message);
+      else setFeatures((f.data ?? []) as PlanFeature[]);
       setLoading(false);
     })();
   }, []);
@@ -51,6 +60,9 @@ export default function RolesPage() {
   }, [rows]);
 
   const admins = rows.filter((r) => r.role === "saas_admin");
+  const droitsActifs = features.filter((f) => f.enabled).length;
+  const modules = Array.from(new Set(features.map((f) => f.feature_key))).sort();
+  const plans = Array.from(new Set(features.map((f) => f.plan_code))).sort();
 
   function exporter() {
     downloadCsv(
@@ -61,15 +73,19 @@ export default function RolesPage() {
   }
 
   return (
-    <ModulePage titre="Rôles & permissions">
+    <ModulePage titre="Sécurité & permissions">
       <ModuleHeader
-        surtitre="AUTO DYALI · Moindre privilège"
-        titre="Rôles & permissions"
-        description="Répartition réelle des comptes par rôle technique. Les rôles ne sont jamais modifiés automatiquement : toute promotion passe par une décision explicite et un rollback possible (migration documentée)."
-        action={<button type="button" onClick={exporter} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Exporter CSV</button>}
+        surtitre="AUTO DYALI · Moindre privilège · RLS"
+        titre="Sécurité & permissions"
+        description="Rôles techniques, matrice de droits par forfait, isolation multi-tenant et journalisation. Les contrôles doivent être appliqués côté serveur/RLS ; l’interface ne suffit pas."
+        action={
+          <>
+            <Link href="/super-admin/plans/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Gérer les droits (forfaits)</Link>
+            <button type="button" onClick={exporter} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Exporter comptes</button>
+          </>
+        }
       />
 
-      {/* Compteurs par rôle */}
       <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {ROLES.map((role) => {
           const c = parRole.get(role) ?? { total: 0, actifs: 0 };
@@ -83,30 +99,66 @@ export default function RolesPage() {
         })}
       </section>
 
-      <div className="carte-premium mt-6 p-5">
-        <h2 className="font-bold">Super Admins ({admins.length})</h2>
-        <p className="mt-1 text-xs text-[#A7B7A8]">Liste réelle des comptes avec rôle saas_admin. Leur accès est tracé dans le journal d’audit.</p>
-        {admins.length === 0 ? (
-          <div className="mt-4"><Vide titre="Aucun Super Admin" detail="Aucun compte n’a le rôle saas_admin." /></div>
-        ) : (
-          <ul className="mt-4 divide-y divide-[#8FB59B]/10">
-            {admins.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                <span className="font-semibold text-[#E8ECE8]">{a.full_name}</span>
-                <span className={a.is_active ? "text-[#7FBF9E]" : "text-[#C5716B]"}>{a.is_active ? "Actif" : "Inactif"}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <section className="mt-6 grid gap-4 lg:grid-cols-3">
+        <article className="carte-premium p-5 lg:col-span-2">
+          <h2 className="font-bold">Accès par module (forfaits)</h2>
+          <p className="mt-1 text-xs text-[#A7B7A8]">
+            {droitsActifs} droit(s) activé(s) sur {features.length} entrées ({modules.length} module(s), {plans.length} forfait(s)). La disponibilité réelle = forfait ∩ permissions attribuées (contrôle serveur).
+          </p>
+          {modules.length === 0 ? (
+            <p className="mt-4 text-sm text-[#A7B7A8]">Aucun droit chargé. Vérifiez la table <code>plan_features</code>.</p>
+          ) : (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[520px] text-left text-sm">
+                <thead className="text-xs uppercase text-[#A7B7A8]">
+                  <tr>
+                    <th className="pb-2 pr-3">Module</th>
+                    {plans.map((p) => <th key={p} className="pb-2 px-2 text-center uppercase">{p}</th>)}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#8FB59B]/10">
+                  {modules.map((m) => (
+                    <tr key={m}>
+                      <td className="py-2 pr-3 text-[#E8ECE8]">{FEATURE_LABEL[m] ?? m}</td>
+                      {plans.map((p) => {
+                        const on = features.find((f) => f.plan_code === p && f.feature_key === m)?.enabled;
+                        return <td key={p} className={`py-2 px-2 text-center ${on ? "text-[#7FBF9E]" : "text-[#6B7B73]"}`}>{on ? "✓" : "—"}</td>;
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </article>
+
+        <article className="carte-premium p-5">
+          <h2 className="font-bold">Super Admins ({admins.length})</h2>
+          <p className="mt-1 text-xs text-[#A7B7A8]">Comptes plateforme (rôle saas_admin).</p>
+          {admins.length === 0 ? (
+            <div className="mt-4"><Vide titre="Aucun Super Admin" detail="Aucun compte saas_admin." /></div>
+          ) : (
+            <ul className="mt-4 divide-y divide-[#8FB59B]/10">
+              {admins.map((a) => (
+                <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                  <span className="font-semibold text-[#E8ECE8] truncate">{a.full_name}</span>
+                  <span className={a.is_active ? "text-[#7FBF9E]" : "text-[#C5716B]"}>{a.is_active ? "Actif" : "Inactif"}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link href="/super-admin/audit/" className="mt-4 inline-block text-sm text-[#8FB59B] hover:underline">Voir le journal d’activité →</Link>
+        </article>
+      </section>
 
       <div className="carte-premium mt-6 border-l-4 border-[#8FB59B]/40 p-5">
-        <h2 className="font-bold">Règles en vigueur</h2>
+        <h2 className="font-bold">RLS, isolation et opérations sensibles</h2>
         <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-[#A7B7A8]">
-          <li>saas_admin → accès total à la plateforme, jamais de modification automatique de rôle.</li>
-          <li>manager → uniquement son établissement (RLS par current_establishment_id()).</li>
-          <li>employee → atelier uniquement ; client final → aucune route professionnelle.</li>
-          <li>Toute action sensible est journalisée (audit_log), jamais de secret journalisé.</li>
+          <li><strong className="text-[#E8ECE8]">Isolation multi-tenant</strong> : les données métier sont filtrées par établissement (RLS / <code>current_establishment_id()</code>) ; le rôle <code>saas_admin</code> dispose d’un accès plateforme contrôlé.</li>
+          <li><strong className="text-[#E8ECE8]">Rôles</strong> : saas_admin (plateforme), manager (propriétaire établissement), employee (atelier), client (final). Aucune promotion automatique.</li>
+          <li><strong className="text-[#E8ECE8]">Permissions</strong> : modules du forfait + droits fins (voir/créer/modifier/supprimer) attribués à l’onboarding ; CRUD fin non généralisé aux RLS métier (statut actuel : <code>can_view</code> principalement appliqué).</li>
+          <li><strong className="text-[#E8ECE8]">Opérations sensibles</strong> : créations, changements de forfait/statut, invitations et actions admin doivent être journalisés (<code>audit_log</code>) sans secrets.</li>
+          <li><strong className="text-[#E8ECE8]">UI ≠ sécurité</strong> : masquer un bouton n’empêche pas une action si l’API/RPC/RLS ne la refuse pas.</li>
         </ul>
       </div>
 

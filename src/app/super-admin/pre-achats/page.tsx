@@ -72,9 +72,13 @@ export default function PreAchatsPage() {
   const [filtrePlan, setFiltrePlan] = useState<string>("tous");
   const [selection, setSelection] = useState<RequestRow | null>(null);
   const [traitement, setTraitement] = useState<string | null>(null);
+  const [historique, setHistorique] = useState<Record<string, unknown>[]>([]);
   const { success, error: notifyError } = useNotification();
 
   useEffect(() => { void charger(); }, []);
+  useEffect(() => {
+    if (selection?.id) void chargerHistorique(selection.id);
+  }, [selection?.id]);
 
   async function charger() {
     if (!supabase) { setLoading(false); setErreur("Configuration indisponible."); return; }
@@ -118,21 +122,39 @@ export default function PreAchatsPage() {
       notifyError({ title: "Action refusée", message: "Un paiement ne peut être marqué confirmé que sur preuve réelle du fournisseur de paiement. Cette action n'est pas automatisée." });
       return;
     }
+    const motif = to === "refuse"
+      ? window.prompt("Motif du refus (obligatoire) :") ?? ""
+      : "";
+    if (to === "refuse" && !motif.trim()) {
+      notifyError({ title: "Motif requis", message: "Un refus doit être motivé et sera historisé." });
+      return;
+    }
     setTraitement(row.id);
     setNotice(null);
     setErreur(null);
-    const { error } = await supabase
-      .from("pre_purchase_requests")
-      .update({ status: to, updated_at: new Date().toISOString() })
-      .eq("id", row.id);
+    // RPC journalisée : statut + événement + audit_log dans une seule transaction.
+    const { data, error } = await supabase.rpc("admin_set_pre_purchase_status", {
+      p_request_id: row.id,
+      p_status: to,
+      p_reason: motif.trim() || null,
+    });
     if (error) {
-      notifyError({ title: "Mise à jour impossible", message: error.message });
+      notifyError({ title: "Décision refusée", message: error.message });
     } else {
-      success({ title: "Statut mis à jour", message: `Demande « ${row.company_name} » : ${labelEtat(to)}.` });
+      success({ title: "Décision enregistrée", message: `Demande « ${row.company_name} » : ${labelEtat(to)} (historisée).` });
       await charger();
-      if (selection?.id === row.id) setSelection((s) => s ? { ...s, status: to } : s);
+      if (selection?.id === row.id) {
+        setSelection((s) => s ? { ...s, status: to } : s);
+        await chargerHistorique(row.id);
+      }
     }
     setTraitement(null);
+  }
+
+  async function chargerHistorique(requestId: string) {
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc("admin_get_pre_purchase_history", { p_request_id: requestId });
+    if (!error) setHistorique((data ?? []) as Record<string, unknown>[]);
   }
 
   function exporter() {
@@ -235,6 +257,19 @@ export default function PreAchatsPage() {
                   <p className="font-semibold text-[#E8ECE8]">Actions & règles</p>
                   <p className="mt-1">• « Paiement confirmé » exige une preuve réelle du fournisseur (action non automatisée).</p>
                   <p>• La conversion en abonné (entreprise, Manager, forfait, établissement, modules, invitation) requiert un flux serveur autorisé, idempotent et tracé (gel P0 pour opérations distantes réelles).</p>
+                </div>
+                <div className="rounded-lg bg-[#252D2D] p-3 text-xs">
+                  <p className="font-semibold text-[#E8ECE8]">Historique de la demande</p>
+                  {historique.length === 0 && <p className="mt-1 text-[#A7B7A8]">Aucun événement enregistré.</p>}
+                  <div className="mt-2 space-y-1">
+                    {historique.map((h) => (
+                      <p key={String(h.id)} className="text-[#A7B7A8]">
+                        <span className="font-semibold text-[#DFE7E2]">{String(h.event_type)}</span>
+                        {" · "}{String(h.from_status ?? "—")} → {String(h.to_status ?? "—")}
+                        {" · "}{dateFrCourte(String(h.created_at ?? ""))}
+                      </p>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-[#A7B7A8]">Changer l’état</p>

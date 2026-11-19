@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * AUTO DYALI — Super Admin › Journal d'audit
+ * AUTO DYALI — Super Admin › Journal d'activité
  * Historique réel des actions sensibles (audit_log). Recherche,
  * pagination serveur, export CSV. Aucun secret n'est journalisé.
  */
@@ -12,7 +12,16 @@ import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader, Chargement, Vide, Erreur } from "@/components/super-admin-page";
 import { downloadCsv } from "@/lib/csv-export";
 
-type Row = { id: string; action: string; entity: string; entity_id: string | null; payload_json: unknown; created_at: string };
+type Row = {
+  id: string;
+  action: string;
+  entity: string;
+  entity_id: string | null;
+  actor_id: string | null;
+  establishment_id: string | null;
+  payload_json: unknown;
+  created_at: string;
+};
 
 const TAILLE = 20;
 
@@ -31,8 +40,10 @@ export default function AuditPage() {
       setLoading(true);
       setErreur(null);
       const q = recherche.trim().replace(/[,%()]/g, " ");
-      let query = supabase.from("audit_log").select("id, action, entity, entity_id, payload_json, created_at", { count: "exact" });
-      if (q) query = query.or(`action.ilike.%${q}%,entity.ilike.%${q}%`);
+      let query = supabase
+        .from("audit_log")
+        .select("id, action, entity, entity_id, actor_id, establishment_id, payload_json, created_at", { count: "exact" });
+      if (q) query = query.or(`action.ilike.%${q}%,entity.ilike.%${q}%,entity_id.ilike.%${q}%`);
       const { data, error, count } = await query.order("created_at", { ascending: false }).range((page - 1) * TAILLE, page * TAILLE - 1);
       if (!vivant) return;
       if (error) setErreur(error.message);
@@ -63,23 +74,33 @@ export default function AuditPage() {
   async function exporter() {
     if (!supabase) return;
     const q = recherche.trim();
-    let query = supabase.from("audit_log").select("id, action, entity, entity_id, payload_json, created_at");
-    if (q) query = query.or(`action.ilike.%${q.replace(/[,%()]/g, " ")}%,entity.ilike.%${q.replace(/[,%()]/g, " ")}%`);
+    let query = supabase
+      .from("audit_log")
+      .select("id, action, entity, entity_id, actor_id, establishment_id, payload_json, created_at");
+    if (q) query = query.or(`action.ilike.%${q.replace(/[,%()]/g, " ")}%,entity.ilike.%${q.replace(/[,%()]/g, " ")}%,entity_id.ilike.%${q.replace(/[,%()]/g, " ")}%`);
     const { data, error } = await query.order("created_at", { ascending: false }).limit(2000);
     if (error) { setErreur(error.message); return; }
     downloadCsv(
       `auto-dyali-audit-${new Date().toISOString().slice(0, 10)}.csv`,
-      ["Date", "Action", "Entité", "ID cible", "Contexte"],
-      ((data ?? []) as Row[]).map((r) => [new Date(r.created_at).toLocaleString("fr-FR"), r.action, r.entity, r.entity_id ?? "", resumePayload(r.payload_json)])
+      ["Date", "Acteur (ID)", "Établissement", "Action", "Entité", "ID cible", "Contexte"],
+      ((data ?? []) as Row[]).map((r) => [
+        new Date(r.created_at).toLocaleString("fr-FR"),
+        r.actor_id ?? "",
+        r.establishment_id ?? "",
+        r.action,
+        r.entity,
+        r.entity_id ?? "",
+        resumePayload(r.payload_json),
+      ])
     );
   }
 
   return (
-    <ModulePage titre="Journal d'audit">
+    <ModulePage titre="Journal d'activité">
       <ModuleHeader
         surtitre="AUTO DYALI · Sécurité"
-        titre="Journal d'audit"
-        description="Historique réel des opérations sensibles effectuées sur la plateforme. Recherche serveur, pagination, export CSV — sans secrets."
+        titre="Journal d'activité"
+        description="Historique réel des opérations sensibles : date, acteur, établissement, action et contexte (sans secrets). Recherche, pagination et export CSV."
         action={<button type="button" onClick={() => void exporter()} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Exporter CSV</button>}
       />
 
@@ -101,18 +122,28 @@ export default function AuditPage() {
         <>
           <div className="carte mt-6 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[860px] text-left text-sm">
+              <table className="w-full min-w-[1080px] text-left text-sm">
                 <thead className="bg-[#344440]/50 text-xs uppercase text-[#A7B7A8]">
-                  <tr><th className="px-5 py-3">Date</th><th className="px-5 py-3">Action</th><th className="px-5 py-3">Entité</th><th className="px-5 py-3">ID</th><th className="px-5 py-3">Contexte</th></tr>
+                  <tr>
+                    <th className="px-5 py-3">Date</th>
+                    <th className="px-5 py-3">Acteur</th>
+                    <th className="px-5 py-3">Établissement</th>
+                    <th className="px-5 py-3">Action</th>
+                    <th className="px-5 py-3">Entité</th>
+                    <th className="px-5 py-3">ID cible</th>
+                    <th className="px-5 py-3">Contexte</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-[#8FB59B]/10">
                   {rows.map((r) => (
                     <tr key={r.id}>
-                      <td className="px-5 py-3 text-[11px] text-[#A7B7A8]">{new Date(r.created_at).toLocaleString("fr-FR")}</td>
+                      <td className="px-5 py-3 text-[11px] text-[#A7B7A8] whitespace-nowrap">{new Date(r.created_at).toLocaleString("fr-FR")}</td>
+                      <td className="px-5 py-3 text-[11px] font-mono text-[#A7B7A8]">{r.actor_id ? `${r.actor_id.slice(0, 8)}…` : "—"}</td>
+                      <td className="px-5 py-3 text-[11px] font-mono text-[#A7B7A8]">{r.establishment_id ? `${r.establishment_id.slice(0, 8)}…` : "Plateforme"}</td>
                       <td className="px-5 py-3 font-semibold text-[#E8ECE8]">{r.action}</td>
                       <td className="px-5 py-3 text-[#A7B7A8]">{r.entity}</td>
-                      <td className="px-5 py-3 text-[11px] text-[#A7B7A8]">{r.entity_id ?? "—"}</td>
-                      <td className="px-5 py-3 text-[11px] text-[#A7B7A8]">{resumePayload(r.payload_json)}</td>
+                      <td className="px-5 py-3 text-[11px] font-mono text-[#A7B7A8]">{r.entity_id ? `${r.entity_id.slice(0, 8)}…` : "—"}</td>
+                      <td className="px-5 py-3 text-[11px] text-[#A7B7A8] max-w-xs truncate" title={resumePayload(r.payload_json)}>{resumePayload(r.payload_json)}</td>
                     </tr>
                   ))}
                 </tbody>

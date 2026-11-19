@@ -34,6 +34,7 @@ export default function SupportPage() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [recherche, setRecherche] = useState("");
   const [filtreStatut, setFiltreStatut] = useState<string>("tous");
+  const [filtrePriorite, setFiltrePriorite] = useState<string>("toutes");
   const [selection, setSelection] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [chargementMsgs, setChargementMsgs] = useState(false);
@@ -86,12 +87,13 @@ export default function SupportPage() {
     const q = recherche.trim().toLowerCase();
     return tickets.filter((t) => {
       if (filtreStatut !== "tous" && t.status !== filtreStatut) return false;
+      if (filtrePriorite !== "toutes" && t.priority !== filtrePriorite) return false;
       if (!q) return true;
       return [t.subject, t.body, t.category, t.establishments?.name, t.priority]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q));
     });
-  }, [tickets, recherche, filtreStatut]);
+  }, [tickets, recherche, filtreStatut, filtrePriorite]);
 
   const ouverts = tickets.filter((t) => ["open", "in_progress", "waiting_reply"].includes(t.status)).length;
   const urgents = tickets.filter((t) => t.priority === "urgent" || t.priority === "high").length;
@@ -147,7 +149,7 @@ export default function SupportPage() {
         <article className="carte-premium p-5"><p className="text-xs uppercase tracking-[0.18em] text-[#A7B7A8]">Total</p><p className="titre-or mt-2 text-3xl font-extrabold">{tickets.length}</p></article>
       </section>
 
-      <div className="carte-premium mt-6 grid gap-3 p-4 sm:grid-cols-3">
+      <div className="carte-premium mt-6 grid gap-3 p-4 sm:grid-cols-4">
         <label className="text-xs text-[#A7B7A8] sm:col-span-2">
           Recherche
           <input type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Sujet, message, entreprise, catégorie…" className="champ mt-1 min-h-11 w-full" aria-label="Rechercher un ticket" />
@@ -159,6 +161,16 @@ export default function SupportPage() {
             {STATUTS.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </label>
+        <label className="text-xs text-[#A7B7A8]">
+          Priorité
+          <select value={filtrePriorite} onChange={(e) => setFiltrePriorite(e.target.value)} className="champ mt-1 min-h-11">
+            <option value="toutes">Toutes</option>
+            <option value="urgent">Urgent</option>
+            <option value="high">Haute</option>
+            <option value="normal">Normale</option>
+            <option value="low">Basse</option>
+          </select>
+        </label>
       </div>
 
       {erreur && <div className="mt-4"><Erreur message={erreur} /></div>}
@@ -166,7 +178,7 @@ export default function SupportPage() {
       {loading ? (
         <div className="mt-6"><Chargement /></div>
       ) : visibles.length === 0 ? (
-        <div className="mt-6"><Vide titre="Aucun ticket" detail={filtreStatut !== "tous" ? "Aucun ticket dans ce statut." : "La file de support est vide."} /></div>
+        <div className="mt-6"><Vide titre="Aucun ticket" detail={(filtreStatut !== "tous" || filtrePriorite !== "toutes" || recherche.trim()) ? "Aucun ticket ne correspond aux filtres." : "La file de support est vide."} /></div>
       ) : (
         <div className="mt-6 grid gap-4 lg:grid-cols-5">
           {/* File */}

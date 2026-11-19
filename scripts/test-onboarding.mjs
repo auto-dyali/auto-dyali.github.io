@@ -12,6 +12,7 @@ import {
   validateOnboardingInput,
   isOnboardingValid,
   buildRequestId,
+  genererIdentifiantProfessionnel,
   PLANS,
 } from "../src/lib/onboarding.ts";
 
@@ -22,10 +23,16 @@ const base = {
   phone: "0522000000",
   email: "contact@garage-atlas.ma",
   plan: "silver",
+  abonnementDuree: "1an",
+  abonnementDureePersonnalisee: 12,
+  essaiDuree: "15",
+  essaiDureePersonnalisee: 15,
   managerName: "Youssef Alami",
   managerEmail: "y.alami@garage-atlas.ma",
   managerPhone: "0600000000",
-  trialDays: 14,
+  managerLoginId: "y.alami",
+  managerPassword: "MonPass123!",
+  managerPasswordConfirm: "MonPass123!",
   legalName: "Garage Atlas SARL",
   activityType: "Garage mécanique générale",
   professionalId: "RC123456",
@@ -82,10 +89,10 @@ test("un forfait inconnu est rejeté", () => {
 });
 
 test("une durée d'essai hors bornes est rejetée", () => {
-  assert.ok(validateOnboardingInput({ ...base, trialDays: -1 }).trialDays);
-  assert.ok(validateOnboardingInput({ ...base, trialDays: 91 }).trialDays);
-  assert.equal(validateOnboardingInput({ ...base, trialDays: 0 }).trialDays, undefined);
-  assert.equal(validateOnboardingInput({ ...base, trialDays: 90 }).trialDays, undefined);
+  assert.ok(validateOnboardingInput({ ...base, essaiDuree: "personnalisee", essaiDureePersonnalisee: -1 }).essaiDureePersonnalisee);
+  assert.ok(validateOnboardingInput({ ...base, essaiDuree: "personnalisee", essaiDureePersonnalisee: 366 }).essaiDureePersonnalisee);
+  assert.equal(validateOnboardingInput({ ...base, essaiDuree: "15" }).essaiDureePersonnalisee, undefined);
+  assert.equal(validateOnboardingInput({ ...base, essaiDuree: "60" }).essaiDureePersonnalisee, undefined);
 });
 
 test("buildRequestId génère des identifiants uniques au format UUID", () => {
@@ -132,11 +139,70 @@ test("un email d'entreprise vide est accepté (champ optionnel)", () => {
 });
 
 test("une durée d'essai non finie est rejetée", () => {
-  const errors = validateOnboardingInput({ ...base, trialDays: Number.NaN });
-  assert.ok(errors.trialDays);
+  const errors = validateOnboardingInput({ ...base, essaiDuree: "personnalisee", essaiDureePersonnalisee: Number.NaN });
+  assert.ok(errors.essaiDureePersonnalisee);
 });
 
 test("le slug est trimé avant validation", () => {
   const errors = validateOnboardingInput({ ...base, slug: "  garage-atlas  " });
   assert.equal(errors.slug, undefined);
+});
+
+test("identifiant de connexion Manager obligatoire", () => {
+  const errors = validateOnboardingInput({ ...base, managerLoginId: "" });
+  assert.ok(errors.managerLoginId);
+});
+
+test("identifiant de connexion trop court est rejeté", () => {
+  const errors = validateOnboardingInput({ ...base, managerLoginId: "ab" });
+  assert.ok(errors.managerLoginId);
+});
+
+test("identifiant de connexion avec caractères invalides est rejeté", () => {
+  const errors = validateOnboardingInput({ ...base, managerLoginId: "USER@NAME" });
+  assert.ok(errors.managerLoginId);
+});
+
+test("identifiant de connexion valide est accepté", () => {
+  const errors = validateOnboardingInput({ ...base, managerLoginId: "y.alami" });
+  assert.equal(errors.managerLoginId, undefined);
+});
+
+test("mot de passe initial obligatoire", () => {
+  const errors = validateOnboardingInput({ ...base, managerPassword: "" });
+  assert.ok(errors.managerPassword);
+});
+
+test("mot de passe trop court est rejeté", () => {
+  const errors = validateOnboardingInput({ ...base, managerPassword: "abc" });
+  assert.ok(errors.managerPassword);
+});
+
+test("mot de passe valide est accepté", () => {
+  const errors = validateOnboardingInput({ ...base, managerPassword: "MonPass123!" });
+  assert.equal(errors.managerPassword, undefined);
+});
+
+test("confirmation de mot de passe obligatoire", () => {
+  const errors = validateOnboardingInput({ ...base, managerPassword: "MonPass123!", managerPasswordConfirm: "" });
+  assert.ok(errors.managerPasswordConfirm);
+});
+
+test("confirmation de mot de passe non correspondante est rejetée", () => {
+  const errors = validateOnboardingInput({ ...base, managerPassword: "MonPass123!", managerPasswordConfirm: "AutrePass123!" });
+  assert.ok(errors.managerPasswordConfirm);
+});
+
+test("mot de passe et confirmation identiques sont acceptés", () => {
+  const errors = validateOnboardingInput({ ...base, managerPassword: "MonPass123!", managerPasswordConfirm: "MonPass123!" });
+  assert.equal(errors.managerPassword, undefined);
+  assert.equal(errors.managerPasswordConfirm, undefined);
+});
+
+test("genererIdentifiantProfessionnel génère un identifiant au format ADY-PRO-XXXXXX", () => {
+  const id1 = genererIdentifiantProfessionnel();
+  const id2 = genererIdentifiantProfessionnel();
+  assert.match(id1, /^ADY-PRO-[0-9A-F]{6}$/);
+  assert.match(id2, /^ADY-PRO-[0-9A-F]{6}$/);
+  assert.notEqual(id1, id2);
 });

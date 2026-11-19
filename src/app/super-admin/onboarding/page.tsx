@@ -1,55 +1,126 @@
 "use client";
+/* eslint-disable react/no-unescaped-entities */
 
 /**
- * AUTO DYALI — Super Admin › Nouvel abonné
- * Parcours complet : entreprise + établissement + Manager (invitation
- * email) + abonnement + droits du forfait.
+ * AUTO DYALI — Super Admin › Nouvel abonné (GV5 §51)
  *
- * Nécessite la migration 0028 (NON appliquée par défaut) et l'Edge
- * Function `onboard-tenant` (NON déployée par défaut). Sans elles,
- * la création échoue avec un message explicite — aucun état fantôme.
+ * Parcours professionnel en 6 étapes, branché sur le CONTRAT UNIQUE v2
+ * (`src/lib/onboarding-contract.ts`, source `_shared/contract.ts`).
+ *
+ *  1. Informations du garage (identité professionnelle choisie par le SA)
+ *  2. Manager : nom, e-mail, téléphone, identifiant de connexion, mot de passe
+ *     temporaire (jamais réaffiché, jamais renvoyé par le serveur)
+ *  3. Formule, durée payante, durée d'essai, date de début
+ *  4. Modules du forfait + permissions réelles (voir/créer/modifier/supprimer)
+ *  5. Transmission e-mail et/ou WhatsApp (canaux indépendants)
+ *  6. Récapitulatif et résultat réel par canal
+ *
+ * Aucune case décorative : chaque module sélectionné produit une ligne
+ * `permissions` transmise au serveur. L'unicité est vérifiée en temps réel
+ * (RPC `admin_check_identity_available`) ET revalidée côté serveur.
  */
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase-browser";
 import { ModulePage } from "@/components/super-admin-module-page";
 import { ModuleHeader } from "@/components/super-admin-page";
-import { buildRequestId, slugify, validateOnboardingInput } from "@/lib/onboarding";
+import { buildRequestId, genererIdentifiantProfessionnel, slugify } from "@/lib/onboarding";
+import {
+  ONBOARDING_CONTRACT_VERSION,
+  computeSubscriptionDates,
+  formatOnboardingError,
+  paidDurationToMonths,
+  trialDurationToDays,
+  validateOnboardingPayload,
+  type OnboardingPayload,
+  type PermissionGrant,
+} from "@/lib/onboarding-contract";
+import { DELIVERY_STATUS_LABEL } from "@/lib/activation";
 import { useNotification } from "@/lib/use-notification";
+import { Champ3D, Zone3D, Section3D } from "@/components/abonne-form-primitives";
+import { validerIdentite, validerCoordonnees } from "@/lib/abonne-rules";
 
-type Form = {
-  companyName: string;
-  legalName: string;
-  slug: string;
-  activityType: string;
-  professionalId: string;
-  address: string;
-  city: string;
-  region: string;
-  phone: string;
-  email: string;
-  notes: string;
-  plan: string;
-  trialDays: number;
-  modules: string[];
-  managerName: string;
-  managerEmail: string;
-  managerPhone: string;
-  sendWhatsApp: boolean;
+type Plan = {
+  code: string;
+  label: string;
+  description: string | null;
+  price_monthly: number | null;
+  price_yearly: number | null;
+  trial_days: number;
+  max_users: number;
+  max_sites: number;
+  storage_mb: number;
+};
+
+type FeatureRow = { plan_code: string; feature_key: string; enabled: boolean };
+
+type DroitModule = {
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+};
+
+type Disponibilite = {
+  professional_id_available?: boolean;
+  login_id_available?: boolean;
+  email_available?: boolean;
+  slug_available?: boolean;
+};
+
+type DeliveryRow = {
+  channel: "email" | "whatsapp";
+  status: string;
+  providerRef?: string | null;
+  providerError?: string | null;
 };
 
 const ETAPES = [
-  { n: 1, label: "Entreprise" },
-  { n: 2, label: "Manager" },
-  { n: 3, label: "Forfait & essai" },
+  "Entreprise",
+  "Responsable",
+  "Formule & abonnement",
+  "Modules & droits",
+  "Transmission",
+  "Confirmation",
 ] as const;
 
+const STORAGE_KEY = "autodyali_onboarding_request_id";
+
+const PREFIXES_ETAPE: Record<number, string[]> = {
+  1: ["establishment."],
+  2: ["manager."],
+  3: ["subscription."],
+  4: ["modules", "permissions"],
+  5: ["delivery"],
+};
+
+function initialRequestId(): string {
+  try {
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    if (stored && /^[0-9a-f-]{36}$/i.test(stored)) return stored;
+  } catch {
+    /* sessionStorage indisponible : UUID en mémoire. */
+  }
+  return buildRequestId();
+}
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export default function OnboardingPage() {
-  const [etape, setEtape] = useState<1 | 2 | 3>(1);
-  const [requestId, setRequestId] = useState(() => buildRequestId());
-  const [form, setForm] = useState<Form>({
-    companyName: "",
+  const [etape, setEtape] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  const [requestId, setRequestId] = useState<string>(() => initialRequestId());
+  const [enCours, setEnCours] = useState(false);
+  const [verification, setVerification] = useState(false);
+  const [resultat, setResultat] = useState<Record<string, unknown> | null>(null);
+  const [erreurGlobale, setErreurGlobale] = useState<string | null>(null);
+  const [dispo, setDispo] = useState<Disponibilite>({});
+  const [dispoErreur, setDispoErreur] = useState<string | null>(null);
+
+  const [form, setForm] = useState({
+    name: "",
     legalName: "",
     slug: "",
     activityType: "",
@@ -57,41 +128,175 @@ export default function OnboardingPage() {
     address: "",
     city: "",
     region: "",
+    country: "Maroc",
     phone: "",
     email: "",
+    complementaryContacts: "",
+    legalInfo: "",
+    fiscalInfo: "",
+    adminInfo: "",
+    dossierState: "en_constitution",
     notes: "",
-    plan: "silver",
-    trialDays: 14,
-    modules: [],
-    managerName: "",
+    managerFirstName: "",
+    managerLastName: "",
+    managerFullName: "",
     managerEmail: "",
     managerPhone: "",
-    sendWhatsApp: false,
+    loginId: "",
+    temporaryPassword: "",
+    temporaryPasswordConfirm: "",
+    plan: "",
+    paidDuration: "1an",
+    paidMonths: 12,
+    trialDuration: "15",
+    trialDays: 15,
+    startDate: todayIso(),
+    rights: {} as Record<string, DroitModule>,
+    deliveryEmail: true,
+    deliveryWhatsapp: false,
   });
-  const [slugTouche, setSlugTouche] = useState(false);
-  const [enCours, setEnCours] = useState(false);
-  const [resultat, setResultat] = useState<Record<string, unknown> | null>(null);
 
-  const { success, error: notifyError, warning: notifyWarning } = useNotification();
-
-  type Plan = {
-    code: string;
-    label: string;
-    description: string | null;
-    price_monthly: number | null;
-    price_yearly: number | null;
-    trial_days: number;
-    max_users: number;
-    max_sites: number;
-    storage_mb: number;
-  };
-  type FeatureRow = { plan_code: string; feature_key: string; enabled: boolean };
+  const { success: notifySuccess, error: notifyError, warning: notifyWarning } = useNotification();
 
   const [plansReels, setPlansReels] = useState<Plan[]>([]);
   const [featuresReels, setFeaturesReels] = useState<FeatureRow[]>([]);
   const [chargementPlans, setChargementPlans] = useState(true);
   const [erreurPlans, setErreurPlans] = useState<string | null>(null);
 
+  /* ------------------------------------------------------------------ */
+  /* Contrat : le formulaire produit EXACTEMENT le payload serveur.       */
+  /* ------------------------------------------------------------------ */
+  const payload: OnboardingPayload = useMemo(() => {
+    const modules = Object.keys(form.rights).sort();
+    const managerFullName = [form.managerFirstName, form.managerLastName].filter(Boolean).join(" ").trim() || form.managerFullName;
+    return {
+      contractVersion: ONBOARDING_CONTRACT_VERSION,
+      requestId,
+      establishment: {
+        name: form.name,
+        legalName: form.legalName,
+        slug: form.slug,
+        activityType: form.activityType,
+        professionalId: form.professionalId,
+        address: form.address,
+        city: form.city,
+        region: form.region,
+        phone: form.phone,
+        email: form.email,
+        notes: form.notes,
+        country: form.country,
+        legalInfo: form.legalInfo ?? "",
+        fiscalInfo: form.fiscalInfo ?? "",
+        adminInfo: form.adminInfo,
+        dossierState: form.dossierState,
+        complementaryContacts: form.complementaryContacts,
+      },
+      manager: {
+        fullName: managerFullName,
+        email: form.managerEmail,
+        phone: form.managerPhone,
+        loginId: form.loginId,
+        temporaryPassword: form.temporaryPassword,
+        temporaryPasswordConfirm: form.temporaryPasswordConfirm,
+      },
+      subscription: {
+        plan: form.plan,
+        paidDuration: form.paidDuration,
+        paidDurationMonths: paidDurationToMonths(form.paidDuration, form.paidMonths),
+        trialDuration: form.trialDuration,
+        trialDurationDays: trialDurationToDays(form.trialDuration, form.trialDays),
+        startDate: form.startDate,
+      },
+      modules,
+      permissions: Object.entries(form.rights).map(
+        ([module, droit]): PermissionGrant => ({ module, ...droit }),
+      ),
+      delivery: { email: form.deliveryEmail, whatsapp: form.deliveryWhatsapp },
+    };
+  }, [form, requestId]);
+
+  const validation = useMemo(() => validateOnboardingPayload(payload), [payload]);
+  // Mêmes règles d'affichage que la fiche de modification (source unique §76).
+  const erreursPartagees = useMemo(
+    () => ({
+      ...validerIdentite({ name: form.name, slug: form.slug, email: form.email, phone: form.phone }),
+      ...validerCoordonnees({ address: form.address, city: form.city }, true),
+    }),
+    [form.name, form.slug, form.email, form.phone, form.address, form.city],
+  );
+  const erreurs = validation.errors;
+
+  const erreur = (cle: string): string | undefined => erreurs[cle];
+
+  const etapeValide = useCallback(
+    (n: number): boolean => {
+      if (n === 6) return validation.valid;
+      const prefixes = PREFIXES_ETAPE[n] ?? [];
+      return !Object.keys(erreurs).some(
+        (cle) => prefixes.some((p) => cle.startsWith(p)) || cle.startsWith("_unknown."),
+      );
+    },
+    [erreurs, validation.valid],
+  );
+
+  function modifier<K extends keyof typeof form>(cle: K, valeur: (typeof form)[K]) {
+    setForm((f) => {
+      const suivant = { ...f, [cle]: valeur };
+      if (cle === "name" && !f.slug.trim()) suivant.slug = slugify(String(valeur));
+      if (cle === "name" && !f.professionalId.trim()) {
+        suivant.professionalId = genererIdentifiantProfessionnel();
+      }
+      if (cle === "managerFirstName" || cle === "managerLastName") {
+        const prenom = cle === "managerFirstName" ? String(valeur) : f.managerFirstName;
+        const nom = cle === "managerLastName" ? String(valeur) : f.managerLastName;
+        suivant.managerFullName = [prenom, nom].filter(Boolean).join(" ").trim();
+      }
+      if (cle === "plan") {
+        // Un changement de forfait ne doit pas conserver des modules absents
+        // du nouveau forfait : le serveur les refuserait (400 explicite).
+        const autorisees = new Set(
+          featuresReels
+            .filter((feat) => feat.plan_code === valeur && feat.enabled)
+            .map((feat) => feat.feature_key),
+        );
+        suivant.rights = Object.fromEntries(
+          Object.entries(f.rights).filter(([module]) => autorisees.has(module)),
+        );
+      }
+      return suivant;
+    });
+    setDispo({});
+  }
+
+  function basculerModule(feature: string) {
+    setForm((f) => {
+      const droits = { ...f.rights };
+      if (droits[feature]) delete droits[feature];
+      else droits[feature] = { canView: true, canCreate: true, canEdit: true, canDelete: false };
+      return { ...f, rights: droits };
+    });
+  }
+
+  function modifierDroit(feature: string, action: keyof DroitModule, valeur: boolean) {
+    setForm((f) => {
+      const courant = f.rights[feature];
+      if (!courant) return f;
+      return { ...f, rights: { ...f.rights, [feature]: { ...courant, [action]: valeur } } };
+    });
+  }
+
+  const planActif = plansReels.find((p) => p.code === form.plan);
+  const featuresDuPlan = (code: string) =>
+    featuresReels.filter((f) => f.plan_code === code && f.enabled).map((f) => f.feature_key);
+  const dates = computeSubscriptionDates(
+    form.startDate,
+    paidDurationToMonths(form.paidDuration, form.paidMonths),
+    trialDurationToDays(form.trialDuration, form.trialDays),
+  );
+
+  /* ------------------------------------------------------------------ */
+  /* Plans + fonctionnalités réels                                       */
+  /* ------------------------------------------------------------------ */
   useEffect(() => {
     let vivant = true;
     void (async () => {
@@ -100,152 +305,162 @@ export default function OnboardingPage() {
         return;
       }
       const [p, f] = await Promise.all([
-        supabase.from("plans").select("code, label, description, price_monthly, price_yearly, trial_days, max_users, max_sites, storage_mb").order("price_monthly"),
+        supabase
+          .from("plans")
+          .select("code, label, description, price_monthly, price_yearly, trial_days, max_users, max_sites, storage_mb")
+          .order("price_monthly"),
         supabase.from("plan_features").select("plan_code, feature_key, enabled"),
       ]);
       if (!vivant) return;
-      if (p.error || f.error) setErreurPlans(p.error?.message ?? f.error?.message ?? "Plans indisponibles");
+      if (p.error || f.error) {
+        setErreurPlans(p.error?.message ?? f.error?.message ?? "Plans indisponibles");
+        setChargementPlans(false);
+        return;
+      }
       const plans = (p.data ?? []) as Plan[];
       setPlansReels(plans);
       setFeaturesReels((f.data ?? []) as FeatureRow[]);
-      if (plans.length > 0 && !plans.some((pl) => pl.code === form.plan)) {
-        setForm((f) => ({ ...f, plan: plans[0].code }));
+      if (plans.length > 0) {
+        setForm((current) =>
+          current.plan && plans.some((pl) => pl.code === current.plan)
+            ? current
+            : { ...current, plan: plans[0].code },
+        );
       }
       setChargementPlans(false);
     })();
-    return () => { vivant = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      vivant = false;
+    };
   }, []);
 
-  const planActif = plansReels.find((p) => p.code === form.plan);
-  const featuresDuPlan = (code: string) => featuresReels.filter((f) => f.plan_code === code && f.enabled).map((f) => f.feature_key);
+  /* ------------------------------------------------------------------ */
+  /* Unicité en temps réel (serveur), sans bloquer si RPC absente        */
+  /* ------------------------------------------------------------------ */
+  async function verifierDisponibilite(): Promise<Disponibilite | null> {
+    if (!supabase) return null;
+    setVerification(true);
+    setDispoErreur(null);
+    try {
+      const { data, error } = await supabase.rpc("admin_check_identity_available", {
+        p_professional_id: form.professionalId.trim() || null,
+        p_login_id: form.loginId.trim() || null,
+        p_manager_email: form.managerEmail.trim() || null,
+        p_slug: form.slug.trim() || null,
+      });
+      if (error) {
+        setDispoErreur(
+          /could not find the function|PGRST202/i.test(error.message)
+            ? "Vérification serveur indisponible : migration 0039 non appliquée. Le serveur revalidera à la création."
+            : `Vérification d'unicité impossible : ${error.message}`,
+        );
+        return null;
+      }
+      const d = (data ?? {}) as Disponibilite;
+      setDispo(d);
+      if (d.professional_id_available === false) {
+        notifyError({ title: "Identifiant professionnel déjà utilisé", message: "Choisissez un autre identifiant." });
+      } else if (d.login_id_available === false) {
+        notifyError({ title: "Identifiant de connexion déjà utilisé", message: "Choisissez un autre identifiant." });
+      } else if (d.email_available === false) {
+        notifyError({ title: "E-mail Manager déjà utilisé", message: "Un compte existe déjà pour cet e-mail." });
+      }
+      return d;
+    } catch (e) {
+      setDispoErreur(e instanceof Error ? e.message : "Vérification d'unicité impossible.");
+      return null;
+    } finally {
+      setVerification(false);
+    }
+  }
 
-  const erreurs = useMemo(
-    () =>
-      validateOnboardingInput({
-        companyName: form.companyName,
-        slug: form.slug,
-        city: form.city,
-        phone: form.phone,
-        email: form.email,
-        plan: form.plan,
-        managerName: form.managerName,
-        managerEmail: form.managerEmail,
-        managerPhone: form.managerPhone,
-        trialDays: form.trialDays,
-      }),
-    [form]
-  );
-  const etapeValide = (n: number): boolean => {
-    if (n === 1)
-      return (
-        !erreurs.companyName &&
-        !erreurs.legalName &&
-        !erreurs.activityType &&
-        !erreurs.professionalId &&
-        !erreurs.address &&
-        !erreurs.region &&
-        !erreurs.slug &&
-        !erreurs.email
-      );
-    if (n === 2) return !erreurs.managerName && !erreurs.managerEmail;
-    return Object.keys(erreurs).length === 0;
-  };
+  async function prochainEtape() {
+    if (!etapeValide(etape)) return;
+    if (etape === 2 || etape === 5) {
+      // Résultat retourné directement : l'état React n'est pas encore à jour
+      // au moment du contrôle, un conflit doit bloquer immédiatement.
+      const resultat = await verifierDisponibilite();
+      if (
+        resultat &&
+        (resultat.professional_id_available === false ||
+          resultat.login_id_available === false ||
+          resultat.email_available === false)
+      ) {
+        return;
+      }
+    }
+    setEtape((e) => (e < 6 ? ((e + 1) as 1 | 2 | 3 | 4 | 5 | 6) : e));
+  }
 
-  function modifier<K extends keyof Form>(cle: K, valeur: Form[K]) {
-    setForm((f) => {
-      const suivant = { ...f, [cle]: valeur };
-      if (cle === "companyName" && !slugTouche) suivant.slug = slugify(String(valeur));
-      return suivant;
-    });
+  function etapePrecedente() {
+    setEtape((e) => (e > 1 ? ((e - 1) as 1 | 2 | 3 | 4 | 5 | 6) : e));
   }
 
   /* ------------------------------------------------------------------ */
-  /* Sélection/désélection d'un module                                  */
+  /* Soumission                                                          */
   /* ------------------------------------------------------------------ */
-  function toggleModule(feature: string) {
-    setForm((f) => {
-      const suivant = f.modules.includes(feature)
-        ? f.modules.filter((m) => m !== feature)
-        : [...f.modules, feature];
-      return { ...f, modules: suivant };
-    });
-  }
-
   async function soumettre(e: FormEvent) {
     e.preventDefault();
+    if (enCours) return; // anti double-soumission
     if (!supabase) {
       notifyError({ title: "Supabase non configuré", message: "La variable d'environnement Supabase est manquante." });
       return;
     }
-    if (Object.keys(erreurs).length > 0) {
-      notifyWarning({ title: "Champs invalides", message: "Corrigez les champs en rouge avant de valider." });
+    if (!validation.valid) {
+      const premier = Object.keys(erreurs)[0] ?? "contrat";
+      notifyWarning({
+        title: "Formulaire invalide",
+        message: `Corrigez les champs signalés avant de valider (${premier}).`,
+      });
       return;
     }
+
     setEnCours(true);
+    setErreurGlobale(null);
     try {
-      const { data, error } = await supabase.functions.invoke("onboard-tenant", {
-        body: {
-          requestId,
-          companyName: form.companyName.trim(),
-          legalName: form.legalName.trim() || null,
-          slug: form.slug.trim(),
-          activityType: form.activityType.trim() || null,
-          professionalId: form.professionalId.trim() || null,
-          address: form.address.trim() || null,
-          city: form.city.trim() || null,
-          region: form.region.trim() || null,
-          phone: form.phone.trim() || null,
-          email: form.email.trim() || null,
-          notes: form.notes.trim() || null,
-          plan: form.plan,
-          trialDays: form.trialDays,
-          modules: form.modules,
-          managerName: form.managerName.trim(),
-          managerEmail: form.managerEmail.trim(),
-          managerPhone: form.managerPhone.trim() || null,
-          sendWhatsApp: form.sendWhatsApp,
-        },
-      });
+      const { data, error } = await supabase.functions.invoke("onboard-tenant", { body: payload });
+
       if (error) {
-        // Extraire le message métier précis depuis la réponse JSON du serveur
-        let messageServeur = error.message ?? "Erreur inconnue";
+        let corps: unknown = null;
         try {
           const ctx = (error as { context?: { json?: () => Promise<unknown> } }).context;
-          const corpsResponse = await ctx?.json?.();
-          const corpsErreur = (corpsResponse ?? {}) as { error?: string | { message?: string } };
-          const messageBrut =
-            typeof corpsErreur.error === "string"
-              ? corpsErreur.error
-              : corpsErreur.error && typeof corpsErreur.error === "object"
-                ? (corpsErreur.error as { message?: string }).message
-                : null;
-          if (messageBrut) messageServeur = messageBrut;
+          corps = (await ctx?.json?.()) ?? null;
         } catch {
-          // Corps indisponible : on conserve le message standard.
+          corps = null;
         }
-        if (messageServeur.includes("Function not found") || messageServeur.includes("404")) {
-          messageServeur =
-            "La fonction `onboard-tenant` n'est pas déployée. Déploiement + migration 0028 requis.";
+        let message = formatOnboardingError(corps, error.message ?? "Erreur inconnue");
+        if (/function not found|404/i.test(message)) {
+          message = "La fonction `onboard-tenant` (v2) n'est pas déployée.";
+        } else if (/non appliquée|Could not find the function/i.test(message)) {
+          message = "Migrations 0036/0039 non appliquées : création impossible pour l'instant.";
         }
-        notifyError({ title: "Échec de l'onboarding", message: messageServeur });
+        setErreurGlobale(message);
+        notifyError({ title: "Échec de l'onboarding", message });
         return;
       }
+
       const corps = (data ?? {}) as Record<string, unknown>;
       if (corps.ok === false) {
-        notifyError({
-          title: "Échec de l'onboarding",
-          message: typeof corps.error === "string" ? corps.error : "Échec de l'onboarding.",
-        });
+        const message =
+          typeof corps.error === "string" ? corps.error : "Échec de l'onboarding.";
+        setErreurGlobale(message);
+        notifyError({ title: "Échec de l'onboarding", message });
         return;
       }
+
       setResultat(corps);
-      setRequestId(buildRequestId());
-      success({
-        title: "Abonné créé avec succès",
-        message: `L'entreprise, l'abonnement et le compte Manager ont été provisionnés (réponse serveur acceptée). L'invitation doit être confirmée côté fournisseur.`,
+      setEtape(6);
+      notifySuccess({
+        title: corps.idempotent ? "Abonné déjà créé" : "Abonné créé",
+        message: "Consultez le statut réel de chaque canal de transmission ci-dessous.",
         duration: 6000,
       });
+      try {
+        sessionStorage.removeItem(STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
+      setRequestId(buildRequestId());
     } catch (err) {
       notifyError({
         title: "Erreur inattendue",
@@ -256,214 +471,492 @@ export default function OnboardingPage() {
     }
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Résultat réel                                                       */
+  /* ------------------------------------------------------------------ */
   if (resultat) {
-    const idempotent = resultat.idempotent === true;
+    const delivery = (resultat.delivery as DeliveryRow[] | undefined) ?? [];
     return (
       <ModulePage titre="Nouvel abonné">
-        <ModuleHeader surtitre="AUTO DYALI · Onboarding" titre="Abonné créé" description="L'entreprise, l'abonnement et le compte Manager ont été provisionnés." />
-        <div className="carte-premium mt-6 border-l-4 border-[#5D9E7F] p-6">
-          <h2 className="font-bold text-[#E8ECE8]">{idempotent ? "Demande déjà traitée (idempotence)" : "Création terminée"}</h2>
-          <p className="mt-2 text-sm text-[#A7B7A8]">
-            {idempotent
-              ? "Cette demande était déjà enregistrée : aucune donnée n'a été dupliquée."
-              : "L'invitation doit être confirmée côté fournisseur. Aucun mot de passe n'est transmis en clair."}
-          </p>
+        <ModuleHeader
+          surtitre="AUTO DYALI · Onboarding"
+          titre="Création terminée"
+          description="Le compte Auth, l'établissement, l'abonnement, les permissions et l'invitation ont été enregistrés côté serveur."
+        />
+        <div className="sa3d-root sa3d-panel mt-6 p-6">
+          <h2 className="font-bold text-[#E8ECE8]">
+            {resultat.idempotent ? "Requête déjà traitée (idempotence)" : "Création confirmée"}
+          </h2>
           <dl className="mt-4 grid gap-2 text-xs text-[#A7B7A8] sm:grid-cols-2">
+            <div><dt className="uppercase">Identifiant professionnel</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.professional_id ?? form.professionalId)}</dd></div>
+            <div><dt className="uppercase">Identifiant de connexion</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.login_id ?? form.loginId)}</dd></div>
             <div><dt className="uppercase">Établissement</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.establishment_id ?? "—")}</dd></div>
             <div><dt className="uppercase">Abonnement</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.subscription_id ?? "—")}</dd></div>
             <div><dt className="uppercase">Manager Auth</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.manager_user_id ?? "—")}</dd></div>
-            <div><dt className="uppercase">Requête</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.request_id ?? "—")}</dd></div>
+            <div><dt className="uppercase">Invitation</dt><dd className="font-mono text-[#E8ECE8]">{String(resultat.invitation_id ?? "—")}</dd></div>
           </dl>
+
+          <div className="mt-5">
+            <h3 className="text-xs uppercase tracking-[0.15em] text-[#A7B7A8]">Transmission</h3>
+            <ul className="mt-2 space-y-2 text-sm">
+              {delivery.length === 0 && (
+                <li className="text-[#A7B7A8]">Aucun statut de transmission renvoyé par le serveur.</li>
+              )}
+              {delivery.map((d) => (
+                <li key={d.channel} className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-[#E8ECE8]">{d.channel === "email" ? "E-mail" : "WhatsApp"}</span>
+                  <span className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                    d.status === "accepte_par_fournisseur"
+                      ? "bg-[#5D9E7F]/15 text-[#5D9E7F]"
+                      : d.status === "echec"
+                        ? "bg-[#C5716B]/15 text-[#C5716B]"
+                        : "bg-[#D6A34D]/15 text-[#D6A34D]"
+                  }`}>
+                    {DELIVERY_STATUS_LABEL[d.status] ?? d.status}
+                  </span>
+                  {d.providerError && <span className="text-[11px] text-[#C5716B]">{d.providerError}</span>}
+                  {d.providerRef && <span className="font-mono text-[10px] text-[#A7B7A8]">{d.providerRef}</span>}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-[11px] text-[#A7B7A8]">
+              « Accepté par le fournisseur » signifie que l'API a accepté la requête. Aucune livraison/lecture n'est affirmée sans preuve (webhook signé). Le lien d'activation est à usage unique, expire sous <strong>7 jours</strong> et le jeton n'est stocké qu'en empreinte (hash). Le Manager doit définir son propre mot de passe via ce lien avant l'accès normal.
+            </p>
+          </div>
+
           <div className="mt-6 flex flex-wrap gap-2">
             <Link href="/super-admin/entreprises/" className="btn-or px-4 py-2 text-sm">Voir les entreprises</Link>
-            <Link href="/super-admin/onboarding/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]" onClick={() => setResultat(null)}>Créer un autre abonné</Link>
+            <Link href="/super-admin/invitations/" className="sa3d-btn sa3d-btn-fantome">
+              Suivre les invitations
+            </Link>
+            <button
+              type="button"
+              className="sa3d-btn sa3d-btn-fantome"
+              onClick={() => {
+                setResultat(null);
+                setEtape(1);
+                setForm((f) => ({
+                  ...f,
+                  name: "",
+                  legalName: "",
+                  slug: "",
+                  activityType: "",
+                  professionalId: "",
+                  address: "",
+                  city: "",
+                  region: "",
+                  country: "Maroc",
+                  phone: "",
+                  email: "",
+                  complementaryContacts: "",
+                  adminInfo: "",
+                  dossierState: "en_constitution",
+                  notes: "",
+                  managerFirstName: "",
+                  managerLastName: "",
+                  managerFullName: "",
+                  managerEmail: "",
+                  managerPhone: "",
+                  loginId: "",
+                  temporaryPassword: "",
+                  temporaryPasswordConfirm: "",
+                  rights: {},
+                }));
+                setDispo({});
+              }}
+            >
+              Créer un autre abonné
+            </button>
           </div>
         </div>
       </ModulePage>
     );
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Formulaire                                                          */
+  /* ------------------------------------------------------------------ */
+  const actions: { key: keyof DroitModule; label: string }[] = [
+    { key: "canView", label: "Voir" },
+    { key: "canCreate", label: "Créer" },
+    { key: "canEdit", label: "Modifier" },
+    { key: "canDelete", label: "Supprimer" },
+  ];
+
   return (
     <ModulePage titre="Nouvel abonné">
       <ModuleHeader
         surtitre="AUTO DYALI · Onboarding"
-        titre="Nouvel abonné"
-        description="Création complète et sécurisée : entreprise, établissement, Manager (invitation email) et abonnement aux droits du forfait choisi."
+        titre="Nouvel abonné professionnel"
+        description="Parcours P0 en 6 étapes : établissement, Manager, formule/abonnement/essai, modules & droits réels, invitation e-mail/WhatsApp (canaux indépendants), récapitulatif et confirmation."
       />
 
-      <form onSubmit={soumettre} className="carte-premium mt-6 p-6">
-        {/* Étapes */}
-        <ol className="flex items-center gap-2 sm:gap-6">
-          {ETAPES.map((e) => (
-            <li key={e.n} className="flex items-center gap-2">
-              <button type="button" onClick={() => setEtape(e.n as 1 | 2 | 3)} aria-current={etape === e.n ? "step" : undefined} className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${etape === e.n ? "bg-[#8FB59B] text-[#252D2D]" : "bg-[#344440] text-[#A7B7A8]"}`}>{e.n}</button>
-              <span className={`text-xs uppercase tracking-wide ${etape === e.n ? "text-[#E8ECE8]" : "text-[#A7B7A8]"}`}>{e.label}</span>
-            </li>
-          ))}
-        </ol>
-
-        {/* Étape 1 — Entreprise */}
-        {etape === 1 && (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Nom de l&apos;entreprise *
-              <input required value={form.companyName} onChange={(e) => modifier("companyName", e.target.value)} className="champ mt-1 min-h-11" placeholder="Garage Atlas SARL" />
-            </label>
-            <label className="text-xs text-[#A7B7A8]">Slug *
-              <input required value={form.slug} onChange={(e) => { setSlugTouche(true); modifier("slug", e.target.value.toLowerCase()); }} className="champ mt-1 min-h-11" placeholder="garage-atlas" aria-describedby="slug-aide" />
-              <span id="slug-aide" className="mt-1 block text-[10px] text-[#A7B7A8]">Généré automatiquement, modifiable.</span>
-              {erreurs.slug && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.slug}</span>}
-            </label>
-            <label className="text-xs text-[#A7B7A8]">Ville
-              <input value={form.city} onChange={(e) => modifier("city", e.target.value)} className="champ mt-1 min-h-11" placeholder="Casablanca" />
-            </label>
-            <label className="text-xs text-[#A7B7A8]">Téléphone
-              <input value={form.phone} onChange={(e) => modifier("phone", e.target.value)} className="champ mt-1 min-h-11" placeholder="0522000000" inputMode="tel" />
-            </label>
-            <label className="text-xs text-[#A7B7A8]">Email de l&apos;entreprise (optionnel)
-              <input type="email" value={form.email} onChange={(e) => modifier("email", e.target.value)} className="champ mt-1 min-h-11" placeholder="contact@garage-atlas.ma" />
-              {erreurs.email && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.email}</span>}
-            </label>
-            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Raison sociale *
-              <input required value={form.legalName} onChange={(e) => modifier("legalName", e.target.value)} className="champ mt-1 min-h-11" placeholder="Garage Atlas SARL" />
-              {erreurs.legalName && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.legalName}</span>}
-            </label>
-            <label className="text-xs text-[#A7B7A8]">Type d&apos;activité *
-              <input required value={form.activityType} onChange={(e) => modifier("activityType", e.target.value)} className="champ mt-1 min-h-11" placeholder="Garage mécanique générale" />
-              {erreurs.activityType && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.activityType}</span>}
-            </label>
-            <label className="text-xs text-[#A7B7A8]">Identifiant professionnel *
-              <input required value={form.professionalId} onChange={(e) => modifier("professionalId", e.target.value)} className="champ mt-1 min-h-11" placeholder="RC123456" />
-              {erreurs.professionalId && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.professionalId}</span>}
-            </label>
-            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Adresse *
-              <input required value={form.address} onChange={(e) => modifier("address", e.target.value)} className="champ mt-1 min-h-11" placeholder="12 Rue Mohammed V" />
-              {erreurs.address && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.address}</span>}
-            </label>
-            <label className="text-xs text-[#A7B7A8]">Région *
-              <input required value={form.region} onChange={(e) => modifier("region", e.target.value)} className="champ mt-1 min-h-11" placeholder="Casablanca-Settat" />
-              {erreurs.region && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.region}</span>}
-            </label>
-            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Informations complémentaires
-              <textarea value={form.notes} onChange={(e) => modifier("notes", e.target.value)} className="champ mt-1 min-h-11" placeholder="Précisions sur l&apos;activité, horaires, etc." />
-            </label>
-          </div>
-        )}
-
-        {/* Étape 2 — Manager */}
-        {etape === 2 && (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Nom complet du Manager *
-              <input required value={form.managerName} onChange={(e) => modifier("managerName", e.target.value)} className="champ mt-1 min-h-11" placeholder="Youssef Alami" />
-              {erreurs.managerName && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.managerName}</span>}
-            </label>
-            <label className="text-xs text-[#A7B7A8]">Email professionnel *
-              <input required type="email" value={form.managerEmail} onChange={(e) => modifier("managerEmail", e.target.value)} className="champ mt-1 min-h-11" placeholder="y.alami@garage-atlas.ma" />
-              {erreurs.managerEmail && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.managerEmail}</span>}
-            </label>
-            <label className="text-xs text-[#A7B7A8]">Téléphone
-              <input value={form.managerPhone} onChange={(e) => modifier("managerPhone", e.target.value)} className="champ mt-1 min-h-11" placeholder="0600000000" inputMode="tel" />
-            </label>
-            <label className="text-xs text-[#A7B7A8] flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.sendWhatsApp}
-                onChange={(e) => modifier("sendWhatsApp", e.target.checked)}
-                className="rounded text-[#8FB59B] focus:ring-[#8FB59B]"
-              />
-              <span>Envoyer aussi l’invitation par WhatsApp</span>
-            </label>
-            <p className="text-[11px] leading-5 text-[#A7B7A8] sm:col-span-2">
-              Le Manager recevra un email d’invitation pour définir son mot de passe — aucun mot de passe ne transite par cette interface. L’invitation est créée côté serveur (Edge Function sécurisée).
-            </p>
-          </div>
-        )}
-
-        {/* Étape 3 — Forfait (données réelles depuis Supabase) */}
-        {etape === 3 && (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <label className="text-xs text-[#A7B7A8] sm:col-span-2">Forfait *
-              {chargementPlans ? (
-                <p className="champ mt-1 min-h-11 pt-3 text-[#A7B7A8]">Chargement des forfaits…</p>
-              ) : plansReels.length === 0 ? (
-                <p role="alert" className="mt-1 rounded-lg bg-[#D6A34D]/10 px-4 py-3 text-xs text-[#D6A34D]">Aucun forfait détecté (migration 0009 non appliquée ?) — vérifiez les accès plans dans Supabase.</p>
-              ) : (
-                <select value={form.plan} onChange={(e) => { const p = plansReels.find((x) => x.code === e.target.value); modifier("plan", e.target.value); if (p) modifier("trialDays", p.trial_days); }} className="champ mt-1 min-h-11">
-                  {plansReels.map((p) => <option key={p.code} value={p.code}>{p.label}</option>)}
-                </select>
-              )}
-            </label>
-
-            {planActif && (
-              <div className="rounded-xl border border-[#8FB59B]/20 bg-[#2C3735] p-4 text-xs text-[#A7B7A8] sm:col-span-2">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#D0C6AE]">{planActif.label} — caractéristiques réelles</p>
-                <ul className="mt-2 grid gap-1 sm:grid-cols-2">
-                  <li>Prix mensuel : <span className="text-[#E8ECE8]">{planActif.price_monthly != null ? `${planActif.price_monthly} MAD` : "non configuré"}</span></li>
-                  <li>Prix annuel : <span className="text-[#E8ECE8]">{planActif.price_yearly != null ? `${planActif.price_yearly} MAD` : "non configuré"}</span></li>
-                  <li>Essai : <span className="text-[#E8ECE8]">{planActif.trial_days} j</span></li>
-                  <li>Utilisateurs max : <span className="text-[#E8ECE8]">{planActif.max_users}</span></li>
-                  <li>Établissements max : <span className="text-[#E8ECE8]">{planActif.max_sites}</span></li>
-                  <li>Stockage : <span className="text-[#E8ECE8]">{planActif.storage_mb} Mo</span></li>
-                </ul>
-                {planActif.description && <p className="mt-2 text-[11px] leading-5">{planActif.description}</p>}
-                {featuresDuPlan(planActif.code).length > 0 && (
-                  <p className="mt-2 text-[11px]">Fonctionnalités : <span className="text-[#E8ECE8]">{featuresDuPlan(planActif.code).length}</span> activées pour ce forfait.</p>
-                )}
-              </div>
-            )}
-            {erreurPlans && <p role="alert" className="text-[11px] text-[#C5716B]">Erreur plans : {erreurPlans}</p>}
-
-            <label className="text-xs text-[#A7B7A8]">Durée d&apos;essai (jours)
-              <input type="number" min={0} max={90} value={form.trialDays} onChange={(e) => modifier("trialDays", Number(e.target.value))} className="champ mt-1 min-h-11" />
-              {erreurs.trialDays && <span className="mt-1 block text-[11px] text-[#C5716B]">{erreurs.trialDays}</span>}
-            </label>
-
-            {/* Sélection des modules */}
-            {planActif && featuresDuPlan(planActif.code).length > 0 && (
-              <div className="rounded-xl border border-[#8FB59B]/15 bg-[#2C3735] p-4 text-xs text-[#A7B7A8] sm:col-span-2">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#D0C6AE]">Modules autorisés ({form.modules.length} sélectionnés)</p>
-                <div className="mt-2 grid gap-1 sm:grid-cols-2">
-                  {featuresDuPlan(planActif.code).map((feature) => {
-                    const actif = form.modules.includes(feature);
-                    return (
-                      <label key={feature} className="flex items-center gap-2 p-2 rounded border border-[#8FB59B]/20 hover:border-[#8FB59B]/40 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={actif}
-                          onChange={() => toggleModule(feature)}
-                          className="rounded text-[#8FB59B] focus:ring-[#8FB59B]"
-                        />
-                        <span className="text-[10px]">{feature}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Récapitulatif */}
-            <div className="rounded-xl border border-[#8FB59B]/15 bg-[#2C3735] p-4 text-xs text-[#A7B7A8] sm:col-span-2">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#D0C6AE]">Récapitulatif</p>
-              <ul className="mt-2 space-y-1">
-                <li><span className="text-[#E8ECE8]">Entreprise :</span> {form.companyName || "—"} ({form.slug || "—"})</li>
-                <li><span className="text-[#E8ECE8]">Manager :</span> {form.managerName || "—"} — {form.managerEmail || "—"}</li>
-                <li><span className="text-[#E8ECE8]">Forfait :</span> {form.plan.toUpperCase()} · {form.trialDays} j d’essai</li>
-                <li><span className="text-[#E8ECE8]">Modules :</span> {form.modules.length > 0 ? form.modules.join(", ") : "Aucun"}</li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex gap-2">
-            {etape > 1 && <button type="button" onClick={() => setEtape((etape - 1) as 1 | 2 | 3)} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">Précédent</button>}
-            {etape < 3 && <button type="button" onClick={() => etapeValide(etape) && setEtape((etape + 1) as 1 | 2 | 3)} disabled={!etapeValide(etape)} className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440] disabled:opacity-40">Suivant</button>}
-          </div>
-          <button type="submit" disabled={enCours || !etapeValide(3)} className="btn-or px-6 py-2 text-sm">{enCours ? "Création…" : "Créer l'abonné"}</button>
+      <form onSubmit={soumettre} className="sa3d-root sa3d-panel mt-6 p-6 lg:p-8" noValidate>
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-sm font-semibold text-[#E8ECE8]">
+            Étape {etape} / 6 — {ETAPES[etape - 1]}
+          </span>
+          {verification && <span className="text-[11px] text-[#A7B7A8]">Vérification serveur…</span>}
+        </div>
+        <div className="w-full h-1 bg-[#344440] rounded-full mb-6">
+          <div className="h-1.5 rounded-full bg-[#8FB59B] transition-all duration-300" style={{ width: `${(etape / 6) * 100}%` }} />
         </div>
 
-        <p className="mt-4 text-[11px] leading-5 text-[#A7B7A8]">
-          Cette création nécessite la migration <code>0028</code> (préparée, non appliquée par défaut) et l’Edge Function <code>onboard-tenant</code> (non déployée par défaut). Sans elles, la demande échouera avec un message explicite — aucune donnée fantôme ne sera créée. Identifiant de demande : <span className="font-mono">{requestId}</span>
-        </p>
+        {erreurPlans && (
+          <p className="mb-4 rounded-lg bg-[#C5716B]/15 px-3 py-2 text-xs text-[#C5716B]">
+            Référentiel indisponible : {erreurPlans}
+          </p>
+        )}
+        {erreurGlobale && (
+          <p className="mb-4 rounded-lg bg-[#C5716B]/15 px-3 py-2 text-xs text-[#C5716B]">{erreurGlobale}</p>
+        )}
+        {dispoErreur && (
+          <p className="mb-4 rounded-lg bg-[#D6A34D]/15 px-3 py-2 text-xs text-[#D6A34D]">{dispoErreur}</p>
+        )}
+
+        {/* ÉTAPE 1 — Entreprise */}
+        {etape === 1 && (
+          <>
+            <h2 className="text-lg font-bold text-[#E8ECE8] mb-1">1. Identification de l'entreprise et de l'établissement</h2>
+            <p className="text-xs text-[#A7B7A8] mb-4">Renseignez les informations professionnelles de l'abonné. L'identifiant professionnel AUTO DYALI est unique et doit être contrôlé côté serveur (format cible <span className="font-mono">ADY-PRO-XXXXXX</span>, sans collision).</p>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Champ3D label="Raison sociale" obligatoire value={form.legalName} onChange={(v) => modifier("legalName", v)} placeholder="Garage Atlas SARL" erreur={erreur("establishment.legalName")} />
+              <Champ3D label="Nom commercial" obligatoire value={form.name} onChange={(v) => modifier("name", v)} placeholder="Garage Atlas" erreur={erreur("establishment.name") ?? erreursPartagees.name} />
+              <Champ3D label="Slug (URL interne)" obligatoire mono value={form.slug} onChange={(v) => modifier("slug", v)} placeholder="garage-atlas" erreur={erreur("establishment.slug") ?? (dispo.slug_available === false ? "Slug déjà utilisé." : undefined)} />
+              <Champ3D
+                label="Identifiant professionnel AUTO DYALI" obligatoire mono className="lg:col-span-2"
+                value={form.professionalId} onChange={(v) => modifier("professionalId", v.toUpperCase())}
+                placeholder="ADY-PRO-XXXXXX"
+                action={<button type="button" onClick={() => modifier("professionalId", genererIdentifiantProfessionnel())} className="sa3d-btn sa3d-btn-fantome shrink-0 px-3 py-2 text-xs">Générer</button>}
+                aide={dispo.professional_id_available === true ? "Identifiant disponible (vérification actuelle)." : "Généré côté client, unicité revalidée côté serveur lors de la création."}
+                erreur={erreur("establishment.professionalId") ?? (dispo.professional_id_available === false ? "Identifiant déjà utilisé." : undefined)}
+              />
+              <Champ3D label="Type / activité de l'établissement" obligatoire value={form.activityType} onChange={(v) => modifier("activityType", v)} placeholder="Garage, carrosserie, centre pneus…" erreur={erreur("establishment.activityType")} />
+              <Champ3D label="Adresse" obligatoire className="lg:col-span-2" value={form.address} onChange={(v) => modifier("address", v)} placeholder="123 Rue de la République" erreur={erreur("establishment.address") ?? erreursPartagees.address} />
+              <Champ3D label="Ville" obligatoire value={form.city} onChange={(v) => modifier("city", v)} placeholder="Casablanca" erreur={erreur("establishment.city") ?? erreursPartagees.city} />
+              <Champ3D label="Région" obligatoire value={form.region} onChange={(v) => modifier("region", v)} placeholder="Casablanca-Settat" erreur={erreur("establishment.region")} />
+              <Champ3D label="Pays" value={form.country} onChange={(v) => modifier("country", v)} placeholder="Maroc" aide="Enregistré dans le champ dédié de l'établissement." />
+              <Champ3D label="Téléphone professionnel" type="tel" value={form.phone} onChange={(v) => modifier("phone", v)} placeholder="+212 6 00 00 00 00" erreur={erreur("establishment.phone") ?? erreursPartagees.phone} />
+              <Champ3D label="Adresse e-mail professionnelle" obligatoire type="email" value={form.email} onChange={(v) => modifier("email", v)} placeholder="contact@garage.com" erreur={erreur("establishment.email") ?? erreursPartagees.email} />
+              <div>
+                <label className="sa3d-label">État du dossier</label>
+                <select value={form.dossierState} onChange={(e) => modifier("dossierState", e.target.value)} className="sa3d-champ w-full">
+                  <option value="en_constitution">En constitution</option>
+                  <option value="en_attente">En attente de pièces</option>
+                  <option value="complet">Complet</option>
+                  <option value="valide">Validé</option>
+                </select>
+              </div>
+              <Champ3D label="Coordonnées complémentaires" className="lg:col-span-2" value={form.complementaryContacts} onChange={(v) => modifier("complementaryContacts", v)} placeholder="Contact secondaire, WhatsApp établissement, site web…" />
+              <Champ3D label="Informations juridiques" value={form.legalInfo} onChange={(v) => modifier("legalInfo", v)} placeholder="Forme juridique, registre, statuts…" />
+              <Champ3D label="Informations fiscales" value={form.fiscalInfo} onChange={(v) => modifier("fiscalInfo", v)} placeholder="ICE, TVA, patente…" />
+              <Champ3D label="Informations administratives" value={form.adminInfo} onChange={(v) => modifier("adminInfo", v)} placeholder="ICE, RC, patente, etc. (si disponibles)" />
+              <Zone3D label="Notes complémentaires" className="lg:col-span-3" lignes={3} value={form.notes} onChange={(v) => modifier("notes", v)} placeholder="Informations complémentaires…" />
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button type="button" onClick={() => void prochainEtape()} className="sa3d-btn sa3d-btn-vert" disabled={!etapeValide(1)}>
+                Suivant
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ÉTAPE 2 — Manager (restaurée §72 : le bloc avait disparu) */}
+        {etape === 2 && (
+          <>
+            <h2 className="text-lg font-bold text-[#E8ECE8] mb-1">2. Création du Manager</h2>
+            <p className="text-xs text-[#A7B7A8] mb-4">Responsable de l'établissement. Ses identifiants sont uniques et contrôlés côté serveur. Il définira son propre mot de passe via le lien d'activation.</p>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Champ3D label="Prénom" obligatoire value={form.managerFirstName} onChange={(v) => modifier("managerFirstName", v)} placeholder="Ahmed" />
+              <Champ3D label="Nom" obligatoire value={form.managerLastName} onChange={(v) => modifier("managerLastName", v)} placeholder="Naji" erreur={erreur("manager.fullName")} />
+              <Champ3D label="Téléphone" obligatoire type="tel" value={form.managerPhone} onChange={(v) => modifier("managerPhone", v)} placeholder="+212 6 00 00 00 00" erreur={erreur("manager.phone")} />
+              <Champ3D label="E-mail professionnel" obligatoire type="email" value={form.managerEmail} onChange={(v) => modifier("managerEmail", v)} placeholder="ahmed.naji@garage.com"
+                aide={dispo.email_available === true ? "E-mail disponible." : undefined}
+                erreur={erreur("manager.email") ?? (dispo.email_available === false ? "Un compte existe déjà pour cet e-mail." : undefined)} />
+              <Champ3D label="Identifiant de connexion Manager" obligatoire mono className="lg:col-span-2"
+                value={form.loginId} onChange={(v) => modifier("loginId", v.toLowerCase())} placeholder="a.naji"
+                action={<button type="button" onClick={() => modifier("loginId", `mgr.${genererIdentifiantProfessionnel().replace("ADY-PRO-", "").toLowerCase()}`)} className="sa3d-btn sa3d-btn-fantome shrink-0 px-3 py-2 text-xs">Générer</button>}
+                erreur={erreur("manager.loginId") ?? (dispo.login_id_available === false ? "Identifiant déjà utilisé." : undefined)} />
+              <Champ3D label="Mot de passe temporaire" obligatoire type="password" value={form.temporaryPassword} onChange={(v) => modifier("temporaryPassword", v)} placeholder="10 caractères minimum" erreur={erreur("manager.temporaryPassword")} />
+              <Champ3D label="Confirmer le mot de passe" obligatoire type="password" value={form.temporaryPasswordConfirm} onChange={(v) => modifier("temporaryPasswordConfirm", v)} placeholder="Confirmer" erreur={erreur("manager.temporaryPasswordConfirm")} />
+            </div>
+            <p className="mt-3 text-[11px] text-[#A7B7A8]">Le mot de passe temporaire est transmis une seule fois au serveur (Auth) et n'est ni stocké en clair, ni renvoyé, ni envoyé par e-mail/WhatsApp. Le Manager choisit son propre mot de passe via le lien d'activation.</p>
+            <div className="mt-6 flex justify-between">
+              <button type="button" onClick={etapePrecedente} className="sa3d-btn sa3d-btn-fantome">Précédent</button>
+              <button type="button" onClick={() => void prochainEtape()} className="sa3d-btn sa3d-btn-vert" disabled={!etapeValide(2) || verification}>Suivant</button>
+            </div>
+          </>
+        )}
+
+        {/* ÉTAPE 3 — Formule & abonnement */}
+        {etape === 3 && (
+          <>
+            <h2 className="text-lg font-bold text-[#E8ECE8] mb-1">3. Formule, abonnement et période</h2>
+            <p className="text-xs text-[#A7B7A8] mb-4">Choisissez la formule, la durée payante et l'essai (indépendant). Les durées et dates sont contrôlées pour cohérence.</p>
+            {chargementPlans ? (
+              <p className="text-xs text-[#A7B7A8]">Chargement des formules…</p>
+            ) : erreurPlans ? (
+              <p className="text-xs text-[#C5716B]">{erreurPlans}</p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {plansReels.map((pl) => (
+                  <div key={pl.code} className={`carte p-4 rounded-lg border ${form.plan === pl.code ? "border-[#8FB59B] bg-[#8FB59B]/10" : "border-[#344440]/50 hover:border-[#8FB59B]/50"}`}>
+                    <h3 className="text-sm font-bold text-[#E8ECE8]">{pl.label}</h3>
+                    <p className="text-[11px] text-[#A7B7A8]">{pl.description ?? ""}</p>
+                    <p className="mt-2 text-lg font-mono text-[#DFE7E2]">{pl.price_monthly ? pl.price_monthly.toLocaleString("fr-FR") + " MAD" : "Non configuré"}</p>
+                    <p className="text-xs text-[#A7B7A8]">Essai forfait : {pl.trial_days} jours · Utilisateurs : {pl.max_users} · Sites : {pl.max_sites}</p>
+                    <button type="button" onClick={() => modifier("plan", pl.code)} className={`mt-2 rounded-lg px-3 py-1 text-xs font-bold ${form.plan === pl.code ? "bg-[#8FB59B] text-[#252D2D]" : "border border-[#8FB59B]/40 text-[#DFE7E2] hover:bg-[#8FB59B]/10"}`}>
+                      {form.plan === pl.code ? "Sélectionné" : "Sélectionner"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {erreur("subscription.plan") && <p className="mt-2 text-xs text-[#C5716B]">{erreur("subscription.plan")}</p>}
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <label className="sa3d-label">Durée payante *</label>
+                <select value={form.paidDuration} onChange={(e) => modifier("paidDuration", e.target.value)} className="sa3d-champ w-full">
+                  <option value="1mois">1 mois</option>
+                  <option value="3mois">3 mois</option>
+                  <option value="6mois">6 mois</option>
+                  <option value="1an">1 an</option>
+                  <option value="2ans">2 ans</option>
+                  <option value="personnalisee">Durée personnalisée</option>
+                </select>
+                {form.paidDuration === "personnalisee" && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <input type="number" min={1} max={120} value={form.paidMonths} onChange={(e) => modifier("paidMonths", Math.max(1, Math.min(120, parseInt(e.target.value) || 0)))} className="sa3d-champ w-24" />
+                    <span className="text-[10px] text-[#A7B7A8]">mois</span>
+                  </div>
+                )}
+                {erreur("subscription.paidDuration") && <p className="mt-1 text-xs text-[#C5716B]">{erreur("subscription.paidDuration")}</p>}
+                {erreur("subscription.paidDurationMonths") && <p className="mt-1 text-xs text-[#C5716B]">{erreur("subscription.paidDurationMonths")}</p>}
+              </div>
+              <div>
+                <label className="sa3d-label">Durée d'essai (indépendante)</label>
+                <select value={form.trialDuration} onChange={(e) => modifier("trialDuration", e.target.value)} className="sa3d-champ w-full">
+                  <option value="aucun">Aucun essai</option>
+                  <option value="7">7 jours</option>
+                  <option value="15">15 jours</option>
+                  <option value="30">30 jours</option>
+                  <option value="45">45 jours</option>
+                  <option value="60">60 jours</option>
+                  <option value="personnalisee">Durée personnalisée</option>
+                </select>
+                {form.trialDuration === "personnalisee" && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <input type="number" min={1} max={365} value={form.trialDays} onChange={(e) => modifier("trialDays", Math.max(1, Math.min(365, parseInt(e.target.value) || 0)))} className="sa3d-champ w-24" />
+                    <span className="text-[10px] text-[#A7B7A8]">jours</span>
+                  </div>
+                )}
+                {erreur("subscription.trialDuration") && <p className="mt-1 text-xs text-[#C5716B]">{erreur("subscription.trialDuration")}</p>}
+                {erreur("subscription.trialDurationDays") && <p className="mt-1 text-xs text-[#C5716B]">{erreur("subscription.trialDurationDays")}</p>}
+              </div>
+              <div>
+                <label className="sa3d-label">Date de début *</label>
+                <input type="date" value={form.startDate} onChange={(e) => modifier("startDate", e.target.value)} className="sa3d-champ w-full" />
+                {erreur("subscription.startDate") && <p className="mt-1 text-xs text-[#C5716B]">{erreur("subscription.startDate")}</p>}
+              </div>
+            </div>
+            <p className="mt-3 text-[11px] text-[#A7B7A8]">
+              Fin de période payante calculée : {dates.paidEndDate}
+              {dates.trialEndDate ? ` · Fin d'essai : ${dates.trialEndDate}` : ""}
+            </p>
+            <div className="mt-2 rounded-lg border border-[#8FB59B]/20 bg-[#344440]/40 p-3 text-[11px] text-[#A7B7A8]">
+              <p><strong className="text-[#E8ECE8]">Règles :</strong> durées payantes proposées 1, 3, 6 mois, 1 an, 2 ans et personnalisée (sans limite artificielle de 90 jours). L'essai est indépendant de l'abonnement et <strong>ne réduit pas</strong> la durée payante souscrite. Date de début, fin, renouvellement/suspension/réactivation/expiration/changement de formule et historique sont gérés selon les capacités du système (cycle de vie abonnements).</p>
+            </div>
+            <div className="mt-6 flex justify-between">
+              <button type="button" onClick={etapePrecedente} className="sa3d-btn sa3d-btn-fantome">Précédent</button>
+              <button type="button" onClick={() => void prochainEtape()} className="sa3d-btn sa3d-btn-vert" disabled={!etapeValide(3) || !form.plan}>
+                Suivant
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ÉTAPE 4 — Modules & permissions */}
+        {etape === 4 && (
+          <>
+            <h2 className="text-lg font-bold text-[#E8ECE8] mb-2">4. Modules & permissions</h2>
+            <p className="text-xs text-[#A7B7A8] mb-4">
+              Les modules proposés proviennent du forfait (`plan_features`). Les cases d'action deviennent de vraies lignes
+              `permissions` appliquées côté serveur, et non des cases décoratives.
+            </p>
+            <div className="space-y-3">
+              {featuresDuPlan(form.plan).map((feature) => {
+                const droit = form.rights[feature];
+                return (
+                  <div key={feature} className={`rounded-lg border px-3 py-2 ${droit ? "border-[#8FB59B]/50" : "border-[#344440]/50"}`}>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className="flex items-center gap-2 text-sm text-[#E8ECE8]">
+                        <input type="checkbox" checked={Boolean(droit)} onChange={() => basculerModule(feature)} className="rounded border-[#344440]" />
+                        <span className="font-medium">{feature}</span>
+                      </label>
+                      <div className="flex flex-wrap gap-3 text-xs text-[#A7B7A8]">
+                        {actions.map((a) => (
+                          <label key={a.key} className={`flex items-center gap-1 ${droit ? "" : "opacity-40"}`}>
+                            <input
+                              type="checkbox"
+                              disabled={!droit}
+                              checked={Boolean(droit?.[a.key])}
+                              onChange={(e) => modifierDroit(feature, a.key, e.target.checked)}
+                              className="rounded border-[#344440]"
+                            />
+                            {a.label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {featuresDuPlan(form.plan).length === 0 && (
+                <p className="text-xs text-[#A7B7A8]">
+                  Aucun module n'est configuré pour cette formule dans `plan_features`. La création est bloquée pour éviter un abonné sans droits.
+                </p>
+              )}
+            </div>
+            {(erreur("modules") || erreur("permissions")) && (
+              <p className="mt-3 text-xs text-[#C5716B]">{erreur("modules") ?? erreur("permissions")}</p>
+            )}
+            <div className="mt-6 flex justify-between">
+              <button type="button" onClick={etapePrecedente} className="sa3d-btn sa3d-btn-fantome">Précédent</button>
+              <button type="button" onClick={() => void prochainEtape()} className="sa3d-btn sa3d-btn-vert" disabled={!etapeValide(4) || !planActif}>
+                Suivant
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ÉTAPE 5 — Transmission */}
+        {etape === 5 && (
+          <>
+            <h2 className="text-lg font-bold text-[#E8ECE8] mb-1">5. Identification et invitation par e-mail et WhatsApp</h2>
+            <p className="text-xs text-[#A7B7A8] mb-4">Canaux indépendants : e-mail uniquement, WhatsApp uniquement, ou les deux. L'échec d'un canal n'annule pas l'autre. Aucun statut « envoyé/délivré » sans preuve du fournisseur.</p>
+
+            <div className="mb-4 rounded-lg border border-[#344440]/60 bg-[#252D2D] p-4">
+              <h3 className="text-xs uppercase tracking-[0.15em] text-[#A7B7A8] mb-2">Récapitulatif sécurisé (à transmettre)</h3>
+              <div className="grid gap-2 text-xs text-[#DFE7E2] sm:grid-cols-2">
+                <p><span className="text-[#A7B7A8]">Identifiant professionnel :</span> <span className="font-mono">{form.professionalId || "—"}</span></p>
+                <p><span className="text-[#A7B7A8]">Identifiant de connexion Manager :</span> <span className="font-mono">{form.loginId || "—"}</span></p>
+                <p><span className="text-[#A7B7A8]">Établissement :</span> {form.name || "—"} ({form.slug || "—"})</p>
+                <p><span className="text-[#A7B7A8]">Formule :</span> {(plansReels.find(p => p.code === form.plan)?.label) ?? form.plan ?? "—"}</p>
+                <p><span className="text-[#A7B7A8]">Durée abonnement :</span> {paidDurationToMonths(form.paidDuration, form.paidMonths)} mois (début {dates.startDate}, fin {dates.paidEndDate})</p>
+                <p><span className="text-[#A7B7A8]">Période d'essai :</span> {trialDurationToDays(form.trialDuration, form.trialDays) > 0 ? `${trialDurationToDays(form.trialDuration, form.trialDays)} jours${dates.trialEndDate ? ` (jusqu'au ${dates.trialEndDate})` : ""}` : "Aucun"}</p>
+                <p className="sm:col-span-2"><span className="text-[#A7B7A8]">Expiration du lien d'activation :</span> <strong className="text-[#E8ECE8]">7 jours</strong> après émission (usage unique, jeton hashé SHA-256, invalidation après utilisation).</p>
+              </div>
+              <div className="mt-3 text-[11px] text-[#A7B7A8]">
+                <p className="font-semibold text-[#E8ECE8]">Instructions de première connexion :</p>
+                <ul className="mt-1 list-disc pl-4 space-y-0.5">
+                  <li>Ouvrir le lien d'activation sécurisé reçu (e-mail et/ou WhatsApp).</li>
+                  <li>Définir votre propre mot de passe avant tout accès normal (le lien n'est pas consommé à la simple ouverture).</li>
+                  <li>Se connecter avec votre identifiant Manager et le mot de passe défini ; changer le mot de passe si une rotation est exigée.</li>
+                </ul>
+                <p className="mt-2">Contacts admin de référence : <span className="font-mono">me.achbni@gmail.com</span> · <span className="font-mono">+33772208885</span> (références, non preuve de configuration fournisseur).</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="flex items-start gap-2 rounded-lg border border-[#344440]/60 p-3">
+                <input type="checkbox" checked={form.deliveryEmail} onChange={(e) => modifier("deliveryEmail", e.target.checked)} className="mt-1 rounded border-[#344440]" />
+                <span>
+                  <span className="block text-sm text-[#DFE7E2]">Invitation par e-mail</span>
+                  <span className="block text-[11px] text-[#A7B7A8]">Destinataire : {form.managerEmail || "—"} (vérifié côté formulaire/serveur). Modèle professionnel, identifiant de connexion et lien d'activation sécurisé. Statut/historique réels selon fournisseur (Resend si configuré).</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 rounded-lg border border-[#344440]/60 p-3">
+                <input type="checkbox" checked={form.deliveryWhatsapp} onChange={(e) => modifier("deliveryWhatsapp", e.target.checked)} className="mt-1 rounded border-[#344440]" />
+                <span>
+                  <span className="block text-sm text-[#DFE7E2]">Invitation par WhatsApp Business</span>
+                  <span className="block text-[11px] text-[#A7B7A8]">Numéro : {form.managerPhone || "—"} (vérifié). Message professionnel, identifiant et lien sécurisé. Suivi distinct, historique/erreurs fournisseur (Meta si configuré).</span>
+                </span>
+              </label>
+            </div>
+            {erreur("delivery") && <p className="mt-2 text-xs text-[#C5716B]">{erreur("delivery")}</p>}
+            <div className="mt-4 bg-[#344440] rounded-lg p-4">
+              <p className="text-xs text-[#A7B7A8] mb-2">Sécurité et transparence :</p>
+              <ul className="text-xs text-[#A7B7A8] space-y-1 list-disc pl-4">
+                <li>Jeton à usage unique, empreinte SHA-256 seule stockée, expiration 7 jours, invalidation après utilisation.</li>
+                <li>Le jeton n'est pas consommé à l'ouverture de la page `/activer/`.</li>
+                <li>Aucun mot de passe permanent transmis par e-mail ou WhatsApp ; aucun stockage/journalisation en clair.</li>
+                <li>Statuts possibles : non demandé, en attente/préparé, accepté par le fournisseur, échec, non configuré — jamais « délivré/lu » sans preuve (webhook signé).</li>
+              </ul>
+            </div>
+            <div className="mt-6 flex justify-between">
+              <button type="button" onClick={etapePrecedente} className="sa3d-btn sa3d-btn-fantome">Précédent</button>
+              <button type="button" onClick={() => void prochainEtape()} className="sa3d-btn sa3d-btn-vert" disabled={!etapeValide(5) || verification}>
+                Suivant
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ÉTAPE 6 — Récapitulatif */}
+        {etape === 6 && (
+          <>
+            <h2 className="text-lg font-bold text-[#E8ECE8] mb-1">6. Récapitulatif et confirmation</h2>
+            <p className="text-xs text-[#A7B7A8] mb-4">Vérifiez toutes les informations avant création. Contrôles : unicité identifiants, validité coordonnées, cohérence formule/durée/essai, modules/permissions autorisés, état des invitations, absence de doublons. Création transactionnelle/compensée, idempotente et traçable (selon backend/migrations appliqués).</p>
+            <Section3D numero="✓" titre="Récapitulatif complet" sousTitre="Validation explicite avant création définitive">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="rounded-lg bg-[#252D2D] p-3">
+                <h4 className="text-xs text-[#A7B7A8] mb-1">Établissement</h4>
+                <p className="text-sm text-[#E8ECE8]">{form.legalName || "—"}</p>
+                <p className="text-[11px] text-[#A7B7A8]">Nom commercial : {form.name || "—"}</p>
+                <p className="text-[11px] text-[#A7B7A8]">Slug : {form.slug || "—"} · Activité : {form.activityType || "—"}</p>
+                <p className="text-[11px] text-[#A7B7A8]">{[form.address, form.city, form.region, form.country].filter(Boolean).join(", ")}</p>
+                <p className="text-[11px] text-[#A7B7A8]">Tél. : {form.phone || "—"} · E-mail : {form.email || "—"}</p>
+                <p className="text-[11px] text-[#A7B7A8]">Dossier : {form.dossierState}</p>
+                {[form.legalInfo, form.fiscalInfo, form.adminInfo, form.complementaryContacts].filter(Boolean).map((v, i) => (
+                  <p key={i} className="text-[11px] text-[#A7B7A8]">Info admin. : {v}</p>
+                ))}
+              </div>
+              <div className="rounded-lg bg-[#252D2D] p-3">
+                <h4 className="text-xs text-[#A7B7A8] mb-1">Identifiants & Manager</h4>
+                <p className="text-[11px] text-[#A7B7A8]">ID professionnel</p>
+                <p className="text-sm font-mono text-[#E8ECE8]">{form.professionalId}</p>
+                <p className="mt-2 text-[11px] text-[#A7B7A8]">Manager (rôle <span className="font-mono">manager</span>, rattaché établissement)</p>
+                <p className="text-sm text-[#E8ECE8]">{[form.managerFirstName, form.managerLastName].filter(Boolean).join(" ") || form.managerFullName || "—"}</p>
+                <p className="text-[11px] text-[#A7B7A8]">Login : <span className="font-mono text-[#DFE7E2]">{form.loginId || "—"}</span></p>
+                <p className="text-[11px] text-[#A7B7A8]">E-mail : {form.managerEmail || "—"} · Tél. : {form.managerPhone || "—"}</p>
+              </div>
+              <div className="rounded-lg bg-[#252D2D] p-3">
+                <h4 className="text-xs text-[#A7B7A8] mb-1">Formule & période</h4>
+                <p className="text-sm text-[#E8ECE8]">{planActif?.label ?? form.plan}</p>
+                <p className="text-[11px] text-[#A7B7A8]">Durée payante : {paidDurationToMonths(form.paidDuration, form.paidMonths)} mois (début {dates.startDate}, fin {dates.paidEndDate})</p>
+                <p className="text-[11px] text-[#A7B7A8]">Essai : {trialDurationToDays(form.trialDuration, form.trialDays) > 0 ? `${trialDurationToDays(form.trialDuration, form.trialDays)} jours${dates.trialEndDate ? ` (fin ${dates.trialEndDate})` : ""}` : "Aucun"} — indépendant, ne réduit pas la durée payante.</p>
+                <p className="text-[11px] text-[#A7B7A8]">Renouvellement/suspension/réactivation/expiration/historique : selon cycle de vie abonnement.</p>
+              </div>
+              <div className="rounded-lg bg-[#252D2D] p-3 lg:col-span-2">
+                <h4 className="text-xs text-[#A7B7A8] mb-1">Modules & droits (effet réel)</h4>
+                <ul className="space-y-1 text-[11px] text-[#A7B7A8]">
+                  {Object.entries(form.rights).map(([module, d]) => (
+                    <li key={module}>
+                      <span className="text-[#E8ECE8]">{module}</span>{" "}
+                      {[d.canView ? "voir" : null, d.canCreate ? "créer" : null, d.canEdit ? "modifier" : null, d.canDelete ? "supprimer" : null].filter(Boolean).join(" · ")}
+                    </li>
+                  ))}
+                  {Object.keys(form.rights).length === 0 && <li>Aucun module sélectionné.</li>}
+                </ul>
+                <p className="mt-2 text-[10px] text-[#A7B7A8]">Cohérence formule ∩ permissions appliquée côté serveur (non vérifiable ici sans backend distant).</p>
+              </div>
+              <div className="rounded-lg bg-[#252D2D] p-3">
+                <h4 className="text-xs text-[#A7B7A8] mb-1">Invitation & activation</h4>
+                <p className="text-sm text-[#E8ECE8]">{form.deliveryEmail ? `E-mail : ${form.managerEmail}` : "E-mail : non demandé"}</p>
+                <p className="text-sm text-[#E8ECE8]">{form.deliveryWhatsapp ? `WhatsApp : ${form.managerPhone}` : "WhatsApp : non demandé"}</p>
+                <p className="mt-2 text-[11px] text-[#A7B7A8]">Lien d'activation sécurisé : usage unique, expiration <strong className="text-[#E8ECE8]">7 jours</strong>, hash du jeton seul stocké. Le Manager définit son mot de passe avant l'accès normal. Aucun mot de passe en clair transmis/stocké/journalisé.</p>
+              </div>
+            </div>
+            </Section3D>
+            <div className="mt-8 flex justify-between">
+              <button type="button" onClick={etapePrecedente} className="sa3d-btn sa3d-btn-fantome">Précédent</button>
+              <button type="submit" className="sa3d-btn sa3d-btn-vert px-6" disabled={enCours || !validation.valid}>
+                {enCours ? "Création en cours…" : "Créer l'abonné"}
+              </button>
+            </div>
+          </>
+        )}
       </form>
     </ModulePage>
   );
