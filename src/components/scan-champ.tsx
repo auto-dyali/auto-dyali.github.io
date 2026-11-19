@@ -118,7 +118,7 @@ export function ScanChamp({
           type="text"
           maxLength={13}
           placeholder={placeholder}
-          className="champ min-h-11 flex-1 text-sm"
+          className={`champ min-h-11 flex-1 text-sm${compact ? " !w-auto min-w-0" : ""}`}
           aria-label="Code-barres"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -131,7 +131,7 @@ export function ScanChamp({
           type="button"
           onClick={() => traiter(champRef.current?.value ?? "")}
           title="Scanner le code saisi, ou ouvrir la caméra si aucun code n'est saisi"
-          className="min-h-11 shrink-0 rounded-lg bg-[#8FB59B] px-4 text-sm font-bold text-[#252D2D]"
+          className={`min-h-11 shrink-0 rounded-lg bg-[#8FB59B] font-bold text-[#252D2D] ${compact ? "px-2 text-xs" : "px-4 text-sm"}`}
         >
           Scanner
         </button>
@@ -140,7 +140,7 @@ export function ScanChamp({
           onClick={() => setCamOuverte(true)}
           title="Lire un code-barres ou un QR avec la caméra"
           aria-label="Scanner avec la caméra"
-          className="min-h-11 shrink-0 rounded-lg border border-[#8FB59B]/40 px-3 text-sm text-[#DFE7E2]"
+          className={`min-h-11 shrink-0 rounded-lg border border-[#8FB59B]/40 text-[#DFE7E2] ${compact ? "px-2 text-xs" : "px-3 text-sm"}`}
         >
           📷
         </button>

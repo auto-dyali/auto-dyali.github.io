@@ -42,10 +42,13 @@ export function ModulePage({ children, titre }: { children: ReactNode; titre: st
   return (
     <SuperAdminGuard titre={titre}>
       <SuperAdminShell onLogout={() => void logout()} notifications={notifications}>
-        <div className="mx-auto max-w-7xl p-5 lg:p-10">
-          <PageIdentityBanner identite={identite} titre={titre} />
-          {children}
-        </div>
+        {/*
+          GV5 §80 — le shell fournit déjà le conteneur `max-w-7xl` et le
+          padding. Un second conteneur ici réduisait la largeur utile et
+          doublait les marges sur toutes les pages modules.
+        */}
+        <PageIdentityBanner identite={identite} titre={titre} />
+        {children}
       </SuperAdminShell>
     </SuperAdminGuard>
   );

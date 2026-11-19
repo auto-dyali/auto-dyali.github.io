@@ -19,7 +19,7 @@ export function ModuleHeader({
       <div>
         <p className="ad-mh-surtitre text-[11px] uppercase tracking-[0.25em] text-[#D0C6AE]">{surtitre}</p>
         <h1 className="ad-mh-titre titre-or mt-1 text-2xl font-extrabold">{titre}</h1>
-        <p className="ad-mh-desc mt-1 max-w-2xl text-sm text-[#A7B7A8]">{description}</p>
+        <p className="ad-mh-desc mt-1 line-clamp-2 max-w-2xl text-[13px] leading-snug text-[#A7B7A8]">{description}</p>
       </div>
       {action && <div className="flex flex-wrap gap-2">{action}</div>}
     </div>
@@ -27,12 +27,12 @@ export function ModuleHeader({
 }
 
 export function Chargement({ label = "Chargement des données…" }: { label?: string }) {
-  return <p className="carte-premium p-6 text-sm text-[#A7B7A8]">{label}</p>;
+  return <p className="carte-premium p-4 text-sm text-[#A7B7A8]">{label}</p>;
 }
 
 export function Vide({ titre, detail }: { titre: string; detail: string }) {
   return (
-    <div className="carte-premium p-8 text-center">
+    <div className="carte-premium p-5 text-center">
       <p className="font-semibold text-[#E8ECE8]">{titre}</p>
       <p className="mt-2 text-sm text-[#A7B7A8]">{detail}</p>
     </div>

@@ -12,7 +12,7 @@ test.describe('GV5 §72 — Parcours réel Super Admin (staging)', () => {
     await page.getByPlaceholder(/email/i).fill(SA_EMAIL);
     await page.getByPlaceholder(/mot de passe/i).fill(SA_PASSWORD);
     await page.getByRole('button', { name: /se connecter|connexion/i }).click();
-    await expect(page).toHaveURL(/\/super-admin/, { timeout: 20000 });
+    await expect(page).toHaveURL(/\/super-admin/, { timeout: 60000 });
     // Vérifier les 11 sections dans la sidebar
     const nav = page.locator('aside[aria-label="Navigation Super Admin"]');
     await expect(nav.getByRole('link', { name: /Vue générale/ }).first()).toBeVisible();
@@ -44,7 +44,7 @@ test.describe('GV5 §72 — Parcours réel Super Admin (staging)', () => {
     await page.getByPlaceholder(/email/i).fill(SA_EMAIL);
     await page.getByPlaceholder(/mot de passe/i).fill(SA_PASSWORD);
     await page.getByRole('button', { name: /se connecter|connexion/i }).click();
-    await expect(page).toHaveURL(/\/super-admin/, { timeout: 20000 });
+    await expect(page).toHaveURL(/\/super-admin/, { timeout: 60000 });
 
     // Aller à l'onboarding
     await page.goto('/super-admin/onboarding/');

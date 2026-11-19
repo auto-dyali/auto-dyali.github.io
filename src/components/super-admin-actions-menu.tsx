@@ -11,20 +11,24 @@ import { useEffect, useRef, useState } from "react";
 export type AbonneAction =
   | "consulter"
   | "modifier"
+  | "identifiants"
   | "renouveler"
   | "suspendre"
   | "reactiver"
   | "archiver"
-  | "restaurer";
+  | "restaurer"
+  | "supprimer";
 
 const LIBELLES: Record<AbonneAction, string> = {
   consulter: "Consulter",
   modifier: "Modifier",
+  identifiants: "Identifiants / MDP",
   renouveler: "Renouveler",
   suspendre: "Suspendre",
   reactiver: "Réactiver",
   archiver: "Archiver",
   restaurer: "Restaurer",
+  supprimer: "Supprimer définitivement",
 };
 
 export function AbonneActionsMenu({
@@ -79,7 +83,7 @@ export function AbonneActionsMenu({
                 onAction(a);
               }}
               className={`block w-full px-3 py-2 text-left text-xs text-[#DFE7E2] hover:bg-[#344440] ${
-                a === "suspendre" || a === "archiver" ? "text-[#C5716B]" : ""
+                a === "suspendre" || a === "archiver" || a === "supprimer" ? "text-[#C5716B]" : ""
               }`}
             >
               {LIBELLES[a]}

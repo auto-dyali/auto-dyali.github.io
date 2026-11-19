@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 
+test.beforeEach(() => test.setTimeout(90_000));
 // GV5 §72 — Activation du Manager depuis la vraie page /activer/ (staging).
 const TOKEN = '155f29b94fa23ee8bdc8cfd462dcadac2cbc546560198a221951873b8f17ce5d';
 

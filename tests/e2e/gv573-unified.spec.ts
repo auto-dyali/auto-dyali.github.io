@@ -63,7 +63,10 @@ test.describe('GV5 §73 — Abonnés unifié', () => {
     await expect(page.getByRole('menuitem', { name: 'Restaurer' }).first()).toBeVisible();
     await page.getByRole('menuitem', { name: 'Restaurer' }).first().click();
     await page.waitForTimeout(2500);
-    await expect(page.getByText('Archivé', { exact: true }).first()).toHaveCount(0);
+    // Vérifier UNIQUEMENT la ligne traitée : d'autres comptes de test peuvent
+    // rester archivés en staging (contrôle global incorrect en §73).
+    const ligne = page.getByRole('row').nth(1);
+    await expect(ligne.getByText('Archivé', { exact: true })).toHaveCount(0);
   });
 
   test('responsive mobile : ComboBox visible et compacte', async ({ page }) => {

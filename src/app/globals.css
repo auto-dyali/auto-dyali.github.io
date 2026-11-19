@@ -898,9 +898,9 @@ label {
   justify-content: space-between;
   gap: 1rem;
   overflow: hidden;
-  min-height: 112px;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.5rem;
+  min-height: 88px;
+  padding: 0.9rem 1.25rem;
+  margin-bottom: 1rem;
   border: 1px solid var(--ad-accent, #8fb59b);
   border-left: 4px solid var(--ad-accent, #8fb59b);
   border-radius: var(--radius-card, 16px);
@@ -921,7 +921,7 @@ label {
 }
 .ad-page-numero {
   font-family: var(--font-geist-mono, ui-monospace, monospace);
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 800;
   line-height: 1;
   color: var(--ad-accent, #8fb59b);
@@ -955,7 +955,7 @@ label {
 .ad-fil-actif { color: var(--ad-accent, #8fb59b); font-weight: 700; }
 .ad-page-titre {
   margin: 0.3rem 0 0.2rem;
-  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
   font-weight: 800;
   color: #e8ece8;
   letter-spacing: -0.02em;
@@ -1115,8 +1115,8 @@ label {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(216, 189, 134, 0.26);
-  border-radius: 1.1rem;
-  padding: 1rem 1.15rem;
+  border-radius: 1rem;
+  padding: 0.8rem 0.95rem;
   background:
     radial-gradient(120% 90% at 15% 0%, rgba(216, 189, 134, 0.16), transparent 52%),
     linear-gradient(155deg, rgba(44, 83, 68, 0.9), rgba(11, 21, 19, 0.96));
@@ -1245,7 +1245,7 @@ label {
   border: 1px solid rgba(216, 189, 134, 0.14);
   border-radius: 1rem;
   background: linear-gradient(165deg, rgba(28, 58, 48, 0.42), rgba(11, 21, 19, 0.55));
-  padding: 1.1rem;
+  padding: 0.9rem;
 }
 .sa3d-section-titre {
   display: flex;

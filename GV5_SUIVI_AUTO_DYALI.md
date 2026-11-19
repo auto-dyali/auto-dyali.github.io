@@ -7677,3 +7677,19 @@ SECURITE : 22 RPC admin (21 interdites a anon, 1 intentionnelle), is_saas_admin 
 FICHIERS §78 : scripts/check-commercial-readiness.mjs (nouveau), tests/e2e/gv572-real-ui.spec.ts (timeout justifie), tests/e2e/gv575-workspace.spec.ts (timeout justifie/captures stables), rapport. Aucun composant/design/RPC/migration modifie.
 
 PRIORITES SUIVANTES : secrets Resend/Meta + destinataire, prix formules + Stripe webhooks, autorisation production + PITR, defaut products.stock, donnees modules metier, appareil physique.
+
+=== GV5 §80 — REFONTE GLOBALE ERGONOMIE (19/11/2026) ===
+
+60 pages recensees (11 publiques, 21 Super Admin, 28 Manager/garage). Corrections partagees : suppression double conteneur max-w-7xl/padding dans ModulePage (20 pages SA), ModuleHeader compact + etats vides/chargement reduits, CSS bandeau 112->88px/titre 1,85->1,6rem/KPI 1->0,8rem/sections 1,1->0,9rem, POS mobile corrige (sous-titre et Imprimer masques <640px, ScanChamp min-w-0 + boutons compacts, overflow-x-hidden) : 98px -> 0px de debordement.
+
+COLONNE ACTIONS : ajout "Identifiants / MDP" (ouvre espace Manager) et "Supprimer definitivement" (apres archivage uniquement). RPC admin_purge_establishment : SA seul, archivage obligatoire, refus si donnees metier, audit conserve (detache + snapshot), suppression atomique des acces. Preuves : SA 200 / Manager 400 / anon 401 / non archive 400.
+
+AUDIT ERGONOMIQUE AUTOMATISE : 42 combinaisons SA + 12 Manager, 0 debordement, 0 erreur console, titre present partout. Captures avant/apres docs/audits/screenshots-80/.
+
+POURCENTAGES : perimeter audite 94%, developpement 66%, validation staging 93%, preparation commerciale 50%, preparation production 64%, ergonomie globale 45% (27 pages testees/60), gestion comptes 94% (7,5/8 ; purge testee sur compte synthetique vide).
+
+TESTS : tsc 0, lint 0/8 avertissements, unit 158/158, EF 13/13, build OK, audit 0 vuln, E2E §72-§76 + §79 + §80 = 22/22 staging.
+
+GIT : aucun commit/push §80 (autorisation de publication non renouvee dans cette mission), travail local pret a committer. .env.local restaure production.
+
+BLOQUES : tarifs NULL, Stripe/Resend/Meta, PITR/autorisation production, 33 pages non ouvertes en navigateur, appareil physique, donnees metier staging.

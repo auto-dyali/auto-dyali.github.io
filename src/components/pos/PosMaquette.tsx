@@ -166,7 +166,7 @@ export function PosMaquette() {
   ];
 
   return (
-    <section aria-label="Point de Vente — maquette" className="maquette-pos flex min-h-0 flex-col gap-4 pb-40 md:h-full md:pb-0">
+    <section aria-label="Point de Vente — maquette" className="maquette-pos flex min-h-0 flex-col gap-4 overflow-x-hidden pb-40 md:h-full md:pb-0">
 
       {erreurBandeau && <div className="rounded-xl border border-[#C66A68]/60 bg-[#C66A68]/15 px-3 py-2 text-xs text-[#F0A8A4]">{erreurBandeau}</div>}
       {infoValidation && <div className="rounded-xl border border-[#31ffb0]/50 bg-[#31ffb0]/10 px-3 py-2 text-xs text-[#8dffce]">{infoValidation}</div>}
@@ -179,7 +179,7 @@ export function PosMaquette() {
           <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#31ffb0]/30 bg-[#07180f]/85 text-xl text-[#F2D58A] shadow-[0_0_18px_rgba(49,255,176,0.14)]" aria-hidden>🛒</span>
           <span>
             <span className="block text-xl font-extrabold text-[#F2F7F3]">Point de Vente</span>
-            <span className="block text-xs text-[#A7B7A8]">Vente rapide • Gestion intelligente</span>
+            <span className="hidden text-xs text-[#A7B7A8] sm:block">Vente rapide • Gestion intelligente</span>
           </span>
         </div>
         <label className="maquette-search flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-full px-4">
@@ -191,7 +191,7 @@ export function PosMaquette() {
             aria-label="Rechercher un produit"
             className="w-full border-0 bg-transparent text-sm text-[#F2F7F3] outline-none placeholder:text-[#8da298]"
           />
-          <span className="min-w-40">
+          <span className="min-w-0 sm:min-w-40">
             <ScanChamp compact onCode={(code) => {
               const p = catalogue.produits.find((x) => x.codeBarres === code || x.reference === code);
               if (p) op.ajouterProduit(p);
@@ -199,7 +199,7 @@ export function PosMaquette() {
           </span>
         </label>
         <button type="button" onClick={vider} className="neon-btn-gold min-h-11 shrink-0 px-4 text-sm">＋ Nouvelle Vente</button>
-        <button type="button" onClick={() => window.print()} className="neon-btn-ghost min-h-11 shrink-0 px-4 text-sm">⎙ Imprimer</button>
+        <button type="button" onClick={() => window.print()} className="neon-btn-ghost hidden min-h-11 shrink-0 px-4 text-sm sm:inline-flex">⎙ Imprimer</button>
       </div>
 
       {catalogue.mode === "test" && (

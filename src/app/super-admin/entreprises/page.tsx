@@ -177,19 +177,46 @@ export default function EntreprisesPage() {
     switch (a) {
       case "consulter": ouvrirFiche(row, "etablissement"); break;
       case "modifier": ouvrirFiche(row, "etablissement"); break;
+      case "identifiants": ouvrirFiche(row, "manager"); break;
       case "renouveler": void renouveler(row); break;
       case "suspendre": void basculer(row); break;
       case "reactiver": void basculer(row); break;
       case "archiver": void archiver(row, true); break;
       case "restaurer": void archiver(row, false); break;
+      case "supprimer": void supprimerDefinitivement(row); break;
     }
   }
 
   function actionsPour(r: Row): AbonneAction[] {
-    const base: AbonneAction[] = ["consulter", "modifier", "renouveler"];
+    const base: AbonneAction[] = ["consulter", "modifier", "identifiants", "renouveler"];
     if (r.is_active) base.push("suspendre"); else base.push("reactiver");
     if (r.archived_at) base.push("restaurer"); else base.push("archiver");
+    // La suppression définitive n'est proposée qu'après archivage : la RPC
+    // refuse toute donnée métier résiduelle et conserve l'audit.
+    if (r.archived_at) base.push("supprimer");
     return base;
+  }
+
+  async function supprimerDefinitivement(row: Row) {
+    if (!supabase) return;
+    const ok = window.confirm(
+      `SUPPRESSION DÉFINITIVE de « ${row.name} ».\n\n` +
+      "Cette opération est irréversible. Les données métier et l'historique d'audit sont conservés. " +
+      "Confirmez-vous après avoir vérifié les dépendances ?",
+    );
+    if (!ok) return;
+    setTraitement(row.id);
+    const { data, error } = await supabase.rpc("admin_purge_establishment", { p_id: row.id });
+    setTraitement(null);
+    if (error) {
+      toastError({ title: "Suppression refusée", message: error.message });
+    } else {
+      toastSuccess({
+        title: "Compte supprimé",
+        message: `« ${row.name} » supprimé définitivement ; audit conservé (${String((data as { comptes_supprimes?: number })?.comptes_supprimes ?? 0)} compte(s) d'accès retiré(s)).`,
+      });
+      await charger();
+    }
   }
 
   function exporter() {
