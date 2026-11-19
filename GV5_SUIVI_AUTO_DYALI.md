@@ -7725,3 +7725,21 @@ POURCENTAGES : audit 94%, developpement 67%, validation staging 95%, maturite co
 GIT : commit 073eff1 pousse (fc6017d..073eff1). Production intacte. Rapport docs/audits/GV5_82_RAPPORT_FINAL.md.
 
 BLOQUES : tarifs 3 formules (NULL), secrets Stripe/Resend/Meta + destinataire, autorisation production + PITR, dunning/renouvellement auto, appareil physique, suppression EF create-test-user via dashboard.
+
+=== GV5 §83 — CORRECTION ONBOARDING ET VALIDATION REELLE (19/11/2026) ===
+
+Etat initial : main b3723b6 = origin/main, commits §82 verifies sur GitHub. Incident : "Verification du profil impossible" puis "Verification serveur indisponible : migration 0039 non appliquee" a etape 6.
+
+CAUSE RACINE PROUVEE : environnement production (sondages HTTP lecture seule) : admin_check_identity_available 404 PGRST202, get_my_security_state 404, resolve_login_email 404, establishments.professional_id 42703. Staging possede tous les objets 0039 (via 0039a/b/0036c). 1er message = EF onboard-tenant callerProfileError ; 2eme = detection PGRST202 cote frontend. Bouton creation restait actif malgre absence verification. PSR : 0 establishment/profil/abonnement/invitation en staging ; production non verifiable en lecture anonyme (RLS + colonne absente) ; aucune nouvelle tentative production.
+
+CORRECTIONS : migration remediation_583/001_identity_health.sql (RPC admin_identity_v2_health, SA seul ; Manager 400, anon revoque) appliquee STAGING ; onboarding = avertissement + case de confirmation obligatoire si verification indisponible, bouton desactive sinon, message PGRST202 explicite ; EF onboard-tenant message d erreur precis. Aucune table recrééé ni donnee supprimee, production intacte.
+
+E2E gv583-onboarding 2/2 : creation GOLD, essai 110j, 12 mois payants (2026-11-19 -> 2027-03-09 essai, -> 2027-11-19 payant), permissions = sous-ensemble GOLD, invitations email ET whatsapp en_attente (preparees, pas envoyees), doublon bloque a etape 2. Non-regression activation + parcours SA 6/6.
+
+TESTS : tsc 0, lint 0/8, unit 158/158, EF 13/13, build OK, audit 0 vuln. Captures docs/audits/screenshots-83/ (3).
+
+POURCENTAGES : audit 94%, developpement 69%, validation staging 95%, commercial 50%, production 67%, ergonomie 85%, parcours creation 85% (11/13 ; livraison activation + rotation mot de passe dependent fournisseurs).
+
+GIT : commit 6d5c42b pousse. Rapport docs/audits/GV5_83_RAPPORT_FINAL.md.
+
+BLOQUES : environnement production non migre (0039), secrets Resend/Meta, tarifs NULL, PITR, appareil physique, EF onboard-tenant a redeployer apres correction environnement.

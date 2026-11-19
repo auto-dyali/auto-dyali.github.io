@@ -125,7 +125,7 @@ Les deux étapes non validées du parcours de création sont la **remise réelle
 
 ## 8. État Git et livraison
 
-À rédiger après création du commit final (voir section mise à jour en fin de mission).
+Commit créé et poussé : **`6d5c42b`** — *GV5 §83: diagnostic identité v2 et garde-fou création Super Admin* (`b3723b6..6d5c42b`), sans conflit. `HEAD` local == `origin/main`. Fichiers modifiés : onboarding, EF `onboard-tenant`, migration `remediation_583` (up/down), spec `gv583-onboarding`, captures `screenshots-83`, rapport. Deux sauvegardes locales restent non suivies volontairement. `.env.local` restauré vers la production.
 
 ---
 
