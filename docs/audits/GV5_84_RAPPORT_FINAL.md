@@ -104,7 +104,7 @@ Les échecs intermédiaires des missions précédentes ont été analysés (sél
 ## 13. Commits GitHub et état final du dépôt
 
 - Commits de référence vérifiés sur `origin/main` : `6d5c42b`, `ac01d56`.
-- Nouveaux fichiers §84 à committer en fin de mission (section mise à jour après push).
+- Commit créé et poussé : **`6ddf761`** — *GV5 §84: préflight onboarding et plan de migration production* (`ac01d56..6ddf761`), sans conflit. `HEAD` local == `origin/main`. Fichiers modifiés : `onboarding/page.tsx`, `tests/e2e/gv584-preflight.spec.ts`, `GV5_84_MIGRATION_PLAN.md`, rapport, captures régénérées par les E2E. Deux sauvegardes locales restent non suivies volontairement.
 - `.env.local` restauré vers la production ; aucun process résiduel ; branche `main` synchrone avant modifications.
 
 ## 14. Pourcentages distincts

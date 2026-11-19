@@ -7743,3 +7743,19 @@ POURCENTAGES : audit 94%, developpement 69%, validation staging 95%, commercial 
 GIT : commit 6d5c42b pousse. Rapport docs/audits/GV5_83_RAPPORT_FINAL.md.
 
 BLOQUES : environnement production non migre (0039), secrets Resend/Meta, tarifs NULL, PITR, appareil physique, EF onboard-tenant a redeployer apres correction environnement.
+
+=== GV5 §84 — STABILISATION PRODUCTION, ALIGNEMENT SUPABASE ET SECURISATION ONBOARDING (19/11/2026) ===
+
+Etat initial : main ac01d56 = origin/main, commits 6d5c42b et ac01d56 verifies sur GitHub, depot propre, .env.local production.
+
+AUDIT COMPARATIF (lecture seule production) : production depourvue de establishments.professional_id (42703), profiles.login_id/must_change_password (42703), invitations (PGRST205), admin_check_identity_available, admin_onboard_tenant_v2, get_my_security_state, resolve_login_email, must_change_password, has_feature, admin_identity_v2_health, admin_get_abonne_details, admin_set_permissions, admin_record_delivery, admin_find_onboarding_request (404 PGRST202), pre_purchase_requests et saas_billing_events (PGRST205). Presence confirmee : get_my_profile, is_saas_admin, my_features, plan_features, permissions, audit_log, subscriptions, plans. Staging : 29 migrations, 36 tables, 37 RPC, 5 EF. Cause : production jamais migree 0036/0039 + correctifs gv575-gv583.
+
+CORRECTIONS LOCALES : onboarding = preflight obligatoire admin_identity_v2_health (alerte des etape 1 + bouton creation desactive si RPC absente ou objet manquant), maintien case confirmation §83 ; test gv584-preflight 1/1 (RPC simulee absente) ; plan docs/audits/GV5_84_MIGRATION_PLAN.md (12 operations ordonnees, risques, verifications, rollback PITR). AUCUNE ECRITE PRODUCTION.
+
+TESTS : tsc 0, lint 0/8, unit 158/158, EF 13/13, stripe local 5/5, build OK, audit 0 vuln, E2E §72-§84 30/30 staging.
+
+POURCENTAGES : audit 94%, developpement 70%, validation staging 96%, commercial 50%, production 71%, ergonomie 85%, comptes 100%, parcours creation 85%, activation Manager 88%.
+
+GIT : commit 6ddf761 pousse (ac01d56..6ddf761). Rapport docs/audits/GV5_84_RAPPORT_FINAL.md.
+
+BLOQUES : autorisation production + PITR, secrets Resend/Meta/Stripe, tarifs NULL, versions EF production inconnues, appareil physique.
