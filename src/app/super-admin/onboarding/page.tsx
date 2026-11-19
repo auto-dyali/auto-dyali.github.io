@@ -118,6 +118,9 @@ export default function OnboardingPage() {
   const [erreurGlobale, setErreurGlobale] = useState<string | null>(null);
   const [dispo, setDispo] = useState<Disponibilite>({});
   const [dispoErreur, setDispoErreur] = useState<string | null>(null);
+  // GV5 §83 — confirmation supplémentaire quand l'unicité n'a pas pu être
+  // vérifiée côté serveur avant le récapitulatif.
+  const [confirmerSansVerification, setConfirmerSansVerification] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -351,7 +354,7 @@ export default function OnboardingPage() {
       if (error) {
         setDispoErreur(
           /could not find the function|PGRST202/i.test(error.message)
-            ? "Vérification serveur indisponible : migration 0039 non appliquée. Le serveur revalidera à la création."
+            ? "Environnement Supabase non compatible : RPC admin_check_identity_available absente (migration 0039). Vérifiez l'environnement cible ; le serveur revalidera les identifiants à la création."
             : `Vérification d'unicité impossible : ${error.message}`,
         );
         return null;
@@ -461,6 +464,8 @@ export default function OnboardingPage() {
         /* ignore */
       }
       setRequestId(buildRequestId());
+      setConfirmerSansVerification(false);
+      setDispoErreur(null);
     } catch (err) {
       notifyError({
         title: "Erreur inattendue",
@@ -951,7 +956,26 @@ export default function OnboardingPage() {
             </Section3D>
             <div className="mt-8 flex justify-between">
               <button type="button" onClick={etapePrecedente} className="sa3d-btn sa3d-btn-fantome">Précédent</button>
-              <button type="submit" className="sa3d-btn sa3d-btn-vert px-6" disabled={enCours || !validation.valid}>
+              {dispoErreur && (
+                <div className="sa3d-alert sa3d-alert--erreur mb-3" role="alert">
+                  <p className="font-semibold">Unicité non vérifiée à l’avance</p>
+                  <p className="mt-1">{dispoErreur} La création revalidera les identifiants côté serveur ; elle sera refusée en cas de doublon.</p>
+                  <label className="mt-2 flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 accent-[#d8bd86]"
+                      checked={confirmerSansVerification}
+                      onChange={(e) => setConfirmerSansVerification(e.target.checked)}
+                    />
+                    <span>Je confirme vouloir créer malgré l’indisponibilité du contrôle préalable.</span>
+                  </label>
+                </div>
+              )}
+              <button
+                type="submit"
+                className="sa3d-btn sa3d-btn-vert px-6"
+                disabled={enCours || !validation.valid || (Boolean(dispoErreur) && !confirmerSansVerification)}
+              >
                 {enCours ? "Création en cours…" : "Créer l'abonné"}
               </button>
             </div>

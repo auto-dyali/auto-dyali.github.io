@@ -165,7 +165,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .select("role, is_active")
       .eq("id", callerId)
       .maybeSingle();
-    if (callerProfileError) return fail(500, "Vérification du profil impossible.");
+    if (callerProfileError) {
+      return fail(500, `Vérification du profil Super Admin impossible : ${callerProfileError.message}`);
+    }
     if (!callerProfile || callerProfile.role !== "saas_admin" || callerProfile.is_active === false) {
       return fail(403, "Accès refusé : Super Admin actif requis.");
     }
