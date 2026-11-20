@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase-browser";
+import { ComboRecherche } from "@/components/combo-recherche";
 import { formatMad } from "@/lib/catalogue-test";
 import { modeleBonInterventionHtml, libelleStatut, type DonneesBon, type Etablissement } from "@/lib/print-pro";
 import {
@@ -547,29 +548,33 @@ export function AtelierModule() {
       </section>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5">
-          <form onSubmit={(e) => void addOrder(e)} className="carte w-full max-w-md p-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/70 p-5" role="dialog" aria-modal="true" aria-label="Nouvel ordre de réparation">
+          <form onSubmit={(e) => void addOrder(e)} className="carte my-auto w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto p-6">
             <h2 className="titre-or text-xl font-extrabold">Nouvel ordre de réparation</h2>
             <div className="mt-5 grid gap-3">
-              <select
+              <ComboRecherche
                 required
-                className="champ min-h-11"
                 value={form.vehicleId}
-                onChange={(event) => {
-                  const vehicleId = event.target.value;
+                ariaLabel="Sélectionner le véhicule"
+                placeholder="Sélectionner le véhicule…"
+                options={vehicles.map((vehicle) => ({
+                  value: vehicle.id,
+                  label: `${vehicle.brand} ${vehicle.model}`,
+                  hint: vehicle.plate,
+                }))}
+                onChange={(vehicleId) => {
                   const vehicle = vehicles.find((item) => item.id === vehicleId);
                   setForm({ ...form, vehicleId, clientId: vehicle?.client_id ?? form.clientId });
                 }}
-              >
-                <option value="">Sélectionner le véhicule</option>
-                {vehicles.map((vehicle) => (
-                  <option key={vehicle.id} value={vehicle.id}>{vehicle.brand} {vehicle.model} · {vehicle.plate}</option>
-                ))}
-              </select>
-              <select required className="champ min-h-11" value={form.clientId} onChange={(event) => setForm({ ...form, clientId: event.target.value })}>
-                <option value="">Sélectionner le client</option>
-                {clients.map((client) => <option key={client.id} value={client.id}>{client.full_name}</option>)}
-              </select>
+              />
+              <ComboRecherche
+                required
+                value={form.clientId}
+                ariaLabel="Sélectionner le client"
+                placeholder="Sélectionner le client…"
+                options={clients.map((client) => ({ value: client.id, label: client.full_name }))}
+                onChange={(clientId) => setForm({ ...form, clientId })}
+              />
               <textarea
                 className="champ min-h-28"
                 placeholder="Diagnostic ou besoin du client"

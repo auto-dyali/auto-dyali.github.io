@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Pré-achat commercial (public)', () => {
   test('page /offres/ présente les offres et un CTA pré-achat', async ({ page }) => {
     // Intercepter plans/features pour un rendu stable (simulation)
-    await page.route('https://nxmsqqoflskfajqrqddw.supabase.co/**', async (route) => {
+    await page.route('https://*.supabase.co/**', async (route) => {
       const url = route.request().url();
       if (url.includes('/rest/v1/plans')) {
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([
@@ -28,7 +28,7 @@ test.describe('Pré-achat commercial (public)', () => {
   });
 
   test('page /pre-achat/ affiche le formulaire et valide les champs requis (client)', async ({ page }) => {
-    await page.route('https://nxmsqqoflskfajqrqddw.supabase.co/**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }));
+    await page.route('https://*.supabase.co/**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }));
     await page.goto('/pre-achat/');
     await expect(page.getByRole('heading', { name: /formulaire de pré-achat/i })).toBeVisible();
     await page.getByRole('button', { name: /soumettre la demande/i }).click();
@@ -36,7 +36,7 @@ test.describe('Pré-achat commercial (public)', () => {
   });
 
   test('soumission pré-achat simulée réussie (mock REST, aucune écriture réelle)', async ({ page }) => {
-    await page.route('https://nxmsqqoflskfajqrqddw.supabase.co/**', async (route) => {
+    await page.route('https://*.supabase.co/**', async (route) => {
       const req = route.request();
       const url = req.url();
       if (url.includes('/rest/v1/pre_purchase_requests') && req.method() === 'POST') {
@@ -66,7 +66,7 @@ test.describe('Pré-achat commercial (public)', () => {
   });
 
   test('affiche un message clair si le service serveur pré-achat est indisponible (simulation d\'absence de table)', async ({ page }) => {
-    await page.route('https://nxmsqqoflskfajqrqddw.supabase.co/**', async (route) => {
+    await page.route('https://*.supabase.co/**', async (route) => {
       const req = route.request();
       const url = req.url();
       if (url.includes('/rest/v1/rpc/submit_pre_purchase_request') && req.method() === 'POST') {

@@ -121,7 +121,8 @@ test.describe('Responsive (simulation, mocks)', () => {
     const menuBtn = page.getByRole('button', { name: /ouvrir le menu/i });
     if (await menuBtn.isVisible().catch(() => false)) {
       await menuBtn.click();
-      await expect(page.getByRole('dialog', { name: /menu super admin/i })).toBeVisible({ timeout: 5000 });
+      // Le menu mobile est un aside (pas un dialog) : il sort de -translate-x-full quand ouvert.
+      await expect(page.locator('#menu-super-admin')).not.toHaveClass(/-translate-x-full/, { timeout: 5000 });
     }
   });
 });

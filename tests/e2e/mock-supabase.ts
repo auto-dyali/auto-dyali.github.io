@@ -1,6 +1,8 @@
 import type { Page, Route } from '@playwright/test';
 
-const SUPABASE = 'https://nxmsqqoflskfajqrqddw.supabase.co';
+// Les mocks doivent s'appliquer quel que soit l'environnement ciblé par
+// `.env.local` (staging ou production) : aucun héritage de projet en dur.
+const SUPABASE_GLOB = 'https://*.supabase.co/**';
 
 export type MockRole = 'saas_admin' | 'manager' | 'employee' | 'client' | 'none';
 
@@ -44,7 +46,7 @@ export async function installSupabaseMocks(page: Page, opts?: { role?: MockRole;
   const loginOk = opts?.loginOk ?? true;
   const profileRole = opts?.profileRole ?? role;
 
-  await page.route(`${SUPABASE}/**`, async (route) => {
+  await page.route(SUPABASE_GLOB, async (route) => {
     const req = route.request();
     const url = req.url();
     const method = req.method();

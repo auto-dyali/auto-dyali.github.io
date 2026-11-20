@@ -553,8 +553,8 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
 
       {/* Modale encaissement */}
       {encaissement && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5">
-          <div className="carte w-full max-w-sm p-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/70 p-5" role="dialog" aria-modal="true" aria-label="Encaissement différé">
+          <div className="carte my-auto w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto p-6">
             <p className="text-xs uppercase tracking-[0.2em] text-[#A7B7A8]">Encaissement différé</p>
             <h2 className="titre-or mt-1 text-xl font-extrabold">{encaissement.reference}</h2>
             <p className="mt-2 text-sm text-[#A7B7A8]">
@@ -582,8 +582,8 @@ ${Number(vente.total) - Number(vente.paid_total) > 0.001 ? `<div><span>Reste dû
 
       {/* Modale retour */}
       {retour && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5">
-          <div className="carte w-full max-w-md p-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/70 p-5" role="dialog" aria-modal="true" aria-label="Retour et avoir">
+          <div className="carte my-auto w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto p-6">
             <p className="text-xs uppercase tracking-[0.2em] text-[#C5716B]">Retour & avoir</p>
             <h2 className="titre-or mt-1 text-xl font-extrabold">Rembourser {retour.reference}</h2>
             <p className="mt-3 text-sm leading-6 text-[#A7B7A8]">

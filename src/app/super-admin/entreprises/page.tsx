@@ -71,7 +71,7 @@ export default function EntreprisesPage() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [recherche, setRecherche] = useState("");
-  const [filtreEtat, setFiltreEtat] = useState<"tous" | "actifs" | "suspendus">("tous");
+  const [filtreEtat, setFiltreEtat] = useState<"tous" | "actifs" | "suspendus" | "archives">("tous");
   const [filtrePlan, setFiltrePlan] = useState<string>("tous");
   const [traitement, setTraitement] = useState<string | null>(null);
   const [selection, setSelection] = useState<Row | null>(null);
@@ -107,8 +107,15 @@ export default function EntreprisesPage() {
   const visibles = useMemo(() => {
     const q = recherche.trim().toLowerCase();
     return rows.filter((r) => {
-      if (filtreEtat === "actifs" && !r.is_active) return false;
-      if (filtreEtat === "suspendus" && r.is_active) return false;
+      if (filtreEtat === "archives") {
+        if (!r.archived_at) return false;
+      } else {
+        // Par défaut, les abonnés archivés sont consultables via le filtre
+        // dédié et ne polluent pas la liste opérationnelle.
+        if (r.archived_at) return false;
+        if (filtreEtat === "actifs" && !r.is_active) return false;
+        if (filtreEtat === "suspendus" && r.is_active) return false;
+      }
       if (filtrePlan !== "tous" && r.plan !== filtrePlan) return false;
       if (!q) return true;
       return [r.name, r.slug, r.city, r.phone, r.email, r.plan, r.professional_id ?? "", managerOf(r)?.login_id ?? ""]
@@ -235,7 +242,7 @@ export default function EntreprisesPage() {
           r.phone,
           r.email,
           r.plan.toUpperCase(),
-          r.is_active ? "Actif" : "Suspendu",
+          r.archived_at ? "Archivé" : r.is_active ? "Actif" : "Suspendu",
           sub?.status ? STATUT_ABO[sub.status] ?? sub.status : "—",
           dateFrCourte(r.created_at),
         ];
@@ -266,9 +273,10 @@ export default function EntreprisesPage() {
         <label className="text-xs text-[#A7B7A8]">
           État
           <select value={filtreEtat} onChange={(e) => setFiltreEtat(e.target.value as typeof filtreEtat)} className="champ mt-1 min-h-11">
-            <option value="tous">Tous</option>
+            <option value="tous">Tous (hors archivés)</option>
             <option value="actifs">Actifs</option>
             <option value="suspendus">Suspendus</option>
+            <option value="archives">Archivés</option>
           </select>
         </label>
         <label className="text-xs text-[#A7B7A8]">
@@ -343,7 +351,7 @@ export default function EntreprisesPage() {
                         <p className="text-xs">{sub?.status ? STATUT_ABO[sub.status] ?? sub.status : "—"}</p>
                         {sub?.current_period_end && <p className="text-[11px] text-[#A7B7A8]">échéance {dateFrCourte(sub.current_period_end)}</p>}
                       </td>
-                      <td className={`px-5 py-4 font-semibold ${r.is_active ? "text-[#5D9E7F]" : "text-[#C5716B]"}`}>{r.is_active ? "Actif" : "Suspendu"}</td>
+                      <td className={`px-5 py-4 font-semibold ${r.archived_at ? "text-[#D6A34D]" : r.is_active ? "text-[#5D9E7F]" : "text-[#C5716B]"}`}>{r.archived_at ? "Archivé" : r.is_active ? "Actif" : "Suspendu"}</td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {r.archived_at && <span className="rounded-full bg-[#D6A34D]/15 px-2 py-0.5 text-[10px] font-semibold text-[#D6A34D]">Archivé</span>}

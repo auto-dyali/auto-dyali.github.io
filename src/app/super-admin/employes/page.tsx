@@ -364,8 +364,8 @@ export default function EmployeesPage() {
 
       {/* Formulaire création / modification */}
       {formOuvert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true">
-          <div className="carte w-full max-w-md bg-[#252D2D]">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/60 p-4" role="dialog" aria-modal="true">
+          <div className="carte my-auto w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto bg-[#252D2D]">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[#E8ECE8]">{formMode === "creer" ? "Nouvel employé" : "Modifier l'employé"}</h2>
               <button type="button" onClick={() => { setFormOuvert(false); resetForm(); }} className="text-xs text-[#A7B7A8] hover:text-[#DFE7E2]">Fermer</button>

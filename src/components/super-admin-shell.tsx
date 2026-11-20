@@ -320,14 +320,23 @@ export function SuperAdminShell({
     <div className="flex h-screen flex-col bg-[#252D2D] text-[#DFE7E2]">
       {/* Topbar */}
       <header className="flex items-center justify-between px-5 py-4 bg-[#1A211E] border-b border-[#8FB59B]/20 shrink-0">
-        <div className="flex items-center gap-4 cursor-pointer" onClick={() => setOpen(!open)}>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#344440]">
-            <span className="text-[10px] font-extrabold text-[#E8ECE8]">A</span>
-          </div>
-          <div className="hidden md:block">
-            <p className="text-xs font-bold uppercase tracking-wider text-[#D0C6AE]">AUTO DYALI</p>
-            <p className="text-[10px] text-[#8FB59B]">Super Admin — SaaS Control Center</p>
-          </div>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-controls="menu-super-admin"
+            aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+            className="flex cursor-pointer items-center gap-4 rounded-lg px-1 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#8FB59B]"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#344440]">
+              <span className="text-[10px] font-extrabold text-[#E8ECE8]">A</span>
+            </div>
+            <div className="hidden text-left md:block">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#D0C6AE]">AUTO DYALI</p>
+              <p className="text-[10px] text-[#8FB59B]">Super Admin — SaaS Control Center</p>
+            </div>
+          </button>
         </div>
 
         <div className="flex items-center gap-3">
@@ -369,6 +378,7 @@ export function SuperAdminShell({
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside
+          id="menu-super-admin"
           className={`absolute inset-y-0 left-0 z-30 w-64 bg-[#2C3735] border-r border-[#8FB59B]/15 shrink-0 transition-transform duration-300 md:relative md:inset-auto md:z-auto md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
           aria-label="Navigation Super Admin"
         >

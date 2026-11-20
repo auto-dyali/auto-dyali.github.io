@@ -374,8 +374,8 @@ export function FournisseursModule() {
 
       {/* Modale création */}
       {ouvert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5" role="dialog" aria-modal="true" aria-labelledby="nouveau-four-titre">
-          <form onSubmit={(e) => void creerFournisseur(e)} className="carte w-full max-w-md p-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/70 p-5" role="dialog" aria-modal="true" aria-labelledby="nouveau-four-titre">
+          <form onSubmit={(e) => void creerFournisseur(e)} className="carte my-auto w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto p-6">
             <h2 id="nouveau-four-titre" className="titre-or text-xl font-extrabold">Nouveau fournisseur</h2>
             <div className="mt-5 grid gap-3">
               <input required className="champ" placeholder="Nom du fournisseur" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />

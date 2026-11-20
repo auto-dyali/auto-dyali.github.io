@@ -11,6 +11,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ScanChamp } from "@/components/scan-champ";
+import { ComboRecherche } from "@/components/combo-recherche";
 import { ClientFormulaire } from "@/modules/new-pos/components/client-form";
 import { TicketVente } from "@/modules/new-pos/components/ticket";
 import { usePos } from "@/modules/new-pos/hooks/use-pos";
@@ -286,18 +287,19 @@ export function PosMaquette() {
             <div className="neon-panel p-3">
               <p className="mb-2 flex items-center gap-2 text-xs font-extrabold text-[#F2F7F3]"><span aria-hidden className="text-[#F2D58A]">👤</span> Client <span className="font-normal text-[#A7B7A8]">(Optionnel)</span></p>
               <div className="flex items-center gap-2">
-                <select
+                <ComboRecherche
+                  className="min-w-0 flex-1"
+                  options={clients.map((c) => ({
+                    value: c.id,
+                    label: c.nomComplet,
+                    hint: c.telephone ?? undefined,
+                  }))}
                   value={panier.client?.id ?? ""}
-                  onChange={(e) => {
-                    const c = clients.find((x) => x.id === e.target.value) ?? null;
-                    choisirClient(c);
-                  }}
-                  aria-label="Sélectionner un client"
-                  className="min-h-11 w-full rounded-lg border border-[#31ffb0]/25 bg-black/40 px-3 text-sm text-[#F2F7F3] outline-none"
-                >
-                  <option value="">Sélectionner un client...</option>
-                  {clients.map((c) => <option key={c.id} value={c.id}>{c.nomComplet}{c.telephone ? ` — ${c.telephone}` : ""}</option>)}
-                </select>
+                  onChange={(id) => choisirClient(clients.find((x) => x.id === id) ?? null)}
+                  placeholder="Sélectionner un client…"
+                  ariaLabel="Sélectionner un client"
+                  vide="Aucun client ne correspond."
+                />
                 <button type="button" onClick={() => setClientFormOuvert((v) => !v)} aria-label="Nouveau client" className="neon-btn-gold min-h-11 min-w-11 px-0 text-base">＋</button>
               </div>
               {panier.client && <p className="mt-1 text-[11px] text-[#8dffce]">Client sélectionné : {panier.client.nomComplet}</p>}

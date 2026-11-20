@@ -52,21 +52,33 @@ test.describe('GV5 §73 — Abonnés unifié', () => {
     page.on('dialog', d => void d.accept());
     await page.goto('/super-admin/entreprises/');
     await page.waitForTimeout(2000);
-    const combo = page.getByRole('button', { name: /Actions pour/ }).first();
-    await combo.click();
+    const filtre = page.getByRole('combobox', { name: 'État', exact: true });
+
+    // Le nom du premier abonné sert de référence : le test ne traite que CETTE ligne.
+    const premiere = page.getByRole('row').nth(1);
+    const nomCible = (await premiere.locator('td').first().locator('p').first().innerText()).trim();
+    expect(nomCible.length).toBeGreaterThan(0);
+
+    await premiere.getByRole('button', { name: /Actions pour/ }).click();
     await expect(page.getByRole('menuitem', { name: 'Archiver' }).first()).toBeVisible();
     await page.getByRole('menuitem', { name: 'Archiver' }).first().click();
     await page.waitForTimeout(2500);
-    // Après archivage, l'action Restaurer doit apparaître
-    const combo2 = page.getByRole('button', { name: /Actions pour/ }).first();
-    await combo2.click();
+
+    // Les abonnés archivés ont leur propre filtre : on y bascule pour restaurer.
+    await filtre.selectOption('archives');
+    const ligneArchivee = page.getByRole('row').filter({ hasText: nomCible }).first();
+    await expect(ligneArchivee).toBeVisible({ timeout: 15000 });
+    await ligneArchivee.getByRole('button', { name: /Actions pour/ }).click();
     await expect(page.getByRole('menuitem', { name: 'Restaurer' }).first()).toBeVisible();
     await page.getByRole('menuitem', { name: 'Restaurer' }).first().click();
     await page.waitForTimeout(2500);
-    // Vérifier UNIQUEMENT la ligne traitée : d'autres comptes de test peuvent
-    // rester archivés en staging (contrôle global incorrect en §73).
-    const ligne = page.getByRole('row').nth(1);
-    await expect(ligne.getByText('Archivé', { exact: true })).toHaveCount(0);
+
+    // Retour à la liste opérationnelle : la ligne n'est plus archivée.
+    await filtre.selectOption('tous');
+    const ligneRestauree = page.getByRole('row').filter({ hasText: nomCible }).first();
+    await expect(ligneRestauree).toBeVisible({ timeout: 15000 });
+    await expect(ligneRestauree.getByText('Archivé', { exact: true })).toHaveCount(0);
+    await expect(ligneRestauree).toContainText('Actif');
   });
 
   test('responsive mobile : ComboBox visible et compacte', async ({ page }) => {

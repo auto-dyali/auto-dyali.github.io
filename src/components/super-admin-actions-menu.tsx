@@ -2,8 +2,12 @@
 
 /**
  * GV5 §73 — ComboBox « Actions » compacte pour les lignes d'abonnés.
- * Hauteur fermée : 32px ≈ 8,5 mm (<< 25 mm exigés). Le menu ne s'ouvre
- * qu'au clic et est positionné en absolu : il n'agrandit jamais la ligne.
+ * Hauteur fermée : 32px ≈ 8,5 mm (<< 25 mm exigés).
+ *
+ * Le menu est rendu en `position: fixed` à partir des coordonnées du
+ * déclencheur : il n'est jamais découpé par le conteneur horizontal
+ * `overflow-x-auto` d'un tableau, et il se retourne vers le haut lorsqu'il
+ * ne reste pas de place en bas d'écran (accessible sur tactile et 320 px).
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -31,6 +35,10 @@ const LIBELLES: Record<AbonneAction, string> = {
   supprimer: "Supprimer définitivement",
 };
 
+const LARGEUR_MENU = 210;
+const HAUTEUR_LIGNE = 34;
+const MARGE = 8;
+
 export function AbonneActionsMenu({
   actions,
   onAction,
@@ -42,36 +50,81 @@ export function AbonneActionsMenu({
   disabled?: boolean;
   label: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [ouvert, setOuvert] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const declencheur = useRef<HTMLButtonElement>(null);
+  const racine = useRef<HTMLDivElement>(null);
+
+  function placer() {
+    const cible = declencheur.current?.getBoundingClientRect();
+    if (!cible) return;
+    const hauteur = Math.min(actions.length * HAUTEUR_LIGNE + 10, window.innerHeight - 2 * MARGE);
+    const bas = cible.bottom + 4;
+    const top =
+      bas + hauteur > window.innerHeight - MARGE
+        ? Math.max(MARGE, cible.top - 4 - hauteur)
+        : bas;
+    const gauche = Math.min(
+      Math.max(MARGE, cible.right - LARGEUR_MENU),
+      Math.max(MARGE, window.innerWidth - LARGEUR_MENU - MARGE),
+    );
+    setPos({ top, left: gauche });
+  }
 
   useEffect(() => {
-    function close(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    if (!ouvert) return;
+    placer();
+    function onScrollResize() {
+      placer();
+    }
+    document.addEventListener("scroll", onScrollResize, true);
+    window.addEventListener("resize", onScrollResize);
+    return () => {
+      document.removeEventListener("scroll", onScrollResize, true);
+      window.removeEventListener("resize", onScrollResize);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ouvert, actions.length]);
+
+  useEffect(() => {
+    if (!ouvert) return;
+    function close(e: Event) {
+      if (racine.current && !racine.current.contains(e.target as Node)) setOuvert(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOuvert(false);
     }
     document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, []);
+    document.addEventListener("touchstart", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("touchstart", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [ouvert]);
 
   return (
-    <div className="relative" ref={ref}>
+    <div ref={racine} className="relative inline-block">
       <button
+        ref={declencheur}
         type="button"
         aria-label={`Actions pour ${label}`}
-        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-expanded={ouvert}
         disabled={disabled}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOuvert((v) => !v)}
         className="flex h-8 min-h-8 max-h-8 items-center gap-1.5 rounded-lg border border-[#8FB59B]/40 bg-[#2C3735] px-2.5 text-xs font-semibold text-[#DFE7E2] hover:bg-[#344440] disabled:opacity-40"
-        style={{ height: "32px", maxHeight: "32px" }}
       >
         <span aria-hidden>⋯</span>
         <span className="hidden sm:inline">Actions</span>
       </button>
-      {open && (
+      {ouvert && pos && (
         <div
           role="menu"
           aria-label={`Actions pour ${label}`}
-          className="absolute right-0 top-full z-40 mt-1 min-w-[160px] overflow-hidden rounded-lg border border-[#8FB59B]/30 bg-[#252D2D] py-1 shadow-xl"
+          className="fixed z-[60] overflow-hidden rounded-lg border border-[#8FB59B]/30 bg-[#252D2D] py-1 shadow-xl"
+          style={{ top: pos.top, left: pos.left, width: LARGEUR_MENU }}
         >
           {actions.map((a) => (
             <button
@@ -79,10 +132,10 @@ export function AbonneActionsMenu({
               type="button"
               role="menuitem"
               onClick={() => {
-                setOpen(false);
+                setOuvert(false);
                 onAction(a);
               }}
-              className={`block w-full px-3 py-2 text-left text-xs text-[#DFE7E2] hover:bg-[#344440] ${
+              className={`block min-h-9 w-full px-3 py-2 text-left text-xs text-[#DFE7E2] hover:bg-[#344440] ${
                 a === "suspendre" || a === "archiver" || a === "supprimer" ? "text-[#C5716B]" : ""
               }`}
             >

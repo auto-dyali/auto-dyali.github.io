@@ -643,8 +643,8 @@ export function ClientsModule() {
       {/* Modale création                                                */}
       {/* ------------------------------------------------------------- */}
       {formOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-5" role="dialog" aria-modal="true" aria-labelledby="nouveau-client-titre">
-          <form onSubmit={(e) => void createClient(e)} className="carte w-full max-w-md p-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/65 p-5" role="dialog" aria-modal="true" aria-labelledby="nouveau-client-titre">
+          <form onSubmit={(e) => void createClient(e)} className="carte my-auto w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto p-6">
             <h2 id="nouveau-client-titre" className="titre-or text-xl font-extrabold">Nouveau client</h2>
             <div className="mt-5 grid gap-3">
               <input required className="champ" placeholder="Code client (ex. CL-0006)" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} />
