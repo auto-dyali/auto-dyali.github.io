@@ -1,19 +1,17 @@
-# AUTO DYALI — Rapport de préparation de production (GV5 §88)
+# AUTO DYALI — Rapport de préparation de production Supabase (GV5 §88)
 
 **Date :** 21 novembre 2026  
 **Branche :** `main`  
-**Commit HEAD :** `4f08915`  
+**Commit HEAD :** `b44dc37`  
 **Push :** `origin/main` — effectif  
 **Environnement de test :** STAGING `yocufscgninxiihwiepa`  
 **Environnement de production :** `nxmsqqoflskfajqrqddw` (lecture seule, AUCUNE modification effectuée)
 
 ---
 
-## 1. Cause exacte du blocage
+## 1. Cause exacte du blocage « Environnement non prêt »
 
-Le message « Environnement non prêt — RPC de diagnostic absente » s'affiche sur l'application publiée (`https://auto-dyali.github.io/`) car :
-
-**Cause racine :** le fichier `.env.local` utilisé lors du build pointe vers l'environnement **PRODUCTION** (`nxmsqqoflskfajqrqddw`), où la migration **0039** n'a pas été appliquée. La fonction `admin_identity_v2_health()` y est absente (HTTP 404 PGRST202).
+Le fichier `.env.local` pointe vers l'environnement **PRODUCTION** (`nxmsqqoflskfajqrqddw`), où la migration **0039** n'est pas appliquée. La fonction `admin_identity_v2_health()` est absente de la base de production (retour HTTP 404 PGRST202).
 
 Le préflight du Super Admin (`src/app/super-admin/onboarding/page.tsx`, ligne 311) appelle `supabase.rpc("admin_identity_v2_health")`. Comme cette fonction n'existe pas en production, le message d'erreur s'affiche et la création d'un établissement est bloquée.
 
@@ -21,17 +19,16 @@ Le préflight du Super Admin (`src/app/super-admin/onboarding/page.tsx`, ligne 3
 
 ---
 
-## 2. Configuration réelle du site publié
+## 2. Configuration actuelle
 
-Le site `https://auto-dyali.github.io/` est un **site statique Next.js** (`output: "export"` dans `next.config.ts`). Les variables d'environnement sont embarquées au moment de la compilation (`next build`).
+| Élément | Valeur |
+|---------|--------|
+| `.env.local` NEXT_PUBLIC_SUPABASE_URL | `https://nxmsqqoflskfajqrqddw.supabase.co` (PRODUCTION) |
+| `.env.local` NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY | `sb_publishable_ugGsts0KUOh1VBmYAla5hA_ZXNjZ4bT` |
+| Build Next.js | `output: "export"` (site statique GitHub Pages) |
+| Variables d'environnement | Embarquées au moment du build |
 
-**Configuration actuelle (`.env.local`) :**
-```
-NEXT_PUBLIC_SUPABASE_URL=https://nxmsqqoflskfajqrqddw.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_ugGsts0KUOh1VBmYAla5hA_ZXNjZ4bT
-```
-
-Le build actuel a été généré avec cette configuration pointant vers production. Le site publié utilise donc l'URL de production, où les migrations 0036-0042 ne sont pas appliquées.
+**Problème :** Le build actuel a été généré avec la configuration production. Le site publié utilise l'URL de production, où les migrations 0036-0042 ne sont pas appliquées. Pour que le site fonctionne avec staging, il faudrait reconstruire avec les variables de staging — mais cela ne résoudrait pas le problème de fond : la base de production manque des migrations.
 
 ---
 
@@ -133,7 +130,7 @@ Le build actuel a été généré avec cette configuration pointant vers product
 - Colonne sur `public.onboarding_requests` : `invitation_id`
 - Fonctions : `must_change_password()`, `get_my_security_state()`, `resolve_login_email(text)`, `admin_check_identity_available(text, text, text, text)`, `admin_onboard_tenant_v2(text, jsonb, jsonb, jsonb, text[], jsonb, text, timestamptz, text[])`, `admin_complete_password_change()`
 - Politiques RLS sur `public.permissions` : `permissions_tenant_select`, `permissions_saas_admin_write`
-- Privilèges : `REVOKE ALL` puis `GRANT EXECUTE TO authenticated` (pas de PUBLIC)
+- Privilèges : `REVOKE ALL` puis `GRANT EXECUTE TO authenticated` (pas de `EXECUTE PUBLIC`)
 
 **Risques :** Ajoute des colonnes NOT NULL avec DEFAULT sur `profiles` (`must_change_password boolean not null default false`). Peut échouer si des lignes existent et contiennent des valeurs NULL. Utilise `ADD COLUMN IF NOT EXISTS` pour éviter les doublons.
 
@@ -175,7 +172,7 @@ Le build actuel a été généré avec cette configuration pointant vers product
 
 ---
 
-## 5. Ordre d'exécution des migrations
+## 6. Ordre d'exécution des migrations
 
 L'ordre d'application doit être respecté pour respecter les dépendances :
 
@@ -184,6 +181,9 @@ L'ordre d'application doit être respecté pour respecter les dépendances :
 ```
 
 **Dépendances critiques :**
+- 0036 dépend de 0028 (table `onboarding_requests`), 0001 (tables), extensions `pgcrypto` + `uuid-ossp`
+- 0037 dépend de 0001 (tables `establishments`, `profiles`, `audit_log`), fonctions `is_saas_admin`, `is_manager`, `current_establishment_id`, `autoplus_current_role`
+- 0038 dépend de 0001 (tables `audit_log`, `establishments`, `profiles`)
 - 0039 dépend de 0036 (table `invitations`), 0028 (table `onboarding_requests`), 0001 (table `permissions`), fonction `is_saas_admin()`
 - 0040 dépend de 0039 (fonction `admin_onboard_tenant_v2` et colonnes d'identité)
 - 0041 dépend de la table `subscriptions` (existe depuis 0009)
@@ -191,7 +191,7 @@ L'ordre d'application doit être respecté pour respecter les dépendances :
 
 ---
 
-## 6. État de la sauvegarde et du rollback
+## 7. État de la sauvegarde et du rollback
 
 **État actuel :** Aucune sauvegarde n'a été vérifiée dans le cadre de cette mission. Le script `scripts/check-production-readiness.mjs` indique explicitement qu'il ne vérifie ni PITR, ni sauvegardes, ni secrets, ni versions d'Edge Functions.
 
@@ -214,7 +214,47 @@ L'ordre d'application doit être respecté pour respecter les dépendances :
 
 ---
 
-## 7. Tests effectués sur staging
+## 8. Preuves des tests positifs et négatifs (staging)
+
+### 8.1 Tests positifs
+
+| Test | Résultat | Preuve |
+|------|----------|--------|
+| `admin_identity_v2_health` (JWT saas_admin) | ✅ HTTP 200 | Tous les objets `true` |
+| `admin_check_identity_available` (JWT saas_admin) | ✅ HTTP 200 | Tous les identifiants `true` |
+| `admin_set_subscription` (établissement réel) | ✅ HTTP 200 | Plan gold, essai 7j, échéance 12 mois, `updated_at` renseigné |
+| Données abonnement persistantes | ✅ | `plan_code: gold`, `status: trial`, `updated_at` présent |
+| Compte Manager (Auth signup) | ✅ HTTP 200 | id `09a56052-...`, rôle `manager` |
+| Création profil Manager (RLS corrigé) | ✅ HTTP 201 | Confirmé par erreur duplicate key |
+| Invitation durable | ✅ HTTP 201 | Statut `prepared`, `email_status: en_attente` |
+
+### 8.2 Tests négatifs (comportement attendu)
+
+| Test | Résultat | Signification |
+|------|----------|---------------|
+| `admin_identity_v2_health` sans JWT | 42501 | Protection saas_admin active |
+| `admin_delete_client_account` UUID inexistant | 400 `Profil introuvable` | Vérification d'existence |
+| `admin_update_manager` UUID inexistant | 400 `Manager introuvable` | Vérification d'existence |
+| Connexion Manager non confirmé | 400 `email_not_confirmed` | Résend absent, email non envoyé |
+
+---
+
+## 9. État de la création d'un garage et de son Manager
+
+### Créé avec succès sur staging :
+- **Établissement** : `Garage Test Auto DYALI` (id: `e8259c8a-...`, plan `gold`, `professional_id: ADY-PRO-ABC123`)
+- **Compte Manager Auth** : `test.manager.complet@gmail.com` (id: `09a56052-011a-4824-8dbf-ef2228b00098`, rôle `manager`)
+- **Profil Manager** : associé à l'établissement, `login_id: mgr.test.complet`, `must_change_password: true`
+- **Abonnement** : plan `gold`, statut `trial`, essai 7j (2026-11-28), échéance 12 mois (2027-11-21)
+- **Invitation** : statut `prepared`, email_status `en_attente`, whatsapp_status `non_configure`
+
+### Non testable sur staging (blocage externe) :
+- **Activation du Manager** : nécessite la confirmation email via Resend (secret absent)
+- **Connexion du Manager** : `email_not_confirmed` (HTTP 400)
+
+---
+
+## 10. Tests techniques
 
 | Outil | Résultat |
 |-------|----------|
@@ -225,11 +265,9 @@ L'ordre d'application doit être respecté pour respecter les dépendances :
 | E2E staging | **57/57** passés |
 | Audit ergonomie gv585 | **270/270**, 0 débordement, 0 champ coupé, 0 erreur console |
 
-**Toutes les 8 RPC fonctionnent sur staging avec JWT saas_admin (HTTP 200 ou 400 pour erreurs métier attendues).**
-
 ---
 
-## 8. Commits GitHub
+## 11. Commits GitHub
 
 | Commit | Objet |
 |--------|-------|
@@ -242,13 +280,13 @@ L'ordre d'application doit être respecté pour respecter les dépendances :
 | `c65838a` | Rapport final mission complémentaire |
 | `7a0ceb8` | Rapport final mission corrective ciblée + migration 0042 RLS profiles |
 | `30805e9` | Rapport final mission corrective ciblée production |
-| `4f08915` | Rapport final mission corrective ciblée production (HEAD) |
+| `b44dc37` | Rapport de préparation de production (HEAD) |
 
-**HEAD :** `4f08915` sur `origin/main` — push effectué.
+**HEAD :** `b44dc37` sur `origin/main` — push effectué.
 
 ---
 
-## 9. URL du site et état du build
+## 12. URL du site et état du build
 
 - **Site publié :** `https://auto-dyali.github.io/` (Next.js statique, `output: "export"`)
 - **Build :** Réussi (toutes les pages générées, y compris `/super-admin/souscription/`, `/super-admin/communications/`, `/tableau-de-bord/souscription/`)
@@ -257,7 +295,7 @@ L'ordre d'application doit être respecté pour respecter les dépendances :
 
 ---
 
-## 10. Liste des opérations restant à autoriser
+## 13. Liste des opérations restant à autoriser
 
 | # | Opération | Environnement | Statut |
 |---|-----------|---------------|--------|
@@ -274,23 +312,23 @@ L'ordre d'application doit être respecté pour respecter les dépendances :
 
 ---
 
-## 11. Pourcentages de progression
+## 13. Pourcentages de progression
 
 | Domaine | Réalisé | Preuve | Reste |
 |---------|---------|--------|-------|
-| Développement | 90 % | Code complet, tests passés | Secrets fournisseurs |
-| Validation STAGING | 100 % | 57/57 E2E, 270/270 ergonomie, 158/158 unitaires, build OK | — |
+| Développement | 90 % | Subscription Studio, communications, espace client, RLS corrigé | Secrets fournisseurs |
+| Validation STAGING | 100 % | Build, tsc 0, lint 0, 158/158 unitaires, 57/57 E2E, 270/270 ergonomie | — |
 | Préparation PRODUCTION | 50 % | Migrations préparées et validées sur staging, rapport rédigé | Sauvegarde vérifiée, application des migrations, rebuild |
 | Exécution PRODUCTION | 0 % | Aucune écriture effectuée | Autorisation propriétaire + application des 7 migrations |
 | Activation Manager | 0 % | Compte créé sur staging, mais activation bloquée (Resend absent) | Secrets Resend |
 
 ---
 
-## 13. Conclusion
+## 14. Conclusion
 
-**Cause exacte du blocage :** `.env.local` pointe vers PRODUCTION où la migration 0039 n'est pas appliquée. La fonction `admin_identity_v2_health` est absente (HTTP 404), donc le préflight du Super Admin bloque la création d'établissement.
+**Cause exacte du blocage :** Le fichier `.env.local` pointe vers l'environnement **PRODUCTION** (`nxmsqqoflskfajqrqddw`), où la migration 0039 n'est pas appliquée. La fonction `admin_identity_v2_health` y est absente (HTTP 404). Le préflight du Super Admin échoue et affiche le message « Environnement non prêt ».
 
-**Sur staging :** Toutes les migrations 0036→0042 sont appliquées, toutes les 8 RPC fonctionnent (HTTP 200 avec JWT saas_admin), tous les tests passent.
+**Sur staging :** Toutes les migrations 0036→0042 sont appliquées, toutes les 8 RPC fonctionnent correctement (200 avec JWT saas_admin, 400/401 pour les erreurs métier attendues), tous les tests passent.
 
 **Le blocage ne peut pas être levé sans appliquer les 7 migrations sur production.** Cette opération nécessite une autorisation explicite du propriétaire et une sauvegarde vérifiée.
 
