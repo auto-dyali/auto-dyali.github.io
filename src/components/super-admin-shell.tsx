@@ -55,6 +55,12 @@ const NAV_ITEMS: NavItem[] = [
     description: "Formules, prix, durées, modules, limites, cycle de vie des abonnements.",
   },
   {
+    label: "Souscription de forfait",
+    href: "/super-admin/souscription/",
+    icon: "sub",
+    description: "Création et modification d'abonnements, durée payante, essai et personnalisation des packs.",
+  },
+  {
     label: "CRM commercial",
     href: "/super-admin/crm/",
     icon: "target",
@@ -77,6 +83,12 @@ const NAV_ITEMS: NavItem[] = [
     href: "/super-admin/integrations/",
     icon: "chat",
     description: "Inventaire des services, état réel, WhatsApp, Chatbot, webhooks et journaux.",
+  },
+  {
+    label: "Communications",
+    href: "/super-admin/communications/",
+    icon: "whatsapp",
+    description: "Modèles d'e-mail et WhatsApp, prévisualisation, suivi des envois.",
   },
   {
     label: "Sécurité & permissions",
@@ -111,7 +123,8 @@ type IconName =
   | "scroll"
   | "gear"
   | "whatsapp"
-  | "bot";
+  | "bot"
+  | "sub";
 
 function IconeNav({ nom, taille = 20 }: { nom: IconName; taille?: number }) {
   // Icônes inline SVG légères, sans dépendance externe.
@@ -281,6 +294,21 @@ function IconeNav({ nom, taille = 20 }: { nom: IconName; taille?: number }) {
         <circle cx="9" cy="14" r="1" />
         <circle cx="15" cy="14" r="1" />
         <path d="M9 17h6" />
+      </svg>
+    ),
+    sub: (
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path d="M3 3h18v18H3V3z" />
+        <path d="M3 9h18" />
+        <path d="M9 21V3" />
+        <path d="M15 21V3" />
       </svg>
     ),
   };
