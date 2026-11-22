@@ -514,10 +514,10 @@ export function PosMaquette() {
                 <span aria-hidden>{m.icone}</span>
               </button>
             ))}
-          </div>
           <button type="button" disabled={!peutValider} onClick={valider} className="pos-final-btn min-h-11 shrink-0 rounded-lg px-3 text-xs font-black">
             ✓ Finaliser
           </button>
+          </div>
         </div>
       </div>
     </section>
