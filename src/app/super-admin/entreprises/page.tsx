@@ -76,6 +76,7 @@ export default function EntreprisesPage() {
   const [traitement, setTraitement] = useState<string | null>(null);
   const [selection, setSelection] = useState<Row | null>(null);
   const [espace, setEspace] = useState<Espace>("etablissement");
+  const [openEditMode, setOpenEditMode] = useState<Espace | null>(null);
   const { success: toastSuccess, error: toastError } = useNotification();
 
   useEffect(() => {
@@ -175,16 +176,17 @@ export default function EntreprisesPage() {
     setTraitement(null);
   }
 
-  function ouvrirFiche(row: Row, espaceInitial: Espace = "etablissement") {
+  function ouvrirFiche(row: Row, espaceInitial: Espace = "etablissement", openEditMode: Espace | null = null) {
     setSelection(row);
     setEspace(espaceInitial);
+    setOpenEditMode(openEditMode);
   }
 
   function dispatchAction(row: Row, a: AbonneAction) {
     switch (a) {
       case "consulter": ouvrirFiche(row, "etablissement"); break;
-      case "modifier": ouvrirFiche(row, "etablissement"); break;
-      case "identifiants": ouvrirFiche(row, "manager"); break;
+      case "modifier": ouvrirFiche(row, "etablissement", "etablissement"); break;
+      case "identifiants": ouvrirFiche(row, "manager", "manager"); break;
       case "renouveler": void renouveler(row); break;
       case "suspendre": void basculer(row); break;
       case "reactiver": void basculer(row); break;
@@ -373,7 +375,8 @@ export default function EntreprisesPage() {
           abonne={selection as AbonneRow}
           espace={espace}
           setEspace={setEspace}
-          onClose={() => setSelection(null)}
+          openEditMode={openEditMode}
+          onClose={() => { setSelection(null); setOpenEditMode(null); }}
           onSaved={() => void charger()}
         />
       )}

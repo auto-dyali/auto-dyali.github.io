@@ -168,12 +168,15 @@ export function AbonneWorkspace({
   setEspace,
   onClose,
   onSaved,
+  openEditMode,
 }: {
   abonne: AbonneRow;
   espace: Espace;
   setEspace: (e: Espace) => void;
   onClose: () => void;
   onSaved: () => void;
+  /** Espace à ouvrir directement en mode édition à l'ouverture de la fiche. */
+  openEditMode?: Espace | null;
 }) {
   const { success, error: notifyError, warning } = useNotification();
   const [details, setDetails] = useState<Details>({
@@ -211,6 +214,16 @@ export function AbonneWorkspace({
 
   const [canaux, setCanaux] = useState<string[]>(["email"]);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+
+  /* Ouverture directe en mode édition depuis la liste (bouton "Modifier"). */
+  useEffect(() => {
+    if (!openEditMode) return;
+    if (openEditMode === "etablissement") { setSnapshotEtab(etab); setEditEtab(true); }
+    if (openEditMode === "manager") { setSnapshotManager(manager); setEditManager(true); }
+    if (openEditMode === "abonnement") { setEditSub(true); }
+    if (openEditMode === "modules") { setEditPerms(true); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openEditMode]);
   const [recap, setRecap] = useState<{
     titre: string;
     sousTitre: string;
