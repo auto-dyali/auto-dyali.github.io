@@ -27,6 +27,7 @@ import {
   Pastille,
   Recapitulatif3D,
 } from "./abonne-form-primitives";
+import { ChampGeographieMaroc } from "@/components/ChampGeographieMaroc";
 import {
   DUREES_ESSAI,
   DUREES_PAYANTES,
@@ -724,9 +725,14 @@ export function AbonneWorkspace({
                       <Champ3D label="Téléphone" value={etab.phone} onChange={(v) => setEtab({ ...etab, phone: v })} disabled={!editEtab} erreur={erreursEtab.phone} />
                       <Champ3D label="E-mail professionnel" value={etab.email} onChange={(v) => setEtab({ ...etab, email: v })} disabled={!editEtab} erreur={erreursEtab.email} type="email" />
                       <Champ3D label="Adresse" value={etab.address} onChange={(v) => setEtab({ ...etab, address: v })} disabled={!editEtab} plein />
-                      <Champ3D label="Ville" value={etab.city} onChange={(v) => setEtab({ ...etab, city: v })} disabled={!editEtab} />
-                      <Champ3D label="Région" value={etab.region} onChange={(v) => setEtab({ ...etab, region: v })} disabled={!editEtab} />
-                      <Champ3D label="Pays" value={etab.country} onChange={(v) => setEtab({ ...etab, country: v })} disabled={!editEtab} />
+                      <ChampGeographieMaroc
+                        ville={etab.city}
+                        region={etab.region}
+                        country={etab.country}
+                        disabled={!editEtab}
+                        onChange={(champ, valeur) => setEtab({ ...etab, [champ]: valeur })}
+                        erreur={erreursEtab.city || erreursEtab.region || erreursEtab.country}
+                      />
                     </div>
                   </Section3D>
 

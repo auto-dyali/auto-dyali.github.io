@@ -39,6 +39,7 @@ import {
 import { DELIVERY_STATUS_LABEL } from "@/lib/activation";
 import { useNotification } from "@/lib/use-notification";
 import { Champ3D, Zone3D, Section3D } from "@/components/abonne-form-primitives";
+import { ChampGeographieMaroc } from "@/components/ChampGeographieMaroc";
 import { validerIdentite, validerCoordonnees } from "@/lib/abonne-rules";
 
 type Plan = {
@@ -675,9 +676,13 @@ export default function OnboardingPage() {
               />
               <Champ3D label="Type / activité de l'établissement" obligatoire value={form.activityType} onChange={(v) => modifier("activityType", v)} placeholder="Garage, carrosserie, centre pneus…" erreur={erreur("establishment.activityType")} />
               <Champ3D label="Adresse" obligatoire className="lg:col-span-2" value={form.address} onChange={(v) => modifier("address", v)} placeholder="123 Rue de la République" erreur={erreur("establishment.address") ?? erreursPartagees.address} />
-              <Champ3D label="Ville" obligatoire value={form.city} onChange={(v) => modifier("city", v)} placeholder="Casablanca" erreur={erreur("establishment.city") ?? erreursPartagees.city} />
-              <Champ3D label="Région" obligatoire value={form.region} onChange={(v) => modifier("region", v)} placeholder="Casablanca-Settat" erreur={erreur("establishment.region")} />
-              <Champ3D label="Pays" value={form.country} onChange={(v) => modifier("country", v)} placeholder="Maroc" aide="Enregistré dans le champ dédié de l'établissement." />
+              <ChampGeographieMaroc
+                ville={form.city}
+                region={form.region}
+                country={form.country}
+                onChange={(champ, valeur) => modifier(champ === "country" ? "country" : champ === "region" ? "region" : "city", valeur)}
+                erreur={erreur("establishment.city") ?? erreur("establishment.region") ?? erreursPartagees.city}
+              />
               <Champ3D label="Téléphone professionnel" type="tel" value={form.phone} onChange={(v) => modifier("phone", v)} placeholder="+212 6 00 00 00 00" erreur={erreur("establishment.phone") ?? erreursPartagees.phone} />
               <Champ3D label="Adresse e-mail professionnelle" obligatoire type="email" value={form.email} onChange={(v) => modifier("email", v)} placeholder="contact@garage.com" erreur={erreur("establishment.email") ?? erreursPartagees.email} />
               <div>
