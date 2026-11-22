@@ -354,9 +354,9 @@ export function PosMaquette() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-bold text-[#F2F7F3]" title={l.libelle}>{l.libelle}</p>
                       <div className="mt-1 flex items-center gap-1.5">
-                        <button type="button" onClick={() => (l.quantite <= 1 ? op.supprimerLigne(l.id) : op.majQuantite(l.id, l.quantite - 1))} aria-label={`Diminuer ${l.libelle}`} className="flex h-8 w-8 items-center justify-center rounded-md border border-[#31ffb0]/25 bg-black/40 font-bold text-[#D9F4E7]">−</button>
-                        <span className="w-6 text-center text-xs font-extrabold text-[#F2F7F3]">{l.quantite}</span>
-                        <button type="button" onClick={() => op.majQuantite(l.id, l.quantite + 1)} aria-label={`Augmenter ${l.libelle}`} className="flex h-8 w-8 items-center justify-center rounded-md border border-[#31ffb0]/25 bg-black/40 font-bold text-[#D9F4E7]">+</button>
+                        <button type="button" onClick={() => (l.quantite <= 1 ? op.supprimerLigne(l.id) : op.majQuantite(l.id, l.quantite - 1))} aria-label={`Diminuer ${l.libelle}`} className="flex h-10 w-10 items-center justify-center rounded-md border border-[#31ffb0]/25 bg-black/40 font-bold text-[#D9F4E7]">−</button>
+                        <span className="w-7 text-center text-xs font-extrabold text-[#F2F7F3]">{l.quantite}</span>
+                        <button type="button" onClick={() => op.majQuantite(l.id, l.quantite + 1)} aria-label={`Augmenter ${l.libelle}`} className="flex h-10 w-10 items-center justify-center rounded-md border border-[#31ffb0]/25 bg-black/40 font-bold text-[#D9F4E7]">+</button>
                       </div>
                     </div>
                     <span className="pos-price shrink-0 text-xs font-extrabold">{afMAD(Math.round(l.quantite * l.prixUnitaireCent))}</span>
