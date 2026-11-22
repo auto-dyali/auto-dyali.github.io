@@ -360,7 +360,7 @@ export function PosMaquette() {
                       </div>
                     </div>
                     <span className="pos-price shrink-0 text-xs font-extrabold">{afMAD(Math.round(l.quantite * l.prixUnitaireCent))}</span>
-                    <button type="button" onClick={() => op.supprimerLigne(l.id)} aria-label={`Retirer ${l.libelle}`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm text-[#F0A8A4] hover:bg-[#C66A68]/10">🗑</button>
+                    <button type="button" onClick={() => op.supprimerLigne(l.id)} aria-label={`Retirer ${l.libelle}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm text-[#F0A8A4] hover:bg-[#C66A68]/10">🗑</button>
                   </li>
                 ))}
               </ul>
@@ -461,7 +461,7 @@ export function PosMaquette() {
                     <span className="font-bold text-[#F2F7F3]">{r.mode}</span>
                     <span className="ml-auto font-mono text-[#F2D58A]">{afMAD(r.montantCent)}</span>
                     {r.mode === "cheque" && r.cheque?.statut === "en_attente" && <span className="text-[10px] text-[#F2D58A]">en attente</span>}
-                    <button type="button" onClick={() => setReglements(reglements.filter((_, j) => j !== i))} aria-label="Retirer ce règlement" className="min-h-8 min-w-8 text-[#F0A8A4]">✕</button>
+                    <button type="button" onClick={() => setReglements(reglements.filter((_, j) => j !== i))} aria-label="Retirer ce règlement" className="min-h-10 min-w-10 text-[#F0A8A4]">✕</button>
                   </li>
                 ))}
               </ul>
