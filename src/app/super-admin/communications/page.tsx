@@ -31,7 +31,7 @@ const DONNEES_TEST = {
 
 export default function CommunicationsPage() {
   const [ongletActif, setOngletActif] = useState<"email-invitation" | "whatsapp" | "email-admin">("email-invitation");
-  const { success: notifySuccess, error: notifyError } = useNotification();
+  useNotification();
 
   return (
     <ModulePage titre="Communications">
@@ -71,7 +71,7 @@ export default function CommunicationsPage() {
           <>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-bold uppercase tracking-wider text-[#A7B7A8]">Modèle e-mail — Invitation Manager</h3>
-              <span className="text-[11px] text-[#7FBF9E]">HTML premium · Logo animé SVG · Bouton d'activation</span>
+              <span className="text-[11px] text-[#7FBF9E]">HTML premium &middot; Logo animé SVG &middot; Bouton d&apos;activation</span>
             </div>
             <div className="w-full h-[600px] overflow-auto border border-[#8FB59B]/30 rounded-lg bg-[#1a2420] p-4">
               <div dangerouslySetInnerHTML={{ __html: ModeleEmailInvitation(DONNEES_TEST) }} />
@@ -82,7 +82,7 @@ export default function CommunicationsPage() {
           <>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-bold uppercase tracking-wider text-[#A7B7A8]">Modèle WhatsApp</h3>
-              <span className="text-[11px] text-[#7FBF9E]">Texte brut · Logo statique de remplacement · Lien d'activation</span>
+              <span className="text-[11px] text-[#7FBF9E]">Texte brut &middot; Logo statique de remplacement &middot; Lien d&apos;activation</span>
             </div>
             <div className="w-full h-[400px] overflow-auto border border-[#8FB59B]/30 rounded-lg bg-[#1a2420] p-4 font-mono text-sm text-[#a7b7a8] whitespace-pre-wrap">
               {ModeleMessageWhatsapp(DONNEES_TEST)}
@@ -119,7 +119,7 @@ export default function CommunicationsPage() {
         <div className="carte p-5 rounded-xl">
           <h4 className="text-sm font-bold text-[#E8ECE8] mb-2">Sécurité</h4>
           <p className="text-[12px] text-[#A7B7A8]">Aucun mot de passe en clair</p>
-          <p className="text-[12px] text-[#A7B7A8]">Lien d'activation : <span className="font-mono text-[#DFE7E2]">jeton unique</span></p>
+          <p className="text-[12px] text-[#A7B7A8]">Lien d&apos;activation : <span className="font-mono text-[#DFE7E2]">jeton unique</span></p>
           <p className="text-[11px] text-[#A7B7A8] mt-2">Validité : 7 jours</p>
         </div>
       </div>
@@ -128,11 +128,11 @@ export default function CommunicationsPage() {
       <div className="mt-8 max-w-4xl mx-auto carte p-5 rounded-xl border-[#D6A34D]/30 border">
         <h4 className="text-sm font-bold text-[#D6A34D] mb-2">⚠️ Rappel important</h4>
         <ul className="text-sm text-[#A7B7A8] space-y-1 list-disc pl-4">
-          <li>L'enregistrement du garage, du Manager, de l'abonnement et de l'invitation est durable dans Supabase, indépendamment de la disponibilité des fournisseurs de notification.</li>
-          <li>Un échec WhatsApp ne doit pas empêcher l'e-mail, et inversement.</li>
-          <li>Aucun mot de passe en clair n'est transmis dans les messages.</li>
-          <li>Aucun envoi fictif n'est effectué.</li>
-          <li>L'affichage « Envoyé » n'apparaît que si le fournisseur a confirmé la délivrance.</li>
+          <li>L&apos;enregistrement du garage, du Manager, de l&apos;abonnement et de l&apos;invitation est durable dans Supabase, indépendamment de la disponibilité des fournisseurs de notification.</li>
+          <li>Un échec WhatsApp ne doit pas empêcher l&apos;e-mail, et inversement.</li>
+          <li>Aucun mot de passe en clair n&apos;est transmis dans les messages.</li>
+          <li>Aucun envoi fictif n&apos;est effectué.</li>
+          <li>L&apos;affichage « Envoyé » n&apos;apparaît que si le fournisseur a confirmé la délivrance.</li>
         </ul>
       </div>
     </ModulePage>
