@@ -1,6 +1,4 @@
-"use client";
-
-/* eslint-disable */
+ "use client";
 
 /**
  * AUTO DYALI — Modèles de communication (email / WhatsApp)

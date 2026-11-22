@@ -150,10 +150,7 @@ export function ComboRecherche({
         aria-label={ariaLabel}
         aria-controls={`${id}-liste`}
         disabled={disabled}
-        onClick={() => {
-          if (!ouvert) setActif(Math.max(0, options.findIndex((o) => o.value === value)));
-          setOuvert(!ouvert);
-        }}
+        onClick={() => setOuvert((v) => !v)}
         onKeyDown={surTouche}
       >
         <span className={`min-w-0 flex-1 truncate ${selection ? "" : "text-[#A7B7A8]"}`}>{libelle}</span>
@@ -177,7 +174,9 @@ export function ComboRecherche({
             className="champ min-h-11 w-full text-sm"
           />
           <ul id={`${id}-liste`} role="listbox" aria-labelledby={`${id}-bouton`} className="mt-2 max-h-56 overflow-y-auto overscroll-contain">
-            {filtrees.length === 0 && <li className="px-3 py-3 text-xs text-[#A7B7A8]">{vide}</li>}
+            {filtrees.length === 0 && (
+              <li className="px-3 py-3 text-xs text-[#A7B7A8]">{vide}</li>
+            )}
             {filtrees.map((option, index) => {
               const choisi = option.value === value;
               return (
@@ -187,9 +186,7 @@ export function ComboRecherche({
                     disabled={option.disabled}
                     onClick={() => choisir(option)}
                     onMouseEnter={() => setActif(index)}
-                    className={`flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm ${
-                      index === actif ? "bg-[#344440]" : ""
-                    } ${choisi ? "text-[#F0DCae]" : "text-[#E8ECE8]"} disabled:opacity-40`}
+                    className={`flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm ${index === actif ? "bg-[#344440]" : ""} ${choisi ? "text-[#F0DCae]" : "text-[#E8ECE8] disabled:opacity-40"}`}
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block truncate">{option.label}</span>
@@ -198,8 +195,8 @@ export function ComboRecherche({
                     {choisi && <span aria-hidden className="text-[#8FB59B]">✓</span>}
                   </button>
                 </li>
-              );
-            })}
+              )}
+            )}
           </ul>
         </div>
       )}
