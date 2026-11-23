@@ -80,7 +80,7 @@ type ManagerProfileRow = {
 
 export default function SuperAdminPage() {
   const router = useRouter();
-  const { success, error: notifyError } = useNotification();
+  const { error: notifyError } = useNotification();
 
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [plans, setPlans] = useState<PlanRow[]>([]);
@@ -175,7 +175,7 @@ export default function SuperAdminPage() {
     } finally {
       setLoading(false);
     }
-  }, [supabase, notifyError]);
+  }, [notifyError]);
 
   useEffect(() => {
     const timer = setTimeout(() => void charger(), 0);
@@ -308,7 +308,6 @@ export default function SuperAdminPage() {
 /* Santé du SaaS                                                      */
 /* ------------------------------------------------------------------ */
   const santeBaseDeDonnees = !error && establishments.length >= 0;
-  const santeAuth = true; // Vérifié par SuperAdminGuard sur chaque page
   const santeMoteurDroits = features.length > 0;
 
   /* ------------------------------------------------------------------ */

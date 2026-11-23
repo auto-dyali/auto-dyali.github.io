@@ -133,7 +133,7 @@ export default function PreAchatsPage() {
     setNotice(null);
     setErreur(null);
     // RPC journalisée : statut + événement + audit_log dans une seule transaction.
-    const { data, error } = await supabase.rpc("admin_set_pre_purchase_status", {
+    const { error } = await supabase.rpc("admin_set_pre_purchase_status", {
       p_request_id: row.id,
       p_status: to,
       p_reason: motif.trim() || null,

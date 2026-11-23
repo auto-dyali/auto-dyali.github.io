@@ -126,7 +126,7 @@ type IconName =
   | "bot"
   | "sub";
 
-function IconeNav({ nom, taille = 20 }: { nom: IconName; taille?: number }) {
+function IconeNav({ nom }: { nom: IconName }) {
   // Icônes inline SVG légères, sans dépendance externe.
   const svg: Record<string, React.ReactNode> = {
     dashboard: (
