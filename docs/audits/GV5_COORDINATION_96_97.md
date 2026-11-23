@@ -3,7 +3,7 @@
 **Date** : 23 novembre 2026  
 **Dépôt** : `auto-dyali/auto-dyali.github.io`  
 **Branche** : `main`  
-**HEAD** : `c635ec2` (synchronisé avec `origin/main`)
+**HEAD** : `40b3eb2` (synchronisé avec `origin/main`)
 
 ---
 
@@ -85,14 +85,14 @@ Ce document sert de coordination entre deux missions parallèles :
 
 ## 4. ÉTAT ACTUEL DES TRAVAUX
 
-### GV5 §96 (sur `main`, HEAD `c635ec2`)
+### GV5 §96 (sur `main`, HEAD `40b3eb2`)
 
 - Code de création d'abonné : complet, cohérent contrat v2, compilant, testé statiquement
 - Migrations 0036→0043 : préparées dans Git, non appliquées sur staging
 - Blocage critique : RPC `admin_identity_v2_health`, `admin_check_identity_available`, `admin_onboard_tenant_v2`, `admin_invitation_preview`, `admin_accept_invitation` absentes sur staging
 - Rapport final : `docs/audits/GV5_96_RAPPORT_FINAL.md`
-- Pourcentage développement : 87 %
-- Pourcentage validation staging : ~40 % (bloqué par migrations)
+- Pourcentage développement : 78 % (code écrit et compilant, non testé en bout en bout sur staging)
+- Pourcentage validation staging : 0 % (bloqué par migrations 0036→0043 non appliquées)
 
 ### GV5 §97 (branche `gv5-97-consolidation-super-admin`)
 

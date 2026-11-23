@@ -5,7 +5,7 @@
 **Branche** : `main`  
 **Dossier local** : `/Users/hind/Documents/Default Project/auto-plus`  
 **HEAD initial** : `c635ec2`  
-**HEAD final** : `c635ec2` (synchronisé avec `origin/main`)  
+**HEAD final** : `40b3eb2` (synchronisé avec `origin/main`)  
 **Application** : https://auto-dyali.github.io/  
 **Production Supabase** : `nxmsqqoflskfajqrqddw` (LECTURE SEULE STRICTE)  
 **Staging Supabase** : `yocufscgninxiihwiepa` (LECTURE SEULE, migrations 0036→0043 non appliquées)  
@@ -19,10 +19,10 @@
 |---|---|---|---|
 | Dépôt | `auto-dyali/auto-dyali.github.io` | `git remote -v` | ✓ |
 | Branche | `main` | `git branch --show-current` | ✓ |
-| HEAD initial | `b347c4f` | `git rev-parse HEAD` | ✓ |
-| HEAD distant | `b347c4f` | `git rev-parse origin/main` | ✓ |
+| HEAD initial | `c635ec2` | `git rev-parse HEAD` | ✓ |
+| HEAD distant | `40b3eb2` | `git rev-parse origin/main` | ✓ |
 | Synchronisation | Synchronisé (HEAD == origin/main) | Comparaison SHA | ✓ |
-| Commits depuis HEAD | Aucun | `git log b347c4f..HEAD` vide | ✓ |
+| Commits depuis HEAD initial | 1 | `git log c635ec2..HEAD` = `40b3eb2` | ✓ |
 | Fichiers modifiés | Aucun (code propre) | `git status --short` | ✓ |
 | TypeScript | 0 erreur | `npx tsc --noEmit` | ✓ |
 | ESLint | 0 erreur, 19 warnings préexistants | `npx eslint .` | ✓ |
@@ -145,7 +145,7 @@ Le code de création d'abonné est **complet, cohérent et testé statiquement**
 | Tests négatifs réussis | ❌ Bloqué | Migrations 0036 + 0039 non appliquées sur staging |
 | Tests E2E staging exécutés | ❌ Bloqué | Migrations non appliquées + `.env.local` sur Production |
 | Aucune régression détectée | ✅ | TSC 0, ESLint 0 erreurs, Tests 176/176 |
-| Code poussé sur GitHub | ✅ | HEAD `b347c4f` = `origin/main` |
+| Code poussé sur GitHub | ✅ | HEAD `40b3eb2` = `origin/main` |
 
 **Aucun critère E2E ne peut être déclaré conforme** car les migrations 0036→0039 ne sont pas appliquées sur staging et `.env.local` pointe sur Production (lecture seule).
 
@@ -212,23 +212,23 @@ Restaurer depuis la sauvegarde/PITR prise avant l'application de la migration 00
 
 | Périmètre | Développement | Validation staging | Préparation production | État opérationnel réel |
 |---|---:|---:|---:|---:|
-| Création abonné | 95 % | 0 % (bloqué par 0039) | 0 % | 0 % |
-| Création Manager | 95 % | 0 % (bloqué par 0039) | 0 % | 0 % |
-| Activation Manager | 90 % | 0 % (bloqué par 0036) | 0 % | 0 % |
-| Gestion des abonnés | 85 % | 0 % (bloqué par 0039) | 0 % | 0 % |
-| Modification des fiches | 95 % | 0 % (bloqué par 0039 pour E2E) | 0 % | 0 % |
-| Localisation Maroc | 90 % | 0 % (pas de test sur base réelle) | 0 % | 0 % |
-| Paiements | 80 % | 0 % (fournisseur non configuré) | 0 % | 0 % |
-| Super Admin complet | 85 % | 0 % (bloqué par 0039) | 0 % | 0 % |
-| **Projet complet** | **87 %** | **~40 %** | **0 %** | **~35 %** |
+| Création abonné | 80 % | 0 % (bloqué par 0039) | 0 % | 0 % |
+| Création Manager | 80 % | 0 % (bloqué par 0039) | 0 % | 0 % |
+| Activation Manager | 75 % | 0 % (bloqué par 0036) | 0 % | 0 % |
+| Gestion des abonnés | 75 % | 0 % (bloqué par 0039) | 0 % | 0 % |
+| Modification des fiches | 85 % | 0 % (bloqué par 0039 pour E2E) | 0 % | 0 % |
+| Localisation Maroc | 85 % | 0 % (pas de test sur base réelle) | 0 % | 0 % |
+| Paiements | 70 % | 0 % (fournisseur non configuré) | 0 % | 0 % |
+| Super Admin complet | 80 % | 0 % (bloqué par 0039) | 0 % | 0 % |
+| **Projet complet** | **78 %** | **0 %** | **0 %** | **0 %** |
 
 **Méthode d'estimation** :
-- **Développement** : code écrit, compilant (TSC 0), testé statiquement (ESLint 0 erreurs, tests unitaires 176/176), build OK. Ne correspond pas au taux de réussite des tests.
-- **Validation staging** : tests E2E réellement exécutés sur staging. Non réalisable sans application des migrations 0036→0043.
-- **Préparation production** : migrations préparées mais non appliquées, production lecture seule.
-- **État opérationnel réel** : fonctionnalité démontrée en bout en bout sur une base avec les migrations appliquées. Actuellement à 0 % pour tout ce qui dépend des migrations 0036→0039.
+- **Développement** : code écrit, compilant (TSC 0), testé statiquement (ESLint 0 erreurs, tests unitaires 176/176), build OK. Reflète l'avancement de l'implémentation côté code, pas le fonctionnement en bout en bout sur une base avec migrations appliquées.
+- **Validation staging** : 0 % car aucun test E2E n'a pu être exécuté sur staging (migrations 0036→0043 non appliquées, `.env.local` pointe sur Production en lecture seule).
+- **Préparation production** : 0 % car Production reste en lecture seule et aucune migration n'a été appliquée.
+- **État opérationnel réel** : 0 % car le parcours de création d'abonné n'a pas été démontré en bout en bout sur staging avec les migrations 0036→0039 appliquées.
 
-**Distinction importante** : Les tests unitaires réussis (176/176) ne constituent PAS une preuve E2E. Le parcours de création d'abonné ne peut être considéré comme opérationnel que s'il a été testé en bout en bout sur staging avec les migrations 0036→0039 appliquées.
+**Distinction importante** : Les tests unitaires réussis (176/176) ne constituent PAS une preuve E2E. Le parcours de création d'abonné ne peut être considéré comme opérationnel que s'il a été testé en bout en bout sur staging avec les migrations 0036→0039 appliquées. Aucun critère de fonctionnement réel n'est actuellement satisfait.
 
 ---
 
@@ -237,9 +237,9 @@ Restaurer depuis la sauvegarde/PITR prise avant l'application de la migration 00
 | Élément | Confirmation |
 |---|---|
 | HEAD initial | `c635ec2` |
-| HEAD final | `c635ec2` (synchronisé avec `origin/main`) |
+| HEAD final | `40b3eb2` (synchronisé avec `origin/main`) |
 | Synchronisation | ✅ HEAD local = HEAD distant |
-| Push GitHub | Aucun commit nouveau sur `main` (pas de modification de code nécessaire — le blocage est infrastructurel) |
+| Push GitHub | Commit `40b3eb2` sur `main` (coordination §96/§97 et mise à jour rapport final — pas de modification de code source) |
 | Fichier de coordination | `docs/audits/GV5_COORDINATION_96_97.md` créé |
 | TypeScript | ✅ 0 erreur |
 | ESLint | ✅ 0 erreur (19 warnings préexistants) |
