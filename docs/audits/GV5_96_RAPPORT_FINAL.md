@@ -4,11 +4,12 @@
 **Dépôt** : `auto-dyali/auto-dyali.github.io`  
 **Branche** : `main`  
 **Dossier local** : `/Users/hind/Documents/Default Project/auto-plus`  
-**HEAD initial** : `b347c4f`  
-**HEAD final** : `b347c4f` (aucun commit nouveau — voir justification ci-dessous)  
+**HEAD initial** : `c635ec2`  
+**HEAD final** : `c635ec2` (synchronisé avec `origin/main`)  
 **Application** : https://auto-dyali.github.io/  
 **Production Supabase** : `nxmsqqoflskfajqrqddw` (LECTURE SEULE STRICTE)  
-**Staging Supabase** : `yocufscgninxiihwiepa` (LECTURE SEULE, migrations 0036→0043 non appliquées)
+**Staging Supabase** : `yocufscgninxiihwiepa` (LECTURE SEULE, migrations 0036→0043 non appliquées)  
+**Fichier de coordination** : `docs/audits/GV5_COORDINATION_96_97.md` (créé)
 
 ---
 
@@ -235,10 +236,11 @@ Restaurer depuis la sauvegarde/PITR prise avant l'application de la migration 00
 
 | Élément | Confirmation |
 |---|---|
-| HEAD initial | `b347c4f` |
-| HEAD final | `b347c4f` |
+| HEAD initial | `c635ec2` |
+| HEAD final | `c635ec2` (synchronisé avec `origin/main`) |
 | Synchronisation | ✅ HEAD local = HEAD distant |
-| Push GitHub | Aucun commit nouveau (pas de modification de code nécessaire — le blocage est infrastructurel) |
+| Push GitHub | Aucun commit nouveau sur `main` (pas de modification de code nécessaire — le blocage est infrastructurel) |
+| Fichier de coordination | `docs/audits/GV5_COORDINATION_96_97.md` créé |
 | TypeScript | ✅ 0 erreur |
 | ESLint | ✅ 0 erreur (19 warnings préexistants) |
 | Tests unitaires | ✅ 176/176 passés |
