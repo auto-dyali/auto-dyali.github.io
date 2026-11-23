@@ -6,9 +6,9 @@
 **Dépôt** : `auto-dyali/auto-dyali.github.io`  
 **Branche** : `main`  
 **Dossier local** : `/Users/hind/Documents/Default Project/auto-plus`  
-**HEAD initial** : `0f13aa2`  
-**HEAD final** : `6fbd571` (synchronisé avec `origin/main`)  
-**Application** : https://auto-dyali.github.io/  
+**HEAD initial** : `192979f`  
+**HEAD final** : `bd9c54e` (synchronisé avec `origin/main`)  
+**Branche protégée** : `gv5-97-consolidation-super-admin` (HEAD `d5526cc`, non modifiée)  
 **Production Supabase** : `nxmsqqoflskfajqrqddw` (LECTURE SEULE STRICTE)  
 **Staging Supabase** : `yocufscgninxiihwiepa` (LECTURE SEULE, accès direct NON DISPONIBLE)
 
@@ -21,14 +21,16 @@
 | Audit initial du dépôt GitHub | ✅ Effectué | HEAD synchronisé, branche §97 intacte |
 | Lecture du rapport GV5 §98 | ✅ Effectué | `docs/audits/GV5_98_RAPPORT_FINAL.md` |
 | Audit des migrations 0036→0043 | ✅ Effectué | 8 migrations présentes dans Git, non appliquées |
-| Audit des composants Super Admin | ✅ Effectué | onboarding/page.tsx, abonne-workspace.tsx, Edge Functions |
+| Audit des composants Super Admin | ✅ Effectué | `onboarding/page.tsx`, `abonne-workspace.tsx`, Edge Functions |
 | Vérification du code (TSC, ESLint, tests, build) | ✅ Effectué | TSC 0, ESLint 0 erreurs, Tests 176/176, Build OK |
 | Création du dossier de suivi SESSION_1 | ✅ Effectué | `docs/sessions/session-1/gv5-98/` |
 | Rapport initial SESSION_1 | ✅ Créé | `SESSION_1_GV5_98_RAPPORT_INITIAL.md` |
+| Rapport de reprise SESSION_1 | ✅ Créé | `SESSION_1_GV5_98_RAPPORT_REPRISE.md` |
 | Registre des anomalies SESSION_1 | ✅ Créé | `SESSION_1_GV5_98_REGISTRE_ANOMALIES.md` |
 | Matrice de tests E2E SESSION_1 | ✅ Créé | `SESSION_1_GV5_98_MATRICE_TESTS.md` |
 | Rapport staging SESSION_1 | ✅ Créé | `SESSION_1_GV5_98_RAPPORT_STAGING.md` |
 | Plan de production SESSION_1 | ✅ Créé | `SESSION_1_GV5_98_PLAN_PRODUCTION.md` |
+| Rapport final SESSION_1 | ✅ Créé | `SESSION_1_GV5_98_RAPPORT_FINAL.md` |
 
 ---
 
@@ -57,7 +59,7 @@
 |---|---|---|---|---|
 | — | Aucune | Aucune | — | — |
 
-**Justification** : Aucune correction de code n'a été effectuée pendant SESSION_1 car le blocage est purement infrastructurel (migrations non appliquées sur staging). Le code de création d'abonné est déjà complet, cohérent avec le contrat v2, compilant et testé statiquement. Aucune correction de code n'est possible sans l'application des migrations 0036→0043 sur staging.
+**Justification** : Aucune correction de code n'a été effectuée pendant SESSION_1 car le blocage est purement infrastructurel (migrations 0036→0043 non appliquées sur staging). Le code de création d'abonné est déjà complet, cohérent avec le contrat v2, compilant et testé statiquement. Aucune correction de code n'est possible sans l'application des migrations 0036→0043 sur staging.
 
 ---
 
@@ -142,13 +144,13 @@
 
 | Élément | Résultat | Preuve |
 |---|---|---|
-| HEAD local | `6fbd571` | `git rev-parse HEAD` |
-| HEAD distant | `6fbd571` | `git rev-parse origin/main` |
+| HEAD local | `192979f` | `git rev-parse HEAD` |
+| HEAD distant | `192979f` | `git rev-parse origin/main` |
 | Synchronisation | ✅ Synchronisé | SHA identiques |
-| Commit de session | `6fbd571` | `GV5 §98 — Rapport final déblocage staging et validation parcours abonnement` |
+| Commit de session | `192979f` | `SESSION_1 GV5 §98 — Rapport de reprise et audit final` |
 | Branche §97 | `d5526cc`, non modifiée | `git log --oneline gv5-97-consolidation-super-admin -1` |
 | Fichiers de code modifiés | Aucun | `git status --short` (uniquement screenshots non suivis) |
-| Fichiers de session créés | 5 | `docs/sessions/session-1/gv5-98/` |
+| Fichiers de session créés | 8 | `docs/sessions/session-1/gv5-98/` |
 
 ---
 
@@ -168,6 +170,8 @@
 
 **Méthode d'estimation** : Les pourcentages de développement reflètent le code écrit, compilant et testé statiquement. Ils ne correspondent pas au taux de réussite des tests ni au fonctionnement en bout en bout. L'état opérationnel réel est à 0 % car aucun test E2E n'a pu être exécuté sur staging.
 
+**Distinction importante** : Les tests unitaires réussis (176/176) ne constituent PAS une preuve E2E. Le parcours de création d'abonné ne peut être considéré comme opérationnel que s'il a été testé en bout en bout sur staging avec les migrations 0036→0039 appliquées.
+
 ---
 
 ## 10. BLOQUAGES REQUIRANT INTERVENTION PROPRIÉTAIRE
@@ -186,12 +190,16 @@
 
 | # | Fichier | Action | Commit |
 |---|---|---|---|
-| 1 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_RAPPORT_INITIAL.md` | Créé | `6fbd571` |
-| 2 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_REGISTRE_ANOMALIES.md` | Créé | `6fbd571` |
-| 3 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_MATRICE_TESTS.md` | Créé | `6fbd571` |
-| 4 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_RAPPORT_STAGING.md` | Créé | `6fbd571` |
-| 5 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_PLAN_PRODUCTION.md` | Créé | `6fbd571` |
-| 6 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_RAPPORT_FINAL.md` | Créé | `6fbd571` |
+| 1 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_RAPPORT_INITIAL.md` | Créé | `192979f` |
+| 2 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_REGISTRE_ANOMALIES.md` | Créé | `192979f` |
+| 3 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_MATRICE_TESTS.md` | Créé | `192979f` |
+| 4 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_RAPPORT_STAGING.md` | Créé | `192979f` |
+| 5 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_PLAN_PRODUCTION.md` | Créé | `192979f` |
+| 6 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_RAPPORT_FINAL.md` | Créé | `192979f` |
+| 7 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_RAPPORT_REPRISE.md` | Créé | `192979f` |
+| 8 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_AUDIT_CREATION_ABONNE.md` | Créé | `192979f` |
+| 9 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_REGISTRE_CORRECTIONS_ABONNE.md` | Créé | `192979f` |
+| 10 | `docs/sessions/session-1/gv5-98/SESSION_1_GV5_98_MATRICE_TESTS_ABONNE.md` | Créé | `192979f` |
 
 Aucun fichier de code source n'a été modifié. Aucun fichier de la branche §97 n'a été touché.
 
@@ -201,10 +209,10 @@ Aucun fichier de code source n'a été modifié. Aucun fichier de la branche §9
 
 ### Ce qui est réellement clôturé dans GV5 §98 :
 
-- **Audit complet du dépôt GitHub** : HEAD `6fbd571`, synchronisé, branche §97 intacte
+- **Audit complet du dépôt GitHub** : HEAD `192979f`, synchronisé, branche §97 intacte
 - **Audit des migrations 0036→0043** : présentes dans Git, non appliquées sur staging
 - **Audit des composants Super Admin** : complets, cohérents, compilant, testés statiquement
-- **Création du dossier de suivi SESSION_1** : `docs/sessions/session-1/gv5-98/` avec 6 rapports
+- **Création du dossier de suivi SESSION_1** : `docs/sessions/session-1/gv5-98/` avec 8 rapports
 - **Vérification des tests techniques** : TSC 0, ESLint 0 erreurs, 176 tests unitaires passés, build OK
 
 ### Ce qui reste ouvert :
@@ -219,3 +227,5 @@ Aucun fichier de code source n'a été modifié. Aucun fichier de la branche §9
 **Le travail reste exclusivement dans SESSION 1. Aucun fichier de SESSION 2 n'a été touché. La branche §97 n'a pas été modifiée. Production Supabase reste en lecture seule.**
 
 **Le parcours de création d'abonné est complet côté code mais ne peut pas être validé en bout en bout tant que les migrations 0036→0039 ne sont pas appliquées sur staging et que les tests E2E n'ont pas été exécutés.**
+
+**Le prochain pas indispensable est l'obtention de l'autorisation propriétaire pour appliquer les migrations 0036→0043 sur staging.**
