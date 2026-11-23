@@ -28,7 +28,7 @@ if ! command -v supabase &> /dev/null; then
 fi
 
 # Vérifier l'authentification
-echo -n "Vérification de l'authentification... "
+echo -n "Vérification de l'authentification Supabase... "
 if supabase projects list > /dev/null 2>&1; then
     echo "✅ Authentifié"
 else
@@ -40,9 +40,10 @@ fi
 echo -n "Vérification du projet... "
 PROJECT_INFO=$(supabase projects list 2>&1)
 if echo "$PROJECT_INFO" | grep -q "yocufscgninxiihwiepa"; then
-    echo "✅ Projet staging trouvé"
+    echo "✅ Projet staging 'yocufscgninxiihwiepa' trouvé"
 else
     echo -e "${RED}ERREUR : Projet staging non trouvé${NC}"
+    echo "$PROJECT_INFO"
     exit 1
 fi
 
@@ -50,7 +51,7 @@ echo ""
 
 # 1. Vérifier les migrations appliquées
 echo "=== 1. MIGRATIONS APPLIQUÉES ==="
-supabase migration list --linked 2>&1 | head -20 || true
+supabase migration list --linked 2>&1 | grep -E "003[6-9]|004[0-3]" || echo "  Aucune migration 0036-0043 trouvée"
 echo ""
 
 # 2. Vérifier les fonctions RPC
@@ -60,14 +61,14 @@ echo ""
 
 # 3. Vérifier les tables
 echo "=== 3. TABLES CRÉÉES ==="
-supabase db list --linked 2>&1 | head -30 || true
+supabase db list --linked 2>&1 | head -40 || true
 echo ""
 
 echo ""
-echo -e "${GREEN}=== VÉRIFICATION TERMINÉE ==="
+echo -e "${GREEN}==============================================${NC}"
 echo "Vérifiez que :"
 echo "  - Les migrations 0036 à 0043 sont appliquées"
 echo "  - Les fonctions RPC sont présentes"
-echo "  - Les tables invitations, invitation_events, establishments, profiles, subscriptions existent"
+echo "  - Les tables invitations, invitation_events existent"
 echo ""
 echo "Puis exécutez les tests E2E de création d'abonné."

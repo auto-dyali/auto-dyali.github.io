@@ -128,12 +128,3 @@ done
 
 echo ""
 echo -e "${GREEN}==============================================${NC}"
-echo -e "${GREEN}  TOUTES LES MIGRATIONS ONT ÉTÉ APPLIQUÉES${NC}"
-echo -e "${GREEN}==============================================${NC}"
-
-echo ""
-echo "=== Vérification des RPC ==="
-supabase functions list --linked 2>&1 | head -20 || true
-
-echo ""
-echo "Migration terminée avec succès."
