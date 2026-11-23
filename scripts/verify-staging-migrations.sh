@@ -54,14 +54,15 @@ echo "=== 1. MIGRATIONS APPLIQUÉES ==="
 supabase migration list --linked 2>&1 | grep -E "003[6-9]|004[0-3]" || echo "  Aucune migration 0036-0043 trouvée"
 echo ""
 
-# 2. Vérifier les fonctions RPC
+# 2. Vérifier les fonctions RPC via SQL
 echo "=== 2. FONCTIONS RPC DISPONIBLES ==="
-supabase functions list --linked 2>&1 | head -30 || true
+echo "Requête SQL pour vérifier les fonctions RPC..."
+supabase db query --linked --file scripts/check-rpc-functions.sql 2>&1 || true
 echo ""
 
 # 3. Vérifier les tables
 echo "=== 3. TABLES CRÉÉES ==="
-supabase db list --linked 2>&1 | head -40 || true
+supabase db list --linked 2>&1 | grep -E "invitations|invitations_events|establishments|profiles|subscriptions|onboarding_requests|permissions" || echo "  Aucune table trouvée"
 echo ""
 
 echo ""

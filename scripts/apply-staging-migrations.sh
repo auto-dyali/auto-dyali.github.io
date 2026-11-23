@@ -10,18 +10,12 @@
 set -euo pipefail
 
 PROJECT_REF="yocufscgninxiihwiepa"
-MIGRATIONS_DIR="supabase/migrations"
 
 # Couleurs
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
 NC='\033[0m'
-
-# ============================================================================
-# VÉRIFICATIONS PRÉLIMINAIRES
-# ============================================================================
 
 echo "=============================================="
 echo "  APPLICATION DES MIGRATIONS SUPABASE STAGING"
@@ -100,7 +94,7 @@ if [ "$confirm" != "oui" ]; then
     exit 0
 fi
 
-# Appliquer chaque migration
+# Appliquer chaque migration UN PAR UN
 for migration in 0036 0037 0038 0039 0040 0041 0042 0043; do
     MIG_FILE="supabase/migrations/${migration}_*.sql"
 
