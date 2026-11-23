@@ -21,7 +21,6 @@ import {
   normaliserTexte,
   REGIONS_MAROC,
   VILLES_MAROC,
-  TOUTES_VILLES_MAROC,
   rechercherVilleMaroc,
   rechercherVillesMaroc,
   villesParRegion,
@@ -60,7 +59,7 @@ test("12 régions présentes", () => {
   assert.strictEqual(REGIONS_MAROC.length, 12);
   const noms = REGIONS_MAROC.map((r) => r.nom);
   assert.ok(noms.includes("Tanger-Tétouan-Al Hoceïma"));
-  assert.ok(noms.includes("Oriental"));
+  assert.ok(noms.includes("L'Oriental"));
   assert.ok(noms.includes("Fès-Meknès"));
   assert.ok(noms.includes("Rabat-Salé-Kénitra"));
   assert.ok(noms.includes("Béni Mellal-Khénifra"));
@@ -167,7 +166,7 @@ test("regionDeVille : résolution correcte", () => {
 });
 
 test("villesParRegion : retourne les villes de la région", () => {
-  const oujda = villesParRegion("Oriental");
+  const oujda = villesParRegion("L'Oriental");
   assert.ok(oujda.includes("Oujda"), "Oujda doit être dans Oriental");
   assert.ok(oujda.includes("Nador"), "Nador doit être dans Oriental");
 
