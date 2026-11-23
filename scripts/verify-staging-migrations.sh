@@ -23,7 +23,7 @@ echo "=============================================="
 
 # Vérifier que le CLI est disponible
 if ! command -v supabase &> /dev/null; then
-    echo -e "${RED}ERREUR : supabase CLI non trouvé${NC}"
+    echo -e "${RED}ERREUR : supabase CLI non trouvé dans le PATH${NC}"
     exit 1
 fi
 
@@ -32,7 +32,7 @@ echo -n "Vérification de l'authentification Supabase... "
 if supabase projects list > /dev/null 2>&1; then
     echo "✅ Authentifié"
 else
-    echo -e "${RED}ERREUR : Non authentifié${NC}"
+    echo -e "${RED}ERREUR : Non authentifié. Exécutez 'supabase login'${NC}"
     exit 1
 fi
 
