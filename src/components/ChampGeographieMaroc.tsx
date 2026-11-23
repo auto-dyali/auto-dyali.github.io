@@ -5,13 +5,16 @@
  *
  * Remplace les champs texte manuels Ville / Région / Pays par une
  * sélection structurée :
- *   - Pays : fixe à "Maroc" (extensible)
- *   - Région : sélection parmi les 12 régions administratives officielles
- *   - Ville : autocomplétion filtrée par région
+ *   - Pays : fixe à "Maroc" (extensible) ;
+ *   - Région : sélection parmi les 12 régions administratives officielles ;
+ *   - Ville : autocomplétion filtrée par région.
  *
  * Quand une ville est choisie, la région et le pays sont renseignés
  * automatiquement. Quand une région est choisie, la liste des villes
  * est filtrée et la ville est vidée si elle n'appartient pas à la région.
+ *
+ * Une saisie inconnue ne provoque jamais l'attribution automatique d'une
+ * région erronée.
  */
 
 import { useCallback, useMemo, useState } from "react";
@@ -19,8 +22,8 @@ import {
   PAYS_DEFAUT,
   PAYS_DISPONIBLES,
   REGIONS_MAROC,
-  TOUTES_VILLES_MAROC,
   regionDeVille,
+  rechercherVillesMaroc,
   type VilleMaroc,
 } from "@/lib/maroc-geographie";
 
@@ -57,24 +60,27 @@ export function ChampGeographieMaroc({
     [],
   );
 
-  const filtrerVilles = useCallback(
+  /**
+   * Calcule les suggestions de ville selon :
+   * - la saisie en cours (recherche partielle) ;
+   * - la région sélectionnée (filtrage géographique).
+   */
+  const calculSuggestions = useCallback(
     (query: string) => {
-      const q = query.toLowerCase().trim();
-      if (!q) return [];
-      return TOUTES_VILLES_MAROC.filter((v) =>
-        v.toLowerCase().includes(q),
-      ).slice(0, 10);
+      return rechercherVillesMaroc(query, region || undefined);
     },
-    [],
+    [region],
   );
 
   const choixRegion = useCallback(
     (nomRegion: string) => {
       onChange("region", nomRegion);
-      // Vider la ville si elle n'appartient pas à la nouvelle région.
+      // Vider la ville uniquement si elle n'appartient plus à la nouvelle région.
       if (ville && regionDeVille(ville) !== nomRegion) {
         onChange("ville", "");
       }
+      setSuggestionsVille([]);
+      setChampVilleFocus(false);
     },
     [ville, onChange],
     );
@@ -96,14 +102,15 @@ export function ChampGeographieMaroc({
   const surSaisieVille = useCallback(
     (valeur: string) => {
       onChange("ville", valeur);
+      const suggestions = calculSuggestions(valeur);
       if (valeur.trim() === "") {
         setSuggestionsVille([]);
       } else {
-        setSuggestionsVille(filtrerVilles(valeur));
+        setSuggestionsVille(suggestions);
         setChampVilleFocus(true);
       }
     },
-    [filtrerVilles, onChange],
+    [calculSuggestions, onChange],
     );
 
   return (

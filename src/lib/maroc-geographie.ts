@@ -2,11 +2,12 @@
  * AUTO DYALI — Référentiel géographique du Maroc.
  *
  * Source : 12 régions administratives officielles du Maroc (découpage
- * régional de 2015) avec leurs préfectures et provinces principales,
- * et les villes principales de chaque région.
+ * régional de 2015) avec leurs villes principales.
  *
- * Les données sont fournies à titre de référentiel pour la sélection
- * géographique structurée dans les formulaires d'établissement.
+ * ⚠️ Ce référentiel est une liste indicative de villes principales.
+ * Il ne constitue pas un inventaire exhaustif ni officiellement certifié
+ * des communes marocaines. Il sert uniquement à la pré-sélection et à
+ * l'autocomplétion dans les formulaires d'établissement.
  *
  * Aucune donnée existante n'est écrasée : ce référentiel est utilisé
  * uniquement pour la pré-sélection et l'autocomplétion.
@@ -25,26 +26,50 @@ export type RegionMaroc = {
   villes: string[];
 };
 
+/**
+ * Normalise un texte pour la comparaison géographique :
+ * - casse ignorée (minuscules) ;
+ * - accents supprimés (NFD + suppression des diacritiques) ;
+ * - espaces multiples, tirets, apostrophes et caractères spéciaux
+ *   remplacés par un tiret unique ;
+ * - tirets en début/fin supprimés.
+ *
+ * Résultat déterministique : "Béni Mellal" → "beni-mellal",
+ * "El Kelaa des Sraghna" → "el-kelaa-des-sraghna",
+ * "Aït Melloul" → "ait-melloul", "Al Hoceïma" → "al-hoceima".
+ */
+export function normaliserTexte(texte: string): string {
+  return texte
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/['’`]/g, "-")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+}
+
 export const REGIONS_MAROC: RegionMaroc[] = [
   {
     nom: "Tanger-Tétouan-Al Hoceïma",
-    nomNormalise: "tanger-tetouan-al-hoceima",
+    nomNormalise: normaliserTexte("Tanger-Tétouan-Al Hoceïma"),
     villes: [
       "Tanger", "Tétouan", "Al Hoceïma", "Ouezzane", "Chefchaouen", "Fnideq",
-      "Martil", "M'diq", "Ksar el-Kebir", "Larache", "Ouezzane",
+      "Martil", "M'diq", "Ksar el-Kebir", "Larache",
     ],
   },
   {
     nom: "Oriental",
-    nomNormalise: "oriental",
+    nomNormalise: normaliserTexte("Oriental"),
     villes: [
-      "Oujda", "Nador", "Berkane", "Taourirt", "Jerada", "Aïn Chock",
-      "Sayada", "Driouch", "Figuig", "Guercif", "Hassi Berkane",
+      "Oujda", "Nador", "Berkane", "Taourirt", "Jerada", "Driouch",
+      "Figuig", "Guercif", "Hassi Berkane",
     ],
   },
   {
     nom: "Fès-Meknès",
-    nomNormalise: "fes-meknes",
+    nomNormalise: normaliserTexte("Fès-Meknès"),
     villes: [
       "Fès", "Meknès", "Sefrou", "Ifrane", "El Hajeb", "Moulay Yacoub",
       "Ain Taoujdate", "Missour", "Outat El Haj", "Ribate El Kheir",
@@ -52,7 +77,7 @@ export const REGIONS_MAROC: RegionMaroc[] = [
   },
   {
     nom: "Rabat-Salé-Kénitra",
-    nomNormalise: "rabat-sale-kenitra",
+    nomNormalise: normaliserTexte("Rabat-Salé-Kénitra"),
     villes: [
       "Rabat", "Salé", "Kénitra", "Témara", "Skhirate", "Tifelt",
       "Ain Sebaa", "Harhoura", "Sidi Kacem", "Sidi Slimane", "Sidi Yahya",
@@ -60,7 +85,7 @@ export const REGIONS_MAROC: RegionMaroc[] = [
   },
   {
     nom: "Béni Mellal-Khénifra",
-    nomNormalise: "beni-mellal-khenifra",
+    nomNormalise: normaliserTexte("Béni Mellal-Khénifra"),
     villes: [
       "Béni Mellal", "Khénifra", "Azilal", "Fquih Ben Salah", "Oulad Ayad",
       "Oulad M'Barek", "Kasba Tadla", "Demnate", "Ait Majden",
@@ -68,23 +93,23 @@ export const REGIONS_MAROC: RegionMaroc[] = [
   },
   {
     nom: "Casablanca-Settat",
-    nomNormalise: "casablanca-settat",
+    nomNormalise: normaliserTexte("Casablanca-Settat"),
     villes: [
       "Casablanca", "Mohammédia", "Settat", "Berrechid", "El Jadida",
-      "Sidi Bennour", "Benslimane", "Nouaceur", "Médiouna", "Laâyoune",
+      "Sidi Bennour", "Benslimane", "Nouaceur", "Médiouna",
     ],
   },
   {
     nom: "Marrakech-Safi",
-    nomNormalise: "marrakech-safi",
+    nomNormalise: normaliserTexte("Marrakech-Safi"),
     villes: [
       "Marrakech", "Safi", "Essaouira", "El Kelaa des Sraghna", "Chichaoua",
-      "Al Haouz", "Sidi Bennour", "Sidi Yzine", "Ben Guerir", "Imlil",
+      "Al Haouz", "Sidi Yzine", "Ben Guerir", "Imlil",
     ],
   },
   {
     nom: "Drâa-Tafilalet",
-    nomNormalise: "draa-tafilalet",
+    nomNormalise: normaliserTexte("Drâa-Tafilalet"),
     villes: [
       "Errachidia", "Ouarzazate", "Zagora", "Tinghir", "Midelt", "Rissani",
       "Goulmima", "Boumalne Dadès", "Nkob", "Tata",
@@ -92,7 +117,7 @@ export const REGIONS_MAROC: RegionMaroc[] = [
   },
   {
     nom: "Souss-Massa",
-    nomNormalise: "souss-massa",
+    nomNormalise: normaliserTexte("Souss-Massa"),
     villes: [
       "Agadir", "Inezgane", "Tiznit", "Taroudant", "Chtouka Aït Baha",
       "Taliouine", "Aït Melloul", "Dcheira El Jihadia", "Biougra", "Tarfaya",
@@ -100,21 +125,21 @@ export const REGIONS_MAROC: RegionMaroc[] = [
   },
   {
     nom: "Guelmim-Oued Noun",
-    nomNormalise: "guelmim-oued-noun",
+    nomNormalise: normaliserTexte("Guelmim-Oued Noun"),
     villes: [
-      "Guelmim", "Tantan", "Assa-Zag", "Sidi Ifni", "Tan-Tan", "Foum Zguid",
+      "Guelmim", "Tan-Tan", "Assa-Zag", "Sidi Ifni", "Foum Zguid",
     ],
   },
   {
     nom: "Laâyoune-Sakia El Hamra",
-    nomNormalise: "laayoune-sakia-el-hamra",
+    nomNormalise: normaliserTexte("Laâyoune-Sakia El Hamra"),
     villes: [
-      "Laâyoune", "Tarfas", "Boujdour", "Es-Semara", "Foum El Oued",
+      "Laâyoune", "Boujdour", "Es-Semara", "Foum El Oued",
     ],
   },
   {
     nom: "Dakhla-Oued Ed-Dahab",
-    nomNormalise: "dakhla-oued-ed-dahab",
+    nomNormalise: normaliserTexte("Dakhla-Oued Ed-Dahab"),
     villes: [
       "Dakhla", "Aousserd", "Bir Gandouz", "Oued Ed-Dahab",
     ],
@@ -124,11 +149,7 @@ export const REGIONS_MAROC: RegionMaroc[] = [
 export const VILLES_MAROC: VilleMaroc[] = REGIONS_MAROC.flatMap((r) =>
   r.villes.map((nom) => ({
     nom,
-    nomNormalise: nom
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "-"),
+    nomNormalise: normaliserTexte(nom),
     province: "",
     region: r.nom,
   }))
@@ -138,16 +159,33 @@ export const VILLES_MAROC: VilleMaroc[] = REGIONS_MAROC.flatMap((r) =>
 export const TOUTES_VILLES_MAROC = VILLES_MAROC.map((v) => v.nom);
 
 /**
- * Recherche une ville par nom (insensible à la casse et aux accents).
- * Retourne la ville trouvée ou null.
+ * Recherche une ville par nom (insensible à la casse, accents, espaces,
+ * apostrophes et tirets). Retourne la ville trouvée ou null.
  */
 export function rechercherVilleMaroc(texte: string): VilleMaroc | null {
-  const normalise = (t: string) =>
-    t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-  const cible = normalise(texte);
-  return (
-    VILLES_MAROC.find((v) => v.nomNormalise === cible) ?? null
-  );
+  const cible = normaliserTexte(texte);
+  return VILLES_MAROC.find((v) => v.nomNormalise === cible) ?? null;
+}
+
+/**
+ * Recherche les villes dont le nom normalisé commence par la requête
+ * (recherche partielle). Retourne au plus 10 résultats.
+ */
+export function rechercherVillesMaroc(
+  requete: string,
+  filtreRegion?: string,
+): string[] {
+  const q = normaliserTexte(requete);
+  if (!q) {
+    if (filtreRegion) {
+      return villesParRegion(filtreRegion);
+    }
+    return [];
+  }
+  return VILLES_MAROC.filter((v) => {
+    if (filtreRegion && v.region !== filtreRegion) return false;
+    return v.nomNormalise.startsWith(q);
+  }).map((v) => v.nom).slice(0, 10);
 }
 
 /**
