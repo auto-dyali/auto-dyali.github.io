@@ -48,16 +48,18 @@ async function creerSuperAdmin() {
 }
 
 async function recupererLienActivation() {
-  // Inbucket : API publique locale, sans secret.
+  // Mailpit (pile Supabase locale) : API publique, sans secret.
   for (let essai = 0; essai < 30; essai++) {
-    const rep = await fetch(`http://127.0.0.1:54324/api/v1/mailbox/${encodeURIComponent(managerEmail)}`);
+    const rep = await fetch("http://127.0.0.1:54324/api/v1/messages?limit=50");
     if (rep.ok) {
       const msgs = await rep.json();
-      if (Array.isArray(msgs) && msgs.length) {
-        const id = msgs[0].id ?? msgs[0].ID;
-        const detail = await fetch(`http://127.0.0.1:54324/api/v1/mailbox/${encodeURIComponent(managerEmail)}/${encodeURIComponent(id)}`);
+      const msg = Array.isArray(msgs)
+        ? msgs.find((m) => (m.To ?? []).some((d) => d.Address === managerEmail))
+        : null;
+      if (msg) {
+        const detail = await fetch(`http://127.0.0.1:54324/api/v1/message/${encodeURIComponent(msg.ID)}`);
         const corp = await detail.text();
-        const m = corp.match(/\/activer\/\?token=([a-f0-9]{64})/i);
+        const m = corp.match(/activer\/\?token=([a-f0-9]{64})/i);
         if (m) return `${APP}/activer/?token=${m[1]}`;
       }
     }
