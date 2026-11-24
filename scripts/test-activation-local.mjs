@@ -52,7 +52,8 @@ async function recupererLienActivation() {
   for (let essai = 0; essai < 30; essai++) {
     const rep = await fetch("http://127.0.0.1:54324/api/v1/messages?limit=50");
     if (rep.ok) {
-      const msgs = await rep.json();
+      const brut = await rep.json();
+      const msgs = Array.isArray(brut) ? brut : (brut.messages ?? []);
       if (essai === 0) {
         out.captureDiagnostic = {
           messages: Array.isArray(msgs) ? msgs.length : "format inattendu",
