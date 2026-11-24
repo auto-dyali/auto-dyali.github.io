@@ -16,6 +16,8 @@ jobs:
         with:
           # Épinglé : `latest` échoue en CI (rate limit de l'API GitHub).
           version: 3.3.0
+      - name: Fournisseur SMTP de test (fichier d'environnement des Edge Functions)
+        run: cp supabase/functions/local-test.env supabase/functions/.env
       - name: Démarrer Supabase local (diagnostic en cas d'échec)
         run: |
           set +e
