@@ -1,0 +1,21 @@
+{
+  "base": "http://127.0.0.1:4173",
+  "etapes": [
+    "connexion Super Admin OK",
+    "établissement + Manager + invitation créés",
+    "fiche établissement ouverte"
+  ],
+  "urlProductionVue": false,
+  "bandeau": true,
+  "noindex": "noindex,noarchive",
+  "trial": true,
+  "creation": {
+    "statut": 200,
+    "ok": true
+  },
+  "modification": {
+    "statut": 200
+  },
+  "appelsStaging": 18,
+  "emailTest": "prev106.1795558910075@autodyali-staging.local"
+}
