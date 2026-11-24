@@ -120,13 +120,15 @@ try {
 
   // Envoi via le fournisseur SMTP local (send-invitation, EMAIL_PROVIDER=smtp)
   await page.goto(`${APP}/super-admin/entreprises/`, { waitUntil: "networkidle" });
-  await page.locator('input[aria-label="Rechercher une entreprise"]').fill(managerEmail);
-  await page.waitForTimeout(900);
-  await page.getByRole("button", { name: /Actions pour/ }).click();
+  await page.locator('input[aria-label="Rechercher une entreprise"]').fill(`Activation 105 ${ts}`);
+  await page.waitForTimeout(1200);
+  await page.locator("button").filter({ hasText: "Actions pour" }).first().click();
   await page.getByRole("menuitem", { name: "Consulter" }).click();
+  await page.getByRole("dialog").waitFor({ timeout: 10000 });
   await page.getByRole("tab", { name: "Invitations & historique" }).click();
   await page.getByText("Invitations enregistrées").first().waitFor({ timeout: 10000 });
-  await page.getByRole("button", { name: /Envoyer \/ Renvoyer|Renouveler/ }).click();
+  out.fiche = (await page.getByRole("dialog").innerText()).slice(-700);
+  await page.locator("button").filter({ hasText: /Envoyer|Renouveler/ }).first().click();
   await page.waitForTimeout(2500);
   const lien = await recupererLienActivation();
   out.etapes.push("invitation envoyée via SMTP local et capturée (jeton non journalisé)");
