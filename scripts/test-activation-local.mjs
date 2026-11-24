@@ -108,7 +108,13 @@ try {
   await page.getByRole("button", { name: "Suivant" }).click();
   await page.getByText("Identification et invitation").first().waitFor({ timeout: 15000 });
   await page.getByRole("button", { name: "Suivant" }).click();
+  const waitCreate = page.waitForResponse(
+    (r) => r.url().includes("functions/v1/onboard-tenant") && r.request().method() === "POST",
+    { timeout: 25000 },
+  );
   await page.getByRole("button", { name: "Créer l'abonné" }).click();
+  const respCreate = await waitCreate;
+  out.creation = { statut: respCreate.status(), reponse: (await respCreate.text()).slice(0, 800) };
   await page.getByText("Création confirmée").waitFor({ timeout: 15000 });
   out.etapes.push("établissement + Manager créés via l'interface");
 
