@@ -1,0 +1,21 @@
+{
+  "slug": "reg103-1795524414497",
+  "email": "reg103.1795524414497@autodyali-staging.local",
+  "etapes": {
+    "formule": true,
+    "creation": {
+      "status": 200,
+      "ok": true,
+      "establishment_id": "27e9115c-6324-4fa7-90be-ec8de1bc4f8b",
+      "invitation_id": "78c175f9-ec80-441b-991d-c6924e29d79a"
+    },
+    "fiche": "AUTO DYALI · FICHE ABONNÉ PROFESSIONNEL\n\nRégression 103 1795524414497\n\nADY-PRO-51ED31 · inscrit le 24/11/2026\n\n✕\nFermer\n\nABONNEMENT\n\nActif\n\nÉCHÉANCE\n\n—\n\nMANAGER\n\nAucun Manager\n\nMODULES FORMULE\n\n0\n\n◆\nÉtablissement\n◉\nManager\n◇\nAbonnement\n▦\nModules & dr",
+    "updateEtab": 200,
+    "updateManager": 200,
+    "updatePermissions": 200,
+    "renouvellement": {
+      "status": 200,
+      "corps": "{\"ok\":true,\"idempotent\":false,\"invitation_id\":\"379053c0-41d9-4451-a764-a52753b15559\",\"renewed_from\":\"78c175f9-ec80-441b-991d-c6924e29d79a\",\"expires_at\":\"2026-12-01T12:47:22.192+00:00\",\"delivery\":[{\"channel\":\"email\",\"status\":\"non_configure\",\"providerError\":\"Fournisseur e-mail non configuré (RESEND_API_KEY / EMAIL_FROM absents).\"}]}"
+    }
+  }
+}
