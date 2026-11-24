@@ -25,6 +25,9 @@ comment on column public.products.stock is 'Stock actuel en unités (somme des l
 -- 2. FORFAITS : valeurs standard | silver | gold
 -- ---------------------------------------------------------------------
 alter table public.establishments
+  drop constraint if exists establishments_plan_check;
+
+alter table public.establishments
   add constraint establishments_plan_check
   check (plan in ('standard', 'silver', 'gold'));
 
