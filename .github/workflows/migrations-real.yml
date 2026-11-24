@@ -6,6 +6,10 @@ on:
 jobs:
   real-supabase:
     runs-on: ubuntu-latest
+    env:
+      EMAIL_PROVIDER: smtp
+      SMTP_HOST: 127.0.0.1
+      SMTP_PORT: "54325"
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
