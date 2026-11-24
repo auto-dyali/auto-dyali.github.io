@@ -496,13 +496,16 @@ begin
 end $$;
 
 -- Profiles : chacun voit au moins son propre profil
+drop policy if exists profiles_self_or_same_establishment on profiles;
 create policy profiles_self_or_same_establishment on profiles
   using (id = auth.uid() or establishment_id = current_establishment_id());
 
 -- SaaS admin : tout voir (policies additivas via WITH CHECK par défaut)
+drop policy if exists saas_admin_full_access on establishments;
 create policy saas_admin_full_access on establishments
   using (is_saas_admin());
 
 -- Policy spécifique : les établissements sont visibles par leurs membres
+drop policy if exists own_establishment on establishments;
 create policy own_establishment on establishments
   using (id = current_establishment_id());
