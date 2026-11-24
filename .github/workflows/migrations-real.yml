@@ -1,0 +1,30 @@
+name: migrations-real
+on:
+  push:
+    branches: [gv5-105-close-all]
+  workflow_dispatch:
+jobs:
+  real-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      - name: Reset 1 (base vierge)
+        run: supabase db reset --yes
+      - name: Reset 2 (idempotence)
+        run: supabase db reset --yes
+      - name: Dump schéma
+        run: supabase db dump --local -f schema-local.sql
+      - name: Exporter les identifiants locaux (noms de variables uniquement dans les logs)
+        run: supabase status -o env >> "$GITHUB_ENV"
+      - name: Tests isolation A/B
+        run: npm ci && npm run test:isolation
+      - name: Résumé du dump (sans secret)
+        run: wc -l schema-local.sql
+      - uses: actions/upload-artifact@v4
+        with:
+          name: schema-local
+          path: schema-local.sql
