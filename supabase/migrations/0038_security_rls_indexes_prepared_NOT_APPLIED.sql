@@ -41,21 +41,21 @@ end $$;
 --    politiques redondantes ou trop larges.
 -- ---------------------------------------------------------------------
 -- Politique de lecture tenant-only (remplace tenant_select_audit_log si elle existe déjà)
-drop policy if exists public.tenant_select_audit_log on public.audit_log;
+drop policy if existstenant_select_audit_log on public.audit_log;
 
 create policytenant_select_audit_log on public.audit_log
   for select
   using (public.establishment_id = public.current_establishment_id() or public.is_saas_admin());
 
 -- Politique d'insertion réservée à saas_admin et manager (remplace managers_insert_audit_log)
-drop policy if exists public.managers_insert_audit_log on public.audit_log;
+drop policy if existsmanagers_insert_audit_log on public.audit_log;
 
 create policymanagers_insert_audit_log on public.audit_log
   for insert
   with check (public.is_saas_admin() or public.is_manager());
 
 -- Politique de modification complète réservée à saas_admin (remplace saas_admin_all_audit_log)
-drop policy if exists public.saas_admin_all_audit_log on public.audit_log;
+drop policy if existssaas_admin_all_audit_log on public.audit_log;
 
 create policysaas_admin_all_audit_log on public.audit_log
   for all
@@ -64,7 +64,7 @@ create policysaas_admin_all_audit_log on public.audit_log
 
 -- Politique tenant_isolation supprimée car redondante avec tenant_select_audit_log pour la lecture
 -- et saas_admin_all_audit_log pour l'écriture. On la supprime pour éviter les politiques multiples.
-drop policy if exists public.tenant_isolation on public.audit_log;
+drop policy if existstenant_isolation on public.audit_log;
 
 -- ---------------------------------------------------------------------
 -- 2. Consolidation des politiques RLS sur establishments
@@ -72,21 +72,21 @@ drop policy if exists public.tenant_isolation on public.audit_log;
 --    On conserve uniquement les politiques nécessaires.
 -- ---------------------------------------------------------------------
 -- Politique de lecture : tenant seulement (saas_admin voit tout via saas_admin_full_access)
-drop policy if exists public.tenant_isolation on public.establishments;
+drop policy if existstenant_isolation on public.establishments;
 
 create policytenant_isolation on public.establishments
   for select
   using (public.establishment_id = public.current_establishment_id());
 
 -- Politique d'insertion réservée à saas_admin
-drop policy if exists public.saas_admin_insert_establishments on public.establishments;
+drop policy if existssaas_admin_insert_establishments on public.establishments;
 
 create policysaas_admin_insert_establishments on public.establishments
   for insert
   with check (public.is_saas_admin());
 
 -- Politique de modification réservée à saas_admin
-drop policy if exists public.saas_admin_update_establishments on public.establishments;
+drop policy if existssaas_admin_update_establishments on public.establishments;
 
 create policysaas_admin_update_establishments on public.establishments
   for update
@@ -94,7 +94,7 @@ create policysaas_admin_update_establishments on public.establishments
   with check (public.is_saas_admin());
 
 -- Politique d'accès complet réservée à saas_admin (remplace saas_admin_full_access)
-drop policy if exists public.saas_admin_full_access on public.establishments;
+drop policy if existssaas_admin_full_access on public.establishments;
 
 create policysaas_admin_full_access on public.establishments
   for all
