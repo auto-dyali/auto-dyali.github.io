@@ -2,6 +2,7 @@
 
 Date : 24/11/2026
 Branche : `gv5-103-fix-invitations-and-hardening` (créée depuis `96c89c5`)
+HEAD final : `03f1edd00799891f1818d8fd0e61e0f80cc600a1`
 Cible d'écriture unique : **STAGING `yocufscgninxiihwiepa`**. Aucune écriture en production, aucun merge dans `main`, aucun secret communiqué.
 
 ---
@@ -138,7 +139,7 @@ Tests rejoués avec de vraies sessions (routes réseau capturées) :
 ## 8. Branche et HEAD
 
 Branche `gv5-103-fix-invitations-and-hardening`, poussée sur `origin`.
-HEAD final et commits à récupérer via `git log --oneline -8` (branche non fusionnée).
+HEAD final : `03f1edd`. Commis dans l'ordre : `93842e6`, `0ffce69`, `b6556de`, `8b9eec8`, `18848c8`, `b62d0b7`, `03f1edd` (branche non fusionnée).
 
 ## 9. Verdict
 
