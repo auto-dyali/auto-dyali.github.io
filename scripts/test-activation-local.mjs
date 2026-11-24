@@ -119,17 +119,19 @@ try {
   out.etapes.push("établissement + Manager créés via l'interface");
 
   // Envoi via le fournisseur SMTP local (send-invitation, EMAIL_PROVIDER=smtp)
-  await page.goto(`${APP}/super-admin/entreprises/`, { waitUntil: "networkidle" });
-  await page.locator('input[aria-label="Rechercher une entreprise"]').fill(`Activation 105 ${ts}`);
-  await page.waitForTimeout(1200);
-  await page.locator("button").filter({ hasText: "Actions pour" }).first().click();
-  await page.getByRole("menuitem", { name: "Consulter" }).click();
-  await page.getByRole("dialog").waitFor({ timeout: 10000 });
-  await page.getByRole("tab", { name: "Invitations & historique" }).click();
-  await page.getByText("Invitations enregistrées").first().waitFor({ timeout: 10000 });
-  out.fiche = (await page.getByRole("dialog").innerText()).slice(-700);
-  await page.locator("button").filter({ hasText: /Envoyer|Renouveler/ }).first().click();
-  await page.waitForTimeout(2500);
+  // Envoi via la session Super Admin réelle obtenue dans le navigateur.
+  const invitationId = out.creation.reponse.match(/"invitation_id":"([^"]+)"/)?.[1];
+  if (!invitationId) throw new Error("invitation_id absent de la réponse de création");
+  const tokenSA = await page.evaluate(() => {
+    const k = Object.keys(localStorage).find((x) => /auth-token/.test(x));
+    return JSON.parse(localStorage.getItem(k)).access_token;
+  });
+  const envoi = await fetch(`${SUP}/functions/v1/send-invitation`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: KEY, Authorization: `Bearer ${tokenSA}` },
+    body: JSON.stringify({ invitationId, channels: ["email"], requestId: crypto.randomUUID() }),
+  });
+  out.envoi = { statut: envoi.status, reponse: (await envoi.text()).slice(0, 600) };
   const lien = await recupererLienActivation();
   out.etapes.push("invitation envoyée via SMTP local et capturée (jeton non journalisé)");
 
