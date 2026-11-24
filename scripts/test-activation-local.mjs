@@ -125,7 +125,8 @@ try {
   await page.getByRole("button", { name: /Actions pour/ }).click();
   await page.getByRole("menuitem", { name: "Consulter" }).click();
   await page.getByRole("tab", { name: "Invitations & historique" }).click();
-  await page.getByRole("button", { name: /Envoyer|Renouveler/ }).click();
+  await page.getByText("Invitations enregistrées").first().waitFor({ timeout: 10000 });
+  await page.getByRole("button", { name: /Envoyer \/ Renvoyer|Renouveler/ }).click();
   await page.waitForTimeout(2500);
   const lien = await recupererLienActivation();
   out.etapes.push("invitation envoyée via SMTP local et capturée (jeton non journalisé)");
