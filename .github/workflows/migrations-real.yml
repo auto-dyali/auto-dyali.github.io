@@ -37,6 +37,20 @@ jobs:
         run: supabase status -o env >> "$GITHUB_ENV"
       - name: Tests isolation A/B
         run: npm ci && npm run test:isolation
+      - name: Installer Chromium pour Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Démarrer l'application Next contre Supabase local
+        run: |
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > .env.local
+          npm run dev -- --hostname 127.0.0.1 --port 3000 > /tmp/next.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:3000/connexion/ > /dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          cat /tmp/next.log
+          exit 1
+      - name: Activation Manager de bout en bout (SMTP local)
+        run: npm run test:activation-local
       - name: Résumé du dump (sans secret)
         run: wc -l schema-local.sql
       - uses: actions/upload-artifact@v4
