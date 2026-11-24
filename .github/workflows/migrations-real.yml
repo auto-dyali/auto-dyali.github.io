@@ -10,7 +10,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Épinglé : `latest` échoue en CI (rate limit de l'API GitHub).
+          version: 3.3.0
       - name: Démarrer Supabase local (diagnostic en cas d'échec)
         run: |
           set +e
