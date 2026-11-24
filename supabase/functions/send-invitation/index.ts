@@ -75,25 +75,48 @@ type Message = {
  * ne jamais casser le déploiement Resend si deno.land est inaccessible.
  */
 async function sendViaSmtpTest(message: Message): Promise<DeliveryResult> {
+  // Client SMTP minimal, sans authentification ni TLS : le serveur de test
+  // local (Mailpit/Inbucket) n'accepte aucun secret et n'est pas exposé.
+  let conn: Deno.Conn | null = null;
   try {
-    const { SMTPClient } = await import("https://deno.land/x/denomailer@1.6.0/mod.ts");
-    const client = new SMTPClient({
-      connection: {
-        hostname: Deno.env.get("SMTP_HOST") ?? "127.0.0.1",
-        port: Number(Deno.env.get("SMTP_PORT") ?? 54325),
-        tls: false,
-      },
+    conn = await Deno.connect({
+      hostname: Deno.env.get("SMTP_HOST") ?? "127.0.0.1",
+      port: Number(Deno.env.get("SMTP_PORT") ?? 54325),
     });
-    await client.send({
-      from: "test@gv5.local",
-      to: message.recipientEmail,
-      subject: `Votre accès AUTO DYALI — ${message.establishmentName}`,
-      html: `<p>Bonjour ${message.managerFullName},</p><p>Activez votre compte : <a href="${message.activationUrl}">Activer mon compte</a></p><p>Ce lien expire dans ${message.expiresInDays} jours.</p>`,
-    });
-    await client.close();
+    const encode = new TextEncoder();
+    const decode = new TextDecoder();
+    const lire = async (): Promise<string> => {
+      let reponse = "";
+      while (!/^\d{3} /.test(reponse.trim())) {
+        const octets = new Uint8Array(2048);
+        const n = await conn!.read(octets);
+        if (n === null) throw new Error("SMTP fermé par le serveur");
+        reponse += decode.decode(octets.subarray(0, n));
+      }
+      return reponse.trim();
+    };
+    const cmd = async (ligne: string): Promise<string> => {
+      await conn!.write(encode.encode(`${ligne}\r\n`));
+      return lire();
+    };
+    await lire(); // 220
+    await cmd("EHLO gv5.local");
+    await cmd("MAIL FROM:<test@gv5.local>");
+    await cmd(`RCPT TO:<${message.recipientEmail}>`);
+    await cmd("DATA");
+    const html = `<p>Bonjour ${message.managerFullName},</p><p>Activez votre compte : <a href="${message.activationUrl}">Activer mon compte</a></p><p>Ce lien expire dans ${message.expiresInDays} jours.</p>`;
+    await conn.write(
+      encode.encode(
+        `From: test@gv5.local\r\nTo: ${message.recipientEmail}\r\nSubject: Votre accès AUTO DYALI — ${message.establishmentName}\r\nContent-Type: text/html; charset=utf-8\r\n\r\n${html}\r\n.\r\n`,
+      ),
+    );
+    await lire();
+    await cmd("QUIT");
     return { channel: "email", status: "accepte_par_fournisseur", providerRef: "smtp-test" };
   } catch (erreur) {
     return { channel: "email", status: "echec", providerError: String((erreur as Error)?.message ?? erreur) };
+  } finally {
+    conn?.close();
   }
 }
 
