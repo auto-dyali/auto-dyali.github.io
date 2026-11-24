@@ -11,7 +11,7 @@ Projet production : `nxmsqqoflskfajqrqddw` (lecture seule pendant GV5 §101–§
 2. **Fenêtre de maintenance** : les migrations 0001/0036/0039/0043 prennent des verrous sur `establishments`, `profiles`, `invitations`, `subscriptions`. Prévoir une fenêtre et prévenir les utilisateurs.
 3. **Copie de production** : rejouer l'intégralité du plan sur une copie et exécuter les smoke tests §5 avant la production.
 4. **Décision sur l'historique des migrations** : l'historique distant de production est ad hoc et ne correspond pas aux fichiers locaux. `supabase db push` est **interdit** (DbPushMissingLocalError / risque de rejouer tout le schéma). Application fichier par fichier via `supabase db query --remote=<ref> --file=<fichier>`, sous réserve de validation sur copie.
-5. **Décision sur les RPC hors migrations** : `supabase/security/remediation_075`, `076`, `583` et les réconciliations §101 ne sont pas dans `supabase/migrations/`. Certaines fonctions ont été intégrées dans 0040/0043, mais un inventaire complet doit être validé avant production.
+5. **Décision sur les RPC hors migrations** : `supabase/security/remediation_075`, `076`, `583` ne sont pas dans `supabase/migrations/`. Certaines fonctions ont été intégrées dans 0040/0043 ; les réconciliations §101 sont désormais versionnées dans `20261124132000_reconcile_manager_onboarding.sql` (§105). Un inventaire complet doit être validé avant production.
 6. **Décision tarifaire** : `GV581_*_MENSUEL/ANNUEL` non fournis ; les prix resteront NULL.
 7. **Décision fournisseur e-mail** : aucun secret Resend/WhatsApp ; l'activation par lien réel reste non testable.
 
@@ -65,6 +65,7 @@ Projet production : `nxmsqqoflskfajqrqddw` (lecture seule pendant GV5 §101–§
 | 42 | `20261124130000_add_invitation_events_provider_error.sql` | Ajout colonne, faible risque | Oui |
 | 43 | `20261124130100_saas_admin_select_profiles.sql` | Policy SELECT profiles | Oui |
 | 44 | `20261124131000_admin_create_invitation_renewal.sql` | Nouvelle RPC SECURITY DEFINER | Oui |
+| 45 | `20261124132000_reconcile_manager_onboarding.sql` | Versionne les réconciliations §101 : 6 colonnes administratives, `admin_onboard_tenant_v2`, `admin_update_manager`, réparation `auth.identities`, `admin_identity_v2_health`, `hash_invitation_token`. Aucune migration déjà appliquée n'est réécrite. | Oui (`CREATE OR REPLACE`, `ADD COLUMN IF NOT EXISTS`) |
 
 **Non réversibles** : 0004 (UPDATE), 0005/0022 (seed), 0009 (seed abonnements), 0014 (UPDATE), 0043 si la RPC de purge est appelée. Toutes les autres sont réversibles par `CREATE OR REPLACE`, `DROP POLICY`/recréation ou `DROP COLUMN` selon le cas.
 
