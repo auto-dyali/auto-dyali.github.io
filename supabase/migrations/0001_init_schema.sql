@@ -235,7 +235,7 @@ create table if not exists purchase_orders (
   created_at        timestamptz not null default now(),
   unique (establishment_id, reference)
 );
-alter table purchase_orders add constraint purchase_orders_tenant_id_unique unique (establishment_id, id);
+create unique index if not exists purchase_orders_tenant_id_unique on purchase_orders (establishment_id, id);
 
 create table if not exists purchase_order_items (
   id                uuid primary key default uuid_generate_v4(),
