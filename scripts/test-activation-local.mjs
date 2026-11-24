@@ -8,7 +8,7 @@
 import { chromium } from "playwright";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
-const SUP = (process.env.SUPABASE_URL ?? process.env.API_EXTERNAL_URL ?? "http://127.0.0.1:54321").replace(/\/+$/, "");
+const SUP = (process.env.SUPABASE_URL ?? process.env.API_EXTERNAL_URL ?? process.env.API_URL ?? "http://127.0.0.1:54321").replace(/\/+$/, "");
 const KEY = process.env.SUPABASE_ANON_KEY ?? process.env.ANON_KEY ?? process.env.API_ANON_KEY ?? "";
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SERVICE_ROLE_KEY ?? process.env.API_SERVICE_ROLE_KEY ?? "";
 const APP = "http://127.0.0.1:3000";
