@@ -1,0 +1,29 @@
+{
+  "viewport": "375x812",
+  "pages": [
+    {
+      "label": "01-liste",
+      "largeur": 375,
+      "document": 375,
+      "debordement": false
+    },
+    {
+      "label": "02-creation",
+      "largeur": 375,
+      "document": 375,
+      "debordement": false
+    },
+    {
+      "label": "03-fiche",
+      "largeur": 375,
+      "document": 375,
+      "debordement": false
+    },
+    {
+      "label": "04-invitations",
+      "largeur": 375,
+      "document": 375,
+      "debordement": false
+    }
+  ]
+}

@@ -1,0 +1,607 @@
+{
+  "moteur": "PostgreSQL 19 (PGlite WASM)",
+  "fichiers": 45,
+  "passe1": [
+    {
+      "fichier": "0001_init_schema.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0002_fix_profile_rls.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0003_manager_profile_rpc.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0004_set_establishment_agadir.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0005_seed_catalogue_filters_lubrifiants.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0006_auto_profile_new_users.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0007_fix_admin_rls_and_rpc.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0008_product_stock_and_plans.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0009_plans_features_subscriptions.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0010_super_admin_rpc.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0011_payment_mobile.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0012_decrement_product_stock.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0013_tires_and_quotes.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0014_product_category_tire.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0015_support_tickets.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0016_vehicle_catalog_compat.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0017_notifications_channel.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0018_crm_super_admin.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0019_cheques.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0020_supplier_returns_invoices.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0021_mini_pos.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0022_test_stock.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0023_scan_pro_barcodes.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0024_print_pro.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0025_pos_core.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0026_subscriptions_audit_and_lifecycle.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0027_mission_2_14_managers_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0028_mission_2_15_onboarding_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0029_crm_extension_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0030_super_admin_security_hardening.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0031_profiles_rls_admin_access.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0033_pre_purchase_requests_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0034_harden_admin_p0_rpcs_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0035_pre_purchase_submit_rpc_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0036_invitations_manager_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0037_fix_security_p0_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0038_security_rls_indexes_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0039_onboarding_identity_v2_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0040_fix_admin_set_subscription_upsert.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0041_add_updated_at_subscriptions.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0042_rls_profiles_saas_admin_insert.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0043_archive_purge_etablissements.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "20261124130000_add_invitation_events_provider_error.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "20261124130100_saas_admin_select_profiles.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "20261124131000_admin_create_invitation_renewal.sql",
+      "statut": "OK"
+    }
+  ],
+  "passe2": [
+    {
+      "fichier": "0001_init_schema.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0002_fix_profile_rls.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0003_manager_profile_rpc.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0004_set_establishment_agadir.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0005_seed_catalogue_filters_lubrifiants.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0006_auto_profile_new_users.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0007_fix_admin_rls_and_rpc.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0008_product_stock_and_plans.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0009_plans_features_subscriptions.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0010_super_admin_rpc.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0011_payment_mobile.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0012_decrement_product_stock.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0013_tires_and_quotes.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0014_product_category_tire.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0015_support_tickets.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0016_vehicle_catalog_compat.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0017_notifications_channel.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0018_crm_super_admin.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0019_cheques.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0020_supplier_returns_invoices.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0021_mini_pos.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0022_test_stock.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0023_scan_pro_barcodes.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0024_print_pro.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0025_pos_core.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0026_subscriptions_audit_and_lifecycle.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0027_mission_2_14_managers_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0028_mission_2_15_onboarding_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0029_crm_extension_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0030_super_admin_security_hardening.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0031_profiles_rls_admin_access.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0033_pre_purchase_requests_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0034_harden_admin_p0_rpcs_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0035_pre_purchase_submit_rpc_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0036_invitations_manager_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0037_fix_security_p0_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0038_security_rls_indexes_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0039_onboarding_identity_v2_prepared_NOT_APPLIED.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0040_fix_admin_set_subscription_upsert.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0041_add_updated_at_subscriptions.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0042_rls_profiles_saas_admin_insert.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "0043_archive_purge_etablissements.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "20261124130000_add_invitation_events_provider_error.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "20261124130100_saas_admin_select_profiles.sql",
+      "statut": "OK"
+    },
+    {
+      "fichier": "20261124131000_admin_create_invitation_renewal.sql",
+      "statut": "OK"
+    }
+  ],
+  "verification": {
+    "provider_error": [
+      {
+        "column_name": "provider_error"
+      }
+    ],
+    "policy_sa": [
+      {
+        "polname": "saas_admin_select_profiles",
+        "polcmd": "r",
+        "using_expr": "is_saas_admin()"
+      }
+    ],
+    "rpc_admin": [
+      {
+        "nb": 26
+      }
+    ],
+    "is_saas_admin": [
+      {
+        "proname": "is_saas_admin",
+        "prosecdef": true
+      }
+    ],
+    "rls": [
+      {
+        "tablename": "appointments",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "attendance",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "audit_log",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "cash_sessions",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "cheques",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "client_notifications",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "clients",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "crm_events",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "crm_leads",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "employees",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "establishments",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "expenses",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "inventory_counts",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "invitation_events",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "invitations",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "invoices",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "maintenance_reminders",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "onboarding_requests",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "part_compatibilities",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "payments",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "permissions",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "plan_features",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "plans",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "pre_purchase_events",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "pre_purchase_requests",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "print_jobs",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "printer_configs",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "product_barcodes",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "product_lots",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "products",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "profiles",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "purchase_order_items",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "purchase_orders",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "quote_items",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "quotes",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "sale_items",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "sales",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "services",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "stock_movements",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "subscriptions",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "subscriptions_audit",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "supplier_invoices",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "supplier_return_items",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "supplier_returns",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "suppliers",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "support_tickets",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "ticket_messages",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "tire_specs",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "vehicle_catalog",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "vehicles",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "work_order_tasks",
+        "rowsecurity": true
+      },
+      {
+        "tablename": "work_orders",
+        "rowsecurity": true
+      }
+    ]
+  },
+  "erreurs": [],
+  "bootstrap": "OK",
+  "passe1_duree_ms": 1610,
+  "passe2_duree_ms": 701
+}

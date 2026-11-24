@@ -1,0 +1,26 @@
+{
+  "slug": "reg104-1795531355820",
+  "email": "reg104.1795531355820@autodyali-staging.local",
+  "etapes": {
+    "creation": {
+      "ok": true,
+      "establishment_id": "11f37adb-0e05-4d14-a439-99e570e63349",
+      "invitation_id": "48ea2d1f-d212-433f-9f6e-298297c8ab59"
+    },
+    "fiche": "Manager affiché dans la fiche",
+    "updateEtab": 200,
+    "updateManager": 200,
+    "updatePermissions": 200,
+    "renouvellement": 200
+  },
+  "isolation": {
+    "A": {
+      "etabVisibles": 1,
+      "etabCible": 0
+    },
+    "B": {
+      "etabVisibles": 1,
+      "etabCible": 0
+    }
+  }
+}
