@@ -68,7 +68,39 @@ type Message = {
   expiresInDays: number;
 };
 
+/**
+ * Fournisseur de test SANS SECRET : quand EMAIL_PROVIDER=smtp, on envoie via
+ * le serveur SMTP local de la pile Supabase (Inbucket). Le chemin Resend et
+ * le comportement par défaut restent inchangés. L'import est dynamique pour
+ * ne jamais casser le déploiement Resend si deno.land est inaccessible.
+ */
+async function sendViaSmtpTest(message: Message): Promise<DeliveryResult> {
+  try {
+    const { SMTPClient } = await import("https://deno.land/x/denomailer@1.6.0/mod.ts");
+    const client = new SMTPClient({
+      connection: {
+        hostname: Deno.env.get("SMTP_HOST") ?? "127.0.0.1",
+        port: Number(Deno.env.get("SMTP_PORT") ?? 54325),
+        tls: false,
+      },
+    });
+    await client.send({
+      from: "test@gv5.local",
+      to: message.recipientEmail,
+      subject: `Votre accès AUTO DYALI — ${message.establishmentName}`,
+      html: `<p>Bonjour ${message.managerFullName},</p><p>Activez votre compte : <a href="${message.activationUrl}">Activer mon compte</a></p><p>Ce lien expire dans ${message.expiresInDays} jours.</p>`,
+    });
+    await client.close();
+    return { channel: "email", status: "accepte_par_fournisseur", providerRef: "smtp-test" };
+  } catch (erreur) {
+    return { channel: "email", status: "echec", providerError: String((erreur as Error)?.message ?? erreur) };
+  }
+}
+
 async function deliverEmail(apiKey: string | null, from: string | null, message: Message): Promise<DeliveryResult> {
+  if (Deno.env.get("EMAIL_PROVIDER") === "smtp") {
+    return sendViaSmtpTest(message);
+  }
   if (!apiKey || !from) {
     return {
       channel: "email",
