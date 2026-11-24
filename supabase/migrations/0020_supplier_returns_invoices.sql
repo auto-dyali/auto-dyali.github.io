@@ -35,6 +35,9 @@ create table if not exists public.supplier_return_items (
   unit_price            numeric(10,2) not null default 0
 );
 alter table public.supplier_return_items
+  drop constraint if exists supplier_return_items_return_fk;
+
+alter table public.supplier_return_items
   add constraint supplier_return_items_return_fk
   foreign key (establishment_id, return_id)
   references public.supplier_returns(establishment_id, id) on delete cascade;
