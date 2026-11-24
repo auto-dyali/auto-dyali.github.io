@@ -37,9 +37,9 @@ jobs:
         run: supabase status -o env >> "$GITHUB_ENV"
       - name: Normaliser les noms de variables locales
         run: |
-          echo "SUPABASE_URL=${SUPABASE_URL:-$API_URL}" >> "$GITHUB_ENV"
-          echo "SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-$ANON_KEY}" >> "$GITHUB_ENV"
-          echo "SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-$SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
+          echo "SUPABASE_URL=$(printf '%s' "${SUPABASE_URL:-$API_URL}" | tr -d '"')" >> "$GITHUB_ENV"
+          echo "SUPABASE_ANON_KEY=$(printf '%s' "${SUPABASE_ANON_KEY:-$ANON_KEY}" | tr -d '"')" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(printf '%s' "${SUPABASE_SERVICE_ROLE_KEY:-$SERVICE_ROLE_KEY}" | tr -d '"')" >> "$GITHUB_ENV"
       - name: Tests isolation A/B
         run: |
           npm ci
