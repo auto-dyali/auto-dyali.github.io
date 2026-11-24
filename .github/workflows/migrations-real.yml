@@ -41,7 +41,16 @@ jobs:
           echo "SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-$ANON_KEY}" >> "$GITHUB_ENV"
           echo "SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-$SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
       - name: Tests isolation A/B
-        run: npm ci && npm run test:isolation
+        run: |
+          npm ci
+          set +e
+          npm run test:isolation > /tmp/isolation.log 2>&1
+          rc=$?
+          cat /tmp/isolation.log
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::test:isolation a échoué : $(tail -c 1200 /tmp/isolation.log | tr '\n' ' ')"
+            exit "$rc"
+          fi
       - name: Installer Chromium pour Playwright
         run: npx playwright install --with-deps chromium
       - name: Démarrer l'application Next contre Supabase local
