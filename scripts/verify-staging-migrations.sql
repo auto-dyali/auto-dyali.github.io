@@ -98,6 +98,20 @@ controles as (
   select 'modules_formules_presents',
          (select count(*) > 0 from public.plan_features where enabled),
          'au moins un module activé par formule'
+
+  union all
+  select 'invitation_events_provider_error',
+         exists (select 1 from information_schema.columns
+                 where table_schema = 'public' and table_name = 'invitation_events'
+                   and column_name = 'provider_error'),
+         'admin_record_delivery insère provider_error : colonne requise'
+
+  union all
+  select 'saas_admin_select_profiles',
+         exists (select 1 from pg_policy
+                 where polrelid = 'public.profiles'::regclass
+                   and polname = 'saas_admin_select_profiles' and polcmd = 'r'),
+         'le Super Admin doit voir les Managers (liste et tableau de bord)'
 )
 select controle, ok, detail
 from controles
