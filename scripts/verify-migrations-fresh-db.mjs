@@ -64,9 +64,13 @@ for (const file of files) {
 
 const provider = "20261124130000_add_invitation_events_provider_error.sql";
 const policy = "20261124130100_saas_admin_select_profiles.sql";
+const renewal = "20261124131000_admin_create_invitation_renewal.sql";
+const reconciliation = "20261124132000_reconcile_manager_onboarding.sql";
 
 assert.ok(files.includes(provider), `${provider} absent`);
 assert.ok(files.includes(policy), `${policy} absent`);
+assert.ok(files.includes(renewal), `${renewal} absent`);
+assert.ok(files.includes(reconciliation), `${reconciliation} absent`);
 assert.match(provider, /^\d{14}_/, "horodatage de migration attendu");
 assert.match(policy, /^\d{14}_/, "horodatage de migration attendu");
 
@@ -77,6 +81,12 @@ assert.match(sqlPolicy, /drop\s+policy\s+if\s+exists/i, "la policy doit être id
 assert.match(sqlPolicy, /for\s+select\s+to\s+authenticated/i, "SELECT uniquement, rôle authenticated");
 assert.match(sqlPolicy, /using\s*\(\s*public\.is_saas_admin\(\)\s*\)/i, "garde côté base obligatoire");
 assert.doesNotMatch(sqlPolicy, /with\s+check/i, "aucune policy WITH CHECK (écriture) autorisée");
+
+const sqlReconciliation = readFileSync(join(dir, reconciliation), "utf8");
+assert.match(sqlReconciliation, /add column if not exists country/i);
+assert.match(sqlReconciliation, /add column if not exists complementary_contacts/i);
+assert.match(sqlReconciliation, /create or replace function public\.admin_onboard_tenant_v2/i);
+assert.match(sqlReconciliation, /create or replace function public\.admin_update_manager/i);
 
 assert.ok(model.columns.has("invitation_events.provider_error"), "provider_error absent de l'état reconstruit");
 const rebuilt = model.policies.get("profiles.saas_admin_select_profiles");
