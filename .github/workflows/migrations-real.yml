@@ -11,7 +11,15 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase start
+      - name: Démarrer Supabase local (diagnostic en cas d'échec)
+        run: |
+          set +e
+          supabase start 2>&1 | tee /tmp/supabase-start.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::supabase start a échoué : $(tail -c 1200 /tmp/supabase-start.log | tr '\n' ' ')"
+            exit "$rc"
+          fi
       - name: Reset 1 (base vierge)
         run: supabase db reset --yes
       - name: Reset 2 (idempotence)
