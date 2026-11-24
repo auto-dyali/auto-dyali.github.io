@@ -76,7 +76,7 @@ drop policy if exists tenant_isolation on public.establishments;
 
 create policy tenant_isolation on public.establishments
   for select
-  using (establishment_id = public.current_establishment_id());
+  using (id = public.current_establishment_id());
 
 -- Politique d'insertion réservée à saas_admin
 drop policy if exists saas_admin_insert_establishments on public.establishments;
