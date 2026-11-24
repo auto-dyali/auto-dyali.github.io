@@ -64,7 +64,15 @@ jobs:
           cat /tmp/next.log
           exit 1
       - name: Activation Manager de bout en bout (SMTP local)
-        run: npm run test:activation-local
+        run: |
+          set +e
+          npm run test:activation-local > /tmp/activation.log 2>&1
+          rc=$?
+          cat /tmp/activation.log
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::test:activation-local a échoué : $(tail -c 1400 /tmp/activation.log | tr '\n' ' ')"
+            exit "$rc"
+          fi
       - name: Résumé du dump (sans secret)
         run: wc -l schema-local.sql
       - uses: actions/upload-artifact@v4
