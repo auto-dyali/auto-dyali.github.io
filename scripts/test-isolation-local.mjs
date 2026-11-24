@@ -45,9 +45,10 @@ async function creerManager(lettre) {
   });
   if (!e.ok) throw new Error(`création établissement ${lettre}: ${e.status} ${(await e.text()).slice(0, 200)}`);
 
+  // Le trigger handle_new_auth_user crée déjà le profil : upsert, pas insert.
   const p = await fetch(`${URL}/rest/v1/profiles`, {
     method: "POST",
-    headers: { ...adminHeaders, Prefer: "return=representation" },
+    headers: { ...adminHeaders, Prefer: "resolution=merge-duplicates,return=representation" },
     body: JSON.stringify({ id: userId, full_name: `Manager ISO ${lettre}`, role: "manager", establishment_id: etabId, is_active: true }),
   });
   if (!p.ok) throw new Error(`création profil ${lettre}: ${p.status} ${(await p.text()).slice(0, 200)}`);
