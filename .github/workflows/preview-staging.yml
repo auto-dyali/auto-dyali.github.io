@@ -1,0 +1,48 @@
+name: preview-staging
+
+# Préversion consultable sous forme d'artefact SÉPARÉ. Ce workflow ne déploie
+# jamais sur GitHub Pages (site de production) et ne touche pas à main.
+on:
+  push:
+    branches: [gv5-105-close-all]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-staging
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build avec les variables STAGING (clé publique uniquement)
+        env:
+          NEXT_PUBLIC_SITE_BASE_PATH: ""
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.STAGING_SUPABASE_URL || 'https://yocufscgninxiihwiepa.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY || 'sb_publishable_SkPOqfTxZ1drLBK8sxu83Q_6yr0OB7d' }}
+          NEXT_PUBLIC_BUILD_SHA: ${{ github.sha }}
+        run: npm run build
+      - name: Marquer noindex + bandeau STAGING
+        run: node scripts/add-staging-banner.mjs out
+      - name: Vérifier l'absence de configuration de production
+        run: |
+          if grep -rqs "nxmsqqoflskfajqrqddw" out; then
+            echo "::error::URL de production détectée dans la préversion"
+            exit 1
+          fi
+          grep -rqs "yocufscgninxiihwiepa" out && echo "STAGING confirmé dans le build"
+      - name: Publier l'artefact de préversion (emplacement séparé)
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-staging
+          path: out
+          retention-days: 14
