@@ -112,6 +112,12 @@ controles as (
                  where polrelid = 'public.profiles'::regclass
                    and polname = 'saas_admin_select_profiles' and polcmd = 'r'),
          'le Super Admin doit voir les Managers (liste et tableau de bord)'
+
+  union all
+  select 'admin_create_invitation_renewal',
+         exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and p.proname = 'admin_create_invitation_renewal'),
+         'renouvellement après révocation : nouvelle invitation, ancien lien invalide'
 )
 select controle, ok, detail
 from controles
