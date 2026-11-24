@@ -82,6 +82,7 @@ declare
   v_client_ok boolean;
   v_vehicule_ok boolean;
   v_paiements_total numeric;
+  v_recu            numeric := 0;
 begin
   if v_est is null then
     raise exception 'Établissement introuvable pour cet utilisateur.';
