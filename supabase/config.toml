@@ -431,7 +431,3 @@ enabled = true
 [functions.send-invitation]
 verify_jwt = false
 
-[functions.send-invitation.env]
-EMAIL_PROVIDER = "env(EMAIL_PROVIDER)"
-SMTP_HOST = "env(SMTP_HOST)"
-SMTP_PORT = "env(SMTP_PORT)"
