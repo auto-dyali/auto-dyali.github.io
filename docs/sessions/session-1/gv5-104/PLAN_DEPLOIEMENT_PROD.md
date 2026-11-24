@@ -66,6 +66,7 @@ Projet production : `nxmsqqoflskfajqrqddw` (lecture seule pendant GV5 §101–§
 | 43 | `20261124130100_saas_admin_select_profiles.sql` | Policy SELECT profiles | Oui |
 | 44 | `20261124131000_admin_create_invitation_renewal.sql` | Nouvelle RPC SECURITY DEFINER | Oui |
 | 45 | `20261124132000_reconcile_manager_onboarding.sql` | Versionne les réconciliations §101 : 6 colonnes administratives, `admin_onboard_tenant_v2`, `admin_update_manager`, réparation `auth.identities`, `admin_identity_v2_health`, `hash_invitation_token`. Aucune migration déjà appliquée n'est réécrite. | Oui (`CREATE OR REPLACE`, `ADD COLUMN IF NOT EXISTS`) |
+| 46 | `20261124133000_fix_onboard_trigger_profile.sql` | Corrige le garde d'onboarding pour le profil provisoire créé par le trigger Auth (défaut reproduit en CI GV5 §105). | Oui (`CREATE OR REPLACE`) |
 
 **Non réversibles** : 0004 (UPDATE), 0005/0022 (seed), 0009 (seed abonnements), 0014 (UPDATE), 0043 si la RPC de purge est appelée. Toutes les autres sont réversibles par `CREATE OR REPLACE`, `DROP POLICY`/recréation ou `DROP COLUMN` selon le cas.
 
