@@ -1,0 +1,10 @@
+{
+  "avant": "es deux\n\nLien unique à usage unique, expiration 7 jours, hash du jeton uniquement. Le Manager choisit son mot de passe lors de l'activation.\n\n02\nInvitations enregistrées\n\nStatuts indépendants WhatsApp / e-mail\n\nmanager.unification.1795176196108@autodyali-staging.local\ncancelled\nE-mail : en_attente\nWhatsApp : non_demande\nCréée le : 20/11/2026\nExpire le : 24/11/2026\nRenouveler\nRévoquer le lien\n03\nJournal d'audit\n\n30 dernières opérations journalisées\n\nrevoke_invitation · invitation\n24/11/2026\npassword_changed · profile\n24/11/2026\nupdate_establishment · establishment\n20/11/2026\nupdate_establishment · establishment\n20/11/2026\nonboard_tenant_v2 · establishment\n20/11/2026\n\nOuvrir le journal complet",
+  "boutonPresent": 1,
+  "boutonDesactive": false,
+  "response": {
+    "status": 200,
+    "body": "{\"ok\":true,\"idempotent\":false,\"invitation_id\":\"872eb112-3b9b-41d4-9287-a2c8e3c1cd2e\",\"renewed_from\":\"e2f22913-05a5-40ec-8d07-478169de3862\",\"expires_at\":\"2026-12-01T12:25:10.3+00:00\",\"delivery\":[{\"channel\":\"email\",\"status\":\"non_configure\",\"providerError\":\"Fournisseur e-mail non configuré (RESEND_API_KEY / EMAIL_FROM absents).\"}]}"
+  },
+  "apres": "s WhatsApp / e-mail\n\nmanager.unification.1795176196108@autodyali-staging.local\nsent\nE-mail : non_configure\nWhatsApp : non_demande\nCréée le : 24/11/2026\nExpire le : 01/12/2026\nEnvoyer / Renvoyer\nRévoquer le lien\nmanager.unification.1795176196108@autodyali-staging.local\ncancelled\nE-mail : en_attente\nWhatsApp : non_demande\nCréée le : 20/11/2026\nExpire le : 24/11/2026\nRenouveler\nRévoquer le lien\n03\nJournal d'audit\n\n30 dernières opérations journalisées\n\nrevoke_invitation · invitation\n24/11/2026\npassword_changed · profile\n24/11/2026\nupdate_establishment · establishment\n20/11/2026\nupdate_establishment · establishment\n20/11/2026\nonboard_tenant_v2 · establishment\n20/11/2026\n\nOuvrir le journal complet"
+}

@@ -991,8 +991,8 @@ export function AbonneWorkspace({
                               {txt(i.last_error) && <span className="sa3d-plein text-[#e59b96]">Erreur : {txt(i.last_error)}</span>}
                             </div>
                             <div className="mt-3 flex flex-wrap gap-2">
-                              <button type="button" className="sa3d-btn sa3d-btn-vert" disabled={envoiEnCours || statut === "accepted" || statut === "cancelled"} onClick={() => void relancer(id)}>
-                                {envoiEnCours ? "…" : "Envoyer / Renvoyer"}
+                              <button type="button" className="sa3d-btn sa3d-btn-vert" disabled={envoiEnCours || statut === "accepted"} onClick={() => void relancer(id)}>
+                                {envoiEnCours ? "…" : statut === "cancelled" ? "Renouveler" : "Envoyer / Renvoyer"}
                               </button>
                               <button type="button" className="sa3d-btn sa3d-btn-danger" disabled={statut === "accepted" || statut === "cancelled"} onClick={() => void revoquer(id)}>
                                 Révoquer le lien

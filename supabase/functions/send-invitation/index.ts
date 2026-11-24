@@ -227,10 +227,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (invitationError) return fail(500, `Lecture de l'invitation impossible : ${invitationError.message}`);
     if (!invitation) return fail(404, "Invitation introuvable.");
     if (invitation.status === "accepted") return fail(409, "Cette invitation a déjà été acceptée.");
-    if (invitation.status === "cancelled") return fail(409, "Cette invitation est annulée.");
 
-    /* Idempotence : même requestId ⇒ même résultat, aucun nouvel envoi. */
-    if (invitation.last_request_id === requestId) {
+    /* Idempotence : même requestId ⇒ même résultat, aucun nouvel envoi.
+       Une invitation révoquée est exclue : elle est renouvelée par une
+       NOUVELLE invitation, jamais ressuscitée. */
+    if (invitation.last_request_id === requestId && invitation.status !== "cancelled") {
       return json(200, {
         ok: true,
         idempotent: true,
@@ -252,26 +253,57 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const tokenHash = await sha256Hex(token);
     const expiresAt = new Date(Date.now() + INVITATION_TTL_DAYS * 86_400_000).toISOString();
 
-    const { error: prepareError } = await caller.rpc("admin_prepare_resend", {
-      p_invitation_id: invitation.id,
-      p_request_id: requestId,
-      p_token_hash: tokenHash,
-      p_expires_at: expiresAt,
-      p_channels: channels,
-    });
-    if (prepareError) {
-      return fail(400, `Préparation de la relance impossible : ${prepareError.message}`);
+    let activeInvitation = invitation;
+    let renewedFrom: string | null = null;
+
+    if (invitation.status === "cancelled") {
+      // Sécurité : l'ancien jeton reste invalide (ligne `cancelled` inchangée).
+      // Le RPC crée une nouvelle invitation avec la nouvelle empreinte.
+      const { data: renewed, error: renewError } = await caller.rpc("admin_create_invitation_renewal", {
+        p_old_invitation_id: invitation.id,
+        p_request_id: requestId,
+        p_token_hash: tokenHash,
+        p_expires_at: expiresAt,
+        p_channels: channels,
+      });
+      if (renewError) {
+        return fail(400, `Renouvellement impossible : ${renewError.message}`);
+      }
+      if (!renewed?.invitation_id) {
+        return fail(500, "Renouvellement sans identifiant d'invitation.");
+      }
+      renewedFrom = invitation.id;
+      activeInvitation = {
+        ...invitation,
+        id: renewed.invitation_id,
+        status: "prepared",
+        expires_at: renewed.expires_at ?? expiresAt,
+        last_request_id: requestId,
+        email_status: channels.includes("email") ? "en_attente" : invitation.email_status,
+        whatsapp_status: channels.includes("whatsapp") ? "en_attente" : invitation.whatsapp_status,
+      };
+    } else {
+      const { error: prepareError } = await caller.rpc("admin_prepare_resend", {
+        p_invitation_id: invitation.id,
+        p_request_id: requestId,
+        p_token_hash: tokenHash,
+        p_expires_at: expiresAt,
+        p_channels: channels,
+      });
+      if (prepareError) {
+        return fail(400, `Préparation de la relance impossible : ${prepareError.message}`);
+      }
     }
 
     const baseUrl = env("ACTIVATION_BASE_URL") ?? req.headers.get("origin") ?? "";
     const activationUrl = `${baseUrl.replace(/\/+$/, "")}/activer/?token=${encodeURIComponent(token)}`;
 
     const message: Message = {
-      managerFullName: invitation.manager_full_name,
+      managerFullName: activeInvitation.manager_full_name,
       establishmentName: establishment?.name ?? "votre établissement",
       activationUrl,
-      recipientEmail: invitation.email,
-      recipientPhone: invitation.manager_phone ?? null,
+      recipientEmail: activeInvitation.email,
+      recipientPhone: activeInvitation.manager_phone ?? null,
       expiresInDays: INVITATION_TTL_DAYS,
     };
 
@@ -295,7 +327,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     for (const r of results) {
       const { error: recordError } = await caller.rpc("admin_record_delivery", {
-        p_invitation_id: invitation.id,
+        p_invitation_id: activeInvitation.id,
         p_channel: r.channel,
         p_status: r.status,
         p_provider_ref: r.providerRef ?? null,
@@ -311,8 +343,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json(200, {
       ok: true,
       idempotent: false,
-      invitation_id: invitation.id,
-      expires_at: expiresAt,
+      invitation_id: activeInvitation.id,
+      renewed_from: renewedFrom,
+      expires_at: activeInvitation.expires_at ?? expiresAt,
       delivery: results,
     });
   } catch (error) {
