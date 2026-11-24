@@ -59,8 +59,17 @@ async function recupererLienActivation() {
       if (msg) {
         const detail = await fetch(`http://127.0.0.1:54324/api/v1/message/${encodeURIComponent(msg.ID)}`);
         const corp = await detail.text();
-        const m = corp.match(/activer\/\?token=([a-f0-9]{64})/i);
-        if (m) return `${APP}/activer/?token=${m[1]}`;
+        const m = corp.match(/token=([a-f0-9=\r\n]{60,140})/i);
+        if (m) {
+          const jeton = m[1].replace(/=\r?\n/g, "").replace(/\s/g, "").slice(0, 64);
+          if (/^[a-f0-9]{64}$/i.test(jeton)) return `${APP}/activer/?token=${jeton}`;
+        }
+        out.captureDiagnostic = {
+          messages: msgs.length,
+          tailleMessage: corp.length,
+          contientActiver: /activer/i.test(corp),
+          extrait: corp.slice(0, 160).replace(/token=[a-f0-9]+/i, "token=***"),
+        };
       }
     }
     await new Promise((r) => setTimeout(r, 1000));
