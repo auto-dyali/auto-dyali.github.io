@@ -132,7 +132,8 @@ create index if not exists idx_subscriptions_establishment_id on public.subscrip
 create index if not exists idx_subscriptions_audit_establishment_id on public.subscriptions_audit (establishment_id);
 create index if not exists idx_suppliers_establishment_id on public.suppliers (establishment_id);
 create index if not exists idx_support_tickets_establishment_id on public.support_tickets (establishment_id);
-create index if not exists idx_ticket_messages_establishment_id on public.ticket_messages (establishment_id);
+-- ticket_messages n'a pas de colonne establishment_id (relation via ticket_id).
+create index if not exists idx_ticket_messages_ticket_id on public.ticket_messages (ticket_id);
 create index if not exists idx_vehicles_establishment_id on public.vehicles (establishment_id);
 create index if not exists idx_work_order_tasks_establishment_id on public.work_order_tasks (establishment_id);
 create index if not exists idx_work_orders_establishment_id on public.work_orders (establishment_id);
