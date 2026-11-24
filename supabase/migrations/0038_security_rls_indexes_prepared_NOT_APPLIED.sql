@@ -45,7 +45,7 @@ drop policy if exists tenant_select_audit_log on public.audit_log;
 
 create policy tenant_select_audit_log on public.audit_log
   for select
-  using (public.establishment_id = public.current_establishment_id() or public.is_saas_admin());
+  using (establishment_id = public.current_establishment_id() or public.is_saas_admin());
 
 -- Politique d'insertion réservée à saas_admin et manager (remplace managers_insert_audit_log)
 drop policy if exists managers_insert_audit_log on public.audit_log;
@@ -76,7 +76,7 @@ drop policy if exists tenant_isolation on public.establishments;
 
 create policy tenant_isolation on public.establishments
   for select
-  using (public.establishment_id = public.current_establishment_id());
+  using (establishment_id = public.current_establishment_id());
 
 -- Politique d'insertion réservée à saas_admin
 drop policy if exists saas_admin_insert_establishments on public.establishments;
@@ -106,36 +106,36 @@ create policy saas_admin_full_access on public.establishments
 --    Index sur les colonnes establishment_id (fréquemment utilisées pour l'isolation
 --    multi-tenant) et autres FK critiques.
 -- ---------------------------------------------------------------------
-create index if not exists public.idx_appointments_establishment_id on public.appointments (establishment_id);
-create index if not exists public.idx_attendance_establishment_id on public.attendance (establishment_id);
-create index if not exists public.idx_audit_log_establishment_id on public.audit_log (establishment_id);
-create index if not exists public.idx_audit_log_actor_id on public.audit_log (actor_id);
-create index if not exists public.idx_cash_sessions_establishment_id on public.cash_sessions (establishment_id);
-create index if not exists public.idx_client_notifications_establishment_id on public.client_notifications (establishment_id);
-create index if not exists public.idx_clients_establishment_id on public.clients (establishment_id);
-create index if not exists public.idx_employees_establishment_id on public.employees (establishment_id);
-create index if not exists public.idx_expenses_establishment_id on public.expenses (establishment_id);
-create index if not exists public.idx_inventory_counts_establishment_id on public.inventory_counts (establishment_id);
-create index if not exists public.idx_invoices_establishment_id on public.invoices (establishment_id);
-create index if not exists public.idx_maintenance_reminders_establishment_id on public.maintenance_reminders (establishment_id);
-create index if not exists public.idx_payments_establishment_id on public.payments (establishment_id);
-create index if not exists public.idx_permissions_establishment_id on public.permissions (establishment_id);
-create index if not exists public.idx_product_lots_establishment_id on public.product_lots (establishment_id);
-create index if not exists public.idx_products_establishment_id on public.products (establishment_id);
-create index if not exists public.idx_purchase_order_items_establishment_id on public.purchase_order_items (establishment_id);
-create index if not exists public.idx_purchase_orders_establishment_id on public.purchase_orders (establishment_id);
-create index if not exists public.idx_sale_items_establishment_id on public.sale_items (establishment_id);
-create index if not exists public.idx_sales_establishment_id on public.sales (establishment_id);
-create index if not exists public.idx_services_establishment_id on public.services (establishment_id);
-create index if not exists public.idx_stock_movements_establishment_id on public.stock_movements (establishment_id);
-create index if not exists public.idx_subscriptions_establishment_id on public.subscriptions (establishment_id);
-create index if not exists public.idx_subscriptions_audit_establishment_id on public.subscriptions_audit (establishment_id);
-create index if not exists public.idx_suppliers_establishment_id on public.suppliers (establishment_id);
-create index if not exists public.idx_support_tickets_establishment_id on public.support_tickets (establishment_id);
-create index if not exists public.idx_ticket_messages_establishment_id on public.ticket_messages (establishment_id);
-create index if not exists public.idx_vehicles_establishment_id on public.vehicles (establishment_id);
-create index if not exists public.idx_work_order_tasks_establishment_id on public.work_order_tasks (establishment_id);
-create index if not exists public.idx_work_orders_establishment_id on public.work_orders (establishment_id);
+create index if not exists idx_appointments_establishment_id on public.appointments (establishment_id);
+create index if not exists idx_attendance_establishment_id on public.attendance (establishment_id);
+create index if not exists idx_audit_log_establishment_id on public.audit_log (establishment_id);
+create index if not exists idx_audit_log_actor_id on public.audit_log (actor_id);
+create index if not exists idx_cash_sessions_establishment_id on public.cash_sessions (establishment_id);
+create index if not exists idx_client_notifications_establishment_id on public.client_notifications (establishment_id);
+create index if not exists idx_clients_establishment_id on public.clients (establishment_id);
+create index if not exists idx_employees_establishment_id on public.employees (establishment_id);
+create index if not exists idx_expenses_establishment_id on public.expenses (establishment_id);
+create index if not exists idx_inventory_counts_establishment_id on public.inventory_counts (establishment_id);
+create index if not exists idx_invoices_establishment_id on public.invoices (establishment_id);
+create index if not exists idx_maintenance_reminders_establishment_id on public.maintenance_reminders (establishment_id);
+create index if not exists idx_payments_establishment_id on public.payments (establishment_id);
+create index if not exists idx_permissions_establishment_id on public.permissions (establishment_id);
+create index if not exists idx_product_lots_establishment_id on public.product_lots (establishment_id);
+create index if not exists idx_products_establishment_id on public.products (establishment_id);
+create index if not exists idx_purchase_order_items_establishment_id on public.purchase_order_items (establishment_id);
+create index if not exists idx_purchase_orders_establishment_id on public.purchase_orders (establishment_id);
+create index if not exists idx_sale_items_establishment_id on public.sale_items (establishment_id);
+create index if not exists idx_sales_establishment_id on public.sales (establishment_id);
+create index if not exists idx_services_establishment_id on public.services (establishment_id);
+create index if not exists idx_stock_movements_establishment_id on public.stock_movements (establishment_id);
+create index if not exists idx_subscriptions_establishment_id on public.subscriptions (establishment_id);
+create index if not exists idx_subscriptions_audit_establishment_id on public.subscriptions_audit (establishment_id);
+create index if not exists idx_suppliers_establishment_id on public.suppliers (establishment_id);
+create index if not exists idx_support_tickets_establishment_id on public.support_tickets (establishment_id);
+create index if not exists idx_ticket_messages_establishment_id on public.ticket_messages (establishment_id);
+create index if not exists idx_vehicles_establishment_id on public.vehicles (establishment_id);
+create index if not exists idx_work_order_tasks_establishment_id on public.work_order_tasks (establishment_id);
+create index if not exists idx_work_orders_establishment_id on public.work_orders (establishment_id);
 
 -- ---------------------------------------------------------------------
 -- 4. Journalisation de l'opération de durcissement
