@@ -53,6 +53,12 @@ async function recupererLienActivation() {
     const rep = await fetch("http://127.0.0.1:54324/api/v1/messages?limit=50");
     if (rep.ok) {
       const msgs = await rep.json();
+      if (essai === 0) {
+        out.captureDiagnostic = {
+          messages: Array.isArray(msgs) ? msgs.length : "format inattendu",
+          destinataires: Array.isArray(msgs) ? msgs.slice(0, 3).map((m) => (m.To ?? []).map((d) => d.Address)) : [],
+        };
+      }
       const msg = Array.isArray(msgs)
         ? msgs.find((m) => (m.To ?? []).some((d) => d.Address === managerEmail))
         : null;
