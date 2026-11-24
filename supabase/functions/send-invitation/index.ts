@@ -87,13 +87,16 @@ async function sendViaSmtpTest(message: Message): Promise<DeliveryResult> {
     const decode = new TextDecoder();
     const lire = async (): Promise<string> => {
       let reponse = "";
-      while (!/^\d{3} /.test(reponse.trim())) {
+      for (;;) {
+        const lignes = reponse.split(/\r?\n/).filter((l) => l.length > 0);
+        if (lignes.length > 0 && /^\d{3} /.test(lignes[lignes.length - 1])) {
+          return lignes.join("\n");
+        }
         const octets = new Uint8Array(2048);
         const n = await conn!.read(octets);
         if (n === null) throw new Error("SMTP fermé par le serveur");
         reponse += decode.decode(octets.subarray(0, n));
       }
-      return reponse.trim();
     };
     const cmd = async (ligne: string): Promise<string> => {
       await conn!.write(encode.encode(`${ligne}\r\n`));
