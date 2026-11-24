@@ -85,7 +85,10 @@ export default function IntegrationsPage() {
     };
   }, []);
 
-  const supabaseOk = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const supabaseOk = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+  );
 
   const integrations = useMemo<Integration[]>(
     () => [
@@ -97,7 +100,7 @@ export default function IntegrationsPage() {
         statut: supabaseOk ? "operationnel" : "non_configure",
         detail: supabaseOk
           ? "Variables publiques présentes côté application. L’état détaillé (migrations, politiques, Edge Functions déployées) doit être vérifié côté projet Supabase."
-          : "Variables NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY absentes.",
+          : "Variables NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY absentes.",
       },
       {
         id: "resend",

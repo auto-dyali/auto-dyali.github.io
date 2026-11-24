@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test scripts/test-crm-csv.mjs scripts/test-onboarding.mjs scripts/test-csv-export.mjs scripts/test-crm.mjs scripts/test-pre-purchase.mjs scripts/test-invitations.mjs scripts/test-employes.mjs scripts/test-onboarding-contract.mjs scripts/test-activation.mjs scripts/test-permissions.mjs scripts/test-providers.mjs scripts/test-migrations-51.mjs scripts/test-edge-functions-51.mjs scripts/test-excel-safe.mjs scripts/test-security-062.mjs scripts/test-maroc-geographie.mjs scripts/test-contract-rpc-067.mjs",
+    "test": "node --test scripts/test-crm-csv.mjs scripts/test-onboarding.mjs scripts/test-csv-export.mjs scripts/test-crm.mjs scripts/test-pre-purchase.mjs scripts/test-invitations.mjs scripts/test-employes.mjs scripts/test-onboarding-contract.mjs scripts/test-activation.mjs scripts/test-permissions.mjs scripts/test-providers.mjs scripts/test-migrations-51.mjs scripts/test-edge-functions-51.mjs scripts/test-excel-safe.mjs scripts/test-security-062.mjs scripts/test-maroc-geographie.mjs scripts/test-contract-rpc-067.mjs scripts/test-staging-reconciliation.mjs",
+    "test:staging": "bash scripts/verify-staging-migrations.sh",
     "test:crm": "node --test scripts/test-crm-csv.mjs scripts/test-crm.mjs",
     "test:onboarding": "node --test scripts/test-onboarding.mjs",
     "test:gv551": "node --test scripts/test-onboarding-contract.mjs scripts/test-activation.mjs scripts/test-permissions.mjs scripts/test-providers.mjs scripts/test-migrations-51.mjs scripts/test-edge-functions-51.mjs",
@@ -34,6 +35,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.4.6",
+    "supabase": "^3.3.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

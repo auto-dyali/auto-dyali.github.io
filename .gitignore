@@ -56,3 +56,6 @@ playwright-report/
 blob-report/
 _probe_tmp.mjs
 scripts/_probe_tmp.mjs
+
+# Supabase CLI (état local, jetons temporaires)
+supabase/.temp/
