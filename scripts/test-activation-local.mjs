@@ -8,16 +8,16 @@
 import { chromium } from "playwright";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
-const SUP = (process.env.SUPABASE_URL ?? "http://127.0.0.1:54321").replace(/\/+$/, "");
-const KEY = process.env.SUPABASE_ANON_KEY ?? "";
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+const SUP = (process.env.SUPABASE_URL ?? process.env.API_EXTERNAL_URL ?? "http://127.0.0.1:54321").replace(/\/+$/, "");
+const KEY = process.env.SUPABASE_ANON_KEY ?? process.env.ANON_KEY ?? process.env.API_ANON_KEY ?? "";
+const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SERVICE_ROLE_KEY ?? process.env.API_SERVICE_ROLE_KEY ?? "";
 const APP = "http://127.0.0.1:3000";
 const DIR = "docs/sessions/session-1/gv5-105/preuves";
 mkdirSync(DIR, { recursive: true });
 const out = { etapes: [] };
 
 if (!KEY || !SERVICE) {
-  console.error("Variables Supabase locales absentes.");
+  console.error("Variables Supabase locales absentes. Noms disponibles: " + Object.keys(process.env).filter(k=>/KEY|SUPABASE|API_/.test(k)).sort().join(","));
   process.exit(2);
 }
 
