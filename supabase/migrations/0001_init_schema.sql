@@ -11,14 +11,14 @@ create extension if not exists pgcrypto;
 -- ---------------------------------------------------------------------
 -- 0. TYPES
 -- ---------------------------------------------------------------------
-create type user_role        as enum ('saas_admin', 'manager', 'employee', 'client');
-create type vehicle_status   as enum ('active', 'in_atelier', 'delivered');
-create type or_status        as enum ('pending', 'in_progress', 'waiting_parts', 'done', 'delivered', 'cancelled');
-create type payment_method   as enum ('cash', 'card', 'cheque', 'credit', 'transfer');
-create type stock_move_dir   as enum ('in', 'out', 'transfer', 'adjustment');
-create type appointment_way  as enum ('walkin', 'online', 'phone', 'counter');
-create type po_status        as enum ('draft', 'sent', 'partially_received', 'received', 'cancelled');
-create type sale_status      as enum ('open', 'paid', 'partial', 'refunded', 'cancelled');
+do $$ begin create type user_role as enum ('saas_admin', 'manager', 'employee', 'client'); exception when duplicate_object then null; end $$;
+do $$ begin create type vehicle_status as enum ('active', 'in_atelier', 'delivered'); exception when duplicate_object then null; end $$;
+do $$ begin create type or_status as enum ('pending', 'in_progress', 'waiting_parts', 'done', 'delivered', 'cancelled'); exception when duplicate_object then null; end $$;
+do $$ begin create type payment_method as enum ('cash', 'card', 'cheque', 'credit', 'transfer'); exception when duplicate_object then null; end $$;
+do $$ begin create type stock_move_dir as enum ('in', 'out', 'transfer', 'adjustment'); exception when duplicate_object then null; end $$;
+do $$ begin create type appointment_way as enum ('walkin', 'online', 'phone', 'counter'); exception when duplicate_object then null; end $$;
+do $$ begin create type po_status as enum ('draft', 'sent', 'partially_received', 'received', 'cancelled'); exception when duplicate_object then null; end $$;
+do $$ begin create type sale_status as enum ('open', 'paid', 'partial', 'refunded', 'cancelled'); exception when duplicate_object then null; end $$;
 
 -- ---------------------------------------------------------------------
 -- 1. ÉTABLISSEMENTS (pilier multi-tenant)
