@@ -1,5 +1,12 @@
 -- AUTO DYALI — Catalogue de test Stock/POS
 -- Tarifs indicatifs en MAD : à confirmer avec les fournisseurs.
+-- Ce seed suppose un établissement de test (utilisé aussi par 0022). Sur une
+-- base vierge reconstruite uniquement depuis les migrations, il n'existe pas :
+-- on le crée de façon idempotente avant d'insérer les produits.
+insert into public.establishments (id, name, slug, city, plan)
+values ('00000000-0000-0000-0000-000000000001', 'Garage Test AUTO DYALI', 'garage-test-auto-dyali', 'Agadir', 'standard')
+on conflict (id) do nothing;
+
 insert into public.products
   (establishment_id, sku, name, category, unit, purchase_price, sale_price, tax_rate, min_stock)
 values
