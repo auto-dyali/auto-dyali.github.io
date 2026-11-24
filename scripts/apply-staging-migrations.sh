@@ -18,7 +18,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo "=============================================="
-echo "  APPLICATION DES MIGRATIONS SUPABASE STAGING"
+echo "  AUTO DYALI - APPLICATION DES MIGRATIONS STAGING"
 echo "  Projet : $PROJECT_REF"
 echo "  Mission : GV5 §98 - Création des abonnés"
 echo "=============================================="
@@ -94,7 +94,7 @@ if [ "$confirm" != "oui" ]; then
     exit 0
 fi
 
-# Appliquer chaque migration UN PAR UN
+# Appliquer chaque migration UNE PAR UNE
 for migration in 0036 0037 0038 0039 0040 0041 0042 0043; do
     MIG_FILE="supabase/migrations/${migration}_*.sql"
 

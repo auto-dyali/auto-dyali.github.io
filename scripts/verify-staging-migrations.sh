@@ -54,18 +54,52 @@ echo "=== 1. MIGRATIONS APPLIQUÉES ==="
 supabase migration list --linked 2>&1 | grep -E "003[6-9]|004[0-3]" || echo "  Aucune migration 0036-0043 trouvée"
 echo ""
 
-# 2. Vérifier les fonctions RPC via SQL
-echo "=== 2. FONCTIONS RPC DISPONIBLES ==="
-echo "Requête SQL pour vérifier les fonctions RPC..."
-supabase db query --linked --file scripts/check-rpc-functions.sql 2>&1 || true
+# 2. Vérifier les fonctions RPC via SQL (pas via Edge Functions)
+echo "=== 2. FONCTIONS RPC CRITIQUES ==="
+supabase db query --linked <<'SQL' 2>&1 || true
+SELECT
+    proname AS fonction,
+    pronargs AS signature
+FROM pg_proc p
+JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'public'
+  AND p.proname IN (
+    'admin_identity_v2_health',
+    'admin_check_identity_available',
+    'admin_onboard_tenant_v2',
+    'admin_invitation_preview',
+    'admin_accept_invitation',
+    'admin_record_delivery',
+    'admin_prepare_resend',
+    'admin_set_subscription',
+    'admin_update_establishment',
+    'admin_update_manager',
+    'admin_get_abonne_details',
+    'admin_set_permissions',
+    'admin_revoke_invitation'
+  )
+ORDER BY proname;
 echo ""
 
-# 3. Vérifier les tables
+# 3. Vérifier les tables créées
 echo "=== 3. TABLES CRÉÉES ==="
-supabase db list --linked 2>&1 | grep -E "invitations|invitations_events|establishments|profiles|subscriptions|onboarding_requests|permissions" || echo "  Aucune table trouvée"
+supabase db query --linked <<'SQL' 2>&1 || true
+SELECT
+    table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_name IN (
+    'invitations',
+    'invitation_events',
+    'establishments',
+    'profiles',
+    'subscriptions',
+    'onboarding_requests',
+    'permissions'
+  )
+ORDER BY table_name;
 echo ""
 
-echo ""
 echo -e "${GREEN}==============================================${NC}"
 echo "Vérifiez que :"
 echo "  - Les migrations 0036 à 0043 sont appliquées"
