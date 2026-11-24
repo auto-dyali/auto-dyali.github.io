@@ -43,21 +43,21 @@ end $$;
 -- Politique de lecture tenant-only (remplace tenant_select_audit_log si elle existe déjà)
 drop policy if exists public.tenant_select_audit_log on public.audit_log;
 
-create policy public.tenant_select_audit_log on public.audit_log
+create policytenant_select_audit_log on public.audit_log
   for select
   using (public.establishment_id = public.current_establishment_id() or public.is_saas_admin());
 
 -- Politique d'insertion réservée à saas_admin et manager (remplace managers_insert_audit_log)
 drop policy if exists public.managers_insert_audit_log on public.audit_log;
 
-create policy public.managers_insert_audit_log on public.audit_log
+create policymanagers_insert_audit_log on public.audit_log
   for insert
   with check (public.is_saas_admin() or public.is_manager());
 
 -- Politique de modification complète réservée à saas_admin (remplace saas_admin_all_audit_log)
 drop policy if exists public.saas_admin_all_audit_log on public.audit_log;
 
-create policy public.saas_admin_all_audit_log on public.audit_log
+create policysaas_admin_all_audit_log on public.audit_log
   for all
   using (public.is_saas_admin())
   with check (public.is_saas_admin());
@@ -74,21 +74,21 @@ drop policy if exists public.tenant_isolation on public.audit_log;
 -- Politique de lecture : tenant seulement (saas_admin voit tout via saas_admin_full_access)
 drop policy if exists public.tenant_isolation on public.establishments;
 
-create policy public.tenant_isolation on public.establishments
+create policytenant_isolation on public.establishments
   for select
   using (public.establishment_id = public.current_establishment_id());
 
 -- Politique d'insertion réservée à saas_admin
 drop policy if exists public.saas_admin_insert_establishments on public.establishments;
 
-create policy public.saas_admin_insert_establishments on public.establishments
+create policysaas_admin_insert_establishments on public.establishments
   for insert
   with check (public.is_saas_admin());
 
 -- Politique de modification réservée à saas_admin
 drop policy if exists public.saas_admin_update_establishments on public.establishments;
 
-create policy public.saas_admin_update_establishments on public.establishments
+create policysaas_admin_update_establishments on public.establishments
   for update
   using (public.is_saas_admin())
   with check (public.is_saas_admin());
@@ -96,7 +96,7 @@ create policy public.saas_admin_update_establishments on public.establishments
 -- Politique d'accès complet réservée à saas_admin (remplace saas_admin_full_access)
 drop policy if exists public.saas_admin_full_access on public.establishments;
 
-create policy public.saas_admin_full_access on public.establishments
+create policysaas_admin_full_access on public.establishments
   for all
   using (public.is_saas_admin())
   with check (public.is_saas_admin());
