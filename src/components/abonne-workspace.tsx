@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase-browser";
+import { classerErreur } from "@/lib/supabase-errors";
 import { dateFrCourte } from "@/lib/csv-export";
 import { useNotification } from "@/lib/use-notification";
 import {
@@ -577,15 +578,24 @@ export function AbonneWorkspace({
     });
     setEnvoiEnCours(false);
     if (error) {
-      let detail = error.message;
+      const c = classerErreur(error);
+      let detail = c.message;
       try {
         const ctx = (error as { context?: { json?: () => Promise<unknown> } }).context;
         const corps = (await ctx?.json?.()) as { error?: string } | undefined;
-        if (corps?.error) detail = corps.error;
+        if (corps?.error) detail = `${c.message} — ${corps.error}`;
       } catch {
-        /* corps indisponible : on conserve le message du client. */
+        /* corps indisponible : on conserve le message classé du client. */
       }
-      notifyError({ title: "Relance impossible", message: detail });
+      const titre =
+        c.famille === "autorisation"
+          ? "Accès refusé"
+          : c.famille === "reseau"
+            ? "Réseau indisponible"
+            : c.famille === "session"
+              ? "Session expirée"
+              : "Relance impossible";
+      notifyError({ title: titre, message: detail });
       return;
     }
     const reponse = (data ?? {}) as { ok?: boolean; error?: string; delivery?: { channel: string; status: string; providerError?: string }[] };

@@ -1,0 +1,12 @@
+{
+  "reseau": {
+    "messageIndisponible": true,
+    "messageRefus": false,
+    "extrait": "Service momentanément indisponible : la vérification de session n’a pas pu aboutir. Aucun accès n’est autorisé.\n\nConnexion réseau indisponible. Vérifiez votre connexion puis réessayez. (TypeError: Failed to fetch)\n\nRéessayer"
+  },
+  "autorisation": {
+    "messageRefus": true,
+    "messageReseau": true,
+    "extrait": "Accès refusé : cette Entreprises est réservée à l’administrateur de la plateforme.\n\nRevenir à la connexion"
+  }
+}

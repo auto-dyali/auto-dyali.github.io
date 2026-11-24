@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { supabase } from "@/lib/supabase-browser";
+import { classerErreur } from "@/lib/supabase-errors";
 
 /**
  * Écran de connexion AUTO DYALI.
@@ -51,10 +52,11 @@ export default function ConnexionPage() {
       const { data, error } = await supabase.rpc("resolve_login_email", { p_login: identifiant });
       if (error) {
         setEnCours(false);
+        const c = classerErreur(error);
         setErreur(
           /could not find the function|PGRST202/i.test(error.message)
             ? "Connexion par identifiant indisponible : migration 0039 non appliquée. Utilisez votre e-mail."
-            : "Connexion par identifiant momentanément indisponible.",
+            : c.message,
         );
         return;
       }
@@ -69,7 +71,7 @@ export default function ConnexionPage() {
     const { error } = await supabase.auth.signInWithPassword({ email: emailAuth, password: motPasse });
     if (error) {
       setEnCours(false);
-      setErreur(error.message === "Invalid login credentials" ? "Identifiant, e-mail ou mot de passe incorrect." : error.message);
+      setErreur(classerErreur(error).message);
       return;
     }
     if (seSouvenir) localStorage.setItem("autodyali_remember", "1");
@@ -79,8 +81,19 @@ export default function ConnexionPage() {
 
     if (profileError || !profile) {
       setEnCours(false);
+      if (profileError) {
+        const c = classerErreur(profileError);
+        // Une panne réseau/serveur ne doit pas déconnecter l'utilisateur :
+        // la session reste valide, seul le chargement du profil a échoué.
+        if (c.famille === "reseau" || c.famille === "serveur" || c.famille === "inconnue") {
+          setErreur(c.message);
+          return;
+        }
+        setErreur(c.message);
+      } else {
+        setErreur("Votre profil n’est pas encore configuré. Demandez à l’administrateur de vous associer à un établissement.");
+      }
       await supabase.auth.signOut();
-      setErreur("Votre profil n’est pas encore configuré. Demandez à l’administrateur de vous associer à un établissement.");
       return;
     }
 
