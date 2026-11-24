@@ -8,7 +8,9 @@
 -- establishments_plan_check : le seed doit utiliser une formule active.
 insert into establishments (id, name, slug, city, phone, plan) values
   ('00000000-0000-0000-0000-000000000001', 'Garage AUTO DYALI Agadir', 'auto-dyali-agadir', 'Agadir', '+212 5 28 00 00 00', 'standard')
-on conflict (slug) do nothing;
+on conflict (id) do update set
+  name = excluded.name, slug = excluded.slug, city = excluded.city,
+  phone = excluded.phone, plan = excluded.plan;
 
 -- Employés / équipe de la maquette
 insert into employees (id, establishment_id, code, full_name, job_title) values
