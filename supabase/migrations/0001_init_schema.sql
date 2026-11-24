@@ -247,6 +247,7 @@ create table if not exists purchase_order_items (
   received_quantity numeric(10,2) not null default 0,
   unit_price        numeric(10,2) not null default 0
 );
+alter table purchase_order_items drop constraint if exists purchase_order_items_order_tenant_fk;
 alter table purchase_order_items add constraint purchase_order_items_order_tenant_fk
   foreign key (establishment_id, purchase_order_id)
   references purchase_orders(establishment_id, id) on delete cascade;
@@ -271,7 +272,7 @@ create table if not exists work_orders (
   created_at        timestamptz not null default now(),
   unique (establishment_id, reference)
 );
-alter table work_orders add constraint work_orders_tenant_id_unique unique (establishment_id, id);
+create unique index if not exists work_orders_tenant_id_unique on work_orders (establishment_id, id);
 
 create table if not exists work_order_tasks (
   id                uuid primary key default uuid_generate_v4(),
@@ -285,6 +286,7 @@ create table if not exists work_order_tasks (
   price             numeric(10,2) not null default 0,
   quality_checked   boolean not null default false
 );
+alter table work_order_tasks drop constraint if exists work_order_tasks_order_tenant_fk;
 alter table work_order_tasks add constraint work_order_tasks_order_tenant_fk
   foreign key (establishment_id, work_order_id)
   references work_orders(establishment_id, id) on delete cascade;
@@ -333,7 +335,7 @@ create table if not exists sales (
   created_at        timestamptz not null default now(),
   unique (establishment_id, reference)
 );
-alter table sales add constraint sales_tenant_id_unique unique (establishment_id, id);
+create unique index if not exists sales_tenant_id_unique on sales (establishment_id, id);
 
 create table if not exists sale_items (
   id                uuid primary key default uuid_generate_v4(),
@@ -347,6 +349,7 @@ create table if not exists sale_items (
   tax_rate          numeric(5,2)  not null default 20,
   discount          numeric(10,2) not null default 0
 );
+alter table sale_items drop constraint if exists sale_items_sale_tenant_fk;
 alter table sale_items add constraint sale_items_sale_tenant_fk
   foreign key (establishment_id, sale_id)
   references sales(establishment_id, id) on delete cascade;
