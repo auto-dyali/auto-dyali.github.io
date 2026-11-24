@@ -15,6 +15,48 @@
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
+-- 0a. Baseline : la fonction venait uniquement de security/remediation_075,
+-- hors du répertoire supabase/migrations/. Sur une base reconstruite depuis
+-- les seules migrations, elle n'existe pas : on la crée ici de façon
+-- idempotente avant le pré-contrôle et le remplacement UPSERT ci-dessous.
+-- ---------------------------------------------------------------------
+create or replace function public.admin_set_subscription(
+  p_establishment_id uuid,
+  p_plan text,
+  p_paid_months integer,
+  p_trial_days integer,
+  p_start_date date default null
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_debut date;
+  v_fin_payee date;
+  v_fin_essai date;
+  v_ancien jsonb;
+begin
+  if not public.is_saas_admin() then raise exception 'Accès refusé.'; end if;
+  if p_plan not in ('standard', 'silver', 'gold') then raise exception 'Forfait inconnu : %', p_plan; end if;
+  if p_paid_months is null or p_paid_months < 1 or p_paid_months > 120 then raise exception 'Durée payante invalide (1 à 120 mois).'; end if;
+  if p_trial_days is null or p_trial_days < 0 or p_trial_days > 365 then raise exception 'Durée d''essai invalide (0 à 365 jours).'; end if;
+  select to_jsonb(s) into v_ancien from public.subscriptions s where s.establishment_id = p_establishment_id limit 1;
+  if v_ancien is null then raise exception 'Abonnement introuvable.'; end if;
+  v_debut := coalesce(p_start_date, (v_ancien->>'started_at')::date, current_date);
+  v_fin_payee := (v_debut + (p_paid_months || ' months')::interval)::date;
+  v_fin_essai := case when p_trial_days > 0 then v_debut + p_trial_days else null end;
+  update public.establishments set plan = p_plan, trial_ends_at = v_fin_essai, updated_at = now() where id = p_establishment_id;
+  update public.subscriptions set
+    plan_code = p_plan, started_at = v_debut, trial_ends_at = v_fin_essai,
+    current_period_end = v_fin_payee,
+    status = case when status in ('suspended','cancelled','expired') then status else
+                    case when p_trial_days > 0 and now() < v_fin_essai then 'trial' else 'active' end end
+  where establishment_id = p_establishment_id;
+  return jsonb_build_object('ok', true, 'plan', p_plan);
+end; $$;
+
+-- ---------------------------------------------------------------------
 -- 0. Pré-contrôle : la fonction doit exister
 -- ---------------------------------------------------------------------
 do $$
