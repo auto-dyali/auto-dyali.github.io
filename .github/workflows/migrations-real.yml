@@ -79,3 +79,53 @@ jobs:
         with:
           name: schema-local
           path: schema-local.sql
+
+  prod-shape:
+    name: rejeu forme production (GV5 §107 P0)
+    runs-on: ubuntu-latest
+    env:
+      EMAIL_PROVIDER: smtp
+      SMTP_HOST: inbucket
+      SMTP_PORT: "1025"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 3.3.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # Démarrer sans appliquer les migrations du dépôt : on veut la forme PRODUCTION.
+      - name: Démarrer Supabase local sans migrations du dépôt
+        run: |
+          mv supabase/migrations supabase/migrations.skip
+          mv supabase/seed.sql supabase/seed.sql.skip
+          supabase start
+          mv supabase/migrations.skip supabase/migrations
+          mv supabase/seed.sql.skip supabase/seed.sql
+      - name: Restaurer le schéma forme production (sans données)
+        run: |
+          cp supabase/functions/local-test.env supabase/functions/.env
+          supabase db query --local --file=supabase/prod-shape-baseline.sql --yes
+          supabase db query --local --file=supabase/prod-shape-functions.sql --yes
+      - name: Appliquer les migrations correctives (2 passages)
+        run: |
+          for passe in 1 2; do
+            for f in 20261125100000_prod_minimal_invitations.sql \
+                     20261125101000_prod_minimal_identity_v2.sql \
+                     20261125102000_prod_minimal_identity_health.sql \
+                     20261125103000_prod_minimal_admin_fields.sql \
+                     20261125104000_prod_minimal_onboard_trigger_fix.sql; do
+              supabase db query --local --file="supabase/migrations/$f" --yes
+            done
+          done
+      - name: Contrôle diagnostic et objets
+        run: |
+          supabase db query --local --read-only "select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('admin_identity_v2_health','admin_check_identity_available','admin_onboard_tenant_v2') order by 1;"
+      - name: Isolation A/B
+        run: |
+          npm ci
+          supabase status -o env >> "$GITHUB_ENV"
+          node -e 'const f=process.env;console.log("URL locale:",f.API_URL?"présente":"absente")'
+          npm run test:isolation
