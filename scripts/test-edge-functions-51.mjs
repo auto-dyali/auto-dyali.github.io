@@ -131,6 +131,19 @@ test("aucun composant client n'appelle service_role ni ne journalise un mot de p
   assert.match(page, /supabase\.functions\.invoke\("onboard-tenant"/);
 });
 
+test("coordonnées de support exactes et Reply-To aligné sur la relance", () => {
+  const constants = read("_shared/constants.ts");
+  assert.match(constants, /SUPPORT_EMAIL\s*=\s*"me\.achbani@gmail\.com"/);
+  assert.match(constants, /SUPPORT_WHATSAPP\s*=\s*"\+33772208885"/);
+  assert.match(resend, /reply_to:\s*SUPPORT_EMAIL/);
+  const onboarding = readFileSync(
+    join(here, "..", "src", "app", "super-admin", "onboarding", "page.tsx"),
+    "utf8",
+  );
+  assert.match(onboarding, /me\.achbani@gmail\.com/);
+  assert.doesNotMatch(onboarding, /me\.achbni@gmail\.com/);
+});
+
 test("le dossier abonné affiche les identités professionnelle et Manager", () => {
   const page = readFileSync(
     join(here, "..", "src", "app", "super-admin", "entreprises", "page.tsx"),

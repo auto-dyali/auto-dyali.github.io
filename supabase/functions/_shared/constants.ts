@@ -5,5 +5,5 @@
  * Aucun secret : uniquement des coordonnées publiques.
  */
 
-export const SUPPORT_EMAIL = "me.achbni@gmail.com";
+export const SUPPORT_EMAIL = "me.achbani@gmail.com";
 export const SUPPORT_WHATSAPP = "+33772208885";

@@ -901,7 +901,7 @@ export default function OnboardingPage() {
                   <li>Définir votre propre mot de passe avant tout accès normal (le lien n'est pas consommé à la simple ouverture).</li>
                   <li>Se connecter avec votre identifiant Manager et le mot de passe défini ; changer le mot de passe si une rotation est exigée.</li>
                 </ul>
-                <p className="mt-2">Contacts admin de référence : <span className="font-mono">me.achbni@gmail.com</span> · <span className="font-mono">+33772208885</span> (références, non preuve de configuration fournisseur).</p>
+                <p className="mt-2">Contacts admin de référence : <span className="font-mono">me.achbani@gmail.com</span> · <span className="font-mono">+33772208885</span> (références, non preuve de configuration fournisseur).</p>
               </div>
             </div>
 
