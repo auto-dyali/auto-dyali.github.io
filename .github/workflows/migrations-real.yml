@@ -126,7 +126,8 @@ jobs:
                      20261125102000_prod_minimal_identity_health.sql \
                      20261125102500_prod_minimal_admin_columns.sql \
                      20261125103000_prod_minimal_admin_fields.sql \
-                     20261125104000_prod_minimal_onboard_trigger_fix.sql; do
+                     20261125104000_prod_minimal_onboard_trigger_fix.sql \
+                     20261125106000_prod_minimal_activation_link.sql; do
               d="/tmp/sql-$f"
               node scripts/sql-split.mjs "supabase/migrations/$f" "$d"
               for stmt in "$d"/*.sql; do
