@@ -107,30 +107,26 @@ jobs:
       - name: Restaurer le schéma forme production (sans données)
         run: |
           cp supabase/functions/local-test.env supabase/functions/.env
-          set +e
-          supabase db query --local --file=supabase/prod-shape-baseline.sql --yes > /tmp/baseline.log 2>&1
-          r1=$?
-          supabase db query --local --file=supabase/prod-shape-functions.sql --yes > /tmp/functions.log 2>&1
-          r2=$?
-          cat /tmp/baseline.log /tmp/functions.log
-          if [ "$r1" -ne 0 ] || [ "$r2" -ne 0 ]; then
-            echo "::error::baseline=$r1 functions=$r2 | $(tail -c 1000 /tmp/baseline.log | tr '\n' ' ') | $(tail -c 1000 /tmp/functions.log | tr '\n' ' ')"
-            exit 1
-          fi
+          CID=$(docker ps -q --filter "label=com.supabase.cli.project=auto-plus" | head -1)
+          echo "conteneur DB: ${CID:0:12}"
+          docker exec -i "$CID" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/prod-shape-baseline.sql
+          docker exec -i "$CID" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/prod-shape-functions.sql
       - name: Appliquer les migrations correctives (2 passages)
         run: |
+          CID=$(docker ps -q --filter "label=com.supabase.cli.project=auto-plus" | head -1)
           for passe in 1 2; do
             for f in 20261125100000_prod_minimal_invitations.sql \
                      20261125101000_prod_minimal_identity_v2.sql \
                      20261125102000_prod_minimal_identity_health.sql \
                      20261125103000_prod_minimal_admin_fields.sql \
                      20261125104000_prod_minimal_onboard_trigger_fix.sql; do
-              supabase db query --local --file="supabase/migrations/$f" --yes
+              docker exec -i "$CID" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < "supabase/migrations/$f"
             done
           done
       - name: Contrôle diagnostic et objets
         run: |
-          supabase db query --local --read-only "select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('admin_identity_v2_health','admin_check_identity_available','admin_onboard_tenant_v2') order by 1;"
+          CID=$(docker ps -q --filter "label=com.supabase.cli.project=auto-plus" | head -1)
+          docker exec -i "$CID" psql -U postgres -d postgres -c "select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('admin_identity_v2_health','admin_check_identity_available','admin_onboard_tenant_v2') order by 1;"
       - name: Isolation A/B
         run: |
           npm ci
