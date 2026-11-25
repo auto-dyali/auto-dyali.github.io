@@ -1,7 +1,7 @@
 name: migrations-real
 on:
   push:
-    branches: [gv5-105-close-all]
+    branches: [gv5-105-close-all, gv5-107-prod-minimal]
   workflow_dispatch:
 jobs:
   real-supabase:
