@@ -41,10 +41,11 @@ async function creerSuperAdmin() {
     id = j.users?.[0]?.id;
   }
   if (!id) throw new Error("Super Admin local introuvable/créable");
-  await fetch(`${SUP}/rest/v1/profiles?id=eq.${id}`, {
+  const patch = await fetch(`${SUP}/rest/v1/profiles?id=eq.${id}`, {
     method: "PATCH", headers: { ...adminHeaders, Prefer: "return=minimal" },
     body: JSON.stringify({ role: "saas_admin", is_active: true, full_name: "SA E2E" }),
   });
+  if (!patch.ok) console.log("PATCH profil SA:", patch.status, (await patch.text()).slice(0, 200));
 }
 
 async function recupererLienActivation() {
@@ -94,7 +95,14 @@ try {
   await page.locator('input[type="text"]').fill(saEmail);
   await page.locator('input[type="password"]').first().fill(saPassword);
   await page.getByRole("button", { name: "Se connecter" }).click();
-  await page.waitForURL("**/super-admin/**", { timeout: 25000 });
+  try {
+    await page.waitForURL("**/super-admin/**", { timeout: 25000 });
+  } catch (e) {
+    out.loginDiagnostic = (await page.locator("body").innerText()).slice(0, 500);
+    out.loginUrl = page.url();
+    throw e;
+  }
+  out.etapes.push("connexion Super Admin OK");
 
   await page.goto(`${APP}/super-admin/onboarding/`, { waitUntil: "networkidle" });
   await page.getByText("Identification de l'entreprise").first().waitFor({ timeout: 15000 });
