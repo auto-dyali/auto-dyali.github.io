@@ -46,30 +46,25 @@ jobs:
           const fs=require("fs");
           let a=(process.env.SECRET_ACCESS_TOKEN||"").trim();
           let b=(process.env.SECRET_DB_PASSWORD||"").trim();
-          if(!a||!b){
-            const c=(process.env.SECRET_COMBINE||"").trim();
-            if(c){
-              let j={}; try{ j=JSON.parse(c); }catch(e){ j={}; }
-              const g=(...ks)=>{for(const k of ks){const v=j[k];if(typeof v==="string"&&v.trim())return v.trim();}return "";};
-              a=a||g("SUPABASE_ACCESS_TOKEN","supabase_access_token","access_token","token");
-              b=b||g("PROD_DB_PASSWORD","prod_db_password","db_password","password");
-              if(!a||!b){const p=c.split(/[\r\n|;]+/).filter(Boolean);if(p.length>=2){a=a||p[0];b=b||p[1];}}
-            }
+          const c=(process.env.SECRET_COMBINE||"").trim();
+          if(c){
+            let j={}; try{ j=JSON.parse(c); }catch(e){ j={}; }
+            const g=(...ks)=>{for(const k of ks){const v=j[k];if(typeof v==="string"&&v.trim())return v.trim();}return "";};
+            a=a||g("SUPABASE_ACCESS_TOKEN","supabase_access_token","access_token","token");
+            b=b||g("PROD_DB_PASSWORD","prod_db_password","db_password","password");
+            if(!a && Object.keys(j).length===0) a=c;
           }
-          if(!a||!b){
-            const c0=(process.env.SECRET_COMBINE||"").trim();
-            let jj={}; let ij=false; try{ jj=JSON.parse(c0); ij=true; }catch(e){}
-            console.error("::error::Secrets introuvables. Métadonnées REHEARSAL_GV5107 ( valeurs non affichées ) : json="+ij+" keys="+(ij?Object.keys(jj).join("|"):"-")+" lignes="+c0.split(/\r?\n/).length+" longueur="+c0.length);
+          if(!a){
+            console.error("::error::SUPABASE_ACCESS_TOKEN introuvable (REHEARSAL_GV5107 sert de repli) — valeurs non affichées");
             process.exit(2);
           }
           fs.appendFileSync(process.env.GITHUB_ENV,"SUPABASE_ACCESS_TOKEN="+a+"\nPROD_DB_PASSWORD="+b+"\n");
-          console.log("Secrets résolus, valeurs non affichées");
+          console.log("Secrets résolus (mot de passe DB "+(b?"présent":"optionnel : login CLI par jeton")+"), valeurs non affichées");
           '
 
       - name: Contrôle des secrets (noms seulement) et absence de fournisseur e-mail
         run: |
           [ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo "::error::SUPABASE_ACCESS_TOKEN absent"; exit 2; }
-          [ -n "$PROD_DB_PASSWORD" ] || { echo "::error::PROD_DB_PASSWORD absent"; exit 2; }
           [ -z "${RESEND_API_KEY:-}" ] || { echo "::error::RESEND_API_KEY ne doit pas être défini dans ce job"; exit 2; }
           [ -z "${EMAIL_FROM:-}" ] || { echo "::error::EMAIL_FROM ne doit pas être défini dans ce job"; exit 2; }
           echo "Secrets requis présents ; aucun secret e-mail défini (valeurs non affichées)"
@@ -77,8 +72,13 @@ jobs:
       - name: Dump du schéma public de PRODUCTION (sans données)
         run: |
           set +e
-          supabase db dump --remote=nxmsqqoflskfajqrqddw --schema public \
-            --password "$PROD_DB_PASSWORD" -f /tmp/prod_schema.sql >/tmp/dump.log 2>&1
+          if [ -n "$PROD_DB_PASSWORD" ]; then
+            supabase db dump --remote=nxmsqqoflskfajqrqddw --schema public \
+              --password "$PROD_DB_PASSWORD" -f /tmp/prod_schema.sql >/tmp/dump.log 2>&1
+          else
+            supabase db dump --remote=nxmsqqoflskfajqrqddw --schema public \
+              -f /tmp/prod_schema.sql >/tmp/dump.log 2>&1
+          fi
           rc=$?
           if [ "$rc" -ne 0 ]; then
             echo "::error::dump du schéma production échoué (code $rc), détail non affiché"
@@ -201,30 +201,25 @@ jobs:
           const fs=require("fs");
           let a=(process.env.SECRET_ACCESS_TOKEN||"").trim();
           let b=(process.env.SECRET_DB_PASSWORD||"").trim();
-          if(!a||!b){
-            const c=(process.env.SECRET_COMBINE||"").trim();
-            if(c){
-              let j={}; try{ j=JSON.parse(c); }catch(e){ j={}; }
-              const g=(...ks)=>{for(const k of ks){const v=j[k];if(typeof v==="string"&&v.trim())return v.trim();}return "";};
-              a=a||g("SUPABASE_ACCESS_TOKEN","supabase_access_token","access_token","token");
-              b=b||g("PROD_DB_PASSWORD","prod_db_password","db_password","password");
-              if(!a||!b){const p=c.split(/[\r\n|;]+/).filter(Boolean);if(p.length>=2){a=a||p[0];b=b||p[1];}}
-            }
+          const c=(process.env.SECRET_COMBINE||"").trim();
+          if(c){
+            let j={}; try{ j=JSON.parse(c); }catch(e){ j={}; }
+            const g=(...ks)=>{for(const k of ks){const v=j[k];if(typeof v==="string"&&v.trim())return v.trim();}return "";};
+            a=a||g("SUPABASE_ACCESS_TOKEN","supabase_access_token","access_token","token");
+            b=b||g("PROD_DB_PASSWORD","prod_db_password","db_password","password");
+            if(!a && Object.keys(j).length===0) a=c;
           }
-          if(!a||!b){
-            const c0=(process.env.SECRET_COMBINE||"").trim();
-            let jj={}; let ij=false; try{ jj=JSON.parse(c0); ij=true; }catch(e){}
-            console.error("::error::Secrets introuvables. Métadonnées REHEARSAL_GV5107 ( valeurs non affichées ) : json="+ij+" keys="+(ij?Object.keys(jj).join("|"):"-")+" lignes="+c0.split(/\r?\n/).length+" longueur="+c0.length);
+          if(!a){
+            console.error("::error::SUPABASE_ACCESS_TOKEN introuvable (REHEARSAL_GV5107 sert de repli) — valeurs non affichées");
             process.exit(2);
           }
           fs.appendFileSync(process.env.GITHUB_ENV,"SUPABASE_ACCESS_TOKEN="+a+"\nPROD_DB_PASSWORD="+b+"\n");
-          console.log("Secrets résolus, valeurs non affichées");
+          console.log("Secrets résolus (mot de passe DB "+(b?"présent":"optionnel : login CLI par jeton")+"), valeurs non affichées");
           '
 
       - name: Contrôle des secrets (noms seulement)
         run: |
           [ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo "::error::SUPABASE_ACCESS_TOKEN absent"; exit 2; }
-          [ -n "$PROD_DB_PASSWORD" ] || { echo "::error::PROD_DB_PASSWORD absent"; exit 2; }
           echo "Secrets requis présents (valeurs non affichées)"
 
       - name: Reprendre le front et l'EF de main (versions déployées)
@@ -235,8 +230,13 @@ jobs:
       - name: Dump du schéma public de PRODUCTION (sans données)
         run: |
           set +e
-          supabase db dump --remote=nxmsqqoflskfajqrqddw --schema public \
-            --password "$PROD_DB_PASSWORD" -f /tmp/prod_schema.sql >/tmp/dump.log 2>&1
+          if [ -n "$PROD_DB_PASSWORD" ]; then
+            supabase db dump --remote=nxmsqqoflskfajqrqddw --schema public \
+              --password "$PROD_DB_PASSWORD" -f /tmp/prod_schema.sql >/tmp/dump.log 2>&1
+          else
+            supabase db dump --remote=nxmsqqoflskfajqrqddw --schema public \
+              -f /tmp/prod_schema.sql >/tmp/dump.log 2>&1
+          fi
           rc=$?
           if [ "$rc" -ne 0 ]; then
             echo "::error::dump du schéma production échoué (code $rc), détail non affiché"
