@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   description:
     "AUTO DYALI — SaaS de gestion automobile complet pour garages : atelier, POS, stocks, caisse, employés et réservations. ACH GROUP.",
   applicationName: "AUTO DYALI",
+  // Le jeton d'activation voyage dans le fragment : aucun Referer ne doit
+  // pouvoir le divulguer, y compris vers un site tiers.
+  referrer: { policy: "no-referrer" },
   icons: {
     icon: ["/icons/auto-dyali-192.png", "/icons/auto-dyali-512.png"],
     apple: "/icons/auto-dyali-192.png",

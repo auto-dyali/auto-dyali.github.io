@@ -50,7 +50,7 @@ begin
           jsonb_build_object('request_id', v_request_id, 'source', 'admin_issue_activation_link'));
 
   return jsonb_build_object(
-    'url', '/activer/?token=' || v_token,
+    'url', '/activer/#token=' || v_token,
     'expires_at', v_expires,
     'invitation_id', v.id
   );

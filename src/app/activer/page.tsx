@@ -58,7 +58,16 @@ async function readFunctionError(error: unknown): Promise<{ code?: string; messa
 
 function ActiverPage() {
   const params = useSearchParams();
-  const token = parseActivationToken(params.toString());
+  const [token, setToken] = useState<string | null>(null);
+
+  // Le jeton est transmis dans le FRAGMENT (#token=…) : il n'est jamais
+  // envoyé au serveur dans l'URL ni dans un en-tête Referer. Compatibilité
+  // conservée avec les anciens liens en query string.
+  useEffect(() => {
+    const fragment = typeof window === "undefined" ? "" : window.location.hash.replace(/^#/, "");
+    const hp = new URLSearchParams(fragment);
+    setToken(parseActivationToken(hp.has("token") ? hp.toString() : params.toString()));
+  }, [params]);
 
   const [vue, setVue] = useState<ActivationView>("verification");
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -73,6 +82,7 @@ function ActiverPage() {
     let vivant = true;
 
     async function previsualiser() {
+      if (token === null) return; // en attente de lecture du fragment
       if (!token || !isValidTokenFormat(token)) {
         if (vivant) {
           setVue("invalide");

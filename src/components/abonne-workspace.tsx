@@ -634,7 +634,7 @@ export function AbonneWorkspace({
       return;
     }
     const chemin = (data as { url?: unknown } | null)?.url;
-    if (typeof chemin !== "string" || !chemin.startsWith("/activer/?token=")) {
+    if (typeof chemin !== "string" || !/^\/activer\/[#?]token=/.test(chemin)) {
       notifyError({ title: "Lien invalide", message: "Le serveur n'a pas renvoyé de lien exploitable." });
       return;
     }
