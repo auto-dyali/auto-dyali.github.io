@@ -20,7 +20,8 @@ let dollar = false;
 
 for (const ligne of sql.split("\n")) {
   courant += ligne + "\n";
-  const nb = (ligne.match(/\$\$/g) ?? []).length;
+  // $$ mais aussi $function$, $f$, etc.
+  const nb = (ligne.match(/\$[A-Za-z0-9_]*\$/g) ?? []).length;
   if (nb % 2 === 1) dollar = !dollar;
   if (!dollar && ligne.trim().endsWith(";")) {
     const nettoye = courant.trim();
