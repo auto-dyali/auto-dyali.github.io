@@ -354,7 +354,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     const baseUrl = env("ACTIVATION_BASE_URL") ?? req.headers.get("origin") ?? "";
-    const activationUrl = `${baseUrl.replace(/\/+$/, "")}/activer/?token=${encodeURIComponent(token)}`;
+    const activationUrl = `${baseUrl.replace(/\/+$/, "")}/activer/#token=${encodeURIComponent(token)}`;
 
     const message: Message = {
       managerFullName: activeInvitation.manager_full_name,
@@ -398,6 +398,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
       }
     }
 
+    // Aucun secret fournisseur n'est requis pour préparer l'invitation :
+    // le statut `non_configure` est explicite et la création n'est pas bloquée.
+    const email = results.find((r) => r.channel === "email");
+    const message =
+      email?.status === "non_configure"
+        ? "Invitation préparée, e-mail non envoyé (RESEND_API_KEY / EMAIL_FROM absents)."
+        : null;
+
     return json(200, {
       ok: true,
       idempotent: false,
@@ -405,6 +413,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       renewed_from: renewedFrom,
       expires_at: activeInvitation.expires_at ?? expiresAt,
       delivery: results,
+      ...(message ? { message, email_sent: false } : {}),
     });
   } catch (error) {
     return fail(500, `Erreur serveur : ${String((error as Error)?.message ?? error)}`);

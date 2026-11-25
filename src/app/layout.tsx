@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   applicationName: "AUTO DYALI",
   // Le jeton d'activation voyage dans le fragment : aucun Referer ne doit
   // pouvoir le divulguer, y compris vers un site tiers.
-  referrer: { policy: "no-referrer" },
+  referrer: "no-referrer",
   icons: {
     icon: ["/icons/auto-dyali-192.png", "/icons/auto-dyali-512.png"],
     apple: "/icons/auto-dyali-192.png",

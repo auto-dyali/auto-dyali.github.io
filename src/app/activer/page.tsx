@@ -16,7 +16,7 @@
  * jeton à usage unique, expiration vérifiée côté serveur.
  */
 
-import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase-browser";
@@ -58,16 +58,18 @@ async function readFunctionError(error: unknown): Promise<{ code?: string; messa
 
 function ActiverPage() {
   const params = useSearchParams();
-  const [token, setToken] = useState<string | null>(null);
 
   // Le jeton est transmis dans le FRAGMENT (#token=…) : il n'est jamais
   // envoyé au serveur dans l'URL ni dans un en-tête Referer. Compatibilité
-  // conservée avec les anciens liens en query string.
-  useEffect(() => {
-    const fragment = typeof window === "undefined" ? "" : window.location.hash.replace(/^#/, "");
-    const hp = new URLSearchParams(fragment);
-    setToken(parseActivationToken(hp.has("token") ? hp.toString() : params.toString()));
-  }, [params]);
+  // conservée avec les anciens liens en query string. `useSyncExternalStore`
+  // lit la source externe sans setState dans un effet (hydratation sûre).
+  const hash = useSyncExternalStore(
+    () => () => {},
+    () => (typeof window === "undefined" ? "" : window.location.hash),
+    () => "",
+  );
+  const hp = new URLSearchParams(hash.replace(/^#/, ""));
+  const token = parseActivationToken(hp.has("token") ? hp.toString() : params.toString());
 
   const [vue, setVue] = useState<ActivationView>("verification");
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -82,7 +84,6 @@ function ActiverPage() {
     let vivant = true;
 
     async function previsualiser() {
-      if (token === null) return; // en attente de lecture du fragment
       if (!token || !isValidTokenFormat(token)) {
         if (vivant) {
           setVue("invalide");
