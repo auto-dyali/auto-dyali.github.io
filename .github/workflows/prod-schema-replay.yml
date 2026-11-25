@@ -1,0 +1,118 @@
+name: prod-schema-replay
+
+# Copie RÉELLE du schéma de production (aucune donnée), restaurée puis
+# rejouée dans le même job. Aucun artefact, aucun log du contenu du dump.
+# Déclenchement MANUEL uniquement.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prod-schema-replay
+  cancel-in-progress: false
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    env:
+      EMAIL_PROVIDER: smtp
+      SMTP_HOST: inbucket
+      SMTP_PORT: "1025"
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 3.3.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Vérifier les secrets requis (noms seulement)
+        run: |
+          [ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo "::error::Secret SUPABASE_ACCESS_TOKEN absent"; exit 2; }
+          [ -n "$PROD_DB_PASSWORD" ] || { echo "::error::Secret PROD_DB_PASSWORD absent"; exit 2; }
+          echo "Secrets requis présents (valeurs non affichées)"
+      - name: Dump du schéma public de PRODUCTION (sans données, hors dépôt, sans artefact)
+        run: |
+          supabase db dump --remote=nxmsqqoflskfajqrqddw --schema public \
+            --password "$PROD_DB_PASSWORD" -f /tmp/prod_schema.sql > /tmp/dump.log 2>&1 || {
+            echo "::error::dump production impossible : $(tail -c 400 /tmp/dump.log | tr '\n' ' ')"
+            exit 1
+          }
+          echo "dump schéma produit: $(wc -c < /tmp/prod_schema.sql) octets"
+      - name: Démarrer Supabase local sans migrations du dépôt
+        run: |
+          mv supabase/migrations supabase/migrations.skip
+          mv supabase/seed.sql supabase/seed.sql.skip
+          supabase start
+          mv supabase/migrations.skip supabase/migrations
+          mv supabase/seed.sql.skip supabase/seed.sql
+      - name: Restaurer le schéma production (sans données)
+        run: |
+          npm ci >/dev/null 2>&1 || true
+          node scripts/sql-split.mjs /tmp/prod_schema.sql /tmp/sql-prod-schema > /tmp/split.log
+          for stmt in /tmp/sql-prod-schema/*.sql; do
+            supabase db query --local --file="$stmt" --yes > /tmp/stmt.log 2>&1 || {
+              echo "::error::restauration $stmt : $(tail -c 400 /tmp/stmt.log | tr '\n' ' ')"
+              exit 1
+            }
+          done
+      - name: Appliquer les 7 migrations correctives (deux passages)
+        run: |
+          for passe in 1 2; do
+            for f in 20261125100000_prod_minimal_invitations.sql \
+                     20261125101000_prod_minimal_identity_v2.sql \
+                     20261125102000_prod_minimal_identity_health.sql \
+                     20261125102500_prod_minimal_admin_columns.sql \
+                     20261125103000_prod_minimal_admin_fields.sql \
+                     20261125104000_prod_minimal_onboard_trigger_fix.sql \
+                     20261125106000_prod_minimal_activation_link.sql; do
+              d="/tmp/sql-$f"
+              node scripts/sql-split.mjs "supabase/migrations/$f" "$d" > /dev/null
+              for stmt in "$d"/*.sql; do
+                supabase db query --local --file="$stmt" --yes > /tmp/stmt.log 2>&1 || {
+                  echo "::error::migration $f (passe $passe) $stmt : $(tail -c 400 /tmp/stmt.log | tr '\n' ' ')"
+                  exit 1
+                }
+              done
+            done
+          done
+      - name: Contrôle du diagnostic (9 valeurs true)
+        run: |
+          supabase db query --local --read-only "select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='admin_identity_v2_health';"
+      - name: Installer Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Démarrer le front contre la copie
+        run: |
+          supabase status -o env > /tmp/status.env
+          node -e '
+          const fs=require("fs");const raw=fs.readFileSync("/tmp/status.env","utf8");const p={};
+          for(const l of raw.split("\n")){const m=l.match(/^([A-Z0-9_]+)=(.*)$/);if(m)p[m[1]]=m[2].replace(/^"|"$/g,"")}
+          const get=(...n)=>{for(const k of n)if(p[k])return p[k];return ""};
+          const v={SUPABASE_URL:get("SUPABASE_URL","API_EXTERNAL_URL","API_URL"),SUPABASE_ANON_KEY:get("SUPABASE_ANON_KEY","ANON_KEY"),SUPABASE_SERVICE_ROLE_KEY:get("SUPABASE_SERVICE_ROLE_KEY","SERVICE_ROLE_KEY")};
+          fs.writeFileSync("/tmp/norm.env",Object.entries(v).map(([k,x])=>`${k}=${x}`).join("\n")+"\n");
+          '
+          set -a; . /tmp/norm.env; set +a
+          cat /tmp/norm.env >> "$GITHUB_ENV"
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > .env.local
+          npm run dev -- --hostname 127.0.0.1 --port 3000 > /tmp/next.log 2>&1 &
+          for i in $(seq 1 90); do
+            curl -fsS http://127.0.0.1:3000/connexion/ > /dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          cat /tmp/next.log
+          exit 1
+      - name: Parcours complet sur copie réelle
+        run: |
+          set +e
+          npm run test:activation-local > /tmp/parcours.log 2>&1
+          rc=$?
+          tail -c 1200 /tmp/parcours.log
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::parcours copie production : $(tail -c 900 /tmp/parcours.log | tr '\n' ' ')"
+            exit "$rc"
+          fi
