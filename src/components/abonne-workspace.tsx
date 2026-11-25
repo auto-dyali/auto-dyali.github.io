@@ -216,6 +216,7 @@ export function AbonneWorkspace({
 
   const [canaux, setCanaux] = useState<string[]>(["email"]);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [copieLienEnCours, setCopieLienEnCours] = useState(false);
 
   /* Ouverture directe en mode édition depuis la liste (bouton "Modifier"). */
   useEffect(() => {
@@ -618,6 +619,33 @@ export function AbonneWorkspace({
     await charger();
   }
 
+  /**
+   * GV5 §107 — lien d'activation copiable depuis la fiche : le jeton est
+   * généré côté serveur, seul son hash est stocké, et il n'est jamais
+   * affiché ni journalisé. L'émission invalide le lien précédent.
+   */
+  async function copierLienActivation(invitationId: string) {
+    if (!supabase) return;
+    setCopieLienEnCours(true);
+    const { data, error } = await supabase.rpc("admin_issue_activation_link", { p_invitation_id: invitationId });
+    setCopieLienEnCours(false);
+    if (error) {
+      notifyError({ title: "Lien indisponible", message: classerErreur(error).message });
+      return;
+    }
+    const chemin = (data as { url?: unknown } | null)?.url;
+    if (typeof chemin !== "string" || !chemin.startsWith("/activer/?token=")) {
+      notifyError({ title: "Lien invalide", message: "Le serveur n'a pas renvoyé de lien exploitable." });
+      return;
+    }
+    await navigator.clipboard.writeText(new URL(chemin, window.location.origin).href);
+    success({
+      title: "Lien d'activation copié",
+      message: "Usage unique, expiration 7 jours. Le jeton n'est ni affiché ni journalisé.",
+    });
+    await charger();
+  }
+
   async function revoquer(invitationId: string) {
     if (!window.confirm("Révoquer ce lien d'invitation ? L'invitation est conservée dans l'historique.")) return;
     const resultat = await rpc("admin_revoke_invitation", { p_invitation_id: invitationId });
@@ -1003,6 +1031,9 @@ export function AbonneWorkspace({
                             <div className="mt-3 flex flex-wrap gap-2">
                               <button type="button" className="sa3d-btn sa3d-btn-vert" disabled={envoiEnCours || statut === "accepted"} onClick={() => void relancer(id)}>
                                 {envoiEnCours ? "…" : statut === "cancelled" ? "Renouveler" : "Envoyer / Renvoyer"}
+                              </button>
+                              <button type="button" className="sa3d-btn" disabled={copieLienEnCours || statut === "accepted" || statut === "cancelled"} onClick={() => void copierLienActivation(id)} title="Émet un nouveau lien et le copie (ancien lien invalidé)">
+                                {copieLienEnCours ? "…" : "Copier le lien d'activation"}
                               </button>
                               <button type="button" className="sa3d-btn sa3d-btn-danger" disabled={statut === "accepted" || statut === "cancelled"} onClick={() => void revoquer(id)}>
                                 Révoquer le lien
