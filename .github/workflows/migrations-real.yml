@@ -171,4 +171,12 @@ jobs:
           cat /tmp/next.log
           exit 1
       - name: Parcours complet sur base forme production (front + EF réels)
-        run: npm run test:activation-local
+        run: |
+          set +e
+          npm run test:activation-local > /tmp/parcours.log 2>&1
+          rc=$?
+          cat /tmp/parcours.log
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::parcours forme production : $(tail -c 1400 /tmp/parcours.log | tr '\n' ' ')"
+            exit "$rc"
+          fi
