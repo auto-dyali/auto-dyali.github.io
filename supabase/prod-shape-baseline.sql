@@ -1,4 +1,5 @@
 -- BASELINE FORME PRODUCTION (schéma seul, aucune donnée) — généré en lecture seule
+do $$ begin create type public.user_role as enum ('saas_admin','manager','employee','client'); exception when duplicate_object then null; end $$;
 create table if not exists public.audit_log (
   id uuid not null default extensions.uuid_generate_v4(),
   establishment_id uuid,
