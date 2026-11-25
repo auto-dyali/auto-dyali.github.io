@@ -22,9 +22,9 @@ Empreintes SHA-256 des scripts livrés (preuve d'intégrité, à recalculer avan
 
 | Script | Lignes | SHA-256 |
 |---|---|---|
-| `scripts/gv5_prod_trial_editeur.sql` | 1965 | `aee8575fdc3de41bfe57ab84f05179af981b7306cab58e882a43eb7188db7b93` |
-| `scripts/gv5_prod_trial_final.sql` | 1965 | `341e5d99956657de3fae898920fb4d456425a1b69a2cc4a9d8842b85a2826e70` |
-| `scripts/gv5_prod_apply.sql` | 1965 | `3e211a256d0a7d2df627c4a1a05faba2061c725a434c62fff1960fe47cd0c776` |
+| `scripts/gv5_prod_trial_editeur.sql` | 1976 | `688ff04365a7a47eff913a27d9be7394899d07e5b5155c2e342ba16352d6a127` |
+| `scripts/gv5_prod_trial_final.sql` | 1976 | `9441efe09d3f7ccadda9415988fedf41f29f4eb3cca23b17897dcf908210c3a1` |
+| `scripts/gv5_prod_apply.sql` | 1976 | `b7cc4ec76efad12e668ff3efd472fbee8219c8efba8ea3dba3d59430d9034800` |
 | `scripts/gv5_staging_onboarding_test.sql` | 368 | `369f15bc8ebab53a0839120a21d7934a677d449d84eff71300f823006431b039` |
 
 ## 2. Cause du blocage et solution
@@ -78,6 +78,6 @@ Aucune commande de ce runbook n'a été exécutée sur la production.
 ## 8. Correctif de déploiement (après GO)
 
 - **SCRIPT-SQL / PRODUCTION** — Première tentative d'application refusée par le garde-fou `ETABS_INSUFFISANTS`, **avant COMMIT** : la production ne contient qu'un seul profil (Super Admin) et le contrôle RLS supposait deux profils tenant avec rotation levée. Vérification en lecture seule : aucune table `invitations`, 2 établissements, 1 profil, 0 demande — production inchangée.
-- **CODE / SCRIPT-SQL** — Correctif limité au bloc de vérification RLS (aucune des 9 migrations modifiée) : le contrôle crée un profil tenant **temporaire** dans la transaction, vérifie l'écriture dans son garage et le refus inter-garage en rôle `authenticated`, puis annule le tout par `rollback to gv5_policy_test`. Empreintes recalculées ci-dessus.
+- **CODE / SCRIPT-SQL** — Correctif limité au bloc de vérification RLS (aucune des 9 migrations modifiée) : le contrôle crée un profil tenant **temporaire** dans la transaction, vérifie l'écriture dans son garage et le refus inter-garage en rôle `authenticated`, puis annule le tout par `rollback to gv5_policy_test`. Empreintes recalculées ci-dessus. Un second refus avant COMMIT (`profiles_id_fkey`) a conduit à créer également un compte Auth temporaire, lui aussi annulé par le savepoint.
 
 **Production intacte à ce stade : aucune migration, aucune EF, aucune donnée modifiée.**

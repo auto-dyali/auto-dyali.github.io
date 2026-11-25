@@ -1903,6 +1903,17 @@ begin
   select id into v_other from public.establishments where id <> v_etab order by id limit 1;
   if v_other is null then raise exception 'ETABS_INSUFFISANTS'; end if;
   v_uid := extensions.uuid_generate_v4();
+  insert into auth.users (
+    id, instance_id, aud, role, email, encrypted_password,
+    email_confirmed_at, created_at, updated_at,
+    raw_app_meta_data, raw_user_meta_data
+  ) values (
+    v_uid, '00000000-0000-0000-0000-000000000000',
+    'authenticated', 'authenticated',
+    'gv5-policy-' || replace(v_uid::text, '-', '') || '@example.invalid', '',
+    now(), now(), now(),
+    '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb
+  );
   insert into public.profiles(id, full_name, establishment_id, role, is_active)
     values (v_uid, 'GV5 policy probe', v_etab, 'employee', true);
   perform set_config('gv5.policy_own_etab', v_etab::text, true);
