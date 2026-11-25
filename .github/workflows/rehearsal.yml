@@ -105,9 +105,12 @@ jobs:
           npm ci >/dev/null 2>&1
           node scripts/sql-split.mjs /tmp/prod_schema.sql /tmp/sql-prod-schema >/tmp/split.log 2>&1 || {
             echo "::error::découpage du dump échoué (détail non affiché)"; exit 1; }
+          i=0
           for stmt in /tmp/sql-prod-schema/*.sql; do
+            i=$((i+1))
             supabase db query --local --file="$stmt" --yes >/tmp/stmt.log 2>&1 || {
-              echo "::error::restauration échouée sur une instruction (détail non affiché)"; exit 1; }
+              code=$(grep -oE '"code"[[:space:]]*:[[:space:]]*"[0-9A-Z]{5}"' /tmp/stmt.log | head -1 | grep -oE '[0-9A-Z]{5}')
+              echo "::error::restauration échouée instruction #$i sqlstate=${code:-inconnu} (contenu non affiché)"; exit 1; }
           done
           echo "restauration du schéma OK"
 
@@ -224,8 +227,8 @@ jobs:
 
       - name: Reprendre le front et l'EF de main (versions déployées)
         run: |
-          git checkout main -- src supabase/functions
-          echo "front et EF remplacés par ceux de main ($(git rev-parse --short main))"
+          git checkout origin/main -- src supabase/functions
+          echo "front et EF remplacés par ceux de main ($(git rev-parse --short origin/main))"
 
       - name: Dump du schéma public de PRODUCTION (sans données)
         run: |
@@ -263,9 +266,12 @@ jobs:
           npm ci >/dev/null 2>&1
           node scripts/sql-split.mjs /tmp/prod_schema.sql /tmp/sql-prod-schema >/tmp/split.log 2>&1 || {
             echo "::error::découpage du dump échoué (détail non affiché)"; exit 1; }
+          i=0
           for stmt in /tmp/sql-prod-schema/*.sql; do
+            i=$((i+1))
             supabase db query --local --file="$stmt" --yes >/tmp/stmt.log 2>&1 || {
-              echo "::error::restauration échouée sur une instruction (détail non affiché)"; exit 1; }
+              code=$(grep -oE '"code"[[:space:]]*:[[:space:]]*"[0-9A-Z]{5}"' /tmp/stmt.log | head -1 | grep -oE '[0-9A-Z]{5}')
+              echo "::error::restauration échouée instruction #$i sqlstate=${code:-inconnu} (contenu non affiché)"; exit 1; }
           done
           echo "restauration du schéma OK"
 
