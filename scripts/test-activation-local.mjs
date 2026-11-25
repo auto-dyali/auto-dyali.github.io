@@ -120,7 +120,12 @@ try {
   await page.locator('input[placeholder="Nom de la ville…"]').fill("Rabat");
   await set("Téléphone professionnel", "+212600000111");
   await set("Adresse e-mail professionnelle", managerEmail);
-  await page.getByRole("button", { name: "Suivant" }).click();
+  try {
+    await page.getByRole("button", { name: "Suivant" }).click({ timeout: 8000 });
+  } catch (e) {
+    out.preflightDiagnostic = (await page.locator("body").innerText()).slice(0, 900);
+    throw e;
+  }
 
   await page.getByText("Création du Manager").first().waitFor({ timeout: 15000 });
   await page.getByRole("button", { name: "Générer" }).click();
