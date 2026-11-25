@@ -237,7 +237,9 @@ export function SuperAdminInvitationsList({ establishmentId }: { establishmentId
           <tbody className="divide-y divide-[#8FB59B]/10">
             {invitations.map((inv) => {
               const expire = inv.expires_at ? new Date(inv.expires_at) < new Date() : false;
-              const bloque = inv.status === "accepted" || inv.status === "cancelled";
+              // Une invitation révoquée peut être renouvelée : le serveur crée
+              // alors une NOUVELLE invitation et invalide définitivement l'ancien lien.
+              const bloque = inv.status === "accepted";
               return (
                 <tr key={inv.id} className="align-top">
                   <td className="px-4 py-4">
@@ -284,7 +286,11 @@ export function SuperAdminInvitationsList({ establishmentId }: { establishmentId
                             disabled={envoi === `${inv.id}:email`}
                             className="rounded-lg border border-[#8FB59B]/40 px-3 py-1.5 text-xs text-[#8FB59B] hover:bg-[#344440] disabled:opacity-40"
                           >
-                            {envoi === `${inv.id}:email` ? "Envoi…" : "Relancer e-mail"}
+                            {envoi === `${inv.id}:email`
+                              ? "Envoi…"
+                              : inv.status === "cancelled"
+                                ? "Renouveler e-mail"
+                                : "Relancer e-mail"}
                           </button>
                           <button
                             type="button"
@@ -292,7 +298,11 @@ export function SuperAdminInvitationsList({ establishmentId }: { establishmentId
                             disabled={envoi === `${inv.id}:whatsapp` || !inv.manager_phone}
                             className="rounded-lg border border-[#8FB59B]/40 px-3 py-1.5 text-xs text-[#8FB59B] hover:bg-[#344440] disabled:opacity-40"
                           >
-                            {envoi === `${inv.id}:whatsapp` ? "Envoi…" : "Relancer WhatsApp"}
+                            {envoi === `${inv.id}:whatsapp`
+                              ? "Envoi…"
+                              : inv.status === "cancelled"
+                                ? "Renouveler WhatsApp"
+                                : "Relancer WhatsApp"}
                           </button>
                         </>
                       )}

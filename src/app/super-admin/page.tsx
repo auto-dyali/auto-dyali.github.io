@@ -371,7 +371,10 @@ export default function SuperAdminPage() {
             color: "bg-[#5D9E7F]/15 text-[#5D9E7F]",
           },
           {
-            label: "Abonnements actifs",
+            // Définition : « actifs » = abonnements PAYANTS en cours.
+            // Les essais ne sont pas des abonnements actifs et sont comptés
+            // séparément (GV5 §103), sans changer la requête SQL.
+            label: "Abonnements payants actifs",
             value: abonnementsActifs,
             sub: `${abonnementsEssai} en essai · ${abonnementsExpires} expirés`,
             icon: "card",

@@ -77,10 +77,12 @@ declare
   v_product  uuid;
   v_service  uuid;
   v_qty      numeric;
+  v_qty_int  integer;
   v_stock_actuel numeric;
   v_client_ok boolean;
   v_vehicule_ok boolean;
   v_paiements_total numeric;
+  v_recu            numeric := 0;
 begin
   if v_est is null then
     raise exception 'Établissement introuvable pour cet utilisateur.';

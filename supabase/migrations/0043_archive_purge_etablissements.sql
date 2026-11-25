@@ -18,7 +18,7 @@
 --
 -- Aucune donnée n'est supprimée par cette migration elle-même. La purge
 -- définitive n'est déclenchée que par un appel explicite à la RPC
--- `admin_purge_establissement`, et uniquement si l'établissement est
+-- `admin_purge_establishment`, et uniquement si l'établissement est
 -- préalablement archivé et qu'aucune donnée métier protégée n'existe.
 -- =====================================================================
 
@@ -186,10 +186,10 @@ begin
 end;
 $$;
 
-revoke all on function public.admin_purge_establissement(uuid) from public;
-grant execute on function public.admin_purge_establissement(uuid) to authenticated;
+revoke all on function public.admin_purge_establishment(uuid) from public;
+grant execute on function public.admin_purge_establishment(uuid) to authenticated;
 
-comment on function public.admin_purge_establissement(uuid) is
+comment on function public.admin_purge_establishment(uuid) is
   'Supprime définitivement un établissement archivé sans données métier. Super Admin uniquement. Archivage préalable obligatoire.';
 
 -- ---------------------------------------------------------------------

@@ -20,7 +20,9 @@ create table if not exists public.supplier_returns (
   updated_at            timestamptz not null default now(),
   unique (establishment_id, reference)
 );
-alter table public.supplier_returns add constraint supplier_returns_tenant_id_unique unique (establishment_id, id);
+-- Index unique idempotent, équivalent à l'ancienne contrainte (permet un rejeu).
+create unique index if not exists supplier_returns_tenant_id_unique
+  on public.supplier_returns (establishment_id, id);
 
 -- Lignes du retour : quantités rendues par produit
 create table if not exists public.supplier_return_items (
@@ -32,6 +34,9 @@ create table if not exists public.supplier_return_items (
   quantity              numeric(10,2) not null check (quantity > 0),
   unit_price            numeric(10,2) not null default 0
 );
+alter table public.supplier_return_items
+  drop constraint if exists supplier_return_items_return_fk;
+
 alter table public.supplier_return_items
   add constraint supplier_return_items_return_fk
   foreign key (establishment_id, return_id)

@@ -310,7 +310,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         req.headers.get("referer")?.replace(/\/[^/]*$/, "") ??
         "";
       const activationUrl = baseUrl
-        ? `${baseUrl.replace(/\/+$/, "")}/activer/?token=${encodeURIComponent(token)}`
+        ? `${baseUrl.replace(/\/+$/, "")}/activer/#token=${encodeURIComponent(token)}`
         : "";
 
       const fetchImpl: FetchLike = (input, init) => fetch(input, init);
@@ -363,12 +363,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
       }
     }
 
+    // Sans secret fournisseur, la création réussit quand même : l'invitation
+    // est préparée et le Super Admin récupère le lien depuis la fiche Manager.
+    // Le statut est explicite, jamais « envoyé ».
+    const email = delivery.find((d) => d.channel === "email");
+    const message =
+      email?.status === "non_configure"
+        ? "Invitation préparée, e-mail non envoyé (RESEND_API_KEY / EMAIL_FROM absents)."
+        : null;
+
     return json(200, {
       ok: true,
       idempotent: false,
       status: "completed",
       ...result,
       delivery,
+      ...(message ? { message, email_sent: false } : {}),
     });
   } catch (error) {
     return fail(500, `Erreur serveur : ${errorMessage(error)}`);

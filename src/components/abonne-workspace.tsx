@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase-browser";
+import { classerErreur } from "@/lib/supabase-errors";
 import { dateFrCourte } from "@/lib/csv-export";
 import { useNotification } from "@/lib/use-notification";
 import {
@@ -215,6 +216,7 @@ export function AbonneWorkspace({
 
   const [canaux, setCanaux] = useState<string[]>(["email"]);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [copieLienEnCours, setCopieLienEnCours] = useState(false);
 
   /* Ouverture directe en mode édition depuis la liste (bouton "Modifier"). */
   useEffect(() => {
@@ -577,15 +579,24 @@ export function AbonneWorkspace({
     });
     setEnvoiEnCours(false);
     if (error) {
-      let detail = error.message;
+      const c = classerErreur(error);
+      let detail = c.message;
       try {
         const ctx = (error as { context?: { json?: () => Promise<unknown> } }).context;
         const corps = (await ctx?.json?.()) as { error?: string } | undefined;
-        if (corps?.error) detail = corps.error;
+        if (corps?.error) detail = `${c.message} — ${corps.error}`;
       } catch {
-        /* corps indisponible : on conserve le message du client. */
+        /* corps indisponible : on conserve le message classé du client. */
       }
-      notifyError({ title: "Relance impossible", message: detail });
+      const titre =
+        c.famille === "autorisation"
+          ? "Accès refusé"
+          : c.famille === "reseau"
+            ? "Réseau indisponible"
+            : c.famille === "session"
+              ? "Session expirée"
+              : "Relance impossible";
+      notifyError({ title: titre, message: detail });
       return;
     }
     const reponse = (data ?? {}) as { ok?: boolean; error?: string; delivery?: { channel: string; status: string; providerError?: string }[] };
@@ -605,6 +616,33 @@ export function AbonneWorkspace({
     if (accepts.length > 0) {
       success({ title: "Statut réel des canaux", message: accepts.map((l) => `${l.channel} : ${l.status}`).join(" · ") });
     }
+    await charger();
+  }
+
+  /**
+   * GV5 §107 — lien d'activation copiable depuis la fiche : le jeton est
+   * généré côté serveur, seul son hash est stocké, et il n'est jamais
+   * affiché ni journalisé. L'émission invalide le lien précédent.
+   */
+  async function copierLienActivation(invitationId: string) {
+    if (!supabase) return;
+    setCopieLienEnCours(true);
+    const { data, error } = await supabase.rpc("admin_issue_activation_link", { p_invitation_id: invitationId });
+    setCopieLienEnCours(false);
+    if (error) {
+      notifyError({ title: "Lien indisponible", message: classerErreur(error).message });
+      return;
+    }
+    const chemin = (data as { url?: unknown } | null)?.url;
+    if (typeof chemin !== "string" || !/^\/activer\/[#?]token=/.test(chemin)) {
+      notifyError({ title: "Lien invalide", message: "Le serveur n'a pas renvoyé de lien exploitable." });
+      return;
+    }
+    await navigator.clipboard.writeText(new URL(chemin, window.location.origin).href);
+    success({
+      title: "Lien d'activation copié",
+      message: "Usage unique, expiration 7 jours. Le jeton n'est ni affiché ni journalisé.",
+    });
     await charger();
   }
 
@@ -991,8 +1029,11 @@ export function AbonneWorkspace({
                               {txt(i.last_error) && <span className="sa3d-plein text-[#e59b96]">Erreur : {txt(i.last_error)}</span>}
                             </div>
                             <div className="mt-3 flex flex-wrap gap-2">
-                              <button type="button" className="sa3d-btn sa3d-btn-vert" disabled={envoiEnCours || statut === "accepted" || statut === "cancelled"} onClick={() => void relancer(id)}>
-                                {envoiEnCours ? "…" : "Envoyer / Renvoyer"}
+                              <button type="button" className="sa3d-btn sa3d-btn-vert" disabled={envoiEnCours || statut === "accepted"} onClick={() => void relancer(id)}>
+                                {envoiEnCours ? "…" : statut === "cancelled" ? "Renouveler" : "Envoyer / Renvoyer"}
+                              </button>
+                              <button type="button" className="sa3d-btn" disabled={copieLienEnCours || statut === "accepted" || statut === "cancelled"} onClick={() => void copierLienActivation(id)} title="Émet un nouveau lien et le copie (ancien lien invalidé)">
+                                {copieLienEnCours ? "…" : "Copier le lien d'activation"}
                               </button>
                               <button type="button" className="sa3d-btn sa3d-btn-danger" disabled={statut === "accepted" || statut === "cancelled"} onClick={() => void revoquer(id)}>
                                 Révoquer le lien

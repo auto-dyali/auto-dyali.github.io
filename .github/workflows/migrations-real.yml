@@ -1,0 +1,182 @@
+name: migrations-real
+on:
+  push:
+    branches: [gv5-105-close-all, gv5-107-prod-minimal, gv5-107-prod-final]
+  workflow_dispatch:
+jobs:
+  real-supabase:
+    runs-on: ubuntu-latest
+    env:
+      EMAIL_PROVIDER: smtp
+      SMTP_HOST: 127.0.0.1
+      SMTP_PORT: "54325"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          # Épinglé : `latest` échoue en CI (rate limit de l'API GitHub).
+          version: 3.3.0
+      - name: Fournisseur SMTP de test (fichier d'environnement des Edge Functions)
+        run: cp supabase/functions/local-test.env supabase/functions/.env
+      - name: Démarrer Supabase local (diagnostic en cas d'échec)
+        run: |
+          set +e
+          supabase start 2>&1 | tee /tmp/supabase-start.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::supabase start a échoué : $(tail -c 1200 /tmp/supabase-start.log | tr '\n' ' ')"
+            exit "$rc"
+          fi
+      - name: Reset 1 (base vierge)
+        run: supabase db reset --yes
+      - name: Reset 2 (idempotence)
+        run: supabase db reset --yes
+      - name: Dump schéma
+        run: supabase db dump --local -f schema-local.sql
+      - name: Exporter les identifiants locaux (noms de variables uniquement dans les logs)
+        run: supabase status -o env >> "$GITHUB_ENV"
+      - name: Normaliser les noms de variables locales
+        run: |
+          echo "SUPABASE_URL=$(printf '%s' "${SUPABASE_URL:-$API_URL}" | tr -d '"')" >> "$GITHUB_ENV"
+          echo "SUPABASE_ANON_KEY=$(printf '%s' "${SUPABASE_ANON_KEY:-$ANON_KEY}" | tr -d '"')" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(printf '%s' "${SUPABASE_SERVICE_ROLE_KEY:-$SERVICE_ROLE_KEY}" | tr -d '"')" >> "$GITHUB_ENV"
+      - name: Tests isolation A/B
+        run: |
+          npm ci
+          set +e
+          npm run test:isolation > /tmp/isolation.log 2>&1
+          rc=$?
+          cat /tmp/isolation.log
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::test:isolation a échoué : $(tail -c 1200 /tmp/isolation.log | tr '\n' ' ')"
+            exit "$rc"
+          fi
+      - name: Installer Chromium pour Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Démarrer l'application Next contre Supabase local
+        run: |
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > .env.local
+          npm run dev -- --hostname 127.0.0.1 --port 3000 > /tmp/next.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:3000/connexion/ > /dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          cat /tmp/next.log
+          exit 1
+      - name: Activation Manager de bout en bout (SMTP local)
+        run: |
+          set +e
+          npm run test:activation-local > /tmp/activation.log 2>&1
+          rc=$?
+          cat /tmp/activation.log
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::test:activation-local a échoué : $(tail -c 1400 /tmp/activation.log | tr '\n' ' ')"
+            exit "$rc"
+          fi
+      - name: Résumé du dump (sans secret)
+        run: wc -l schema-local.sql
+      - uses: actions/upload-artifact@v4
+        with:
+          name: schema-local
+          path: schema-local.sql
+
+  prod-shape:
+    name: rejeu forme production (GV5 §107 P0)
+    runs-on: ubuntu-latest
+    env:
+      EMAIL_PROVIDER: smtp
+      SMTP_HOST: inbucket
+      SMTP_PORT: "1025"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 3.3.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # Démarrer sans appliquer les migrations du dépôt : on veut la forme PRODUCTION.
+      - name: Démarrer Supabase local sans migrations du dépôt
+        run: |
+          mv supabase/migrations supabase/migrations.skip
+          mv supabase/seed.sql supabase/seed.sql.skip
+          supabase start
+          mv supabase/migrations.skip supabase/migrations
+          mv supabase/seed.sql.skip supabase/seed.sql
+      - name: Restaurer le schéma forme production (sans données)
+        run: |
+          cp supabase/functions/local-test.env supabase/functions/.env
+          npm ci >/dev/null 2>&1 || true
+          for f in supabase/prod-shape-baseline.sql supabase/prod-shape-functions.sql; do
+            d="/tmp/sql-$(basename "$f" .sql)"
+            node scripts/sql-split.mjs "$f" "$d"
+            for stmt in "$d"/*.sql; do
+              supabase db query --local --file="$stmt" --yes > /tmp/stmt.log 2>&1 || {
+                echo "::error::échec $f / $stmt : $(tail -c 500 /tmp/stmt.log | tr '\n' ' ')"
+                exit 1
+              }
+            done
+          done
+      - name: Appliquer les migrations correctives (2 passages)
+        run: |
+          for passe in 1 2; do
+            for f in 20261125100000_prod_minimal_invitations.sql \
+                     20261125101000_prod_minimal_identity_v2.sql \
+                     20261125102000_prod_minimal_identity_health.sql \
+                     20261125102500_prod_minimal_admin_columns.sql \
+                     20261125103000_prod_minimal_admin_fields.sql \
+                     20261125104000_prod_minimal_onboard_trigger_fix.sql \
+                     20261125106000_prod_minimal_activation_link.sql; do
+              d="/tmp/sql-$f"
+              node scripts/sql-split.mjs "supabase/migrations/$f" "$d"
+              for stmt in "$d"/*.sql; do
+                supabase db query --local --file="$stmt" --yes > /tmp/stmt.log 2>&1 || {
+                  echo "::error::échec $f / $stmt (passe $passe) : $(tail -c 500 /tmp/stmt.log | tr '\n' ' ')"
+                  exit 1
+                }
+              done
+            done
+          done
+      - name: Contrôle diagnostic et objets
+        run: |
+          supabase db query --local --read-only "select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('admin_identity_v2_health','admin_check_identity_available','admin_onboard_tenant_v2') order by 1;"
+      - name: Contrôle des droits du diagnostic (forme production)
+        run: |
+          supabase db query --local --read-only "select p.proname, p.prosecdef, array_to_string(p.proacl, ',') as acl from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='admin_identity_v2_health';"
+          supabase db query --local --read-only "select c.relname, p.polname, p.polcmd from pg_policy p join pg_class c on c.oid=p.polrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('invitations','invitation_events') order by 1,2;"
+          echo "Isolation A/B réelle : exécutée sur STAGING (voir preuves GV5 §107)."
+      - name: Installer Chromium pour le parcours complet
+        run: npx playwright install --with-deps chromium
+      - name: Démarrer le front contre Supabase local
+        run: |
+          supabase status -o env > /tmp/status.env
+          node -e '
+          const fs=require("fs");
+          const raw=fs.readFileSync("/tmp/status.env","utf8");
+          const p={};
+          for(const l of raw.split("\n")){const m=l.match(/^([A-Z0-9_]+)=(.*)$/);if(m)p[m[1]]=m[2].replace(/^"|"$/g,"")}
+          const get=(...n)=>{for(const k of n)if(p[k])return p[k];return ""};
+          const vals={SUPABASE_URL:get("SUPABASE_URL","API_EXTERNAL_URL","API_URL"),SUPABASE_ANON_KEY:get("SUPABASE_ANON_KEY","ANON_KEY"),SUPABASE_SERVICE_ROLE_KEY:get("SUPABASE_SERVICE_ROLE_KEY","SERVICE_ROLE_KEY")};
+          fs.writeFileSync("/tmp/norm.env",Object.entries(vals).map(([k,v])=>`${k}=${v}`).join("\n")+"\n");
+          ' 
+          set -a; . /tmp/norm.env; set +a
+          cat /tmp/norm.env >> "$GITHUB_ENV"
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > .env.local
+          npm run dev -- --hostname 127.0.0.1 --port 3000 > /tmp/next.log 2>&1 &
+          for i in $(seq 1 90); do
+            curl -fsS http://127.0.0.1:3000/connexion/ > /dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          cat /tmp/next.log
+          exit 1
+      - name: Parcours complet sur base forme production (front + EF réels)
+        run: |
+          set +e
+          npm run test:activation-local > /tmp/parcours.log 2>&1
+          rc=$?
+          cat /tmp/parcours.log
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::parcours forme production : $(tail -c 1400 /tmp/parcours.log | tr '\n' ' ')"
+            exit "$rc"
+          fi

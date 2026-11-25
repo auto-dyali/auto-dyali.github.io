@@ -1,0 +1,61 @@
+{
+  "date": "2026-11-24T12:13:25.711Z",
+  "checks": {
+    "loginA": "http://127.0.0.1:3000/tableau-de-bord/",
+    "managerA": {
+      "profilesVisibles": {
+        "status": 200,
+        "rows": [
+          {
+            "id": "e61f4de5-c9a6-404f-a56c-06e0e015e9ab",
+            "role": "manager",
+            "establishment_id": "068e72f8-4b97-4682-ae16-a4746c1a3cab",
+            "login_id": "mgr.onboard.1795176415968"
+          }
+        ]
+      },
+      "profilCible": {
+        "status": 200,
+        "rows": []
+      },
+      "modificationCible": {
+        "status": 200,
+        "rows": []
+      },
+      "rpcCible": {
+        "status": 400,
+        "body": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"Accès refusé.\"}"
+      }
+    },
+    "loginB": "http://127.0.0.1:3000/tableau-de-bord/",
+    "managerB": {
+      "profilesVisibles": {
+        "status": 200,
+        "rows": [
+          {
+            "id": "40fd4e81-701f-4383-a3e8-d535210c14b1",
+            "role": "manager",
+            "establishment_id": "07b22908-047a-413b-a897-57ec8f2f7474",
+            "login_id": "mgr.unification.1795176196108"
+          }
+        ]
+      },
+      "profilCible": {
+        "status": 200,
+        "rows": []
+      },
+      "modificationCible": {
+        "status": 200,
+        "rows": []
+      },
+      "rpcCible": {
+        "status": 400,
+        "body": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"Accès refusé.\"}"
+      }
+    },
+    "anon": {
+      "status": 200,
+      "rows": []
+    }
+  }
+}

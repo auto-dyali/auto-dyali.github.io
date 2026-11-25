@@ -36,6 +36,15 @@ create table if not exists public.plan_features (
 
 comment on table public.plan_features is 'Moteur de droits : feature_key active ou non pour un forfait.';
 
+-- Les formules doivent exister AVANT les fonctionnalités qui les référencent
+-- (clé étrangère plan_features.plan_code -> plans.code). Le seed de fin de
+-- fichier reste idempotent, mais il était trop tard pour cet INSERT.
+insert into public.plans (code, label, description) values
+  ('standard','STANDARD','Gestion entreprise, clients, catalogue, stock de base, POS, factures, devis, rapports essentiels.'),
+  ('silver','SILVER','Tout STANDARD + stock avancé, achats, employés, atelier, rendez-vous, pneumatiques, scanner, Excel, rapports financiers, chèques, alertes, CRM.'),
+  ('gold','GOLD','Tout SILVER + AUTO DYALI AI, automatisations, analyses avancées, multi-sites, WhatsApp, rapports personnalisés, permissions avancées.')
+on conflict (code) do nothing;
+
 -- Fonctionnalités maîtres de la plateforme
 insert into public.plan_features (plan_code, feature_key, enabled) values
   -- Offre STANDARD (offre d''entrée)

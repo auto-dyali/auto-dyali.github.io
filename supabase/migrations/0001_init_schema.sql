@@ -11,19 +11,19 @@ create extension if not exists pgcrypto;
 -- ---------------------------------------------------------------------
 -- 0. TYPES
 -- ---------------------------------------------------------------------
-create type user_role        as enum ('saas_admin', 'manager', 'employee', 'client');
-create type vehicle_status   as enum ('active', 'in_atelier', 'delivered');
-create type or_status        as enum ('pending', 'in_progress', 'waiting_parts', 'done', 'delivered', 'cancelled');
-create type payment_method   as enum ('cash', 'card', 'cheque', 'credit', 'transfer');
-create type stock_move_dir   as enum ('in', 'out', 'transfer', 'adjustment');
-create type appointment_way  as enum ('walkin', 'online', 'phone', 'counter');
-create type po_status        as enum ('draft', 'sent', 'partially_received', 'received', 'cancelled');
-create type sale_status      as enum ('open', 'paid', 'partial', 'refunded', 'cancelled');
+do $$ begin create type user_role as enum ('saas_admin', 'manager', 'employee', 'client'); exception when duplicate_object then null; end $$;
+do $$ begin create type vehicle_status as enum ('active', 'in_atelier', 'delivered'); exception when duplicate_object then null; end $$;
+do $$ begin create type or_status as enum ('pending', 'in_progress', 'waiting_parts', 'done', 'delivered', 'cancelled'); exception when duplicate_object then null; end $$;
+do $$ begin create type payment_method as enum ('cash', 'card', 'cheque', 'credit', 'transfer'); exception when duplicate_object then null; end $$;
+do $$ begin create type stock_move_dir as enum ('in', 'out', 'transfer', 'adjustment'); exception when duplicate_object then null; end $$;
+do $$ begin create type appointment_way as enum ('walkin', 'online', 'phone', 'counter'); exception when duplicate_object then null; end $$;
+do $$ begin create type po_status as enum ('draft', 'sent', 'partially_received', 'received', 'cancelled'); exception when duplicate_object then null; end $$;
+do $$ begin create type sale_status as enum ('open', 'paid', 'partial', 'refunded', 'cancelled'); exception when duplicate_object then null; end $$;
 
 -- ---------------------------------------------------------------------
 -- 1. ÉTABLISSEMENTS (pilier multi-tenant)
 -- ---------------------------------------------------------------------
-create table establishments (
+create table if not exists establishments (
   id          uuid primary key default uuid_generate_v4(),
   name        text not null,
   slug        text not null unique,
@@ -42,7 +42,7 @@ create table establishments (
 -- ---------------------------------------------------------------------
 -- 2. UTILISATEURS & EMPLOYÉS
 -- ---------------------------------------------------------------------
-create table profiles (
+create table if not exists profiles (
   id                uuid primary key references auth.users(id) on delete cascade,
   full_name         text not null,
   phone             text,
@@ -55,7 +55,7 @@ create table profiles (
   created_at        timestamptz not null default now()
 );
 
-create table employees (
+create table if not exists employees (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   profile_id        uuid references profiles(id) on delete set null,
@@ -70,7 +70,7 @@ create table employees (
 );
 
 -- Pointage (entrées / sorties de service)
-create table attendance (
+create table if not exists attendance (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   employee_id       uuid not null references employees(id) on delete cascade,
@@ -80,7 +80,7 @@ create table attendance (
   notes             text
 );
 
-create table permissions (
+create table if not exists permissions (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   role              user_role not null,
@@ -93,7 +93,7 @@ create table permissions (
 );
 
 -- Journal des opérations sensibles
-create table audit_log (
+create table if not exists audit_log (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid references establishments(id) on delete cascade,
   actor_id          uuid references auth.users(id) on delete set null,
@@ -107,7 +107,7 @@ create table audit_log (
 -- ---------------------------------------------------------------------
 -- 3. CLIENTS & VÉHICULES
 -- ---------------------------------------------------------------------
-create table clients (
+create table if not exists clients (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   code              text not null unique,
@@ -122,7 +122,7 @@ create table clients (
   unique (establishment_id, code)
 );
 
-create table vehicles (
+create table if not exists vehicles (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   client_id         uuid not null references clients(id) on delete cascade,
@@ -141,7 +141,7 @@ create table vehicles (
 -- ---------------------------------------------------------------------
 -- 4. CATALOGUE : SERVICES & PRODUITS
 -- ---------------------------------------------------------------------
-create table services (
+create table if not exists services (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   name              text not null,
@@ -153,7 +153,7 @@ create table services (
   created_at        timestamptz not null default now()
 );
 
-create table products (
+create table if not exists products (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   sku               text not null,
@@ -172,7 +172,7 @@ create table products (
 );
 
 -- Lots (traçabilité complète)
-create table product_lots (
+create table if not exists product_lots (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   product_id        uuid not null references products(id) on delete cascade,
@@ -183,7 +183,7 @@ create table product_lots (
   received_at       timestamptz not null default now()
 );
 
-create table stock_movements (
+create table if not exists stock_movements (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   product_id        uuid not null references products(id) on delete cascade,
@@ -196,7 +196,7 @@ create table stock_movements (
   created_at        timestamptz not null default now()
 );
 
-create table inventory_counts ( -- inventaire physique
+create table if not exists inventory_counts ( -- inventaire physique
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   label             text not null,
@@ -208,7 +208,7 @@ create table inventory_counts ( -- inventaire physique
 -- ---------------------------------------------------------------------
 -- 5. FOURNISSEURS & ACHATS
 -- ---------------------------------------------------------------------
-create table suppliers (
+create table if not exists suppliers (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   name              text not null,
@@ -220,7 +220,7 @@ create table suppliers (
   created_at        timestamptz not null default now()
 );
 
-create table purchase_orders (
+create table if not exists purchase_orders (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   supplier_id       uuid not null references suppliers(id) on delete restrict,
@@ -235,9 +235,9 @@ create table purchase_orders (
   created_at        timestamptz not null default now(),
   unique (establishment_id, reference)
 );
-alter table purchase_orders add constraint purchase_orders_tenant_id_unique unique (establishment_id, id);
+create unique index if not exists purchase_orders_tenant_id_unique on purchase_orders (establishment_id, id);
 
-create table purchase_order_items (
+create table if not exists purchase_order_items (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   purchase_order_id uuid not null,
@@ -247,6 +247,7 @@ create table purchase_order_items (
   received_quantity numeric(10,2) not null default 0,
   unit_price        numeric(10,2) not null default 0
 );
+alter table purchase_order_items drop constraint if exists purchase_order_items_order_tenant_fk;
 alter table purchase_order_items add constraint purchase_order_items_order_tenant_fk
   foreign key (establishment_id, purchase_order_id)
   references purchase_orders(establishment_id, id) on delete cascade;
@@ -254,7 +255,7 @@ alter table purchase_order_items add constraint purchase_order_items_order_tenan
 -- ---------------------------------------------------------------------
 -- 6. ATELIER : ORDRES DE RÉPARATION & PLANNING
 -- ---------------------------------------------------------------------
-create table work_orders (
+create table if not exists work_orders (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   reference         text not null,           -- OR-2025-048
@@ -271,9 +272,9 @@ create table work_orders (
   created_at        timestamptz not null default now(),
   unique (establishment_id, reference)
 );
-alter table work_orders add constraint work_orders_tenant_id_unique unique (establishment_id, id);
+create unique index if not exists work_orders_tenant_id_unique on work_orders (establishment_id, id);
 
-create table work_order_tasks (
+create table if not exists work_order_tasks (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   work_order_id     uuid not null,
@@ -285,12 +286,13 @@ create table work_order_tasks (
   price             numeric(10,2) not null default 0,
   quality_checked   boolean not null default false
 );
+alter table work_order_tasks drop constraint if exists work_order_tasks_order_tenant_fk;
 alter table work_order_tasks add constraint work_order_tasks_order_tenant_fk
   foreign key (establishment_id, work_order_id)
   references work_orders(establishment_id, id) on delete cascade;
 
 --(Notification) Rappels d'entretien automatiques
-create table maintenance_reminders (
+create table if not exists maintenance_reminders (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   vehicle_id        uuid not null references vehicles(id) on delete cascade,
@@ -300,7 +302,7 @@ create table maintenance_reminders (
   created_at        timestamptz not null default now()
 );
 
-create table appointments (
+create table if not exists appointments (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   client_id         uuid references clients(id) on delete set null,
@@ -318,7 +320,7 @@ create table appointments (
 -- ---------------------------------------------------------------------
 -- 7. VENTES : POS, TICKETS, FACTURES, PAIEMENTS
 -- ---------------------------------------------------------------------
-create table sales (
+create table if not exists sales (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   client_id         uuid references clients(id) on delete set null,
@@ -333,9 +335,9 @@ create table sales (
   created_at        timestamptz not null default now(),
   unique (establishment_id, reference)
 );
-alter table sales add constraint sales_tenant_id_unique unique (establishment_id, id);
+create unique index if not exists sales_tenant_id_unique on sales (establishment_id, id);
 
-create table sale_items (
+create table if not exists sale_items (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   sale_id           uuid not null,
@@ -347,11 +349,12 @@ create table sale_items (
   tax_rate          numeric(5,2)  not null default 20,
   discount          numeric(10,2) not null default 0
 );
+alter table sale_items drop constraint if exists sale_items_sale_tenant_fk;
 alter table sale_items add constraint sale_items_sale_tenant_fk
   foreign key (establishment_id, sale_id)
   references sales(establishment_id, id) on delete cascade;
 
-create table payments (
+create table if not exists payments (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   sale_id           uuid not null references sales(id) on delete cascade,
@@ -361,7 +364,7 @@ create table payments (
   received_by       uuid references auth.users(id) on delete set null
 );
 
-create table invoices ( -- documents légaux (facture = ticket transformé)
+create table if not exists invoices ( -- documents légaux (facture = ticket transformé)
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   sale_id           uuid not null references sales(id) on delete restrict,
@@ -374,7 +377,7 @@ create table invoices ( -- documents légaux (facture = ticket transformé)
 -- ---------------------------------------------------------------------
 -- 8. CAISSE & FINANCES
 -- ---------------------------------------------------------------------
-create table cash_sessions (
+create table if not exists cash_sessions (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   opened_by         uuid references auth.users(id) on delete set null,
@@ -386,7 +389,7 @@ create table cash_sessions (
   closed_at         timestamptz
 );
 
-create table expenses (
+create table if not exists expenses (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   category          text not null, -- salaires | loyer | fournisseurs | impôts | autre
@@ -400,7 +403,7 @@ create table expenses (
 -- ---------------------------------------------------------------------
 -- 9. NOTIFICATIONS CLIENTS (espace client)
 -- ---------------------------------------------------------------------
-create table client_notifications (
+create table if not exists client_notifications (
   id                uuid primary key default uuid_generate_v4(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   client_id         uuid not null references clients(id) on delete cascade,
@@ -493,13 +496,16 @@ begin
 end $$;
 
 -- Profiles : chacun voit au moins son propre profil
+drop policy if exists profiles_self_or_same_establishment on profiles;
 create policy profiles_self_or_same_establishment on profiles
   using (id = auth.uid() or establishment_id = current_establishment_id());
 
 -- SaaS admin : tout voir (policies additivas via WITH CHECK par défaut)
+drop policy if exists saas_admin_full_access on establishments;
 create policy saas_admin_full_access on establishments
   using (is_saas_admin());
 
 -- Policy spécifique : les établissements sont visibles par leurs membres
+drop policy if exists own_establishment on establishments;
 create policy own_establishment on establishments
   using (id = current_establishment_id());

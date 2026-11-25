@@ -1,0 +1,95 @@
+{
+  "tables": {
+    "rebuilt": 52,
+    "staging": 36,
+    "missingOnStaging": 17,
+    "extraOnStaging": 1
+  },
+  "columns": {
+    "rebuilt": 792,
+    "staging": 511,
+    "missingOnStaging": 305,
+    "extraOnStaging": 24
+  },
+  "policies": {
+    "rebuilt": 118,
+    "staging": 83,
+    "missingOnStaging": 39,
+    "extraOnStaging": 4
+  },
+  "functions": {
+    "rebuilt": 57,
+    "staging": 45,
+    "missingOnStaging": 22,
+    "extraOnStaging": 10
+  },
+  "cles": {
+    "column|invitation_events.provider_error|text": {
+      "rebuilt": true,
+      "staging": true
+    },
+    "column|profiles.login_id|text": {
+      "rebuilt": true,
+      "staging": true
+    },
+    "column|profiles.must_change_password|boolean": {
+      "rebuilt": true,
+      "staging": true
+    },
+    "column|establishments.complementary_contacts|text": {
+      "rebuilt": false,
+      "staging": true
+    },
+    "policy|profiles.saas_admin_select_profiles|r": {
+      "rebuilt": true,
+      "staging": true
+    },
+    "function|is_saas_admin|": {
+      "rebuilt": true,
+      "staging": true
+    }
+  },
+  "tablesManquantesStaging": [
+    "cheques",
+    "crm_events",
+    "crm_leads",
+    "part_compatibilities",
+    "print_jobs",
+    "printer_configs",
+    "product_barcodes",
+    "quote_items",
+    "quotes",
+    "subscriptions_audit",
+    "supplier_invoices",
+    "supplier_return_items",
+    "supplier_returns",
+    "support_tickets",
+    "ticket_messages",
+    "tire_specs",
+    "vehicle_catalog"
+  ],
+  "fonctionsManquantesStaging": [
+    "add_product_barcode",
+    "admin_attach_manager",
+    "admin_expire_subscription",
+    "admin_onboard_tenant",
+    "admin_reactivate_subscription",
+    "admin_tenant_integrity",
+    "cheques_echeances_proches",
+    "complete_client_account",
+    "complete_employee_account",
+    "count_print_jobs",
+    "create_invoice_for_sale",
+    "create_pos_sale",
+    "create_pos_sale_v2",
+    "decrement_product_stock",
+    "digest",
+    "gen_random_bytes",
+    "handle_new_auth_user",
+    "open_ticket_count",
+    "printer_configs_unique_defaut",
+    "remove_product_barcode",
+    "resolve_product_by_barcode",
+    "uuid_generate_v4"
+  ]
+}

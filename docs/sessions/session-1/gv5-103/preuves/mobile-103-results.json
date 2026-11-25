@@ -1,0 +1,78 @@
+{
+  "viewport": "375x812",
+  "pages": [
+    {
+      "label": "01-liste",
+      "largeur": 375,
+      "document": 375,
+      "débordement": false,
+      "boutonsVisibles": [
+        "AAUTO DYALISuper Admin — SaaS Contr",
+        "🚪Déconnexion",
+        "🚪Déconnexion",
+        "Exporter CSV",
+        "⋯Actions",
+        "⋯Actions",
+        "⋯Actions",
+        "⋯Actions",
+        "⋯Actions",
+        "⋯Actions",
+        "⋯Actions",
+        "⋯Actions"
+      ]
+    },
+    {
+      "label": "02-creation",
+      "largeur": 375,
+      "document": 375,
+      "débordement": false,
+      "boutonsVisibles": [
+        "AAUTO DYALISuper Admin — SaaS Contr",
+        "🚪Déconnexion",
+        "🚪Déconnexion",
+        "Générer",
+        "Suivant"
+      ]
+    },
+    {
+      "label": "03-fiche",
+      "largeur": 375,
+      "document": 375,
+      "débordement": false,
+      "boutonsVisibles": [
+        "AAUTO DYALISuper Admin — SaaS Contr",
+        "🚪Déconnexion",
+        "🚪Déconnexion",
+        "Exporter CSV",
+        "⋯Actions",
+        "✕ Fermer",
+        "◆Établissement",
+        "◉Manager",
+        "◇Abonnement",
+        "▦Modules & droits",
+        "↗Invitations & historique"
+      ]
+    },
+    {
+      "label": "04-invitations",
+      "largeur": 375,
+      "document": 375,
+      "débordement": false,
+      "boutonsVisibles": [
+        "AAUTO DYALISuper Admin — SaaS Contr",
+        "🚪Déconnexion",
+        "🚪Déconnexion",
+        "Exporter CSV",
+        "⋯Actions",
+        "✕ Fermer",
+        "◆Établissement",
+        "◉Manager",
+        "◇Abonnement",
+        "▦Modules & droits",
+        "↗Invitations & historique",
+        "Les deux"
+      ]
+    }
+  ],
+  "nouvelAbonneVisible": true
+}

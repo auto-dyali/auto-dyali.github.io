@@ -20,9 +20,13 @@ create table if not exists public.vehicle_catalog (
   version        text,
   vehicle_type   text not null default 'voiture'
                  check (vehicle_type in ('voiture','utilitaire','camion','bus','remorque','moto','agricole','engin')),
-  created_at     timestamptz not null default now(),
-  unique (brand, model, coalesce(generation,''), coalesce(engine_code,''), coalesce(year_from,0))
+  created_at     timestamptz not null default now()
 );
+
+-- Une contrainte UNIQUE n'accepte pas d'expressions : l'unicité avec
+-- valeurs NULL neutralisées est portée par un index unique (idempotent).
+create unique index if not exists vehicle_catalog_unique_idx
+  on public.vehicle_catalog (brand, model, coalesce(generation,''), coalesce(engine_code,''), coalesce(year_from,0));
 
 comment on table public.vehicle_catalog is
   'Catalogue vehicules centralise : marque, modele, generation, motorisation. Donnees de reference reelles.';

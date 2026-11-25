@@ -1,0 +1,23 @@
+{
+  "base": "http://127.0.0.1:4173",
+  "etapes": [
+    "connexion Super Admin OK",
+    "préflight diagnostic exécuté",
+    "établissement + Manager + invitation créés",
+    "fiche établissement ouverte"
+  ],
+  "urlProductionVue": false,
+  "preflight": {
+    "messageNonPret": false,
+    "extrait": "A\n\nAUTO DYALI\n\nSuper Admin — SaaS Control Center\n\n🚪\nDéconnexion\n\nRôle : saas_admin\n\nVue générale\n\nTableau de bord global du SaaS : abonnés, abonnements, alertes, santé.\n\nAbonnés professionnels\n\nGarages abonnés, fiches détaillées, création, activation, suspension.\n\nUtilisateurs\n\nManagers et utilisateurs professionnels, rôles, accès, activation.\n\nAbonnements & formules\n\nFormules, prix, durées, modu"
+  },
+  "creation": {
+    "statut": 200,
+    "corps": "{\"ok\":true,\"idempotent\":false,\"status\":\"completed\",\"modules\":[\"dashboard\"],\"login_id\":\"mgr.569c25\",\"request_id\":\"aa6ae734-2ef4-40ed-8126-3c1d00117ebb\",\"invitation_id\":\"b076f6e3-8902-4809-8693-4b89bee8818b\",\"manager_user_id\":\"327c27cb-998b-4d71-85f6-df64f5e9957f\",\"professional_id\":\"ADY-PRO-9BAB0E\",\"subscription_id\":\"09b79d80-bfaa-43b1-abea-6eee05288bcd\",\"establishment_id\":\"9cff7cf4-19ed-4e3e-8f56-940753375113\",\"delivery\":[{\"channel\":\"email\",\"status\":\"non_configure\",\"providerError\":\"Fournisseur e-"
+  },
+  "modification": {
+    "statut": 200
+  },
+  "appelsStaging": 18,
+  "emailTest": "zz-test-gv5107.1795565842389@autodyali-staging.local"
+}

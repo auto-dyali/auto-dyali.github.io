@@ -955,9 +955,16 @@ export default function OnboardingPage() {
                 <p className="text-[11px] text-[#A7B7A8]">{[form.address, form.city, form.region, form.country].filter(Boolean).join(", ")}</p>
                 <p className="text-[11px] text-[#A7B7A8]">Tél. : {form.phone || "—"} · E-mail : {form.email || "—"}</p>
                 <p className="text-[11px] text-[#A7B7A8]">Dossier : {form.dossierState}</p>
-                {[form.legalInfo, form.fiscalInfo, form.adminInfo, form.complementaryContacts].filter(Boolean).map((v, i) => (
-                  <p key={i} className="text-[11px] text-[#A7B7A8]">Info admin. : {v}</p>
-                ))}
+                {([
+                  ["Juridique", form.legalInfo],
+                  ["Fiscal", form.fiscalInfo],
+                  ["Admin", form.adminInfo],
+                  ["Contacts", form.complementaryContacts],
+                ] as const)
+                  .filter(([, v]) => v)
+                  .map(([libelle, v]) => (
+                    <p key={libelle} className="text-[11px] text-[#A7B7A8]">{libelle} : {v}</p>
+                  ))}
               </div>
               <div className="rounded-lg bg-[#252D2D] p-3">
                 <h4 className="text-xs text-[#A7B7A8] mb-1">Identifiants & Manager</h4>
