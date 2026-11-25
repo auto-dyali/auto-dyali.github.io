@@ -103,3 +103,16 @@ create table if not exists public.subscriptions (
   created_at timestamp with time zone not null default now()
 );
 
+
+-- Contraintes de la forme PRODUCTION
+alter table public.establishments add constraint establishments_pkey PRIMARY KEY (id);
+alter table public.establishments add constraint establishments_slug_key UNIQUE (slug);
+alter table public.profiles add constraint profiles_pkey PRIMARY KEY (id);
+alter table public.permissions add constraint permissions_establishment_id_role_module_key UNIQUE (establishment_id, role, module);
+alter table public.permissions add constraint permissions_pkey PRIMARY KEY (id);
+alter table public.audit_log add constraint audit_log_pkey PRIMARY KEY (id);
+alter table public.plans add constraint plans_code_key UNIQUE (code);
+alter table public.plans add constraint plans_pkey PRIMARY KEY (id);
+alter table public.plan_features add constraint plan_features_pkey PRIMARY KEY (plan_code, feature_key);
+alter table public.subscriptions add constraint subscriptions_pkey PRIMARY KEY (id);
+alter table public.onboarding_requests add constraint onboarding_requests_pkey PRIMARY KEY (request_id);
