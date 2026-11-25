@@ -107,7 +107,10 @@ jobs:
       - name: Restaurer le schéma forme production (sans données)
         run: |
           cp supabase/functions/local-test.env supabase/functions/.env
-          CID=$(docker ps -q --filter "label=com.supabase.cli.project=auto-plus" | head -1)
+          command -v docker || { echo "::error::docker absent"; exit 127; }
+          docker ps --format '{{.Names}} {{.Labels}}' | head -5
+          CID=$(docker ps -q --filter "label=com.supabase.cli.project" | head -1)
+          [ -n "$CID" ] || { echo "::error::conteneur Supabase introuvable"; exit 127; }
           echo "conteneur DB: ${CID:0:12}"
           docker exec -i "$CID" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/prod-shape-baseline.sql
           docker exec -i "$CID" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/prod-shape-functions.sql
