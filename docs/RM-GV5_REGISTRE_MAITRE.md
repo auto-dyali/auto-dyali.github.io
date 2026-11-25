@@ -55,4 +55,4 @@ Les preuves détaillées sont dans :
 - `docs/sessions/session-1/gv5-107-prod-final/DOSSIER_GO2.md`
 - `docs/sessions/session-1/gv5-107-prod-final/RAPPORT_PREPARATION_PROD.md`
 
-**État : préparation technique terminée, production intacte, en attente du GO d'application.**
+**État (25/11) : GO d'application reçu et exécuté. 9 migrations appliquées, 3 Edge Functions déployées, création réelle d'un garage de vérification et connexion de son Manager confirmées en production, isolation vérifiée. Parcours navigateur de bout en bout : NON TESTÉ. Aucune donnée préexistante supprimée.**
