@@ -41,11 +41,12 @@ async function creerSuperAdmin() {
     id = j.users?.[0]?.id;
   }
   if (!id) throw new Error("Super Admin local introuvable/créable");
-  const patch = await fetch(`${SUP}/rest/v1/profiles?id=eq.${id}`, {
-    method: "PATCH", headers: { ...adminHeaders, Prefer: "return=minimal" },
-    body: JSON.stringify({ role: "saas_admin", is_active: true, full_name: "SA E2E" }),
+  // La forme PRODUCTION n'a pas le trigger handle_new_auth_user : upsert.
+  const patch = await fetch(`${SUP}/rest/v1/profiles`, {
+    method: "POST", headers: { ...adminHeaders, Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({ id, role: "saas_admin", is_active: true, full_name: "SA E2E" }),
   });
-  if (!patch.ok) console.log("PATCH profil SA:", patch.status, (await patch.text()).slice(0, 200));
+  if (!patch.ok) console.log("UPSERT profil SA:", patch.status, (await patch.text()).slice(0, 200));
   const verif = await fetch(`${SUP}/rest/v1/profiles?id=eq.${id}&select=id,role,establishment_id`, { headers: adminHeaders });
   const lignes = await verif.json().catch(() => []);
   console.log("profil SA serves:", Array.isArray(lignes) ? lignes.length : "erreur");
