@@ -1887,9 +1887,11 @@ end $$;
 -- Contrôle de la policy d'écriture tenant (test annulé par savepoint).
 -- Le test s'exécute avec le rôle `authenticated` : `postgres` est
 -- superutilisateur et contourne RLS, ce qui rendrait le contrôle faux.
+-- Production ne contient qu'un profil (Super Admin) : on crée un profil
+-- tenant TEMPORAIRE dans la transaction, annulé par le savepoint.
 savepoint gv5_policy_test;
 do $$
-declare a gv5_etabs; b gv5_etabs; v_def text;
+declare v_etab uuid; v_other uuid; v_uid uuid; v_def text;
 begin
   if to_regprocedure('public.current_establishment_id()') is null then
     raise exception 'CURRENT_ETAB_ABSENT';
@@ -1898,23 +1900,16 @@ begin
   if v_def not like '%auth.uid()%' or v_def not like '%profiles%' then
     raise exception 'CURRENT_ETAB_INCOMPATIBLE';
   end if;
-  -- Profil dont la rotation temporaire est déjà levée (sinon la policy
-  -- restrictive `password_rotation_required` bloquerait même son garage).
-  select e.* into a
-    from gv5_etabs e
-    join public.profiles p on p.id = e.uid
-   where coalesce(p.must_change_password, false) is false
-   order by e.etab limit 1;
-  select e.* into b
-    from gv5_etabs e
-   where e.etab <> a.etab
-   order by e.etab limit 1;
-  if a.etab is null or b.etab is null then
-    raise exception 'ETABS_INSUFFISANTS';
-  end if;
-  perform set_config('gv5.policy_own_etab', a.etab::text, true);
-  perform set_config('gv5.policy_own_uid', a.uid::text, true);
-  perform set_config('gv5.policy_cross_etab', b.etab::text, true);
+  select id into v_etab from public.establishments order by id limit 1;
+  if v_etab is null then raise exception 'ETABS_ABSENTS'; end if;
+  select id into v_other from public.establishments where id <> v_etab order by id limit 1;
+  if v_other is null then raise exception 'ETABS_INSUFFISANTS'; end if;
+  v_uid := extensions.uuid_generate_v4();
+  insert into public.profiles(id, full_name, establishment_id, role, is_active)
+    values (v_uid, 'GV5 policy probe', v_etab, 'employee', true);
+  perform set_config('gv5.policy_own_etab', v_etab::text, true);
+  perform set_config('gv5.policy_own_uid', v_uid::text, true);
+  perform set_config('gv5.policy_cross_etab', v_other::text, true);
 end $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', current_setting('gv5.policy_own_uid'), true);
