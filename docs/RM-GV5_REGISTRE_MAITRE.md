@@ -56,3 +56,56 @@ Les preuves détaillées sont dans :
 - `docs/sessions/session-1/gv5-107-prod-final/RAPPORT_PREPARATION_PROD.md`
 
 **État (25/11) : GO d'application reçu et exécuté. 9 migrations appliquées, 3 Edge Functions déployées, création réelle d'un garage de vérification et connexion de son Manager confirmées en production, isolation vérifiée. Parcours navigateur de bout en bout : NON TESTÉ. Aucune donnée préexistante supprimée.**
+
+## 10. Finalisation « création d'abonné » — état réel (25/11)
+
+### 10.1 Identité et coordonnées (distinction vérifiée)
+
+| Élément | Rôle constaté | Statut |
+|---|---|---|
+| `admin@auto-dyali.ma` | Unique compte Super Admin global (contrôle plateforme) | **CONFORME ET VÉRIFIÉ** en production (1 seul profil `saas_admin`, précontrôle A) |
+| `me.achbani@gmail.com` | Coordonnée de contact du responsable ; utilisée comme contact de support etReply-To dans le code | **CONFORME ET VÉRIFIÉ** dans le code après correction (commit `8043233`) — n'est pas un expéditeur technique configuré |
+| `+33772208885` | WhatsApp Business : contact de support affiché dans les messages | **PARTIEL** — numéro de contact, pas un expéditeur Meta configuré |
+| `+212665310308` | Second numéro communiqué ; aucune utilisation trouvée dans le code ou la configuration | **ABSENT** du parcours — aucun rôle technique vérifié, aucun rôle inventé |
+| `a.naji@auto-dyali.ma`, `r.bami@auto-dyali.ma` | Anciens comptes supprimés, non réutilisés dans le parcours | **CONFORME** (aucune recréation) |
+
+### 10.2 Configuration des communications (secrets inspectés par nom, valeurs masquées)
+
+Production : **7 secrets présents**, tous internes Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEYS`, `SUPABASE_SECRET_KEYS`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`, `SUPABASE_JWKS`).
+
+Absents : `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `SMTP_HOST`/`SMTP_PORT`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TEMPLATE_NAME`, `WHATSAPP_TEMPLATE_LANG`, `WHATSAPP_API_VERSION`, `ACTIVATION_BASE_URL`.
+
+| Exigence | État | Preuve |
+|---|---|---|
+| Expéditeur e-mail | **BLOQUÉ PAR CONFIG** | `EMAIL_FROM` absent ; code `non_configure` sans appel réseau |
+| Reply-To | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | `SUPPORT_EMAIL` dans `deliverInvitation` et, après correction locale, dans `send-invitation` (non redéployé) |
+| Fournisseur e-mail | **PARTIEL** | Resend codé, aucun secret fournisseur en production |
+| Expéditeur WhatsApp / Business enregistré | **BLOQUÉ PAR CONFIG** | `WHATSAPP_PHONE_NUMBER_ID` absent ; `+33772208885` n'est qu'un contact de support |
+| Destinataires | **CONFORME ET VÉRIFIÉ** | e-mail = `manager.email` ; WhatsApp = `manager.phone` (contrat v2, validation dédiée) |
+| Contenu (garage, Manager, lien, 7 jours) | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | `_shared/providers.ts`, tests 31/31 (ciblés) |
+| Doublons / traçabilité | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | idempotence `request_id`, `invitation_events`, statut `accepte_par_fournisseur` jamais « délivré » |
+
+### 10.3 Interface et parcours
+
+| Exigence | État | Preuve |
+|---|---|---|
+| Page Super Admin › Nouvel abonné | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** dans le navigateur | `src/app/super-admin/onboarding/page.tsx` (1050 lignes), 6 étapes, lien depuis `/super-admin/` |
+| Formulaires/validation/doublon/soumission multiple | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | contrat v2 partagé, `enCours`, `admin_check_identity_available`, santé 9/9 |
+| Bouton de création et résultat par canal | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | `soumettre()`, étape 6, statuts `delivery` explicites |
+| Rendu ordinateur/tablette/smartphone | **NON VÉRIFIÉ** | classes responsives présentes ; aucune capture navigateur de cette mission |
+| Test navigateur de bout en bout | **EN ATTENTE D'AUTORISATION / NON TESTÉ** | identifiants Super Admin non disponibles dans l'environnement |
+| Création réelle garage + Manager + connexion + isolation | **CONFORME ET VÉRIFIÉ** | SQL + Auth réels en production (rapport §107.9) — 1 garage visible sur 3 |
+| E-mail / WhatsApp réellement reçus | **ABSENT** | aucun secret fournisseur, aucun message émis ni reçu |
+| Renouvellement d'invitation, limitation des tentatives de jeton | **ABSENT** | non présents dans les migrations appliquées |
+
+### 10.4 Progression justifiée
+
+**~60 %** : création backend + activation + isolation **vérifiées réellement** (blocage levé) ; interface et notifications **codées mais non vérifiées en navigateur** ; **0/2 canaux configurés**, **0 message réellement livré** ; dernières corrections de contact **non déployées** ; fusion et Pages **non autorisées**.
+
+### 10.5 Point de reprise
+
+Définitivement clôturé : 9 migrations production, 3 EF déployées, création réelle, connexion Manager, isolation, correction du contact et du Reply-To dans le code.
+
+Restent ouverts : fournisseur e-mail + `EMAIL_FROM` (+ `EMAIL_REPLY_TO` recommandé), fournisseur WhatsApp + `WHATSAPP_PHONE_NUMBER_ID` + modèle approuvé, `ACTIVATION_BASE_URL`, test navigateur avec `admin@auto-dyali.ma`, redéploiement des EF après correction, fusion PR #2 et publication Pages.
+
+Blocage exact : **secrets fournisseurs absents** (BLOQUÉ PAR CONFIG) et **autorisation absente** pour toute opération sensible supplémentaire sur Production, fusion ou publication.
