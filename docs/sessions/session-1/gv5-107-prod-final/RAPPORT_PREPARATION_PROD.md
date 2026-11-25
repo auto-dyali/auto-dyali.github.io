@@ -5,6 +5,7 @@
 | Fichier | Rôle |
 |---|---|
 | `supabase/migrations/20261125108000_prod_minimal_pgcrypto_helpers.sql` | 8ᵉ migration corrective : helpers `gen_invitation_token()` / `hash_invitation_token()` avec `SET search_path = public, extensions` et appels qualifiés `extensions.*` |
+| `supabase/migrations/20261125109000_prod_minimal_permissions_tenant_write.sql` | 9ᵉ migration corrective : restaure l'écriture `permissions` par un rôle tenant (ancien front de `main`), sans modifier `101000` |
 | `supabase/rollbacks/gv5107/20261125108000.sql` | Retour arrière du correctif (DROP des 2 fonctions) |
 | `scripts/gv5_prod_trial.sql` | Essai transactionnel : `BEGIN`, `lock_timeout=2s`, `search_path=public, extensions`, 8 migrations, contrôle santé 9/9, **`ROLLBACK`** — aucun `COMMIT` |
 | `scripts/gv5_prod_apply.sql` | Même script mais **`COMMIT`** — à n'exécuter qu'après GO explicite |

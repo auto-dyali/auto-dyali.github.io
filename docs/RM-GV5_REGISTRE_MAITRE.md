@@ -27,7 +27,9 @@ Identité du projet : **GV5**. Le dépôt GitHub `auto-dyali/auto-dyali.github.i
 
 ## 3. Chaîne de migrations retenue (8 fichiers)
 
-`20261125100000` → `101000` → `102000` → `102500` → `103000` → `104000` → `106000` → **`108000`**.
+`20261125100000` → `101000` → `102000` → `102500` → `103000` → `104000` → `106000` → `108000` → **`109000`**.
+
+La 9ᵉ migration restaure `permissions_tenant_write` (écriture tenant équivalente à l'ancienne policy `tenant_isolation`) : le front de `main` écrit directement dans `permissions` avec un rôle non Super Admin ; sans elle, le parcours historique serait cassé. `101000` n'est pas modifiée (déjà appliquée sur staging).
 
 Dépendances : `100000` crée `invitations` dont dépend la FK de `101000` ; `102500` crée les 6 colonnes exigées par le précontrôle de `103000` ; `108000` corrige les helpers SQL de `100000` et doit être exécutée **dans la même transaction** avec `SET LOCAL search_path = public, extensions`.
 

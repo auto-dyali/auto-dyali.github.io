@@ -1,7 +1,7 @@
 /**
  * GV5 §107 — Contrôle statique de préparation PRODUCTION (aucune écriture).
  *
- * Vérifie l'ordre des 8 migrations, la corrective pgcrypto, les scripts
+ * Vérifie l'ordre des 9 migrations, la corrective pgcrypto, les scripts
  * d'essai/application, les retours arrière et l'absence d'opérations
  * destructives au niveau migration.
  */
@@ -20,13 +20,14 @@ const MIGS = [
   "20261125104000_prod_minimal_onboard_trigger_fix.sql",
   "20261125106000_prod_minimal_activation_link.sql",
   "20261125108000_prod_minimal_pgcrypto_helpers.sql",
+  "20261125109000_prod_minimal_permissions_tenant_write.sql",
 ];
 
-test("8 migrations présentes, datées dans l'ordre croissant", () => {
+test("9 migrations présentes, datées dans l'ordre croissant", () => {
   for (const f of MIGS) assert.ok(existsSync(new URL("supabase/migrations/" + f, ROOT)), f);
   const dates = MIGS.map((f) => f.slice(0, 14));
   assert.deepEqual(dates, [...dates].sort(), "ordre des migrations");
-  assert.equal(new Set(dates).size, 8, "dates uniques");
+  assert.equal(new Set(dates).size, 9, "dates uniques");
 });
 
 test("cause et correctif pgcrypto", () => {
@@ -49,7 +50,7 @@ test("diagnostic : 9 clés, get_my_profile préexistant", () => {
     "fn_get_my_security_state", "fn_resolve_login_email", "fn_must_change_password",
   ]) assert.ok(h.includes(cle), `clé ${cle}`);
   assert.ok(!MIGS.some((f) => read("supabase/migrations/" + f).includes("create or replace function public.get_my_profile")),
-    "get_my_profile n'est pas recréé par les 8 migrations (existe déjà en production)");
+    "get_my_profile n'est pas recréé par les 9 migrations (existe déjà en production)");
 });
 
 test("contenu de 0039 repris dans 101000", () => {
@@ -73,15 +74,18 @@ test("aucune opération destructive au niveau migration", () => {
 
 test("scripts d'essai et d'application", () => {
   const trial = read("scripts/gv5_prod_trial.sql");
+  const final = read("scripts/gv5_prod_trial_final.sql");
   const apply = read("scripts/gv5_prod_apply.sql");
-  for (const s of [trial, apply]) {
+  for (const [s, attendu] of [[trial, MIGS.slice(0, 8)], [final, MIGS], [apply, MIGS]]) {
     assert.match(s, /^begin;/m);
     assert.match(s, /set local lock_timeout = '2s'/);
     assert.match(s, /set local search_path = public, extensions/);
-    for (const f of MIGS) assert.ok(s.includes(f), `migration ${f} présente`);
+    for (const f of attendu) assert.ok(s.includes(f), `migration ${f} présente`);
     assert.match(s, /set local request\.jwt\.claim\.sub = '<SA_UUID>'/);
-    assert.match(s, /select public\.admin_identity_v2_health\(\)/);
+    assert.match(s, /select public\.admin_identity_v2_health\(\)|v jsonb := public\.admin_identity_v2_health\(\)/);
   }
+  assert.match(final, /set local idle_in_transaction_session_timeout = '15s'/);
+  assert.ok(final.indexOf("begin;") < final.indexOf("set local idle_in_transaction_session_timeout"));
   assert.equal((trial.match(/^commit;/gm) ?? []).length, 0, "aucun COMMIT dans l'essai");
   assert.equal((trial.match(/^rollback;/gm) ?? []).length, 1, "ROLLBACK explicite dans l'essai");
   assert.equal((apply.match(/^commit;/gm) ?? []).length, 1, "COMMIT unique dans l'application");
@@ -98,9 +102,18 @@ test("retours arrière au nombre de 8, correctif réversible", () => {
   assert.match(fix, /drop function if exists public\.hash_invitation_token\(text\)/);
 });
 
+test("correction permissions : écriture tenant restaurée", () => {
+  const origine = read("supabase/migrations/" + MIGS[1]);
+  const correctif = read("supabase/migrations/" + MIGS[8]);
+  assert.match(origine, /drop policy if exists tenant_isolation on public\.permissions/);
+  assert.match(correctif, /create policy permissions_tenant_write on public\.permissions/);
+  assert.match(correctif, /for all to authenticated/);
+  assert.match(correctif, /with check \(establishment_id = public\.current_establishment_id\(\)\)/);
+});
+
 test("aucun secret dans les scripts", () => {
   for (const p of ["scripts/gv5_prod_trial.sql", "scripts/gv5_prod_apply.sql",
-    "supabase/migrations/" + MIGS[7]]) {
+    "scripts/gv5_prod_trial_final.sql", "supabase/migrations/" + MIGS[7]]) {
     assert.doesNotMatch(read(p), /sb_secret_|service_role"[[:space:]]*[:=][[:space:]]*"[A-Za-z0-9_-]{20,}/, p);
   }
 });
