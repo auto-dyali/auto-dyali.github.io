@@ -124,6 +124,7 @@ jobs:
             for f in 20261125100000_prod_minimal_invitations.sql \
                      20261125101000_prod_minimal_identity_v2.sql \
                      20261125102000_prod_minimal_identity_health.sql \
+                     20261125102500_prod_minimal_admin_columns.sql \
                      20261125103000_prod_minimal_admin_fields.sql \
                      20261125104000_prod_minimal_onboard_trigger_fix.sql; do
               d="/tmp/sql-$f"
