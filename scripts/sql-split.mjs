@@ -22,8 +22,11 @@ for (const ligne of sql.split("\n")) {
   courant += ligne + "\n";
   // $$ mais aussi $function$, $f$, etc.
   const nb = (ligne.match(/\$[A-Za-z0-9_]*\$/g) ?? []).length;
+  const etaitDansDollar = dollar;
   if (nb % 2 === 1) dollar = !dollar;
-  if (!dollar && ligne.trim().endsWith(";")) {
+  // pg_get_functiondef termine par `$tag$` sans point-virgule.
+  const finDollar = etaitDansDollar && !dollar && /^\s*\$[A-Za-z0-9_]*\$\s*$/.test(ligne);
+  if (!dollar && (ligne.trim().endsWith(";") || finDollar)) {
     const nettoye = courant.trim();
     if (nettoye) instructions.push(nettoye);
     courant = "";
