@@ -27,7 +27,9 @@ Parcours `ancien` couvert : connexion SA avec le front de `main`, précontrôle 
 Aucun artefact (`upload-artifact` absent), aucun `cat` du dump ni des instructions SQL, aucun log de contenu de schéma : toute sortie Supabase est redirigée vers `/tmp/*.log` non affiché ; seules des chances/noms/booléens sont publiés.
 
 ### État réel
-**EN PLACE — PAS ENCORE VERT.** Les secrets ne sont pas encore posés dans le dépôt privé (le propriétaire les ajoute). Le run déclenché par le push échouera à l'étape « Contrôle des secrets ». Dès confirmation que les secrets sont posés, je pousse un commit d'amorçage pour relancer, puis j'itère **un commit par correction** jusqu'à 100 % vert. Ce point reste donc **NON TESTÉ** à ce stade, conformément à la règle de preuve.
+**EN PLACE — PAS ENCORE VERT.** Run `45600630906`, événement `push`, branche `a3a824a` : les deux jobs (`nouveau-parcours`, `ancien-parcours`) ont échoué **uniquement à l'étape 5 « Contrôle des secrets »** ; les étapes 1 à 4 sont `success`, toutes les autres `skipped`. Cela prouve que le déclencheur, la syntaxe YAML et la structure des jobs sont valides, et que le blocage est bien l'absence des secrets que le propriétaire doit poser dans `auto-dyali-rehearsal` (noms : `SUPABASE_ACCESS_TOKEN`, `PROD_DB_PASSWORD`).
+
+Dès confirmation que les secrets sont posés, je pousse un commit d'amorçage pour relancer, puis j'itère **un commit par correction** jusqu'à 100 % vert. Le dump/reste/parcours reste donc **NON TESTÉ** à ce stade, conformément à la règle de preuve.
 
 ## Condition 2 — Activation sans fournisseur e-mail
 
