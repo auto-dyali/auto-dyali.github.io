@@ -22,9 +22,9 @@ Empreintes SHA-256 des scripts livrés (preuve d'intégrité, à recalculer avan
 
 | Script | Lignes | SHA-256 |
 |---|---|---|
-| `scripts/gv5_prod_trial_editeur.sql` | 1947 | `9fbc120e0cc1a4fbcca9d81966253370771ec3c2166798f56c65215eaeedf40a` |
-| `scripts/gv5_prod_trial_final.sql` | 1947 | `122a3a9e87966f6557f66670e1230dcde687ca87cb350f8b546dd77a7381c8ce` |
-| `scripts/gv5_prod_apply.sql` | 1947 | `7a108135988fe4b234a91398c9e2b24afc4ab585baf315e1cc776253a44811f4` |
+| `scripts/gv5_prod_trial_editeur.sql` | 1947 | `311baa7e55631ec2b95f189665e6b7f916c3ade783a5ed8f9de25cac71a0e570` |
+| `scripts/gv5_prod_trial_final.sql` | 1947 | `9fbc3d3012df8bf4307148c05710bb12f0251cf23375d780bda4aa65fc229967` |
+| `scripts/gv5_prod_apply.sql` | 1947 | `8fe4987fab65a8b1c358a6a09766756eb1066ff82cf84d722d386a58807dad0b` |
 | `scripts/gv5_staging_onboarding_test.sql` | 368 | `369f15bc8ebab53a0839120a21d7934a677d449d84eff71300f823006431b039` |
 
 ## 2. Cause du blocage et solution
