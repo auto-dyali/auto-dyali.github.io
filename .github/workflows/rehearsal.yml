@@ -57,7 +57,9 @@ jobs:
             }
           }
           if(!a||!b){
-            console.error("::error::Secrets SUPABASE_ACCESS_TOKEN / PROD_DB_PASSWORD introuvables (noms seulement)");
+            const c0=(process.env.SECRET_COMBINE||"").trim();
+            let jj={}; let ij=false; try{ jj=JSON.parse(c0); ij=true; }catch(e){}
+            console.error("::error::Secrets introuvables. Métadonnées REHEARSAL_GV5107 ( valeurs non affichées ) : json="+ij+" keys="+(ij?Object.keys(jj).join("|"):"-")+" lignes="+c0.split(/\r?\n/).length+" longueur="+c0.length);
             process.exit(2);
           }
           fs.appendFileSync(process.env.GITHUB_ENV,"SUPABASE_ACCESS_TOKEN="+a+"\nPROD_DB_PASSWORD="+b+"\n");
@@ -210,7 +212,9 @@ jobs:
             }
           }
           if(!a||!b){
-            console.error("::error::Secrets SUPABASE_ACCESS_TOKEN / PROD_DB_PASSWORD introuvables (noms seulement)");
+            const c0=(process.env.SECRET_COMBINE||"").trim();
+            let jj={}; let ij=false; try{ jj=JSON.parse(c0); ij=true; }catch(e){}
+            console.error("::error::Secrets introuvables. Métadonnées REHEARSAL_GV5107 ( valeurs non affichées ) : json="+ij+" keys="+(ij?Object.keys(jj).join("|"):"-")+" lignes="+c0.split(/\r?\n/).length+" longueur="+c0.length);
             process.exit(2);
           }
           fs.appendFileSync(process.env.GITHUB_ENV,"SUPABASE_ACCESS_TOKEN="+a+"\nPROD_DB_PASSWORD="+b+"\n");
