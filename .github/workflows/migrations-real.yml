@@ -1,7 +1,7 @@
 name: migrations-real
 on:
   push:
-    branches: [gv5-105-close-all, gv5-107-prod-minimal]
+    branches: [gv5-105-close-all, gv5-107-prod-minimal, gv5-107-prod-final]
   workflow_dispatch:
 jobs:
   real-supabase:
@@ -146,3 +146,21 @@ jobs:
           supabase db query --local --read-only "select p.proname, p.prosecdef, array_to_string(p.proacl, ',') as acl from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='admin_identity_v2_health';"
           supabase db query --local --read-only "select c.relname, p.polname, p.polcmd from pg_policy p join pg_class c on c.oid=p.polrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('invitations','invitation_events') order by 1,2;"
           echo "Isolation A/B réelle : exécutée sur STAGING (voir preuves GV5 §107)."
+      - name: Installer Chromium pour le parcours complet
+        run: npx playwright install --with-deps chromium
+      - name: Démarrer le front contre Supabase local
+        run: |
+          supabase status -o env >> "$GITHUB_ENV"
+          echo "SUPABASE_URL=$(printf '%s' "${SUPABASE_URL:-$API_URL}" | tr -d '"')" >> "$GITHUB_ENV"
+          echo "SUPABASE_ANON_KEY=$(printf '%s' "${SUPABASE_ANON_KEY:-$ANON_KEY}" | tr -d '"')" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(printf '%s' "${SUPABASE_SERVICE_ROLE_KEY:-$SERVICE_ROLE_KEY}" | tr -d '"')" >> "$GITHUB_ENV"
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > .env.local
+          npm run dev -- --hostname 127.0.0.1 --port 3000 > /tmp/next.log 2>&1 &
+          for i in $(seq 1 90); do
+            curl -fsS http://127.0.0.1:3000/connexion/ > /dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          cat /tmp/next.log
+          exit 1
+      - name: Parcours complet sur base forme production (front + EF réels)
+        run: npm run test:activation-local
