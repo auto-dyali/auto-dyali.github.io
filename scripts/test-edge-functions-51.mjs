@@ -51,6 +51,14 @@ test("onboard-tenant crée le compte Auth côté serveur et compense en cas d'é
   assert.equal(/console\.(log|info|debug)/.test(onboard), false);
 });
 
+test("onboard-tenant reprend un compte orphelin de la même requête, jamais un autre", () => {
+  assert.match(onboard, /onboarding_request_id:\s*payload\.requestId/);
+  assert.match(onboard, /canAdoptManager/);
+  assert.match(onboard, /auth\.admin\.getUserById/);
+  assert.match(onboard, /auth\.admin\.updateUserById/);
+  assert.match(onboard, /admin_find_onboarding_request/);
+});
+
 test("onboard-tenant appelle la RPC v2 avec les permissions réelles", () => {
   assert.match(onboard, /admin_onboard_tenant_v2/);
   assert.match(onboard, /p_permissions/);

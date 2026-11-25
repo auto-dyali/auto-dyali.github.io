@@ -73,6 +73,28 @@ function isMissingFunction(error: unknown): boolean {
   return e?.code === "PGRST202" || /could not find the function/i.test(e?.message ?? "");
 }
 
+/**
+ * Reprise d'un compte Auth orphelin.
+ *
+ * Un incident entre `createUser` et la RPC (timeout, coupure réseau) peut
+ * laisser un compte sans profil ni établissement. On ne le réutilise que s'il
+ * porte la MÊME requête d'onboarding (`onboarding_request_id`) et le même
+ * e-mail : jamais un compte quelconque, jamais un doublon d'identité.
+ */
+async function canAdoptManager(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  email: string,
+  requestId: string,
+): Promise<boolean> {
+  const { data, error } = await admin.auth.admin.getUserById(userId);
+  const user = data?.user;
+  if (error || !user) return false;
+  if ((user.email ?? "").toLowerCase() !== email.toLowerCase()) return false;
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  return meta.onboarding_request_id === requestId;
+}
+
 /** Traduit le payload validé vers les objets JSON attendus par la RPC. */
 function toRpcArgs(
   payload: OnboardingPayload,
@@ -258,23 +280,72 @@ Deno.serve(async (req: Request): Promise<Response> => {
       }
       return fail(400, `Vérification du compte Manager impossible : ${errorMessage(findError)}`);
     }
+    const managerMetadata = {
+      full_name: payload.manager.fullName,
+      onboarding_request_id: payload.requestId,
+    };
+
+    /* Le compte est créé OU repris pour cette requête : dans les deux cas il
+       appartient à cette tentative et doit être compensé si la RPC échoue. */
+    let managerOwned = false;
+
     if (typeof foundId === "string" && foundId) {
-      return fail(409, "Un compte existe déjà pour cet e-mail Manager. Choisissez un autre e-mail.");
+      if (!(await canAdoptManager(admin, foundId, payload.manager.email, payload.requestId))) {
+        return fail(409, "Un compte existe déjà pour cet e-mail Manager. Choisissez un autre e-mail.");
+      }
+      /* Compte orphelin de la MÊME requête : on reprend l'identité sans doublon. */
+      const { error: resumeError } = await admin.auth.admin.updateUserById(foundId, {
+        password: payload.manager.temporaryPassword,
+        email_confirm: true,
+        user_metadata: managerMetadata,
+      });
+      if (resumeError) {
+        return fail(500, `Reprise du compte Manager impossible : ${resumeError.message}`);
+      }
+      managerUserId = foundId;
+      managerOwned = true;
     }
 
-    const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
-      email: payload.manager.email,
-      password: payload.manager.temporaryPassword,
-      email_confirm: true,
-      user_metadata: { full_name: payload.manager.fullName },
-    });
-    if (createError || !createdUser?.user) {
-      const message = createError?.message ?? "création impossible";
-      const status = /already|exists|registered/i.test(message) ? 409 : 400;
-      return fail(status, `Création du compte Manager impossible : ${message}`);
+    if (!managerUserId) {
+      const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
+        email: payload.manager.email,
+        password: payload.manager.temporaryPassword,
+        email_confirm: true,
+        user_metadata: managerMetadata,
+      });
+      if (createError || !createdUser?.user) {
+        const message = createError?.message ?? "création impossible";
+        /* Course entre deux essais : reprise uniquement si la requête est identique. */
+        if (/already|exists|registered/i.test(message)) {
+          const { data: racedId } = await caller.rpc("admin_find_user_id_by_email", {
+            p_email: payload.manager.email,
+          });
+          if (
+            typeof racedId === "string" &&
+            racedId &&
+            (await canAdoptManager(admin, racedId, payload.manager.email, payload.requestId))
+          ) {
+            const { error: resumeError } = await admin.auth.admin.updateUserById(racedId, {
+              password: payload.manager.temporaryPassword,
+              email_confirm: true,
+              user_metadata: managerMetadata,
+            });
+            if (!resumeError) {
+              managerUserId = racedId;
+              managerOwned = true;
+            }
+          }
+        }
+        if (!managerUserId) {
+          const status = /already|exists|registered/i.test(message) ? 409 : 400;
+          return fail(status, `Création du compte Manager impossible : ${message}`);
+        }
+      } else {
+        managerUserId = createdUser.user.id;
+        managerOwned = true;
+      }
     }
-    managerUserId = createdUser.user.id;
-    const created = true;
+
     if (!managerUserId) return fail(500, "Compte Manager non créé.");
 
     /* 6) Jeton d'invitation : brut transmis, empreinte seule stockée. */
@@ -289,8 +360,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
 
     if (rpcError) {
-      if (created && managerUserId) {
-        await admin.auth.admin.deleteUser(managerUserId).catch(() => undefined);
+      /* Compensation : ne jamais laisser un compte Auth sans état cohérent.
+         On ne supprime pas si la requête a en réalité été clôturée (réponse
+         perdue) : l'état serveur prime sur l'erreur de transport. */
+      if (managerOwned && managerUserId) {
+        const { data: etat } = await caller.rpc("admin_find_onboarding_request", {
+          p_request_id: payload.requestId,
+        });
+        const dejaTermine = Boolean(
+          etat && (etat as { status?: string }).status === "completed",
+        );
+        if (!dejaTermine) {
+          await admin.auth.admin.deleteUser(managerUserId).catch(() => undefined);
+        }
       }
       if (isMissingFunction(rpcError)) {
         return fail(503, "Onboarding indisponible : migration 0039 non appliquée.");

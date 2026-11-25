@@ -1,10 +1,42 @@
--- GV5 §107 — ESSAI en transaction ANNULÉE (Supabase Free, Dashboard SQL Editor).
--- Exécuter TOUT ce fichier en UNE SEULE requête.
+-- GV5 §107 — APPLICATION RÉELLE EN PRODUCTION (Supabase Free, Dashboard SQL Editor).
+-- Exécuter TOUT ce fichier en UNE SEULE requête, un seul clic sur Exécuter.
+-- Se termine par COMMIT uniquement si TOUS les contrôles passent ; sinon la
+-- transaction est annulée automatiquement par PostgreSQL (aucune écriture).
+set idle_in_transaction_session_timeout = '120s';
 begin;
-set local idle_in_transaction_session_timeout = '15s';
+set local idle_in_transaction_session_timeout = '120s';
 set local lock_timeout = '2s';
 set local statement_timeout = '120s';
 set local search_path = public, extensions;
+-- 0. Contrôles avant migrations (aucune donnée réelle n'est affichée).
+do $$
+declare n integer;
+begin
+  select count(*)::int into n from public.profiles where role = 'saas_admin';
+  if n <> 1 then
+    raise exception 'SA_UNIQUE_KO: %', n;
+  end if;
+end $$;
+
+create temp table gv5_etabs(etab uuid, uid uuid) on commit drop;
+create temp table gv5_features_avant(etab uuid, feature_key text, enabled boolean) on commit drop;
+
+do $$
+declare r record;
+begin
+  for r in
+    select e.id as etab,
+           (select p.id from public.profiles p where p.establishment_id = e.id order by p.id limit 1) as uid
+      from public.establishments e
+     where exists (select 1 from public.profiles p where p.establishment_id = e.id)
+  loop
+    insert into gv5_etabs values (r.etab, r.uid);
+    perform set_config('request.jwt.claim.sub', r.uid::text, true);
+    insert into gv5_features_avant(etab, feature_key, enabled)
+      select r.etab, x.feature_key, x.enabled from public.my_features() x;
+  end loop;
+end $$;
+
 -- === 20261125100000_prod_minimal_invitations.sql ===
 -- AUTO DYALI — GV5 §107-PROD-MINIMAL — Migration corrective.
 -- Copie idempotente de 0036_invitations_manager_prepared_NOT_APPLIED.sql : invitations + invitation_events + RPC d'invitation.
@@ -1837,7 +1869,102 @@ create policy permissions_tenant_write on public.permissions
   using (establishment_id = public.current_establishment_id())
   with check (establishment_id = public.current_establishment_id());
 
--- Vérification : remplacer <SA_UUID> par l'id issu de la requête lecture seule.
-set local request.jwt.claim.sub = '<SA_UUID>';
-select public.admin_identity_v2_health();
+-- Contrôle my_features : aucune fonctionnalité active ne doit disparaître.
+do $$
+declare r record; a record; v_new boolean;
+begin
+  for r in select * from gv5_etabs loop
+    perform set_config('request.jwt.claim.sub', r.uid::text, true);
+    for a in select feature_key from gv5_features_avant where etab = r.etab and enabled loop
+      select enabled into v_new from public.my_features() where feature_key = a.feature_key;
+      if v_new is not true then
+        raise exception 'FEATURE_PERDUE: %', a.feature_key;
+      end if;
+    end loop;
+  end loop;
+end $$;
+
+-- Contrôle de la policy d'écriture tenant (test annulé par savepoint).
+-- Le test s'exécute avec le rôle `authenticated` : `postgres` est
+-- superutilisateur et contourne RLS, ce qui rendrait le contrôle faux.
+savepoint gv5_policy_test;
+do $$
+declare a gv5_etabs; b gv5_etabs; v_def text;
+begin
+  if to_regprocedure('public.current_establishment_id()') is null then
+    raise exception 'CURRENT_ETAB_ABSENT';
+  end if;
+  select pg_get_functiondef('public.current_establishment_id()'::regprocedure) into v_def;
+  if v_def not like '%auth.uid()%' or v_def not like '%profiles%' then
+    raise exception 'CURRENT_ETAB_INCOMPATIBLE';
+  end if;
+  -- Profil dont la rotation temporaire est déjà levée (sinon la policy
+  -- restrictive `password_rotation_required` bloquerait même son garage).
+  select e.* into a
+    from gv5_etabs e
+    join public.profiles p on p.id = e.uid
+   where coalesce(p.must_change_password, false) is false
+   order by e.etab limit 1;
+  select e.* into b
+    from gv5_etabs e
+   where e.etab <> a.etab
+   order by e.etab limit 1;
+  if a.etab is null or b.etab is null then
+    raise exception 'ETABS_INSUFFISANTS';
+  end if;
+  perform set_config('gv5.policy_own_etab', a.etab::text, true);
+  perform set_config('gv5.policy_own_uid', a.uid::text, true);
+  perform set_config('gv5.policy_cross_etab', b.etab::text, true);
+end $$;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', current_setting('gv5.policy_own_uid'), true);
+do $$
+begin
+  begin
+    insert into public.permissions(establishment_id, role, module, can_view)
+      values (current_setting('gv5.policy_own_etab')::uuid, 'employee', 'gv5_policy_test', true);
+  exception when others then
+    raise exception 'POLICY_OWN_WRITE_KO';
+  end;
+  begin
+    insert into public.permissions(establishment_id, role, module, can_view)
+      values (current_setting('gv5.policy_cross_etab')::uuid, 'employee', 'gv5_policy_test', true);
+    raise exception 'POLICY_CROSS_WRITE_OK';
+  exception when insufficient_privilege then
+    null;
+  end;
+end $$;
+reset role;
+rollback to gv5_policy_test;
+
+-- Session Super Admin résolue uniquement depuis la base, sans UUID saisi.
+select set_config('request.jwt.claim.sub', (select id::text from public.profiles where role = 'saas_admin'), true);
+-- La santé est lue DANS la transaction, avant COMMIT. Le NOTICE reste
+-- publié, mais le contrôle repose sur une EXCEPTION : l'application ne
+-- réussit que si le SELECT final 'APPLIQUE' est atteint.
+DO $$
+DECLARE
+  v jsonb := public.admin_identity_v2_health();
+  n integer;
+  non_booleens integer;
+  en_echec integer;
+BEGIN
+  RAISE NOTICE 'SANTE_GV5=%', v::text;
+  select count(*)::int,
+         count(*) filter (where jsonb_typeof(value) <> 'boolean')::int
+    into n, non_booleens
+    from jsonb_each(v);
+  if n is distinct from 9 or non_booleens > 0 then
+    raise exception 'SANTE_INCOMPLETE: %', v::text;
+  end if;
+  select count(*)::int into en_echec
+    from jsonb_each(v)
+   where jsonb_typeof(value) = 'boolean'
+     and (value #>> '{}')::boolean is not true;
+  if en_echec > 0 then
+    raise exception 'SANTE_KO: %', v::text;
+  end if;
+  RAISE NOTICE 'SANTE_OK=true';
+END $$;
 commit;
+select 'APPLIQUE' as resultat;

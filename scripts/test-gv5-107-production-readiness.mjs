@@ -81,15 +81,44 @@ test("scripts d'essai et d'application", () => {
     assert.match(s, /set local lock_timeout = '2s'/);
     assert.match(s, /set local search_path = public, extensions/);
     for (const f of attendu) assert.ok(s.includes(f), `migration ${f} présente`);
-    assert.match(s, /set local request\.jwt\.claim\.sub = '<SA_UUID>'/);
+    /* Aucun UUID saisi : le Super Admin est résolu en base, et jamais un
+       placeholder à remplacer à la main au moment de l'application. */
+    assert.doesNotMatch(s, /<SA_UUID>/);
+    assert.match(
+      s,
+      /set_config\('request\.jwt\.claim\.sub',\s*\(select id::text from public\.profiles where role = 'saas_admin'/,
+    );
     assert.match(s, /select public\.admin_identity_v2_health\(\)|v jsonb := public\.admin_identity_v2_health\(\)/);
+    /* La fonction de santé ne doit jamais être appelée avant sa création. */
+    const creation = s.indexOf("create or replace function public.admin_identity_v2_health");
+    assert.ok(creation > -1, "fonction de santé créée par le script");
+    const premierAppel = s.search(/public\.admin_identity_v2_health\(\)/);
+    assert.ok(premierAppel > creation, "aucun appel de santé avant sa création");
   }
-  assert.match(final, /set local idle_in_transaction_session_timeout = '15s'/);
+  assert.match(final, /set local idle_in_transaction_session_timeout = '120s'/);
   assert.ok(final.indexOf("begin;") < final.indexOf("set local idle_in_transaction_session_timeout"));
   assert.equal((trial.match(/^commit;/gm) ?? []).length, 0, "aucun COMMIT dans l'essai");
   assert.equal((trial.match(/^rollback;/gm) ?? []).length, 1, "ROLLBACK explicite dans l'essai");
+  assert.equal((final.match(/^commit;/gm) ?? []).length, 0, "aucun COMMIT dans la répétition générale");
+  assert.equal((final.match(/^rollback;/gm) ?? []).length, 1, "ROLLBACK explicite dans la répétition générale");
   assert.equal((apply.match(/^commit;/gm) ?? []).length, 1, "COMMIT unique dans l'application");
   assert.equal((apply.match(/^rollback;/gm) ?? []).length, 0, "aucun ROLLBACK dans l'application");
+
+  /* La répétition générale doit exécuter EXACTEMENT les instructions de
+     l'application : seuls l'en-tête, les commentaires et la dernière
+     instruction diffèrent. Un écart rendrait la répétition non probante. */
+  const corps = (s) =>
+    s
+      .slice(s.indexOf("begin;"))
+      .split("\n")
+      .filter(
+        (l) =>
+          !l.trimStart().startsWith("--") &&
+          !/^(commit|rollback);$/.test(l.trim()) &&
+          !/^select '.*' as resultat;$/.test(l.trim()),
+      )
+      .join("\n");
+  assert.equal(corps(final), corps(apply), "répétition générale identique à l'application");
 });
 
 test("retours arrière au nombre de 8, correctif réversible", () => {

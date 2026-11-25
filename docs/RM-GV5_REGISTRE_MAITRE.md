@@ -24,8 +24,11 @@ Identité du projet : **GV5**. Le dépôt GitHub `auto-dyali/auto-dyali.github.i
 | 25/11 | Réconciliation `main` ← `gv5-107-prod-final` (PR #1) | Fusionnée |
 | 25/11 | Aucune écriture production (migrations / EF / données) | **Respecté** |
 | 25/11 | Plan Free conservé ; aucun recours à Pro ni PITR | **Respecté** |
+| 25/11 | Déclaration `verify_jwt = false` pour `onboard-tenant` et `activate-manager` dans `supabase/config.toml` (les EF valident elles-mêmes JWT / jeton) | **Développée, testée localement, non déployée** |
+| 25/11 | Reprise idempotente d'un compte Auth orphelin par la même `requestId` dans `onboard-tenant` ; compensation seulement si la demande n'est pas déjà clôturée | **Développée, testée localement, non déployée** |
+| 25/11 | Test d'intégration transactionnel complet sur staging (création → idempotence → doublon → acceptation → isolation) ; `ROLLBACK` et 0 résidu | **Testé sur staging** |
 
-## 3. Chaîne de migrations retenue (8 fichiers)
+## 3. Chaîne de migrations retenue (9 fichiers)
 
 `20261125100000` → `101000` → `102000` → `102500` → `103000` → `104000` → `106000` → `108000` → **`109000`**.
 
@@ -35,8 +38,9 @@ Dépendances : `100000` crée `invitations` dont dépend la FK de `101000` ; `10
 
 ## 4. Protection des données
 
-- Sauvegarde fraîche : `~/.local/share/auto-dyali/gv5-supabase-prod-backup-20261125-135853/`.
-- sha256 : schéma `52885122a89da0524b5a04cc0ff947e6b193af0dbb305bf067c95d01d48df1f46bec`, données chiffrées `91283db0ec1e1e601ca9f895ecf9c0f0553347601dc27dfad8e737d2c2d6cf62`, comptages `650ec5e80b1c7e4684ab500833eb353f08ce1a6a9cb7a94399e1dbff00bec68f`.
+- Sauvegarde fraîche à utiliser : `~/.local/share/auto-dyali/gv5-supabase-prod-backup-20261125-191107/` (la sauvegarde `…135853` est périmée).
+- sha256 de la sauvegarde à utiliser : schéma `52885122a89da0524b5a04cc0ff947e6b193af0dbb305bf067c95d01d48df1f46bec`, données chiffrées `75171117e668d546341f628af0abb09b2c2ae83bea00188a9f53a68af405afbe`; restauration testée sur 105 lignes.
+- Le script d'application ne contient aucun UUID à saisir : le Super Admin est résolu en base et le nombre de comptes SA doit être exactement 1 (précontrôle A).
 - Phrase de passe : fichier local `backup.passphrase` (mode 600), **jamais** dans le dépôt, le chat ni les journaux.
 - Plan Free = aucune sauvegarde automatique : cette sauvegarde est l'unique protection.
 

@@ -1819,7 +1819,34 @@ $$;
 revoke all on function public.hash_invitation_token(text) from public;
 revoke all on function public.hash_invitation_token(text) from anon;
 grant execute on function public.hash_invitation_token(text) to authenticated, service_role;
--- Vérification : remplacer <SA_UUID> par l'id issu de la requête lecture seule.
-set local request.jwt.claim.sub = '<SA_UUID>';
-select public.admin_identity_v2_health();
+-- Session Super Admin résolue uniquement depuis la base, sans UUID saisi.
+select set_config('request.jwt.claim.sub', (select id::text from public.profiles where role = 'saas_admin'), true);
+-- La santé est lue DANS la transaction, avant ROLLBACK. Le NOTICE reste
+-- publié, mais le contrôle repose sur une EXCEPTION : l'essai ne réussit
+-- que si le SELECT final 'ROLLBACK_VOLONTAIRE' est atteint.
+DO $$
+DECLARE
+  v jsonb := public.admin_identity_v2_health();
+  n integer;
+  non_booleens integer;
+  en_echec integer;
+BEGIN
+  RAISE NOTICE 'SANTE_GV5=%', v::text;
+  select count(*)::int,
+         count(*) filter (where jsonb_typeof(value) <> 'boolean')::int
+    into n, non_booleens
+    from jsonb_each(v);
+  if n is distinct from 9 or non_booleens > 0 then
+    raise exception 'SANTE_INCOMPLETE: %', v::text;
+  end if;
+  select count(*)::int into en_echec
+    from jsonb_each(v)
+   where jsonb_typeof(value) = 'boolean'
+     and (value #>> '{}')::boolean is not true;
+  if en_echec > 0 then
+    raise exception 'SANTE_KO: %', v::text;
+  end if;
+  RAISE NOTICE 'SANTE_OK=true';
+END $$;
 rollback;
+select 'ROLLBACK_VOLONTAIRE' as resultat;
