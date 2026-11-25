@@ -22,9 +22,9 @@ Empreintes SHA-256 des scripts livrés (preuve d'intégrité, à recalculer avan
 
 | Script | Lignes | SHA-256 |
 |---|---|---|
-| `scripts/gv5_prod_trial_editeur.sql` | 1976 | `688ff04365a7a47eff913a27d9be7394899d07e5b5155c2e342ba16352d6a127` |
-| `scripts/gv5_prod_trial_final.sql` | 1976 | `9441efe09d3f7ccadda9415988fedf41f29f4eb3cca23b17897dcf908210c3a1` |
-| `scripts/gv5_prod_apply.sql` | 1976 | `b7cc4ec76efad12e668ff3efd472fbee8219c8efba8ea3dba3d59430d9034800` |
+| `scripts/gv5_prod_trial_editeur.sql` | 1947 | `9fbc120e0cc1a4fbcca9d81966253370771ec3c2166798f56c65215eaeedf40a` |
+| `scripts/gv5_prod_trial_final.sql` | 1947 | `122a3a9e87966f6557f66670e1230dcde687ca87cb350f8b546dd77a7381c8ce` |
+| `scripts/gv5_prod_apply.sql` | 1947 | `7a108135988fe4b234a91398c9e2b24afc4ab585baf315e1cc776253a44811f4` |
 | `scripts/gv5_staging_onboarding_test.sql` | 368 | `369f15bc8ebab53a0839120a21d7934a677d449d84eff71300f823006431b039` |
 
 ## 2. Cause du blocage et solution
@@ -78,6 +78,6 @@ Aucune commande de ce runbook n'a été exécutée sur la production.
 ## 8. Correctif de déploiement (après GO)
 
 - **SCRIPT-SQL / PRODUCTION** — Première tentative d'application refusée par le garde-fou `ETABS_INSUFFISANTS`, **avant COMMIT** : la production ne contient qu'un seul profil (Super Admin) et le contrôle RLS supposait deux profils tenant avec rotation levée. Vérification en lecture seule : aucune table `invitations`, 2 établissements, 1 profil, 0 demande — production inchangée.
-- **CODE / SCRIPT-SQL** — Correctif limité au bloc de vérification RLS (aucune des 9 migrations modifiée) : le contrôle crée un profil tenant **temporaire** dans la transaction, vérifie l'écriture dans son garage et le refus inter-garage en rôle `authenticated`, puis annule le tout par `rollback to gv5_policy_test`. Empreintes recalculées ci-dessus. Un second refus avant COMMIT (`profiles_id_fkey`) a conduit à créer également un compte Auth temporaire, lui aussi annulé par le savepoint.
+- **CODE / SCRIPT-SQL** — Correctif limité au bloc de vérification RLS (aucune des 9 migrations modifiée) : le contrôle crée un profil tenant **temporaire** dans la transaction, vérifie l'écriture dans son garage et le refus inter-garage en rôle `authenticated`, puis annule le tout par `rollback to gv5_policy_test`. Empreintes recalculées ci-dessus. Un second refus avant COMMIT (`profiles_id_fkey`) puis un troisième (`POLICY_OWN_WRITE_KO`) ont révélé que le rôle `authenticated` n'a aucun droit d'écriture sur `permissions` en production (ACL `Dxtm`). Le bloc de contrôle RLS vérifie désormais les définitions des policies sans écriture ; l'isolation réelle est vérifiée après déploiement via le parcours fonctionnel.
 
 **Production intacte à ce stade : aucune migration, aucune EF, aucune donnée modifiée.**

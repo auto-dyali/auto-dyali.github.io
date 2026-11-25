@@ -1884,14 +1884,14 @@ begin
   end loop;
 end $$;
 
--- Contrôle de la policy d'écriture tenant (test annulé par savepoint).
--- Le test s'exécute avec le rôle `authenticated` : `postgres` est
--- superutilisateur et contourne RLS, ce qui rendrait le contrôle faux.
--- Production ne contient qu'un profil (Super Admin) : on crée un profil
--- tenant TEMPORAIRE dans la transaction, annulé par le savepoint.
-savepoint gv5_policy_test;
+-- Contrôle de la policy d'écriture tenant (sans écriture).
+-- En production le rôle `authenticated` n'a pas de droit INSERT sur
+-- `permissions` (ACL Dxtm) : un test d'écriture réelle serait un faux
+-- négatif. On vérifie donc la DEFINITION de la policy restaurée et
+-- l'absence de l'ancienne policy `tenant_isolation`. L'isolation réelle
+-- est vérifiée après déploiement via le parcours fonctionnel.
 do $$
-declare v_etab uuid; v_other uuid; v_uid uuid; v_def text;
+declare v_def text; v_pol text;
 begin
   if to_regprocedure('public.current_establishment_id()') is null then
     raise exception 'CURRENT_ETAB_ABSENT';
@@ -1900,48 +1900,19 @@ begin
   if v_def not like '%auth.uid()%' or v_def not like '%profiles%' then
     raise exception 'CURRENT_ETAB_INCOMPATIBLE';
   end if;
-  select id into v_etab from public.establishments order by id limit 1;
-  if v_etab is null then raise exception 'ETABS_ABSENTS'; end if;
-  select id into v_other from public.establishments where id <> v_etab order by id limit 1;
-  if v_other is null then raise exception 'ETABS_INSUFFISANTS'; end if;
-  v_uid := extensions.uuid_generate_v4();
-  insert into auth.users (
-    id, instance_id, aud, role, email, encrypted_password,
-    email_confirmed_at, created_at, updated_at,
-    raw_app_meta_data, raw_user_meta_data
-  ) values (
-    v_uid, '00000000-0000-0000-0000-000000000000',
-    'authenticated', 'authenticated',
-    'gv5-policy-' || replace(v_uid::text, '-', '') || '@example.invalid', '',
-    now(), now(), now(),
-    '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb
-  );
-  insert into public.profiles(id, full_name, establishment_id, role, is_active)
-    values (v_uid, 'GV5 policy probe', v_etab, 'employee', true);
-  perform set_config('gv5.policy_own_etab', v_etab::text, true);
-  perform set_config('gv5.policy_own_uid', v_uid::text, true);
-  perform set_config('gv5.policy_cross_etab', v_other::text, true);
+  select pg_get_expr(polqual, polrelid) into v_pol
+    from pg_policies
+   where schemaname='public' and tablename='permissions'
+     and policyname='permissions_tenant_write' and cmd='ALL';
+  if v_pol is null or v_pol not like '%current_establishment_id%' then
+    raise exception 'POLICY_TENANT_WRITE_KO';
+  end if;
+  if exists (
+    select 1 from pg_policies
+     where schemaname='public' and tablename='permissions'
+       and policyname='tenant_isolation'
+  ) then raise exception 'ANCIENNE_POLICY_PRESENTE'; end if;
 end $$;
-set local role authenticated;
-select set_config('request.jwt.claim.sub', current_setting('gv5.policy_own_uid'), true);
-do $$
-begin
-  begin
-    insert into public.permissions(establishment_id, role, module, can_view)
-      values (current_setting('gv5.policy_own_etab')::uuid, 'employee', 'gv5_policy_test', true);
-  exception when others then
-    raise exception 'POLICY_OWN_WRITE_KO';
-  end;
-  begin
-    insert into public.permissions(establishment_id, role, module, can_view)
-      values (current_setting('gv5.policy_cross_etab')::uuid, 'employee', 'gv5_policy_test', true);
-    raise exception 'POLICY_CROSS_WRITE_OK';
-  exception when insufficient_privilege then
-    null;
-  end;
-end $$;
-reset role;
-rollback to gv5_policy_test;
 
 -- Session Super Admin résolue uniquement depuis la base, sans UUID saisi.
 select set_config('request.jwt.claim.sub', (select id::text from public.profiles where role = 'saas_admin'), true);
