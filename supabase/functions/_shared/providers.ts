@@ -31,7 +31,7 @@ export type FetchResponseLike = {
   text: () => Promise<string>;
 };
 
-import { SUPPORT_EMAIL, SUPPORT_WHATSAPP } from "./constants.ts";
+import { LOGO_URL, SUPER_ADMIN_EMAIL, SUPPORT_EMAIL, SUPPORT_WHATSAPP } from "./constants.ts";
 
 export type FetchLike = (
   input: string,
@@ -105,14 +105,23 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/** Prénom et nom séparés pour la formule « Bonjour [Prénom] [Nom] ». */
+export function prenomEtNom(fullName: string): { prenom: string; nom: string } {
+  const parties = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parties.length === 0) return { prenom: "", nom: "" };
+  return { prenom: parties[0], nom: parties.slice(1).join(" ") || parties[0] };
+}
+
 export function buildEmailInvitationMessage(input: InvitationMessageInput): {
   subject: string;
   text: string;
   html: string;
 } {
   const subject = `AUTO DYALI — Activation de votre espace ${input.establishmentName}`;
+  const { prenom, nom } = prenomEtNom(input.managerFullName);
+  const salutation = [prenom, nom].filter(Boolean).join(" ");
   const text = [
-    `Bonjour ${input.managerFullName},`,
+    `Bonjour ${salutation},`,
     "",
     `Votre espace professionnel AUTO DYALI pour « ${input.establishmentName} » est prêt.`,
     "",
@@ -132,11 +141,12 @@ export function buildEmailInvitationMessage(input: InvitationMessageInput): {
     <tr><td align="center">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:14px;overflow:hidden">
         <tr><td style="background:#252d2d;padding:22px 28px;color:#e8ece8">
-          <div style="font-size:18px;font-weight:bold;letter-spacing:.08em">AUTO DYALI</div>
+          <img src="${LOGO_URL}" alt="AUTO DYALI" width="132" height="52"
+               style="display:block;max-width:100%;height:auto" />
           <div style="font-size:12px;color:#a7b7a8;margin-top:4px">Espace professionnel</div>
         </td></tr>
         <tr><td style="padding:28px">
-          <p style="margin:0 0 14px">Bonjour <strong>${escapeHtml(input.managerFullName)}</strong>,</p>
+          <p style="margin:0 0 14px">Bonjour <strong>${escapeHtml(salutation)}</strong>,</p>
           <p style="margin:0 0 14px;line-height:1.6">Votre espace professionnel pour
             <strong>${escapeHtml(input.establishmentName)}</strong> est prêt.</p>
           <p style="margin:0 0 6px;line-height:1.6">1. Activez votre compte et choisissez votre mot de passe personnel :</p>
@@ -396,4 +406,105 @@ export async function deliverInvitation(params: {
   }
 
   return Promise.all(tasks);
+}
+
+/* --------------------------------------------------------------------- */
+/* Notification du Super Admin (interne + e-mail), sans faux statut.       */
+/* --------------------------------------------------------------------- */
+
+export type AdminNotificationInput = {
+  establishmentName: string;
+  managerFullName: string;
+  createdAt: string;
+  resultat: string;
+};
+
+/** Message français, personnalisé, avec le logo officiel inchangé. */
+export function buildAdminNotificationMessage(input: AdminNotificationInput): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `AUTO DYALI — Nouvel abonné : ${input.establishmentName}`;
+  const text = [
+    `Bonjour ${input.managerFullName},`,
+    "",
+    `Un nouvel abonné vient d'être créé : ${input.establishmentName}.`,
+    `Manager : ${input.managerFullName}.`,
+    `Date de création : ${input.createdAt}.`,
+    `Résultat de l'opération : ${input.resultat}.`,
+    "",
+    "Ceci est une notification interne au Super Admin AUTO DYALI.",
+  ].join("\n");
+  const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f4f6f4;font-family:Arial,Helvetica,sans-serif;color:#252d2d">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px">
+    <tr><td align="center"><table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:14px">
+      <tr><td style="background:#252d2d;padding:22px 28px">
+        <img src="${LOGO_URL}" alt="AUTO DYALI" width="132" height="52" style="display:block;max-width:100%;height:auto" />
+      </td></tr>
+      <tr><td style="padding:28px">
+        <p>Bonjour ${escapeHtml(input.managerFullName)},</p>
+        <p>Un nouvel abonné vient d'être créé : <strong>${escapeHtml(input.establishmentName)}</strong>.</p>
+        <p>Manager : ${escapeHtml(input.managerFullName)}<br>Date de création : ${escapeHtml(input.createdAt)}<br>Résultat : ${escapeHtml(input.resultat)}</p>
+      </td></tr>
+    </table></td></tr>
+  </table></body></html>`;
+  return { subject, text, html };
+}
+
+/**
+ * Envoi générique via Resend. Le statut `accepte_par_fournisseur` signifie
+ * uniquement HTTP 2xx ; aucune livraison finale n'est affirmée.
+ */
+export async function sendAdminNotificationEmail(params: {
+  config: EmailConfig;
+  fetchImpl: FetchLike;
+  to?: string;
+  message: ReturnType<typeof buildAdminNotificationMessage>;
+}): Promise<DeliveryResult> {
+  if (!isEmailConfigured(params.config)) {
+    return {
+      channel: "email",
+      status: "non_configure",
+      providerError: "Fournisseur e-mail non configuré (RESEND_API_KEY / EMAIL_FROM absents).",
+    };
+  }
+  try {
+    const response = await params.fetchImpl("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${params.config.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: params.config.from,
+        to: [params.to ?? SUPER_ADMIN_EMAIL],
+        reply_to: params.replyTo ?? params.config.replyTo ?? SUPPORT_EMAIL,
+        subject: params.message.subject,
+        text: params.message.text,
+        html: params.message.html,
+      }),
+    });
+    if (!response.ok) {
+      return {
+        channel: "email",
+        status: "echec",
+        httpStatus: response.status,
+        providerError: `Fournisseur e-mail HTTP ${response.status} : ${truncate(await response.text())}`,
+      };
+    }
+    let providerRef: string | null = null;
+    try {
+      providerRef = (JSON.parse(await response.text()) as { id?: string }).id ?? null;
+    } catch {
+      providerRef = null;
+    }
+    return { channel: "email", status: "accepte_par_fournisseur", providerRef, httpStatus: response.status };
+  } catch (error) {
+    return {
+      channel: "email",
+      status: "echec",
+      providerError: `Réseau e-mail : ${truncate(String((error as Error)?.message ?? error))}`,
+    };
+  }
 }

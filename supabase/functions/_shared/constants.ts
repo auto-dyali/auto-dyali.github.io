@@ -7,3 +7,9 @@
 
 export const SUPPORT_EMAIL = "me.achbani@gmail.com";
 export const SUPPORT_WHATSAPP = "+33772208885";
+
+/** Compte Super Admin unique : destinataire de la notification interne. */
+export const SUPER_ADMIN_EMAIL = "admin@auto-dyali.ma";
+
+/** Logo officiel, fichier existant du dépôt, inchangé. */
+export const LOGO_URL = "https://auto-dyali.github.io/images/branding/logo.webp";

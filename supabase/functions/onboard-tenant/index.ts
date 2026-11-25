@@ -33,10 +33,13 @@ import {
   type OnboardingPayload,
 } from "../_shared/contract.ts";
 import {
+  buildAdminNotificationMessage,
   deliverInvitation,
   generateInvitationToken,
+  sendAdminNotificationEmail,
   sha256Hex,
   type DeliveryResult,
+  type EmailConfig,
   type FetchLike,
 } from "../_shared/providers.ts";
 
@@ -396,18 +399,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
         : "";
 
       const fetchImpl: FetchLike = (input, init) => fetch(input, init);
+      const emailConfig: EmailConfig = {
+        enabled: Boolean(env("RESEND_API_KEY")),
+        apiKey: env("RESEND_API_KEY"),
+        from: env("EMAIL_FROM"),
+        replyTo: env("EMAIL_REPLY_TO"),
+      };
       const results = await deliverInvitation({
         channels: [
           ...(payload.delivery.email ? (["email"] as const) : []),
           ...(payload.delivery.whatsapp ? (["whatsapp"] as const) : []),
         ],
         fetchImpl,
-        emailConfig: {
-          enabled: Boolean(env("RESEND_API_KEY")),
-          apiKey: env("RESEND_API_KEY"),
-          from: env("EMAIL_FROM"),
-          replyTo: env("EMAIL_REPLY_TO"),
-        },
+        emailConfig,
         whatsappConfig: {
           enabled: Boolean(env("WHATSAPP_ACCESS_TOKEN")),
           accessToken: env("WHATSAPP_ACCESS_TOKEN"),
@@ -454,12 +458,28 @@ Deno.serve(async (req: Request): Promise<Response> => {
         ? "Invitation préparée, e-mail non envoyé (RESEND_API_KEY / EMAIL_FROM absents)."
         : null;
 
+    /* 9) Notification Super Admin : jamais bloquante pour la création. */
+    const superAdminNotification = await notifierSuperAdmin(
+      admin,
+      payload,
+      result,
+      delivery,
+      {
+        enabled: Boolean(env("RESEND_API_KEY")),
+        apiKey: env("RESEND_API_KEY"),
+        from: env("EMAIL_FROM"),
+        replyTo: env("EMAIL_REPLY_TO"),
+      },
+      (input, init) => fetch(input, init),
+    );
+
     return json(200, {
       ok: true,
       idempotent: false,
       status: "completed",
       ...result,
       delivery,
+      super_admin_notification: superAdminNotification,
       ...(message ? { message, email_sent: false } : {}),
     });
   } catch (error) {
@@ -494,4 +514,77 @@ async function readDelivery(
       providerRef: row.whatsapp_provider_ref,
     },
   ];
+}
+
+/**
+ * Notification du Super Admin : une ligne persistée via RPC sécurisée,
+ * puis un e-mail séparé si Resend est configuré. Une panne secondaire ne doit
+ * jamais annuler la création du garage / Manager : on retourne un statut
+ * explicite au lieu de lever une erreur.
+ */
+async function notifierSuperAdmin(
+  admin: ReturnType<typeof createClient>,
+  payload: OnboardingPayload,
+  resultat: Record<string, unknown>,
+  livraison: DeliveryResult[],
+  emailConfig: EmailConfig,
+  fetchImpl: FetchLike,
+): Promise<Record<string, unknown>> {
+  const statut = (canal: string): string =>
+    livraison.find((d) => d.channel === canal)?.status ?? "non_demande";
+  const message = buildAdminNotificationMessage({
+    establishmentName: payload.establishment.name,
+    managerFullName: payload.manager.fullName,
+    createdAt: new Date().toISOString(),
+    resultat: resultat.status === "completed" ? "création confirmée" : String(resultat.status ?? "inconnu"),
+  });
+
+  let envoiAdmin: DeliveryResult | null = null;
+  try {
+    envoiAdmin = await sendAdminNotificationEmail({
+      config: emailConfig,
+      fetchImpl,
+      message,
+    });
+  } catch (erreur) {
+    envoiAdmin = {
+      channel: "email",
+      status: "echec",
+      providerError: String((erreur as Error)?.message ?? erreur),
+    };
+  }
+
+  try {
+    const { data, error } = await admin.rpc("admin_notify_new_subscriber", {
+      p_payload: {
+        source_request_id: payload.requestId,
+        title: message.subject,
+        body: message.text,
+        email_status: envoiAdmin?.status ?? "non_configure",
+        whatsapp_status: statut("whatsapp"),
+        email_ref: envoiAdmin?.providerRef ?? null,
+        whatsapp_ref: livraison.find((d) => d.channel === "whatsapp")?.providerRef ?? null,
+        last_error: envoiAdmin?.providerError ?? null,
+      },
+    });
+    if (error) {
+      return {
+        status: "indisponible",
+        email_status: envoiAdmin?.status ?? "non_configure",
+        error: errorMessage(error),
+      };
+    }
+    return {
+      status: "enregistre",
+      email_status: envoiAdmin?.status ?? "non_configure",
+      whatsapp_status: statut("whatsapp"),
+      ...(data ?? {}),
+    };
+  } catch (erreur) {
+    return {
+      status: "indisponible",
+      email_status: envoiAdmin?.status ?? "non_configure",
+      error: String((erreur as Error)?.message ?? erreur),
+    };
+  }
 }

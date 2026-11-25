@@ -41,6 +41,7 @@ import { useNotification } from "@/lib/use-notification";
 import { Champ3D, Zone3D, Section3D } from "@/components/abonne-form-primitives";
 import { ChampGeographieMaroc } from "@/components/ChampGeographieMaroc";
 import { validerIdentite, validerCoordonnees } from "@/lib/abonne-rules";
+import { libellePays } from "@/lib/geographie";
 
 type Plan = {
   code: string;
@@ -136,7 +137,7 @@ export default function OnboardingPage() {
     address: "",
     city: "",
     region: "",
-    country: "Maroc",
+    country: "MA",
     phone: "",
     email: "",
     complementaryContacts: "",
@@ -583,7 +584,7 @@ export default function OnboardingPage() {
                   address: "",
                   city: "",
                   region: "",
-                  country: "Maroc",
+                  country: "MA",
                   phone: "",
                   email: "",
                   complementaryContacts: "",
@@ -952,7 +953,7 @@ export default function OnboardingPage() {
                 <p className="text-sm text-[#E8ECE8]">{form.legalName || "—"}</p>
                 <p className="text-[11px] text-[#A7B7A8]">Nom commercial : {form.name || "—"}</p>
                 <p className="text-[11px] text-[#A7B7A8]">Slug : {form.slug || "—"} · Activité : {form.activityType || "—"}</p>
-                <p className="text-[11px] text-[#A7B7A8]">{[form.address, form.city, form.region, form.country].filter(Boolean).join(", ")}</p>
+                <p className="text-[11px] text-[#A7B7A8]">{[form.address, form.city, form.region, libellePays(form.country) || form.country].filter(Boolean).join(", ")}</p>
                 <p className="text-[11px] text-[#A7B7A8]">Tél. : {form.phone || "—"} · E-mail : {form.email || "—"}</p>
                 <p className="text-[11px] text-[#A7B7A8]">Dossier : {form.dossierState}</p>
                 {([

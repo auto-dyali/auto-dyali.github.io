@@ -7,6 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  buildAdminNotificationMessage,
   buildEmailInvitationMessage,
   buildWhatsAppTemplateParams,
   deliverInvitation,
@@ -14,6 +15,7 @@ import {
   isEmailConfigured,
   isWhatsAppConfigured,
   sendEmailInvitation,
+  sendAdminNotificationEmail,
   sendWhatsAppInvitation,
   sha256Hex,
 } from "../supabase/functions/_shared/providers.ts";
@@ -216,4 +218,40 @@ test("URL d'activation absente : aucun envoi, échec explicite", async () => {
   assert.equal(results.find((r) => r.channel === "email")?.status, "echec");
   assert.equal(results.find((r) => r.channel === "whatsapp")?.status, "echec");
   assert.match(results[0].providerError ?? "", /URL d'activation absente/);
+});
+
+
+test("notification Super Admin : non configurée sans secret, jamais livrée", async () => {
+  const msg = buildAdminNotificationMessage({
+    establishmentName: "Garage Atlas",
+    managerFullName: "Youssef Alami",
+    createdAt: "2026-11-26T00:00:00Z",
+    resultat: "création confirmée",
+  });
+  assert.match(msg.text, /Garage Atlas/);
+  assert.match(msg.text, /Youssef Alami/);
+  assert.match(msg.html, /images\/branding\/logo\.webp/);
+  const nonConfigure = await sendAdminNotificationEmail({
+    config: { enabled: false, apiKey: null, from: null },
+    fetchImpl: async () => { throw new Error("aucun appel réseau attendu"); },
+    message: msg,
+  });
+  assert.equal(nonConfigure.status, "non_configure");
+});
+
+test("notification Super Admin : HTTP 2xx = accepté par le fournisseur seulement", async () => {
+  const msg = buildAdminNotificationMessage({
+    establishmentName: "Garage Atlas",
+    managerFullName: "Youssef Alami",
+    createdAt: "2026-11-26T00:00:00Z",
+    resultat: "création confirmée",
+  });
+  const result = await sendAdminNotificationEmail({
+    config: { enabled: true, apiKey: "cle-de-test", from: "expediteur@exemple.invalid" },
+    fetchImpl: async () => ({ ok: true, status: 200, text: async () => '{"id":"prov-test"}' }),
+    message: msg,
+  });
+  assert.equal(result.status, "accepte_par_fournisseur");
+  assert.equal(result.providerRef, "prov-test");
+  assert.notEqual(result.status, "livre");
 });
