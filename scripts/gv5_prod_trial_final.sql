@@ -1900,7 +1900,7 @@ begin
   if v_def not like '%auth.uid()%' or v_def not like '%profiles%' then
     raise exception 'CURRENT_ETAB_INCOMPATIBLE';
   end if;
-  select pg_get_expr(qual, polrelid) into v_pol
+  select qual::text into v_pol
     from pg_policies
    where schemaname='public' and tablename='permissions'
      and policyname='permissions_tenant_write' and cmd='ALL';
