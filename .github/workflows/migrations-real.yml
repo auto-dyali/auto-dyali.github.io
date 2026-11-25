@@ -144,5 +144,7 @@ jobs:
         run: |
           npm ci
           supabase status -o env >> "$GITHUB_ENV"
-          node -e 'const f=process.env;console.log("URL locale:",f.API_URL?"présente":"absente")'
+          echo "SUPABASE_URL=$(printf '%s' "${SUPABASE_URL:-$API_URL}" | tr -d '"')" >> "$GITHUB_ENV"
+          echo "SUPABASE_ANON_KEY=$(printf '%s' "${SUPABASE_ANON_KEY:-$ANON_KEY}" | tr -d '"')" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(printf '%s' "${SUPABASE_SERVICE_ROLE_KEY:-$SERVICE_ROLE_KEY}" | tr -d '"')" >> "$GITHUB_ENV"
           npm run test:isolation
