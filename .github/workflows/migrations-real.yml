@@ -158,7 +158,7 @@ jobs:
           for(const l of raw.split("\n")){const m=l.match(/^([A-Z0-9_]+)=(.*)$/);if(m)p[m[1]]=m[2].replace(/^"|"$/g,"")}
           const get=(...n)=>{for(const k of n)if(p[k])return p[k];return ""};
           const vals={SUPABASE_URL:get("SUPABASE_URL","API_EXTERNAL_URL","API_URL"),SUPABASE_ANON_KEY:get("SUPABASE_ANON_KEY","ANON_KEY"),SUPABASE_SERVICE_ROLE_KEY:get("SUPABASE_SERVICE_ROLE_KEY","SERVICE_ROLE_KEY")};
-          fs.writeFileSync("/tmp/norm.env",Object.entries(vals).map(([k,v])=>`${k}=${JSON.stringify(v)}`).join("\n")+"\n");
+          fs.writeFileSync("/tmp/norm.env",Object.entries(vals).map(([k,v])=>`${k}=${v}`).join("\n")+"\n");
           ' 
           set -a; . /tmp/norm.env; set +a
           cat /tmp/norm.env >> "$GITHUB_ENV"
