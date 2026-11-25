@@ -81,7 +81,8 @@ jobs:
           fi
           rc=$?
           if [ "$rc" -ne 0 ]; then
-            echo "::error::dump du schéma production échoué (code $rc), détail non affiché"
+            catgorie=$(grep -ioE 'unauthorized|forbidden|rate limit|too many requests|not found|invalid|failed' /tmp/dump.log | head -1 || true)
+            echo "::error::dump du schéma production échoué (code $rc, catégorie=${catgorie:-inconnue}), détail non affiché"
             exit "$rc"
           fi
           echo "dump produit : $(wc -c < /tmp/prod_schema.sql) octets (contenu non affiché)"
@@ -109,7 +110,7 @@ jobs:
           for stmt in /tmp/sql-prod-schema/*.sql; do
             i=$((i+1))
             supabase db query --local --file="$stmt" --yes >/tmp/stmt.log 2>&1 || {
-              code=$(grep -oE '"code"[[:space:]]*:[[:space:]]*"[0-9A-Z]{5}"' /tmp/stmt.log | head -1 | grep -oE '[0-9A-Z]{5}')
+              code=$(grep -oE '"code"[[:space:]]*:[[:space:]]*"[0-9A-Z]{5}"' /tmp/stmt.log | head -1 | grep -oE '[0-9A-Z]{5}' || true)
               echo "::error::restauration échouée instruction #$i sqlstate=${code:-inconnu} (contenu non affiché)"; exit 1; }
           done
           echo "restauration du schéma OK"
@@ -242,7 +243,8 @@ jobs:
           fi
           rc=$?
           if [ "$rc" -ne 0 ]; then
-            echo "::error::dump du schéma production échoué (code $rc), détail non affiché"
+            catgorie=$(grep -ioE 'unauthorized|forbidden|rate limit|too many requests|not found|invalid|failed' /tmp/dump.log | head -1 || true)
+            echo "::error::dump du schéma production échoué (code $rc, catégorie=${catgorie:-inconnue}), détail non affiché"
             exit "$rc"
           fi
           echo "dump produit : $(wc -c < /tmp/prod_schema.sql) octets (contenu non affiché)"
@@ -270,7 +272,7 @@ jobs:
           for stmt in /tmp/sql-prod-schema/*.sql; do
             i=$((i+1))
             supabase db query --local --file="$stmt" --yes >/tmp/stmt.log 2>&1 || {
-              code=$(grep -oE '"code"[[:space:]]*:[[:space:]]*"[0-9A-Z]{5}"' /tmp/stmt.log | head -1 | grep -oE '[0-9A-Z]{5}')
+              code=$(grep -oE '"code"[[:space:]]*:[[:space:]]*"[0-9A-Z]{5}"' /tmp/stmt.log | head -1 | grep -oE '[0-9A-Z]{5}' || true)
               echo "::error::restauration échouée instruction #$i sqlstate=${code:-inconnu} (contenu non affiché)"; exit 1; }
           done
           echo "restauration du schéma OK"
