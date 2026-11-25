@@ -109,3 +109,88 @@ Définitivement clôturé : 9 migrations production, 3 EF déployées, création
 Restent ouverts : fournisseur e-mail + `EMAIL_FROM` (+ `EMAIL_REPLY_TO` recommandé), fournisseur WhatsApp + `WHATSAPP_PHONE_NUMBER_ID` + modèle approuvé, `ACTIVATION_BASE_URL`, test navigateur avec `admin@auto-dyali.ma`, redéploiement des EF après correction, fusion PR #2 et publication Pages.
 
 Blocage exact : **secrets fournisseurs absents** (BLOQUÉ PAR CONFIG) et **autorisation absente** pour toute opération sensible supplémentaire sur Production, fusion ou publication.
+
+## 11. Géographie internationale + notifications Super Admin (MISSION « lance »)
+
+### 11.1 État Git initial et réconciliation
+
+- Dépôt `auto-dyali/auto-dyali.github.io`, branche `gv5-107-prod-final`, HEAD initial `e5916cb44c1fd6b2a460f5207b2341d5f4cbf1aa`.
+- `origin/main` = `3a0329baee540935c46adac24933bd16c4deebf1` ; divergence initiale **1 en retard / 14 en avance**.
+- `git merge-tree --write-tree origin/main HEAD` : **aucun conflit**. Le commit « en retard » est la fusion PR #1 (`3a0329b`) qui contient déjà une partie des travaux de la branche.
+- Fusion LOCALE de `origin/main` dans la branche (`git merge --no-edit`, **ni rebase forcé ni force-push**) : **0 en retard / 16 en avance**. `main` et Pages inchangés.
+- Commit de code `882df6acfe2ff8457155ae61ce175ace9fbbde9c` ; commit de fusion `8703e526ef144d9151cbec7cdafefedcae8f253a`.
+- Modifications préexistantes non suivies/capturées préservées (aucune suppression, aucun `clean`).
+
+### 11.2 Décisions et sources
+
+- **Refus GPL** : aucune dépendance `country-state-city` (GPL-3.0) dans le bundle public.
+- Pays : `countryInfo.txt` GeoNames ; libellés français via `Intl.DisplayNames('fr')`.
+- Villes : GeoNames **`cities500.zip`**, licence **CC BY 4.0**, attribution dans `docs/ATTRIBUTIONS.md`, statistiques dans `docs/GEODATA_STATS.md`. `alternateNamesV2.zip` (205 Mo) non embarqué. Générateur reproductible : `scripts/generate-geodata.mjs`.
+- Limites documentées : localités ≥ 500 habitants, liste **non exhaustive**, 6 entrées sans ville, `XK` code utilisateur.
+
+### 11.3 Statistiques recalculées
+
+| Mesure | Valeur |
+|---|---|
+| Entrées `countryInfo` | 252 (251 avec code ISO numérique, 1 code utilisateur `XK`) |
+| Pays avec au moins une ville | 246 |
+| Pays sans ville | `AN`, `AQ`, `BV`, `CS`, `HM`, `UM` |
+| Lignes `cities500` retenues (classe P) | 237 395 |
+| Villes après déduction par clé normalisée | 209 004 |
+| Taille `public/data/villes-par-pays.json` | 2 786 621 octets (chargé à la demande) |
+| SHA-256 du JSON villes | `fabdc1ab4d5051bee8b11fa8cc93d1129199513c87452b67f9edcc952fa4b7fa` |
+| SHA-256 du JSON pays | `828fcc856c9574ba9335af6a918c902f2aa5f0a633b470d075f35ed67005c4ad` |
+| SHA-256 du générateur | `8e42c655369961f4fe5b3aee4c1e88ba4391f03894bd59ff785dcc4e2817dc67` |
+
+### 11.4 Union marocaine — démonstration corrigée
+
+Le calcul naïf `480 + 142 − 106 = 516` était faux : les **106 correspondances** incluaient les alias (ASCII/noms alternatifs), alors que l'union doit utiliser la **clé du nom principal**.
+
+| Quantité | Valeur |
+|---|---|
+| Villes locales inchangées (`maroc-geographie.ts`) | 142 |
+| Régions inchangées | 12 |
+| Lignes GeoNames `MA` | 480 |
+| Clés normalisées distinctes côté local | 142 |
+| Clés normalisées distinctes côté GeoNames | 476 (4 lignes répètent un même nom) |
+| Intersection par nom principal | 90 |
+| Noms GeoNames ajoutés | 386 |
+| **Union réelle** | **142 + 386 = 528** |
+| Correspondances élargies avec alias (contrôle de couverture) | 106 |
+| Villes locales absentes de GeoNames même par alias (conservées) | 36 |
+
+Aucune ville locale perdue, aucun écrasement du référentiel marocain. Listes détaillées dans `docs/GEODATA_STATS.md`.
+
+### 11.5 Fichiers créés / modifiés
+
+Créés : `src/lib/geographie.ts`, `public/data/pays-iso.json`, `public/data/villes-par-pays.json`, `scripts/generate-geodata.mjs`, `scripts/test-geographie-final.mjs`, `scripts/test-super-admin-notifications.mjs`, `scripts/test-super-admin-notifications-pglite.mjs`, `docs/ATTRIBUTIONS.md`, `docs/GEODATA_STATS.md`, `supabase/migrations/20261126000000_super_admin_notifications.sql`, `supabase/rollbacks/gv5108/20261126000000.sql`.
+Modifiés : `src/components/ChampGeographieMaroc.tsx`, `src/components/abonne-workspace.tsx`, `src/app/super-admin/onboarding/page.tsx`, `supabase/functions/_shared/constants.ts`, `supabase/functions/_shared/providers.ts`, `supabase/functions/onboard-tenant/index.ts`, `scripts/test-providers.mjs`.
+
+### 11.6 Migration notifications — sécurité et preuves
+
+- Table additive `public.super_admin_notifications` ; **SHA-256 migration** `737bf28fccd26a0cf4c968df66424f5126ea5f5eb784393430ad1cd5aa48db9b`, **SHA-256 rollback** `0245d394b588e7cbeec4fb3039614cb9fad0204c8559ba22962a7569838b15ce`.
+- RLS activée ; SELECT/UPDATE réservés à `public.is_saas_admin()` ; **aucune policy INSERT**, aucun droit anon/Manager ; `REVOKE` explicites ; RPC `admin_notify_new_subscriber(jsonb)` `SECURITY DEFINER`, réservée à `service_role`, idempotente par index unique `source_request_id` et `ON CONFLICT DO UPDATE`.
+- Statuts honnêtes : `non_demande`, `non_configure`, `en_attente`, `accepte_par_fournisseur`, `echec`. Aucun statut « livré » ; `accepte_par_fournisseur` = HTTP 2xx uniquement.
+- PGlite (base mémoire locale) : migration appliquée, 2 appels identiques → 1 ligne (`idempotent=true` au 2ᵉ), refus des statuts fictifs et d'un `source_request_id` invalide, INSERT refusé au rôle `authenticated`, rollback ne supprimant que les objets créés : **5/5**.
+- Logo officiel : `public/images/branding/logo.webp`, non modifié ; URL `https://auto-dyali.github.io/images/branding/logo.webp` vérifiée **HTTP 200 / image/webp**, SHA-256 distant `603de9de…` identique au dépôt.
+
+### 11.7 Tests exécutés (sorties conservées)
+
+- `npm test` : **204/204**.
+- `tsc --noEmit` : OK ; `eslint` : **0 erreur**, 20 warnings préexistants ; `next build` : OK.
+- Ciblés : géographie **8/8**, notifications statiques **7/7**, notifications PGlite **5/5**, providers **18/18** (dont 2 nouveaux pour la notification SA), EF statiques **15/15**, readiness 107 **9/9**, cohérence contrat RPC **5/5**.
+- Aucun appel réseau géographique à l'exécution ; aucun test E2E navigateur, aucun envoi réel, aucune écriture distante.
+
+### 11.8 Statuts réels
+
+| Élément | Statut |
+|---|---|
+| Référentiel Pays/Ville, interface, migration, RPC, messages, tests | **MODIFIÉ LOCALEMENT + TESTÉ LOCALEMENT + COMMITÉ** |
+| Fusion locale de `main` dans la branche | **COMMITÉ** (`8703e52`), pas de force-push |
+| Migration `20261126000000` | **PRÉPARÉE — JAMAIS APPLIQUÉE** (ni staging, ni production) |
+| EF corrigées | **PRÉPARÉES — JAMAIS REDÉPLOYÉES** |
+| Création garage/Manager supplémentaire | **NON EFFECTUÉE** |
+| E-mail / WhatsApp réels | **NON ENVOYÉS** (aucun secret fournisseur) |
+| PR #2 | **NON FUSIONNÉE** |
+| GitHub Pages | **NON PUBLIÉE** ; production inchangée |
+| Secrets Resend / Meta | **BLOQUÉ PAR CONFIG** — à poser par le propriétaire |
