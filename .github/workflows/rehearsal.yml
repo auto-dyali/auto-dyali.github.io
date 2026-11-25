@@ -24,8 +24,9 @@ jobs:
   nouveau-parcours:
     runs-on: ubuntu-latest
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+      SECRET_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SECRET_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+      SECRET_COMBINE: ${{ secrets.REHEARSAL_GV5107 }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -36,10 +37,37 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Les secrets peuvent être fournis sous les deux noms attendus OU
+      # regroupés dans REHEARSAL_GV5107 (JSON ou deux lignes). Aucune valeur
+      # n'est affichée : elles sont uniquement écrites dans $GITHUB_ENV.
+      - name: Résolution des secrets de répétition (valeurs non affichées)
+        run: |
+          node -e '
+          const fs=require("fs");
+          let a=(process.env.SECRET_ACCESS_TOKEN||"").trim();
+          let b=(process.env.SECRET_DB_PASSWORD||"").trim();
+          if(!a||!b){
+            const c=(process.env.SECRET_COMBINE||"").trim();
+            if(c){
+              let j={}; try{ j=JSON.parse(c); }catch(e){ j={}; }
+              const g=(...ks)=>{for(const k of ks){const v=j[k];if(typeof v==="string"&&v.trim())return v.trim();}return "";};
+              a=a||g("SUPABASE_ACCESS_TOKEN","supabase_access_token","access_token","token");
+              b=b||g("PROD_DB_PASSWORD","prod_db_password","db_password","password");
+              if(!a||!b){const p=c.split(/[\r\n|;]+/).filter(Boolean);if(p.length>=2){a=a||p[0];b=b||p[1];}}
+            }
+          }
+          if(!a||!b){
+            console.error("::error::Secrets SUPABASE_ACCESS_TOKEN / PROD_DB_PASSWORD introuvables (noms seulement)");
+            process.exit(2);
+          }
+          fs.appendFileSync(process.env.GITHUB_ENV,"SUPABASE_ACCESS_TOKEN="+a+"\nPROD_DB_PASSWORD="+b+"\n");
+          console.log("Secrets résolus, valeurs non affichées");
+          '
+
       - name: Contrôle des secrets (noms seulement) et absence de fournisseur e-mail
         run: |
-          [ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo "::error::Secret SUPABASE_ACCESS_TOKEN absent"; exit 2; }
-          [ -n "$PROD_DB_PASSWORD" ] || { echo "::error::Secret PROD_DB_PASSWORD absent"; exit 2; }
+          [ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo "::error::SUPABASE_ACCESS_TOKEN absent"; exit 2; }
+          [ -n "$PROD_DB_PASSWORD" ] || { echo "::error::PROD_DB_PASSWORD absent"; exit 2; }
           [ -z "${RESEND_API_KEY:-}" ] || { echo "::error::RESEND_API_KEY ne doit pas être défini dans ce job"; exit 2; }
           [ -z "${EMAIL_FROM:-}" ] || { echo "::error::EMAIL_FROM ne doit pas être défini dans ce job"; exit 2; }
           echo "Secrets requis présents ; aucun secret e-mail défini (valeurs non affichées)"
@@ -149,8 +177,9 @@ jobs:
   ancien-parcours:
     runs-on: ubuntu-latest
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+      SECRET_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SECRET_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+      SECRET_COMBINE: ${{ secrets.REHEARSAL_GV5107 }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -163,10 +192,35 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Même résolution que dans l'autre job, sans affichage des valeurs.
+      - name: Résolution des secrets de répétition (valeurs non affichées)
+        run: |
+          node -e '
+          const fs=require("fs");
+          let a=(process.env.SECRET_ACCESS_TOKEN||"").trim();
+          let b=(process.env.SECRET_DB_PASSWORD||"").trim();
+          if(!a||!b){
+            const c=(process.env.SECRET_COMBINE||"").trim();
+            if(c){
+              let j={}; try{ j=JSON.parse(c); }catch(e){ j={}; }
+              const g=(...ks)=>{for(const k of ks){const v=j[k];if(typeof v==="string"&&v.trim())return v.trim();}return "";};
+              a=a||g("SUPABASE_ACCESS_TOKEN","supabase_access_token","access_token","token");
+              b=b||g("PROD_DB_PASSWORD","prod_db_password","db_password","password");
+              if(!a||!b){const p=c.split(/[\r\n|;]+/).filter(Boolean);if(p.length>=2){a=a||p[0];b=b||p[1];}}
+            }
+          }
+          if(!a||!b){
+            console.error("::error::Secrets SUPABASE_ACCESS_TOKEN / PROD_DB_PASSWORD introuvables (noms seulement)");
+            process.exit(2);
+          }
+          fs.appendFileSync(process.env.GITHUB_ENV,"SUPABASE_ACCESS_TOKEN="+a+"\nPROD_DB_PASSWORD="+b+"\n");
+          console.log("Secrets résolus, valeurs non affichées");
+          '
+
       - name: Contrôle des secrets (noms seulement)
         run: |
-          [ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo "::error::Secret SUPABASE_ACCESS_TOKEN absent"; exit 2; }
-          [ -n "$PROD_DB_PASSWORD" ] || { echo "::error::Secret PROD_DB_PASSWORD absent"; exit 2; }
+          [ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo "::error::SUPABASE_ACCESS_TOKEN absent"; exit 2; }
+          [ -n "$PROD_DB_PASSWORD" ] || { echo "::error::PROD_DB_PASSWORD absent"; exit 2; }
           echo "Secrets requis présents (valeurs non affichées)"
 
       - name: Reprendre le front et l'EF de main (versions déployées)
