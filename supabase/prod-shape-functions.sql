@@ -1,5 +1,5 @@
 do $$ begin create type public.user_role as enum ('saas_admin','manager','employee','client'); exception when duplicate_object then null; end $$;
--- Fonctions de la forme PRODUCTION (schéma seul)
+-- Fonctions de la forme PRODUCTION utiles au parcours (schéma seul)
 CREATE OR REPLACE FUNCTION public.admin_attach_manager(p_establishment_id uuid, p_user_id uuid, p_full_name text, p_phone text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -123,92 +123,6 @@ begin
           jsonb_build_object('name', p_name, 'plan', p_plan, 'slug', p_slug));
 
   return v_id;
-end;
-$function$
-
-
-CREATE OR REPLACE FUNCTION public.admin_delete_client_account(p_user_id uuid)
- RETURNS void
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-declare
-  v_profile public.profiles%rowtype;
-begin
-  if not public.is_saas_admin() then
-    raise exception 'Accès refusé : réservé au Super Admin.';
-  end if;
-
-  select * into v_profile from public.profiles where id = p_user_id;
-  if v_profile.id is null then
-    raise exception 'Profil introuvable.';
-  end if;
-
-  delete from public.clients
-   where establishment_id = v_profile.establishment_id;
-
-  insert into public.audit_log (establishment_id, actor_id, action, entity, entity_id, payload_json)
-  values (v_profile.establishment_id, auth.uid(), 'delete_client_account', 'profile', p_user_id, jsonb_build_object('source', 'super_admin_dashboard'));
-
-  delete from public.profiles where id = p_user_id;
-  delete from auth.users where id = p_user_id;
-end;
-$function$
-
-
-CREATE OR REPLACE FUNCTION public.admin_expire_subscription(p_establishment_id uuid)
- RETURNS void
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-declare
-  v_ancien_statut text;
-  v_sub_id        uuid;
-begin
-  if not public.is_saas_admin() then
-    raise exception 'Accès refusé : réservé au Super Admin.';
-  end if;
-
-  select s.id, s.status
-    into v_sub_id, v_ancien_statut
-    from public.subscriptions s
-   where s.establishment_id = p_establishment_id
-     and s.status in ('active','trial','past_due')
-   order by s.started_at desc
-   limit 1;
-
-  if not found then
-    raise exception 'Aucun abonnement actif trouvé pour cet établissement.';
-  end if;
-
-  update public.subscriptions
-     set status = 'expired',
-         updated_at = now()
-   where id = v_sub_id;
-
-  update public.establishments
-     set is_active = false,
-         suspended_at = now(),
-         updated_at = now()
-   where id = p_establishment_id;
-
-  insert into public.subscriptions_audit (
-    subscription_id, establishment_id, actor_id, action,
-    ancien_plan, nouveau_plan, ancien_statut, nouveau_statut,
-    payload_json
-  ) values (
-    v_sub_id, p_establishment_id, auth.uid(), 'expire',
-    (select plan_code from public.subscriptions where id = v_sub_id),
-    (select plan_code from public.subscriptions where id = v_sub_id),
-    v_ancien_statut, 'expired',
-    jsonb_build_object('raison', 'expiration manuelle par le Super Admin')
-  );
-
-  insert into public.audit_log (actor_id, action, entity, entity_id, payload_json)
-  values (auth.uid(), 'expire', 'subscription', p_establishment_id,
-          jsonb_build_object('ancien_statut', v_ancien_statut, 'nouveau_statut', 'expired'));
 end;
 $function$
 
@@ -416,137 +330,6 @@ end;
 $function$
 
 
-CREATE OR REPLACE FUNCTION public.admin_reactivate_subscription(p_establishment_id uuid)
- RETURNS void
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-declare
-  v_ancien_statut text;
-  v_ancien_plan   text;
-  v_sub_id        uuid;
-begin
-  if not public.is_saas_admin() then
-    raise exception 'Accès refusé : réservé au Super Admin.';
-  end if;
-
-  select s.id, s.status, s.plan_code
-    into v_sub_id, v_ancien_statut, v_ancien_plan
-    from public.subscriptions s
-   where s.establishment_id = p_establishment_id
-     and s.status in ('suspended','expired','cancelled')
-   order by s.started_at desc
-   limit 1;
-
-  if not found then
-    raise exception 'Aucun abonnement suspendu ou expiré trouvable pour cet établissement.';
-  end if;
-
-  update public.subscriptions
-     set status = 'active',
-         updated_at = now()
-   where id = v_sub_id;
-
-  update public.establishments
-     set plan = v_ancien_plan,
-         is_active = true,
-         suspended_at = null,
-         updated_at = now()
-   where id = p_establishment_id;
-
-  insert into public.subscriptions_audit (
-    subscription_id, establishment_id, actor_id, action,
-    ancien_plan, nouveau_plan, ancien_statut, nouveau_statut,
-    payload_json
-  ) values (
-    v_sub_id, p_establishment_id, auth.uid(), 'reactivate',
-    v_ancien_plan, v_ancien_plan, v_ancien_statut, 'active',
-    jsonb_build_object('raison', 'réactivation manuelle par le Super Admin')
-  );
-
-  insert into public.audit_log (actor_id, action, entity, entity_id, payload_json)
-  values (auth.uid(), 'reactivate', 'subscription', p_establishment_id,
-          jsonb_build_object('ancien_statut', v_ancien_statut, 'nouveau_statut', 'active'));
-end;
-$function$
-
-
-CREATE OR REPLACE FUNCTION public.admin_renew_subscription(p_establishment_id uuid, p_months integer DEFAULT 12)
- RETURNS void
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-declare
-  v_ancien_statut text;
-  v_ancien_plan   text;
-  v_ancien_fin    timestamptz;
-  v_nouveau_fin   timestamptz;
-  v_sub_id        uuid;
-begin
-  if not public.is_saas_admin() then
-    raise exception 'Accès refusé : réservé au Super Admin.';
-  end if;
-
-  if p_months <= 0 then
-    raise exception 'La durée de renouvellement doit être positive.';
-  end if;
-
-  -- Récupération de l abonnement courant
-  select s.id, s.status, s.plan_code, s.current_period_end
-    into v_sub_id, v_ancien_statut, v_ancien_plan, v_ancien_fin
-    from public.subscriptions s
-   where s.establishment_id = p_establishment_id
-     and s.status in ('active','trial','past_due','suspended','expired')
-   order by s.started_at desc
-   limit 1;
-
-  if not found then
-    raise exception 'Aucun abonnement trouvable pour cet établissement.';
-  end if;
-
-  -- Calcul de la nouvelle date de fin
-  if v_ancien_fin is not null and v_ancien_fin > now() then
-    v_nouveau_fin := v_ancien_fin + (p_months || ' months')::interval;
-  else
-    v_nouveau_fin := now() + (p_months || ' months')::interval;
-  end if;
-
-  -- Mise à jour de l abonnement
-  update public.subscriptions
-     set status = 'active',
-         current_period_end = v_nouveau_fin,
-         updated_at = now()
-   where id = v_sub_id;
-
-  -- Mise à jour de l établissement
-  update public.establishments
-     set plan = v_ancien_plan,
-         updated_at = now()
-   where id = p_establishment_id;
-
-  -- Journal dans subscriptions_audit
-  insert into public.subscriptions_audit (
-    subscription_id, establishment_id, actor_id, action,
-    ancien_plan, nouveau_plan, ancien_statut, nouveau_statut,
-    ancien_fin_periode, nouveau_fin_periode,
-    payload_json
-  ) values (
-    v_sub_id, p_establishment_id, auth.uid(), 'renew',
-    v_ancien_plan, v_ancien_plan, v_ancien_statut, 'active',
-    v_ancien_fin, v_nouveau_fin,
-    jsonb_build_object('months', p_months)
-  );
-
-  -- Journal dans audit_log
-  insert into public.audit_log (actor_id, action, entity, entity_id, payload_json)
-  values (auth.uid(), 'renew', 'subscription', p_establishment_id,
-          jsonb_build_object('ancien_statut', v_ancien_statut, 'nouveau_statut', 'active', 'duree_mois', p_months));
-end;
-$function$
-
-
 CREATE OR REPLACE FUNCTION public.admin_save_plan(p_code text, p_price_monthly numeric, p_price_yearly numeric, p_trial_days integer, p_max_users integer, p_max_sites integer, p_storage_mb integer)
  RETURNS void
  LANGUAGE plpgsql
@@ -706,36 +489,6 @@ AS $function$
 $function$
 
 
-CREATE OR REPLACE FUNCTION public.decrement_product_stock(p_product_id uuid, p_quantity integer)
- RETURNS void
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-declare
-  v_stock integer;
-begin
-  if not (public.is_manager() or public.is_saas_admin()) then
-    raise exception 'Accès refusé : réservé aux managers.';
-  end if;
-  if p_quantity is null or p_quantity <= 0 then
-    raise exception 'Quantité invalide : %', p_quantity;
-  end if;
-
-  update public.products
-     set stock = greatest(coalesce(stock, 0) - p_quantity, 0),
-         updated_at = now()
-   where id = p_product_id
-     and establishment_id = public.current_establishment_id()
-  returning stock into v_stock;
-
-  if v_stock is null then
-    raise exception 'Produit introuvable dans votre établissement.';
-  end if;
-end;
-$function$
-
-
 CREATE OR REPLACE FUNCTION public.get_my_profile()
  RETURNS TABLE(role user_role, establishment_id uuid)
  LANGUAGE sql
@@ -777,18 +530,5 @@ AS $function$
     from public.establishments e
     join public.plan_features pf on pf.plan_code = e.plan
    where e.id = public.current_establishment_id();
-$function$
-
-
-CREATE OR REPLACE FUNCTION public.open_ticket_count(p_establishment_id uuid)
- RETURNS integer
- LANGUAGE sql
- STABLE SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-  select count(*)::integer
-    from public.support_tickets
-   where establishment_id = p_establishment_id
-     and status in ('open','in_progress','waiting_reply');
 $function$
 
