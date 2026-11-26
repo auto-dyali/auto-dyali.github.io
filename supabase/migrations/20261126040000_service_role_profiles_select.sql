@@ -13,6 +13,3 @@
 -- saas_admin + is_active).
 
 grant select on public.profiles to service_role;
-
-comment on table public.profiles is
-  'Lecture service_role autorisée uniquement pour la vérification serveur du profil Super Admin (GV5 §117) ; RLS conservée.';

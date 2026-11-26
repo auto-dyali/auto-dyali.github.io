@@ -509,3 +509,49 @@ Migration additive unique `20261126040000_service_role_profiles_select.sql` : `g
 - EF : aucune modification de code nécessaire pour ce défaut ; le déployé `17ac6a8…` bénéficiera du GRANT sans redéploiement. L'écart de version (`v2` déployée vs `v3` attendue) reste ouvert pour les notifications.
 - Vérification staging préparée : connexion SA → profil lu → `onboard-tenant` → garage, Manager, profil, permissions, abonnement, invitation → statuts des canaux (création effective ≠ invitation créée ≠ e-mail accepté ≠ livraison). **BLOQUÉE** : identifiants `GV5_STAGING_*` absents et aucune autorisation d'écriture staging.
 - Production : inchangée ; création d'abonné toujours non démontrée. GO écrit distinct requis pour appliquer le GRANT.
+
+## 21. GV5 §118 — Correction SQL finale, audit sécurité et complément géographique
+
+**Date** : 26/11. **HEAD initial réel** : `8f8d04e809f34c13bf0623c339e95a8895db2f15` (conforme). **Branche** : `gv5-107-prod-final`.
+
+### 21.1 Correction SQL
+
+- Cause (déjà prouvée §117) : `service_role` sans `SELECT` sur `public.profiles` (ACL `Dxtm`) alors que l'EF lit `role, is_active` avec la clé de service.
+- Ancien SQL : `grant select … ;` + `comment on table public.profiles is '…'` — le commentaire pouvait écraser une métadonnée préexistante et n'était pas restauré par le rollback.
+- Nouveau SQL : **unique instruction** `grant select on public.profiles to service_role;`. Aucun `ALTER TABLE`, aucun `DROP POLICY`, aucun RLS modifié, aucun `GRANT` à `anon`, `authenticated` ou `PUBLIC`, aucune autre table.
+- Rollback inchangé et explicitement testé : `revoke select on public.profiles from service_role;`.
+- Privilèges effectifs vérifiés en PGlite : avant `service_role SELECT=false`, après `true`, `anon=false`, `authenticated` inchangé, RLS active, politiques inchangées ; après rollback `service_role=false` et le défaut redevient reproductible.
+
+### 21.2 Sécurité EF (aucune modification de l'EF)
+
+`onboard-tenant` conserve : JWT absent → 401 ; `caller.auth.getUser(jwt)` → session invalide 401 ; lecture du profil via client `service_role` ;`role === "saas_admin"` et `is_active !== false` ; refus Manager / profil absent / compte inactif ; contrôle avant `createUser`, `admin_onboard_tenant_v2` et `invitations`. Aucun `console.*`, aucun fallback `anon`, aucun secret exposé. JWT invalide/expiré : **test statique/unit**, pas validation cryptographique réelle exécutée ici.
+
+### 21.3 Complément géographique
+
+- Cause du non-remplissage : le filtre par région utilisait uniquement les 142 villes du référentiel historique ; les 386 villes ajoutées par GeoNames disparaissaient dès qu'une région était choisie.
+- Correction : nouveau fichier `public/data/villes-maroc-par-region.json` (12 régions, mêmes noms que le référentiel local, 527 villes uniques + 1 localité sans code admin1 conservée dans la liste globale des 528) ; `src/lib/geographie.ts` exporte `VILLES_MAROC_PAR_REGION`, `villesDeRegionMaroc()`, `regionDeVilleMaroc()`, `villeAppartientARegionMaroc()` ; `ChampGeographieMaroc.tsx` affiche immédiatement jusqu'à 12 villes de la région, reset pays/région/ville, états chargement / vide / prêt, cohérence pays+région avant enregistrement.
+- Les 142 villes locales et les 12 régions sont conservées ; deux pays étrangers (FR, US) restent exploitables. Aucune région inventée ni doublon.
+
+### 21.4 Tests réellement exécutés
+
+| Commande | Résultat |
+|---|---|
+| `node --test scripts/test-service-role-profiles-select.mjs` | **9/9** (scénarios A–F) |
+| `node --test scripts/test-geographie-form.mjs` | **7/7** |
+| `npm test` | **253/253** |
+| `npx tsc --noEmit` | OK |
+| `npx eslint` | **0 erreur**, 20 warnings préexistants |
+| `npm run build` | OK |
+| `node scripts/generate-geodata.mjs --check` | 252 pays, 12 régions, 528 villes marocaines |
+
+### 21.5 États
+
+- **Développé / testé localement / commité / poussé** : correction SQL, rollback, tests renforcés, géographie, documentation.
+- **Staging** : plan préparé (`docs/sessions/session-1/gv5-107-prod-final/§118_STAGING_PLAN.md`), **non exécuté** ; identifiants `GV5_STAGING_*` absents et aucun GO d'écriture.
+- **Production** : **inchangée** ; aucun GRANT/REVOKE distant, aucun déploiement, aucune création.
+- **Pages / PR #2 / main** : inchangés.
+- **Points non vérifiés** : parcours navigateur réel, validation cryptographique JWT, livraison des notifications, comportement RLS/PostgREST réel en production.
+
+### 21.6 Point de reprise
+
+GO distinct requis pour (1) appliquer `20261126040000` en staging, (2) fournir les identifiants de test, (3) exécuter le plan staging, (4) GO distinct pour la production. Tant que le GRANT n'est pas appliqué et vérifié en production avec un parcours réel, l'onboarding n'est pas déclaré réparé.

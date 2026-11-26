@@ -19,9 +19,12 @@ import {
   libellePays,
   libelleVille,
   rechercherVilles,
+  regionDeVilleMaroc,
+  villeAppartientARegionMaroc,
   villeAppartientAuPays,
+  villesDeRegionMaroc,
 } from "@/lib/geographie";
-import { REGIONS_MAROC, regionDeVille } from "@/lib/maroc-geographie";
+import { REGIONS_MAROC } from "@/lib/maroc-geographie";
 
 type ChampGeographieMarocProps = {
   ville: string;
@@ -53,16 +56,18 @@ export function ChampGeographieMaroc({
   const [listes, setListes] = useState<Map<string, string[]>>(new Map());
   const [focusVille, setFocusVille] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [chargement, setChargement] = useState(true);
+  const [etatVilles, setEtatVilles] = useState<"chargement" | "pret" | "vide">("chargement");
 
   useEffect(() => {
     let actif = true;
     chargerVillesParPays()
       .then((donnees) => {
-        if (actif) setListes(donnees);
+        if (!actif) return;
+        setListes(donnees);
+        setEtatVilles(donnees.size > 0 ? "pret" : "vide");
       })
-      .finally(() => {
-        if (actif) setChargement(false);
+      .catch(() => {
+        if (actif) setEtatVilles("vide");
       });
     return () => {
       actif = false;
@@ -73,6 +78,12 @@ export function ChampGeographieMaroc({
   const villesPays = useMemo(
     () => listes.get(country) ?? listes.get(MAROC) ?? [],
     [listes, country],
+  );
+  /* Le Maroc filtre par région à partir de la table dédiée (528 villes),
+     pas uniquement des 142 villes du référentiel historique. */
+  const listeVilles = useMemo(
+    () => (estMaroc && region ? villesDeRegionMaroc(region) : villesPays),
+    [estMaroc, region, villesPays],
   );
 
   /** Pays : on vide TOUJOURS la ville et la région puisqu'elles sont pays-dépendantes. */
@@ -91,18 +102,19 @@ export function ChampGeographieMaroc({
 
   const calculSuggestions = useCallback(
     (requete: string) => {
-      const trouvees = rechercherVilles(villesPays, requete);
-      if (!estMaroc || !region) return trouvees;
-      return trouvees.filter((v) => regionDeVille(v) === region);
+      /* Sans saisie, on affiche immédiatement les premières villes disponibles
+         de la région (ou du pays) : le champ ne reste jamais vide à tort. */
+      if (!requete.trim()) return listeVilles.slice(0, 12).map(libelleVille);
+      return rechercherVilles(listeVilles, requete);
     },
-    [villesPays, estMaroc, region],
+    [listeVilles],
   );
 
   const choixRegion = useCallback(
     (nomRegion: string) => {
       onChange("region", nomRegion);
-      if (ville && regionDeVille(ville) !== nomRegion) onChange("ville", "");
-      setSuggestions([]);
+      if (ville && !villeAppartientARegionMaroc(ville, nomRegion)) onChange("ville", "");
+      setSuggestions(villesDeRegionMaroc(nomRegion).slice(0, 12));
       setFocusVille(false);
     },
     [ville, onChange],
@@ -112,7 +124,7 @@ export function ChampGeographieMaroc({
     (nomVille: string) => {
       onChange("ville", nomVille);
       if (estMaroc) {
-        const r = regionDeVille(nomVille);
+        const r = regionDeVilleMaroc(nomVille);
         if (r && r !== region) onChange("region", r);
       }
       setSuggestions([]);
@@ -124,17 +136,18 @@ export function ChampGeographieMaroc({
   const surSaisieVille = useCallback(
     (valeur: string) => {
       onChange("ville", valeur);
-      setSuggestions(valeur.trim() ? calculSuggestions(valeur) : []);
-      setFocusVille(Boolean(valeur.trim()));
+      setSuggestions(calculSuggestions(valeur));
+      setFocusVille(true);
     },
     [calculSuggestions, onChange],
   );
 
-  /* Sécurité : si une ville chargée n'appartient pas au pays, elle est retirée. */
+  /* Sécurité : ville cohérente avec le pays ET, au Maroc, avec la région. */
   useEffect(() => {
     if (!ville || listes.size === 0) return;
     if (!villeAppartientAuPays(ville, country, listes)) onChange("ville", "");
-  }, [ville, country, listes, onChange]);
+    else if (estMaroc && region && !villeAppartientARegionMaroc(ville, region)) onChange("ville", "");
+  }, [ville, country, region, estMaroc, listes, onChange]);
 
   return (
     <div className={`grid gap-3 sm:grid-cols-3 ${className ?? ""}`}>
@@ -145,9 +158,15 @@ export function ChampGeographieMaroc({
             type="text"
             value={ville}
             onChange={(e) => surSaisieVille(e.target.value)}
-            onFocus={() => ville.trim() && setSuggestions(calculSuggestions(ville))}
+            onFocus={() => setSuggestions(calculSuggestions(ville))}
             onBlur={() => setTimeout(() => setFocusVille(false), 150)}
-            placeholder={chargement ? "Chargement des villes…" : "Rechercher une ville…"}
+            placeholder={
+              etatVilles === "chargement"
+                ? "Chargement des villes…"
+                : etatVilles === "vide"
+                  ? "Aucune ville disponible"
+                  : "Rechercher ou choisir une ville…"
+            }
             disabled={disabled}
             aria-label={labelVille}
             autoComplete="off"
@@ -172,8 +191,12 @@ export function ChampGeographieMaroc({
             </ul>
           )}
         </div>
-        <p className="text-[10px] text-[#A7B7A8]">
-          {villesPays.length} villes disponibles — liste non exhaustive.
+        <p className="text-[10px] text-[#A7B7A8]" role="status">
+          {etatVilles === "chargement"
+            ? "Chargement du référentiel…"
+            : etatVilles === "vide"
+              ? "Aucune donnée de ville disponible pour ce pays."
+              : `${listeVilles.length} ville(s) disponible(s)${estMaroc && region ? ` pour « ${region} »` : ""} — liste non exhaustive.`}
         </p>
         {erreur && <p className="text-[10px] text-[#C5716B]">{erreur}</p>}
       </div>

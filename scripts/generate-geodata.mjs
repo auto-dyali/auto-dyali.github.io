@@ -1,6 +1,10 @@
 /**
  * GV5 — Générateur reproductible du référentiel géographique international.
  *
+ * Le jeu de données versionné dans public/data est VERROUILLÉ : une
+ * régénération avec une source mise à jour doit être accompgagnée d'une
+ * revue des statistiques, des tests et du rollback associé.
+ *
  * Sources (à télécharger une fois, NON embarquées) :
  *   https://download.geonames.org/export/dump/cities500.zip
  *   https://download.geonames.org/export/dump/countryInfo.txt
@@ -166,6 +170,46 @@ const villesParPays = Object.fromEntries(
     .sort()
     .map((code) => [code, parPays[code]]),
 );
+/* Régions marocaines : mêmes noms que le référentiel local, jamais doublés. */
+const REGION_MA_PAR_CODE = {
+  "01": "Tanger-Tétouan-Al Hoceïma",
+  "02": "L'Oriental",
+  "03": "Fès-Meknès",
+  "04": "Rabat-Salé-Kénitra",
+  "05": "Béni Mellal-Khénifra",
+  "06": "Casablanca-Settat",
+  "07": "Marrakech-Safi",
+  "08": "Drâa-Tafilalet",
+  "09": "Souss-Massa",
+  "10": "Guelmim-Oued Noun",
+  "11": "Laâyoune-Sakia El Hamra",
+  "12": "Dakhla-Oued Ed-Dahab",
+};
+const nomsRegionsLocales = [...marocSrc.matchAll(/\bnom:\s*"([^"]+)",\s*nomNormalise:/g)].map((m) => m[1]);
+const villesParRegionMA = Object.fromEntries(nomsRegionsLocales.map((r) => [r, new Set()]));
+const blocsRegions = [...marocSrc.matchAll(/nom:\s*"([^"]+)",\s*nomNormalise:[\s\S]*?villes:\s*\[([\s\S]*?)\]/g)];
+const nomMaRegion = new Map();
+for (const bloc of blocsRegions) {
+  for (const m of bloc[2].matchAll(/"([^"]+)"/g)) {
+    const ville = m[1];
+    if (villesParRegionMA[bloc[1]] && !nomMaRegion.has(normaliser(ville))) {
+      villesParRegionMA[bloc[1]].add(ville);
+      nomMaRegion.set(normaliser(ville), bloc[1]);
+    }
+  }
+}
+for (const f of lignes) {
+  if (f[8] !== "MA") continue;
+  const region = REGION_MA_PAR_CODE[f[10]];
+  const cle = normaliser(f[1]);
+  if (region && villesParRegionMA[region] && !nomMaRegion.has(cle)) {
+    villesParRegionMA[region].add(f[1]);
+    nomMaRegion.set(cle, region);
+  }
+}
+const villesMarocParRegion = Object.fromEntries(
+  Object.entries(villesParRegionMA).map(([r, set]) => [r, [...set].sort((a, b) => a.localeCompare(b, "fr"))]),
+);
 
 /* Doublons géographiques détectés (plusieurs libellés -> même clé). */
 const doublonsMa = {};
@@ -197,7 +241,8 @@ const stats = {
     avecVilles: paysAvecVilles,
     sansVilles: paysSansVilles,
   },
-  villes: { lignesSource: lignes.length, retenues: totalRetenues, octetsJson: octetsJson },
+  villes: { lignesSource: lignes.length, retenues: totalRetenues, octetsJson: octetsJson,
+            marocParRegion: Object.values(villesMarocParRegion).reduce((a, b) => a + b.length, 0) },
   maroc: {
     locales: villesLocales.length,
     regions: regionsLocales.length,
@@ -275,6 +320,7 @@ if (CHECK) {
 } else {
   mkdirSync(join(ROOT, "public/data"), { recursive: true });
   writeFileSync(join(ROOT, "public/data/villes-par-pays.json"), JSON.stringify(villesParPays));
+  writeFileSync(join(ROOT, "public/data/villes-maroc-par-region.json"), JSON.stringify(villesMarocParRegion));
   writeFileSync(join(ROOT, "public/data/pays-iso.json"), JSON.stringify(paysData));
   writeFileSync(join(ROOT, "docs/GEODATA_STATS.md"), md);
   console.log(JSON.stringify(stats, null, 2));

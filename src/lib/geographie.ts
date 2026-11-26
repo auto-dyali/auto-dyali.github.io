@@ -14,6 +14,7 @@
  */
 
 import paysImportes from "../../public/data/pays-iso.json";
+import villesMarocParRegionImportees from "../../public/data/villes-maroc-par-region.json";
 import { normaliserTexte, TOUTES_VILLES_MAROC } from "./maroc-geographie";
 
 export type Pays = {
@@ -25,6 +26,31 @@ export type Pays = {
 
 export const PAYS: Pays[] = paysImportes as Pays[];
 export const PAYS_PAR_CODE = new Map(PAYS.map((p) => [p.code, p]));
+
+/** Régions marocaines → villes, généré depuis le même référentiel que la liste pays/villes. */
+export const VILLES_MAROC_PAR_REGION = villesMarocParRegionImportees as Record<string, string[]>;
+
+/** Ville → région marocaine (table d'association construite une seule fois). */
+const REGION_DE_VILLE_MAROC = new Map<string, string>();
+for (const [region, villes] of Object.entries(VILLES_MAROC_PAR_REGION)) {
+  for (const ville of villes) {
+    const cle = normaliserTexte(ville);
+    if (!REGION_DE_VILLE_MAROC.has(cle)) REGION_DE_VILLE_MAROC.set(cle, region);
+  }
+}
+
+export function villesDeRegionMaroc(region: string): string[] {
+  return VILLES_MAROC_PAR_REGION[region] ?? [];
+}
+
+/** Région d'une ville marocaine, ou null si la donnée source ne la renseigne pas. */
+export function regionDeVilleMaroc(ville: string): string | null {
+  return REGION_DE_VILLE_MAROC.get(normaliserTexte(ville)) ?? null;
+}
+
+export function villeAppartientARegionMaroc(ville: string, region: string): boolean {
+  return regionDeVilleMaroc(ville) === region;
+}
 
 const displayNames = new Intl.DisplayNames(["fr"], { type: "region" });
 
