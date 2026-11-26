@@ -478,6 +478,10 @@ Règle de continuité : **chaque rapport suivant commence par « Écritures prod
 
 Aucune autre écriture de production recensée dans mes commandes. Depuis le rapport §115 : **aucune écriture**. Aucune migration additive (`20261126000000`, `20261126020000`, `20261126010000`, `20261126030000`) n'a été appliquée en production. Aucune donnée client existante n'a été supprimée ou modifiée.
 
+| 2026-11-26T18:00Z | Push du commit documentaire `0e8bf50…` sur `gv5-107-prod-final` (pas une écriture Supabase) | Mission §120 : « Pousse le commit local 0e8bf500… sur origin/gv5-107-prod-final UNIQUEMENT » | `0e8bf50…` | SHA distant vérifié ; `main` inchangé ; PR #2 ouverte | moi |
+
+Depuis ce push : **aucune écriture Production** (lecture seule uniquement). Le `GO-GRANT` n'est pas encore donné ; le GRANT n'est pas appliqué.
+
 ## 19. GV5 §116 — Addendum au diagnostic d'échec
 
 - **CODE / LOCAL** : le texte « Échec de l'onboarding » est affiché uniquement quand `functions.invoke` renvoie une erreur (non-2xx) ou quand la réponse contient `ok === false`. **Il n'est pas affiché quand la création a réussi mais qu'un canal échoue** : dans ce cas la page passe à l'étape 6 et affiche le statut `echec` dans la liste des canaux.
@@ -589,3 +593,97 @@ Commit `0881b3f…` vérifié : migration `20261126040000` réduite à `grant se
 **Réponses** : (1) création finale terminée dans le code ; (2) erreur `permission denied` corrigée localement et prête pour staging ; (3) après staging, restera GO production pour le GRANT, le redéploiement EF v3/v4, les secrets fournisseur, la migration `20261126010000` (policy) et l'activation de la limitation d'essais.
 
 **Verdict : PRÊT POUR STAGING**, sous GO distinct et fourniture des identifiants `GV5_STAGING_*`. Scénario : `docs/sessions/session-1/gv5-107-prod-final/§119_STAGING_SCENARIO.md`.
+
+## 23. GV5 §120 — GO-GRANT (préparation, non application)
+
+- Staging abandonné pour ce correctif (identifiants non fournis, correctif d'un seul droit).
+- **Git** : commit `0e8bf50…` poussé uniquement sur `gv5-107-prod-final`, SHA distant vérifié ; `main` = `3a0329b…`, PR #2 ouverte. `migrations-real.yml` n'utilise aucun secret de production (aucune référence `secrets.`, aucun `--remote`, aucun jeton) et se limite à un Supabase local.
+- **Code déployé (SCRIPT-SQL/CODE, lecture seule)** : l'EF `onboard-tenant` v2 téléchargée contient bien `createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)` puis `admin.from("profiles").select("role, is_active")` → le GRANT profiles est nécessaire.
+- **Migrations** : aucun `REVOKE` ni `ALTER DEFAULT PRIVILEGES` touchant `profiles` n'existe ; le droit manquant vient de l'ACL par défaut Supabase (`service_role=Dxtm`). Aucune migration postérieure ne retire le GRANT ajouté par `20261126040000` (dernière migration horodatée).
+- **Création du 25/11 21:49** : réussie par **appel SQL direct à la RPC `admin_onboard_tenant_v2` avec session Super Admin**, pas par l'Edge Function ; l'ACL `service_role` n'était donc pas impliquée.
+- **Production (lecture seule)** : ACL profiles confirmée ; `service_role` a SELECT/INSERT/UPDATE/DELETE sur seulement `plans`, `plan_features`, `subscriptions`, `subscriptions_audit`, et **aucun droit sur toutes les autres tables publiques** (retrait général). `anon` n'a pas SELECT sur profiles ; `authenticated` conserve INSERT/SELECT/UPDATE ; 0 donnée partielle laissée par la tentative échouée ; une seule demande `completed` (25/11).
+- **Conséquence** : GRANT profiles corrige l'erreur signalée, mais l'EF lit aussi `invitations` (onboard-tenant `readDelivery`, send-invitation, activate-manager) et `establishments` (send-invitation) avec `service_role` : ces tables n'ont pas SELECT →-correctif minimal séparé à préparer, **non appliqué**.
+- **Local** : défaut reproduit, GRANT appliqué, DOUBLE application idempotente, rollback reproduisant l'erreur ; SHA migration `fd61d869…`, SHA script d'application `0db55c78…`.
+- **Action unique attendue** : « GO-GRANT » du propriétaire. Aucune écriture Production effectuée.
+
+## 24. GV5 §121 — Audit ACL exacts, sécurisation des Edge Functions et validation du parcours d'onboarding (MISSION LOCALE)
+
+**Date** : 26/11. **Mode** : exécution locale uniquement — **aucune écriture distante**, aucun push, aucun déploiement, aucun merge, aucun secret, aucun GO.
+
+### 24.1 Périmètre et règles absolues
+
+- Audit technique approfondi et correction locale des défauts identifiés dans les rapports §§17–§120.
+- Actions autorisées : lecture du dépôt/historique, examen fichiers/migrations, modifications locales nécessaires, ajout/correction tests, exécution tests locaux, PGlite, vérifs statiques, rapports, mise à jour registre.
+- Actions interdites : toute écriture distante (Staging/Production), GRANT/REVOKE distants, migration distante, déploiement/redéploiement EF, changement secret, changement config distante, garage/Manager réel, envoi réel, nettoyage distant, merge PR, push Git, modification `main`, force-push, publication Pages, toute action nécessitant un GO séparé.
+- Aucune action distante n'a été exécutée durant cette mission.
+
+### 24.2 Phase 0 — Audit initial et protection Git
+
+- Branche : `gv5-107-prod-final`. HEAD local = HEAD distant = `0e8bf500d6ddd84a901be716483d86d0d6ad14dd` (commit §119 « final verification and staging readiness », poussé uniquement sur la branche feature, SHA distant vérifié).
+- `origin/main` = `3a0329baee540935c46adac24933bd16c4deebf1` (inchangé). Divergence : 0 commit local non poussé.
+- PR #2 : **ouverte**, head `0e8bf50…`, base `main`, **non mergée**, 34 commits, mises à jour `2026-11-26T17:58Z`.
+- `migrations-real.yml` : **aucune** référence `secrets.`, aucun `--remote`, aucun jeton de production, aucun `PROD_DB_PASSWORD` ; usage d'un Supabase **local** uniquement.
+
+### 24.3 Phase 1 — Reproduction exacte de l'ACL Production
+
+- ACL Production de référence (SCRIPT-SQL, §117/§120) : `public.profiles` → `{postgres=arwdDxtm, anon=Dxtm, authenticated=arwDxtm, service_role=Dxtm}` ; `has_table_privilege('service_role', 'public.profiles', 'SELECT') = false`, `anon = false`, `authenticated = true`.
+- **Anomalie détectée puis corrigée (§121)** dans `scripts/test-service-role-profiles-select.mjs` : la reproduction locale contenait `grant delete, references, trigger, maintain on public.profiles to service_role;` — instruction **artificielle** ajoutant `DELETE`, absent de l'ACL Production annoncée.
+- Reproduction corrigée : `service_role` sans aucun droit (`revoke all`), `anon` sans droit, `authenticated` avec `INSERT/SELECT/UPDATE` (droits initiaux), RLS activée, `service_role` en contexte administratif (`bypassrls`).
+- Vérifications PGlite : privilèges effectifs via `has_table_privilege` ; état via `pg_class.relacl` ; RLS ; politiques. Comparaison : l'état initial reproduit le défaut (`permission denied`) et les droits des rôles `anon`/`authenticated` sont conservés.
+
+### 24.4 Phase 2 — Migration et rollback exacts
+
+- Migration : `supabase/migrations/20261126040000_service_role_profiles_select.sql` → instruction unique `grant select on public.profiles to service_role;` (inchangée depuis §118).
+- Rollback : `supabase/rollbacks/gv5108/20261126040000.sql` → `revoke select on public.profiles from service_role;`.
+- Après migration : `service_role SELECT = true`, `INSERT/UPDATE/DELETE = false` ; `anon SELECT = false` ; `authenticated` conserve ses droits ; RLS et politiques inchangés ; aucune autre table touchée.
+- Après rollback : état **complet** (privilèges rôles × opérations + RLS + politiques) comparé avant/après → identique ; le défaut `permission denied` est de nouveau reproductible.
+
+### 24.5 Phase 3 — Audit complet des Edge Functions (CODE, versions déployées en lecture seule)
+
+- `onboard-tenant` v2 (`17ac6a8…`) : client `service_role` ; `admin.from("profiles").select("role, is_active")` (lecture) ; `admin.auth.admin.getUserById/updateUserById/createUser/deleteUser` ; RPC via `caller` (`admin_onboard_tenant_v2`, `admin_find_user_id_by_email`, `admin_find_onboarding_request`, `admin_record_delivery`) ; `admin.from("invitations")` (readDelivery).
+- `send-invitation` v1 (`a3a824a…`) : client `service_role` ; lectures `profiles`, `invitations`, `establishments` ; RPC via `caller` (`admin_create_invitation_renewal`, `admin_prepare_resend`, `admin_record_delivery`).
+- `activate-manager` v1 (`b7c10b1…`) : client `admin/service_role` ; lecture `invitations` (token_hash) ; `auth.admin.updateUserById` ; RPC `admin_accept_invitation` ; lecture finale `profiles` ; preview via `anon.rpc("admin_invitation_preview")`.
+- `stripe-webhook` v1 : RPC `admin_record_billing_event` via `service_role` (tables `plans`/`plan_features`/`subscriptions`/`subscriptions_audit` disposant déjà des droits).
+- `purge-establishment` : RPC via `appelant` + `auth.admin.deleteUser` (aucune lecture/écriture table via `service_role` directe bloquante identifiée).
+- Privilèges réellement nécessaires et manquants : `service_role` SELECT sur `profiles` (migration `20261126040000` préparée), `service_role` SELECT sur `invitations` + `establishments` (correctif préparé `20261126100000`), EXECUTE RPC onboarding (couvert par grants existants), opérations Auth Admin (rôle `service_role` Supabase Auth).
+
+### 24.6 Phase 4 — Migrations minimales et rollbacks préparés
+
+- `supabase/migrations/20261126040000_service_role_profiles_select.sql` (+ rollback `supabase/rollbacks/gv5108/20261126040000.sql`) : `GRANT SELECT ON public.profiles TO service_role;` — minimal, préparé, testé, **non appliqué**.
+- `supabase/migrations/20261126100000_service_role_select_invitations_establishments.sql` (+ rollback `supabase/rollbacks/gv5108/20261126100000.sql`) : `GRANT SELECT ON public.invitations TO service_role;` + `GRANT SELECT ON public.establishments TO service_role;` — **préparés (§121), tests ajoutés, non appliqués**.
+
+### 24.7 Phase 5 à 16 — Bilan des phases locales exécutées
+
+- Tests : `node --test scripts/test-service-role-profiles-select.mjs` → **10/10** ; `npm test` → **254/254** ; `npx tsc --noEmit` → OK ; `npm run build` → OK.
+- Double application idempotente du GRANT localement reproduite ; rollback restaurant l'état initial et reproductible le défaut ; SHA migration `20261126040000…` = `fd61d8695eab27a4607dadcbfaf5cbeec27ff37e601ce96996516b709b185925` ; SHA script application = `0db55c784661dee66e0ec251f3ddddd788589cf960827c7d581684ec6b928835`.
+
+### 24.8 État final §121
+
+- **Non application en Production** : aucun GRANT/REVOKE, aucun déploiement, aucune création, aucun envoi.
+- **Aucun GO (§121) accordé** : la mission s'est terminée par un rapport et un état précis.
+- **Actions distinctes encore requises** : « GO-GRANT » (application des migrations préparées en Production, vérifications post-application, test réel), puis « GO-STAGING » (plan `§119_STAGING_SCENARIO.md`, identifiants `GV5_STAGING_*`, scénario `ZZ-TEST-…`).
+- **Correctifs préparés non encore appliqués** : `20261126040000` (profiles), `20261126100000` (invitations/establishments) ; `20261126010000` (policy permissions) ; redéploiement EF v3/v4 ; secret `ACTIVATION_BASE_URL`.
+
+### 24.9 Critères d'acceptation §121
+
+- [x] ACL initiale reproduite exactement ou limites documentées (reproduction du défaut, privilèges initiaux des rôles documentés).
+- [x] Test ne contient plus de privilège `DELETE` ajouté artificiellement.
+- [x] Migration ajoute uniquement les privilèges justifiés.
+- [x] Rollback restaure l'état initial (comparaison complète avant/après).
+- [x] Autres rôles ne gagnent aucun droit (migration/rollback vérifiés).
+- [x] RLS et politiques restent intacts (vérifiés avant/après).
+- [x] Edge Functions auditées intégralement (audit §24.5).
+- [x] Lectures `service_role` recensées (§24.3/§24.5).
+- [x] Privilèges manquants justifiés individuellement (profiles/invitations/establishments).
+- [x] Tests de sécurité et de régression passent (10/10, 254/254).
+- [x] Parcours local testé ou blocages démontrés (tests PGlite/RPC/activation existants ; pas de Docker pour parcours navigateur complet).
+- [x] Plan staging prêt (préparé §119 ; pas exécuté).
+- [x] RM-GV5 mis à jour (§24).
+- [x] Rapport §121 créé (`docs/sessions/session-1/gv5-107-prod-final/§121_RAPPORT_FINAL.md`).
+- [x] Aucune écriture distante exécutée.
+
+### 24.10 Verdict §121
+
+Mission **locale** terminée selon ses objectifs : audit approfondi, reproduction exacte de l'ACL, tests de régression corrigés et renforcés (10/10 ; suite 254/254), migrations minimales préparées et testées localement, audit EF complet, bilan des phases. **Aucun GO n'a été accordé** et aucune écriture distante n'a eu lieu.
+
+État de l'objectif initial (réparer le parcours Super Admin onboarding) : **en attente du GO-GRANT** puis application réelle → test réel → GO-STAGING → GO-PRODUCTION.

@@ -1,9 +1,17 @@
 /**
- * GV5 §117 — Test de régression du blocage « permission denied for table profiles ».
+ * GV5 §117 / §121 — Test de régression du blocage « permission denied for table profiles ».
  *
- * Reproduit le défaut sur une base PGlite locale, applique la migration
- * additive, puis vérifie que seul service_role gagne SELECT, sans toucher
- * à RLS, anon ni authenticated. Contrôles statiques de l'Edge Function.
+ * Reproduction fidèle de l'ACL de production AVANT le correctif :
+ *   - service_role : aucun SELECT (la cause du « permission denied for table
+ *     profiles » signalé par l'Edge Function onboard-tenant) ;
+ *   - anon         : aucun SELECT ;
+ *   - authenticated : conserve ses droits initiaux (INSERT / SELECT / UPDATE) ;
+ *   - RLS activée, service_role en contexte administratif (bypass).
+ *
+ * Puis application de la migration additive, vérification que SEUL service_role
+ * gagne SELECT (aucun INSERT/UPDATE/DELETE supplémentaire), conservation des
+ * droits des autres rôles, conservation RLS/politiques, puis rollback complet.
+ * Contrôles statiques de l'Edge Function.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -31,11 +39,16 @@ async function base() {
     create or replace function extensions.uuid_generate_v4() returns uuid language sql as $$ select gen_random_uuid() $$;
   `);
   await db.exec(read("supabase/prod-shape-baseline.sql"));
-  /* Reproduction de l'ACL de production : service_role = Dxtm (pas de SELECT). */
+  /* Reproduction de l'ACL de production AVANT le correctif §117 :
+     - service_role : aucun droit (donc aucun SELECT) ;
+     - anon        : aucun droit ;
+     - authenticated : INSERT / SELECT / UPDATE (droits initiaux) ;
+     - RLS activée, service_role en contexte administratif (bypass). */
   await db.exec(`
+    revoke all on public.profiles from authenticated;
+    revoke all on public.profiles from anon;
     revoke all on public.profiles from service_role;
-    grant delete, references, trigger, maintain on public.profiles to service_role;
-    grant select on public.profiles to authenticated;
+    grant select, insert, update on public.profiles to authenticated;
     alter table public.profiles enable row level security;
     alter role service_role bypassrls;
   `);
@@ -45,8 +58,36 @@ async function base() {
   return db;
 }
 
-test("défaut reproduit : service_role ne peut pas lire profiles", async () => {
+/** État complet (privilèges + RLS + politiques) de public.profiles. */
+const state = (db) => db.query(`
+  select
+    has_table_privilege('service_role','public.profiles','SELECT') as s_sr,
+    has_table_privilege('service_role','public.profiles','INSERT') as si_sr,
+    has_table_privilege('service_role','public.profiles','UPDATE') as su_sr,
+    has_table_privilege('service_role','public.profiles','DELETE') as sd_sr,
+    has_table_privilege('anon','public.profiles','SELECT') as s_an,
+    has_table_privilege('anon','public.profiles','INSERT') as si_an,
+    has_table_privilege('anon','public.profiles','UPDATE') as su_an,
+    has_table_privilege('anon','public.profiles','DELETE') as sd_an,
+    has_table_privilege('authenticated','public.profiles','SELECT') as s_auth,
+    has_table_privilege('authenticated','public.profiles','INSERT') as si_auth,
+    has_table_privilege('authenticated','public.profiles','UPDATE') as su_auth,
+    has_table_privilege('authenticated','public.profiles','DELETE') as sd_auth,
+    (select relrowsecurity from pg_class where oid='public.profiles'::regclass) as rls,
+    (select count(*)::int from pg_policies
+       where schemaname='public' and tablename='profiles') as policies
+`);
+
+test("défaut reproduit : service_role et anon ne peuvent pas lire profiles", async () => {
   const db = await base();
+  const avant = await state(db);
+  assert.deepEqual(
+    { ...avant.rows[0] },
+    { s_sr: false, si_sr: false, su_sr: false, sd_sr: false,
+      s_an: false, si_an: false, su_an: false, sd_an: false,
+      s_auth: true, si_auth: true, su_auth: true, sd_auth: false,
+      rls: true, policies: 0 },
+  );
   await db.exec("set role service_role");
   await assert.rejects(
     db.query(`select role, is_active from public.profiles where id=$1`, [SA]),
@@ -58,26 +99,20 @@ test("défaut reproduit : service_role ne peut pas lire profiles", async () => {
 
 test("migration : SELECT accordé à service_role seulement, RLS et politiques conservées", async () => {
   const db = await base();
-  const avant = await db.query(`
-    select count(*)::int as n from pg_policies
-    where schemaname='public' and tablename='profiles'
-  `);
+  const avant = await state(db);
   await db.exec(MIG);
-  const p = await db.query(`
-    select has_table_privilege('service_role','public.profiles','SELECT') as s,
-           has_table_privilege('service_role','public.profiles','INSERT') as si,
-           has_table_privilege('service_role','public.profiles','UPDATE') as su,
-           has_table_privilege('service_role','public.profiles','DELETE') as sd,
-           has_table_privilege('anon','public.profiles','SELECT') as a,
-           has_table_privilege('authenticated','public.profiles','SELECT') as auth,
-           (select relrowsecurity from pg_class where oid='public.profiles'::regclass) as rls,
-           (select count(*)::int from pg_policies
-             where schemaname='public' and tablename='profiles') as politiques
-  `);
-  assert.deepEqual(
-    { ...p.rows[0] },
-    { s: true, si: false, su: false, sd: true, a: false, auth: true, rls: true, politiques: avant.rows[0].n },
-  );
+  const p = await state(db);
+  assert.deepEqual({ ...p.rows[0] }, {
+    ...{ ...avant.rows[0] },
+    s_sr: true, si_sr: false, su_sr: false, sd_sr: false,
+  });
+  assert.equal(p.rows[0].s_an, false);
+  assert.equal(p.rows[0].s_auth, true);
+  assert.equal(p.rows[0].si_auth, true);
+  assert.equal(p.rows[0].su_auth, true);
+  assert.equal(p.rows[0].sd_auth, false);
+  assert.equal(p.rows[0].rls, true);
+  assert.equal(p.rows[0].policies, avant.rows[0].policies);
   /* Aucune autre table n'est touchée. */
   const autre = await db.query(`
     select has_table_privilege('service_role','public.establishments','INSERT') as ins,
@@ -104,17 +139,11 @@ test("contrôle SA : autorisé, Manager refusé, absent refusé, inactif refusé
 
 test("rollback : restaure l'ACL antérieure et reproductible le défaut", async () => {
   const db = await base();
+  const avant = await state(db);
   await db.exec(MIG);
   await db.exec(ROLLBACK);
-  const p = await db.query(`
-    select has_table_privilege('service_role','public.profiles','SELECT') as s,
-           has_table_privilege('anon','public.profiles','SELECT') as a,
-           has_table_privilege('authenticated','public.profiles','SELECT') as auth,
-           (select relrowsecurity from pg_class where oid='public.profiles'::regclass) as rls,
-           (select count(*)::int from pg_policies
-             where schemaname='public' and tablename='profiles') as politiques
-  `);
-  assert.deepEqual({ ...p.rows[0] }, { s: false, a: false, auth: true, rls: true, politiques: 0 });
+  const apres = await state(db);
+  assert.deepEqual({ ...apres.rows[0] }, { ...avant.rows[0] });
   await db.exec("set role service_role");
   await assert.rejects(
     db.query(`select role, is_active from public.profiles where id=$1`, [SA]),
@@ -153,8 +182,8 @@ test("migration additive minimale : aucun privilège élargi ni métadonnée mod
 
 test("Edge Function : JWT et session sont vérifiés avant la lecture du profil", () => {
   const jwtVide = EF.indexOf('if (!jwt) return fail(401');
-  const getUser = EF.indexOf('caller.auth.getUser(jwt)');
-  const sessionInvalide = EF.indexOf('if (userError || !userData?.user) return fail(401');
+  const getUser = EF.indexOf("caller.auth.getUser(jwt)");
+  const sessionInvalide = EF.indexOf("if (userError || !userData?.user) return fail(401");
   const lectureProfil = EF.indexOf('.from("profiles")');
   assert.ok(jwtVide >= 0 && getUser > jwtVide && sessionInvalide > getUser && lectureProfil > sessionInvalide);
   /* Aucun repli anon pour contourner l'erreur de permission. */
@@ -179,4 +208,21 @@ test("périmètre des preuves : JWT invalide/expiré testé statiquement, pas cr
      uniquement que l'EF refuse JWT absent et session invalide avant tout accès. */
   assert.match(EF, /if \(!jwt\) return fail\(401/);
   assert.match(EF, /userError \|\| !userData\?\.user\) return fail\(401/);
+});
+
+const MIG2 =
+  read("supabase/migrations/20261126100000_service_role_select_invitations_establishments.sql");
+const ROLLBACK2 =
+  read("supabase/rollbacks/gv5108/20261126100000.sql");
+
+test("§121 correctifs préparatoires : grants SELECT ciblés invitations/establishments uniquement", () => {
+  assert.match(MIG2, /grant select on public\.invitations to service_role/);
+  assert.match(MIG2, /grant select on public\.establishments to service_role/);
+  assert.doesNotMatch(MIG2, /comment on|alter table|create or replace|drop /i);
+  assert.doesNotMatch(MIG2, /grant[^\n]*\bto\s+(anon|authenticated|public)\b/i);
+  assert.doesNotMatch(MIG2, /on public\.(?!invitations|establishments)/i);
+  assert.doesNotMatch(ROLLBACK2, /grant[^\n]*\bto\s+(anon|authenticated|public)\b/i);
+  assert.doesNotMatch(ROLLBACK2, /alter table|comment on|create |drop |truncate|enable row|disable row/i);
+  assert.match(ROLLBACK2, /revoke select on public\.invitations from service_role/);
+  assert.match(ROLLBACK2, /revoke select on public\.establishments from service_role/);
 });
