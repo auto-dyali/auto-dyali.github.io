@@ -152,6 +152,6 @@ test("le dossier abonné affiche les identités professionnelle et Manager", () 
   assert.match(page, /professional_id/);
   assert.match(page, /login_id/);
   assert.match(page, /managerOf/);
-  assert.match(page, /select\("\*, subscriptions/);
+  assert.match(page, /select\("\*,[^)]*subscriptions/);
   assert.match(page, /Repli si l'embed `profiles` est refusé/);
 });

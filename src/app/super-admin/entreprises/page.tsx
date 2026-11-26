@@ -17,7 +17,14 @@ import { useNotification } from "@/lib/use-notification";
 import { AbonneActionsMenu, type AbonneAction } from "@/components/super-admin-actions-menu";
 import { AbonneWorkspace, type AbonneRow, type Espace } from "@/components/abonne-workspace";
 
-type Sub = { status: string | null; plan_code: string | null; trial_ends_at: string | null; current_period_end: string | null };
+type Sub = {
+  id: string;
+  status: string | null;
+  plan_code: string | null;
+  trial_ends_at: string | null;
+  current_period_end: string | null;
+  gv5_archived_at?: string | null;
+};
 type ManagerRow = {
   id: string;
   full_name: string | null;
@@ -37,6 +44,7 @@ type Row = {
   created_at: string;
   suspended_at: string | null;
   archived_at?: string | null;
+  gv5_archived_at?: string | null;
   professional_id?: string | null;
   legal_name?: string | null;
   activity_type?: string | null;
@@ -51,6 +59,10 @@ type Row = {
  * migration 0039 (les colonnes d'identité sont alors simplement absentes),
  * au lieu de casser toute la liste.
  */
+function archiveAt(row: Row): string | null {
+  return row.gv5_archived_at ?? row.archived_at ?? null;
+}
+
 function managerOf(row: Row): ManagerRow | null {
   const managers = (row.profiles ?? []).filter((p) => p.role === "manager");
   return managers[0] ?? null;
@@ -73,6 +85,7 @@ export default function EntreprisesPage() {
   const [recherche, setRecherche] = useState("");
   const [filtreEtat, setFiltreEtat] = useState<"tous" | "actifs" | "suspendus" | "archives">("tous");
   const [filtrePlan, setFiltrePlan] = useState<string>("tous");
+  const [filtreAbo, setFiltreAbo] = useState<string>("tous");
   const [traitement, setTraitement] = useState<string | null>(null);
   const [selection, setSelection] = useState<Row | null>(null);
   const [espace, setEspace] = useState<Espace>("etablissement");
@@ -89,13 +102,13 @@ export default function EntreprisesPage() {
     setErreur(null);
     let { data, error } = await supabase
       .from("establishments")
-      .select("*, subscriptions(status, plan_code, trial_ends_at, current_period_end), profiles(*)")
+      .select("*, gv5_archived_at, subscriptions(id, status, plan_code, trial_ends_at, current_period_end, gv5_archived_at), profiles(*)")
       .order("created_at", { ascending: false });
     if (error) {
       // Repli si l'embed `profiles` est refusé (RLS/policy absente).
       const repli = await supabase
         .from("establishments")
-        .select("*, subscriptions(status, plan_code, trial_ends_at, current_period_end)")
+        .select("*, gv5_archived_at, subscriptions(id, status, plan_code, trial_ends_at, current_period_end, gv5_archived_at)")
         .order("created_at", { ascending: false });
       data = repli.data;
       error = repli.error;
@@ -109,30 +122,38 @@ export default function EntreprisesPage() {
     const q = recherche.trim().toLowerCase();
     return rows.filter((r) => {
       if (filtreEtat === "archives") {
-        if (!r.archived_at) return false;
+        if (!archiveAt(r)) return false;
       } else {
         // Par défaut, les abonnés archivés sont consultables via le filtre
         // dédié et ne polluent pas la liste opérationnelle.
-        if (r.archived_at) return false;
+        if (archiveAt(r)) return false;
         if (filtreEtat === "actifs" && !r.is_active) return false;
         if (filtreEtat === "suspendus" && r.is_active) return false;
       }
       if (filtrePlan !== "tous" && r.plan !== filtrePlan) return false;
+      if (filtreAbo !== "tous" && r.subscriptions?.[0]?.status !== filtreAbo) return false;
       if (!q) return true;
       return [r.name, r.slug, r.city, r.phone, r.email, r.plan, r.professional_id ?? "", managerOf(r)?.login_id ?? ""]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q));
     });
-  }, [rows, recherche, filtreEtat, filtrePlan]);
+  }, [rows, recherche, filtreEtat, filtrePlan, filtreAbo]);
 
   async function basculer(row: Row) {
     if (!supabase) return;
     setTraitement(row.id);
     setNotice(null);
     setErreur(null);
-    const { error } = await supabase.rpc("admin_set_establishment_status", {
+    const motif = row.is_active ? window.prompt("Motif de la suspension (obligatoire) :") : null;
+    if (row.is_active && !motif?.trim()) {
+      setTraitement(null);
+      toastError({ title: "Motif requis", message: "Indiquez un motif pour suspendre un garage." });
+      return;
+    }
+    const { error } = await supabase.rpc("admin_set_establishment_status_v2", {
       p_establishment_id: row.id,
       p_active: !row.is_active,
+      p_reason: motif?.trim() ?? null,
     });
     if (error) toastError({ title: "Erreur suspension", message: error.message });
     else toastSuccess({ title: "Établissement mis à jour", message: row.is_active ? `« ${row.name} » suspendue (données conservées).` : `« ${row.name} » réactivée.` });
@@ -157,7 +178,15 @@ export default function EntreprisesPage() {
     if (!window.confirm(archive ? `Archiver « ${row.name} » ? Les données sont conservées et l'action est journalisée.` : `Restaurer « ${row.name} » ?`)) return;
     setTraitement(row.id);
     setErreur(null);
-    const { error } = await supabase.rpc("admin_archive_establishment", { p_id: row.id, p_archive: archive });
+    const motif = window.prompt(archive ? "Motif de l'archivage (obligatoire) :" : "Motif de la restauration (facultatif) :") ?? "";
+    if (archive && !motif.trim()) {
+      setTraitement(null);
+      toastError({ title: "Motif requis", message: "Indiquez un motif pour archiver un garage." });
+      return;
+    }
+    const { error } = await supabase.rpc("admin_archive_establishment_v2", {
+      p_id: row.id, p_archive: archive, p_reason: motif.trim() || null,
+    });
     if (error) toastError({ title: archive ? "Erreur archivage" : "Erreur restauration", message: error.message });
     else toastSuccess({ title: archive ? "Abonné archivé" : "Abonné restauré", message: `« ${row.name} » ${archive ? "archivé" : "restauré"} (données conservées, journalisé).` });
     await charger();
@@ -169,11 +198,61 @@ export default function EntreprisesPage() {
     if (!window.confirm(`Renouveler l'abonnement de « ${row.name} » pour 12 mois ?`)) return;
     setTraitement(row.id);
     setErreur(null);
-    const { error } = await supabase.rpc("admin_renew_subscription", { p_establishment_id: row.id, p_months: 12 });
+    const motif = window.prompt("Motif du renouvellement (obligatoire) :");
+    if (!motif?.trim()) {
+      setTraitement(null);
+      toastError({ title: "Motif requis", message: "Indiquez un motif de renouvellement." });
+      return;
+    }
+    const { error } = await supabase.rpc("admin_renew_subscription_v2", {
+      p_establishment_id: row.id, p_months: 12, p_reason: motif.trim(),
+    });
     if (error) toastError({ title: "Erreur renouvellement", message: error.message });
     else toastSuccess({ title: "Abonnement renouvelé", message: `« ${row.name} » renouvelé de 12 mois (journalisé).` });
     await charger();
     setTraitement(null);
+  }
+
+  async function actionAbonnement(
+    row: Row,
+    action: "abo_activer" | "abo_suspendre" | "abo_resilier" | "abo_archiver" | "abo_restaurer" | "abo_supprimer",
+  ) {
+    if (!supabase) return;
+    const sub = row.subscriptions?.[0];
+    if (!sub) {
+      toastError({ title: "Abonnement introuvable", message: "Aucun contrat attaché à ce garage." });
+      return;
+    }
+    const motif = window.prompt("Motif de l'opération (obligatoire) :");
+    if (!motif?.trim()) {
+      toastError({ title: "Motif requis", message: "Chaque opération sur un abonnement est journalisée avec un motif." });
+      return;
+    }
+    if (action === "abo_supprimer") {
+      const confirmation = window.prompt("Tapez SUPPRIMER pour confirmer la suppression logique :");
+      if (confirmation !== "SUPPRIMER") return;
+    }
+    setTraitement(row.id);
+    setErreur(null);
+    let error;
+    if (action === "abo_archiver" || action === "abo_restaurer") {
+      ({ error } = await supabase.rpc("admin_archive_subscription", {
+        p_subscription_id: sub.id, p_archive: action === "abo_archiver", p_reason: motif.trim(),
+      }));
+    } else if (action === "abo_supprimer") {
+      ({ error } = await supabase.rpc("admin_soft_delete_subscription", {
+        p_subscription_id: sub.id, p_reason: motif.trim(), p_confirmation: "SUPPRIMER",
+      }));
+    } else {
+      const statut = action === "abo_activer" ? "active" : action === "abo_suspendre" ? "suspended" : "cancelled";
+      ({ error } = await supabase.rpc("admin_set_subscription_status", {
+        p_subscription_id: sub.id, p_status: statut, p_reason: motif.trim(),
+      }));
+    }
+    setTraitement(null);
+    if (error) toastError({ title: "Opération refusée", message: error.message });
+    else toastSuccess({ title: "Abonnement mis à jour", message: "Opération journalisée côté serveur." });
+    await charger();
   }
 
   function ouvrirFiche(row: Row, espaceInitial: Espace = "etablissement", openEditMode: Espace | null = null) {
@@ -193,36 +272,61 @@ export default function EntreprisesPage() {
       case "archiver": void archiver(row, true); break;
       case "restaurer": void archiver(row, false); break;
       case "supprimer": void supprimerDefinitivement(row); break;
+      case "abo_activer": case "abo_suspendre": case "abo_resilier":
+      case "abo_archiver": case "abo_restaurer": case "abo_supprimer":
+        void actionAbonnement(row, a); break;
     }
   }
 
   function actionsPour(r: Row): AbonneAction[] {
     const base: AbonneAction[] = ["consulter", "modifier", "identifiants", "renouveler"];
     if (r.is_active) base.push("suspendre"); else base.push("reactiver");
-    if (r.archived_at) base.push("restaurer"); else base.push("archiver");
+    if (archiveAt(r)) base.push("restaurer"); else base.push("archiver");
     // La suppression définitive n'est proposée qu'après archivage : la RPC
     // refuse toute donnée métier résiduelle et conserve l'audit.
-    if (r.archived_at) base.push("supprimer");
+    if (archiveAt(r)) base.push("supprimer");
+    const sub = r.subscriptions?.[0];
+    if (sub?.gv5_archived_at) {
+      base.push("abo_restaurer");
+      if (sub.status === "cancelled" || sub.status === "expired") base.push("abo_supprimer");
+    } else if (sub) {
+      if (sub.status !== "active" && !["cancelled", "expired"].includes(sub.status ?? "")) base.push("abo_activer");
+      if (["trial", "active", "past_due"].includes(sub.status ?? "")) base.push("abo_suspendre");
+      if (!["cancelled", "expired"].includes(sub.status ?? "")) base.push("abo_resilier");
+      base.push("abo_archiver");
+    }
     return base;
   }
 
   async function supprimerDefinitivement(row: Row) {
     if (!supabase) return;
+    const motif = window.prompt("Motif de la suppression (obligatoire) :");
+    if (!motif?.trim()) {
+      toastError({ title: "Motif requis", message: "Indiquez un motif de suppression." });
+      return;
+    }
+    const confirmation = window.prompt("Tapez SUPPRIMER pour confirmer :");
+    if (confirmation !== "SUPPRIMER") {
+      toastError({ title: "Confirmation refusée", message: "Suppression annulée." });
+      return;
+    }
     const ok = window.confirm(
-      `SUPPRESSION DÉFINITIVE de « ${row.name} ».\n\n` +
+      `SUPPRESSION LOGIQUE de « ${row.name} ».\n\n` +
       "Cette opération est irréversible. Les données métier et l'historique d'audit sont conservés. " +
       "Confirmez-vous après avoir vérifié les dépendances ?",
     );
     if (!ok) return;
     setTraitement(row.id);
-    const { data, error } = await supabase.rpc("admin_purge_establishment", { p_id: row.id });
+    const { data, error } = await supabase.rpc("admin_soft_delete_establishment", {
+      p_id: row.id, p_reason: motif.trim(), p_confirmation: "SUPPRIMER",
+    });
     setTraitement(null);
     if (error) {
       toastError({ title: "Suppression refusée", message: error.message });
     } else {
       toastSuccess({
-        title: "Compte supprimé",
-        message: `« ${row.name} » supprimé définitivement ; audit conservé (${String((data as { comptes_supprimes?: number })?.comptes_supprimes ?? 0)} compte(s) d'accès retiré(s)).`,
+        title: "Suppression logique effectuée",
+        message: `« ${row.name} » supprimé logiquement ; données et audit conservés (${String((data as { mode?: string })?.mode ?? "logique")}).`,
       });
       await charger();
     }
@@ -288,6 +392,18 @@ export default function EntreprisesPage() {
             <option value="standard">STANDARD</option>
             <option value="silver">SILVER</option>
             <option value="gold">GOLD</option>
+          </select>
+        </label>
+        <label className="text-xs text-[#A7B7A8]">
+          Abonnement
+          <select value={filtreAbo} onChange={(e) => setFiltreAbo(e.target.value)} className="champ mt-1 min-h-11">
+            <option value="tous">Tous</option>
+            <option value="trial">Essai</option>
+            <option value="active">Actif</option>
+            <option value="past_due">Impayé</option>
+            <option value="suspended">Suspendu</option>
+            <option value="cancelled">Résilié</option>
+            <option value="expired">Expiré</option>
           </select>
         </label>
         <div className="flex items-end">

@@ -21,7 +21,13 @@ export type AbonneAction =
   | "reactiver"
   | "archiver"
   | "restaurer"
-  | "supprimer";
+  | "supprimer"
+  | "abo_activer"
+  | "abo_suspendre"
+  | "abo_resilier"
+  | "abo_archiver"
+  | "abo_restaurer"
+  | "abo_supprimer";
 
 const LIBELLES: Record<AbonneAction, string> = {
   consulter: "Consulter",
@@ -33,6 +39,12 @@ const LIBELLES: Record<AbonneAction, string> = {
   archiver: "Archiver",
   restaurer: "Restaurer",
   supprimer: "Supprimer définitivement",
+  abo_activer: "Abonnement : activer",
+  abo_suspendre: "Abonnement : suspendre",
+  abo_resilier: "Abonnement : résilier",
+  abo_archiver: "Abonnement : archiver",
+  abo_restaurer: "Abonnement : restaurer",
+  abo_supprimer: "Abonnement : supprimer (logique)",
 };
 
 const LARGEUR_MENU = 210;
