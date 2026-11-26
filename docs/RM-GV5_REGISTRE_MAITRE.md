@@ -336,3 +336,41 @@ Migration additive `20261126020000_garage_subscription_lifecycle.sql` (+ rollbac
 ### 14.6 Décision attendue
 
 Appliquer `20261126020000` uniquement après GO distinct, puis valider en staging avec un garage `ZZ-TEST-…`. La page n'est pas déclarée opérationnelle sans cette validation.
+
+## 15. GV5 §112 — Suppression définitive des abonnés de test
+
+### 15.1 Découverte (SCRIPT-SQL / LECTURE SEULE)
+
+- **STAGING** : `establishments` possède `archived_at` ; 31 tables avec `establishment_id` ; 68 établissements, **26 candidats de test** (`%test%` ou `ZZ-%`) ; ~50 comptes de test signalés.
+- **PRODUCTION** : `archived_at` **absent** ; 32 tables avec `establishment_id` ; 3 établissements, **0 candidat de test** par nom. Aucune donnée personnelle recopiée dans ce registre.
+- FK directes vers `establishments` : `c` (cascade) sur la majorité des tables, `n` (SET NULL) sur `onboarding_requests`, `pre_purchase_requests`, `profiles`, `crm_leads`, `saas_billing_events`.
+- FK indirectes notables : `invitation_events` → `invitations`, `pre_purchase_events` → `pre_purchase_requests`, `subscriptions_audit` → `subscriptions`, `ticket_messages` → `support_tickets`, `invoices`/`payments`/`sale_items` → `sales`.
+- **Tables comptables identifiées** : `invoices`, `payments`, `cash_sessions`, `expenses`, `sales`, `sale_items`, `purchase_orders`, `purchase_order_items`, `stock_movements`, `saas_billing_events`, `subscriptions_audit`.
+- `audit_log` : `id`, `establishment_id`, `actor_id`, `action`, `entity`, `entity_id`, `payload_json`, `created_at` (identique en staging et production).
+
+### 15.2 Migration additive et rollback
+
+`supabase/migrations/20261126030000_purge_establishment.sql` (+ `supabase/rollbacks/gv5108/20261126030000.sql`) : colonnes `is_test`/`is_protected`, RPC `admin_purge_establishment(uuid,text,boolean,text[])` avec garde-fous `ACCES_REFUSE`, `ETABLISSEMENT_INTROUVABLE`, `ETABLISSEMENT_PROTEGE`, `NON_MARQUE_TEST`, `NOM_DE_CONFIRMATION_INCORRECT`, `DOCUMENTS_COMPTABLES_PRESENTS`, `SUPPRESSION_INCOMPLETE`. Dry-run par défaut, passes successives, suppression explicite des profils (FK SET NULL), audit `purge_establishment` sans donnée personnelle. **Les 9 migrations et le script d'essai ne sont pas modifiés.**
+
+### 15.3 Edge Function et interface
+
+- `supabase/functions/purge-establishment/index.ts` : JWT vérifié par la passerelle **et** par `auth.getUser`, RPC appelée comme l'utilisateur, suppression Auth **uniquement après** succès SQL, clé `service_role` côté serveur jamais journalisée, statut `comptes_a_nettoyer` pour reprise idempotente.
+- Interface Super Admin : « Archiver » (réversible, `admin_archive_establishment_v2`) et « Supprimer définitivement » (irréversible) avec **dry-run affiché** (comptages uniquement), saisie du nom exact, puis application, messages d'erreur distincts.
+
+### 15.4 Preuves
+
+- `npm run test:purge` (PGlite) : **16/16 OK** — dry-run sans écriture, refus (nom, non test, protégé, comptabilité, Manager), suppression réelle (2 passes), 0 résidu dans toutes les tables à `establishment_id`, 0 profil orphelin, audit écrit, garage témoin intact, double appel sans duplicata, rollback propre.
+- `npm test` **237/237**, `tsc` OK, lint 0 erreur, `next build` OK.
+- `scripts/cleanup-staging-tests.mjs` : DRY-RUN par défaut, refuse toute cible hors staging, variables attendues `GV5_STAGING_URL`, `GV5_STAGING_ANON_KEY`, `GV5_STAGING_SERVICE_ROLE_KEY` — **absentes** → BLOQUÉ, aucune suppression.
+
+### 15.5 Statuts et limites
+
+| Élément | Statut |
+|---|---|
+| Migration, RPC, EF, UI, tests locaux | **IMPLÉMENTÉ + TESTÉ LOCAL** |
+| Suppression réelle sur staging | **BLOQUÉ** : autorisation et identifiants absents |
+| Navigateur desktop/mobile | **NON TESTÉ** |
+| Production | **INCHANGÉE** ; aucun marquage `is_protected` des 2 garages avant GO écrit |
+| Création d'abonnés en production | **PRIORITAIRE** : essai propriétaire → GO-APPLY → test réel |
+
+**Verdict : NON TERMINÉ** tant que la création d'abonnés n'est pas démontrée en production et la suppression validée en staging.
