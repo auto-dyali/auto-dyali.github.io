@@ -555,3 +555,37 @@ Migration additive unique `20261126040000_service_role_profiles_select.sql` : `g
 ### 21.6 Point de reprise
 
 GO distinct requis pour (1) appliquer `20261126040000` en staging, (2) fournir les identifiants de test, (3) exécuter le plan staging, (4) GO distinct pour la production. Tant que le GRANT n'est pas appliqué et vérifié en production avec un parcours réel, l'onboarding n'est pas déclaré réparé.
+
+## 22. GV5 §119 — Vérification finale et décision de staging
+
+### 22.1 Création finale (CODE / LOCAL)
+
+- `admin_onboard_tenant_v2` (migration `20261125103000`) crée dans une seule transaction : établissement (identité + `country/region/city`), abonnement rattaché par `establishment_id` (`trial` si essai > 0 sinon `active`, `started_at`, `trial_ends_at`, `current_period_end = début + mois payés`), profil Manager (`role=manager`, `is_active=true`, `must_change_password=true`, identifiant de connexion), permissions Manager (intersection forfait ∩ droits, `can_view=true`), invitation `prepared` + `invitation_events`, audit `onboard_tenant_v2`, demande `completed`.
+- Garde-fous : SA uniquement, `request_id` unique + verrou advisory (idempotence), identifiant professionnel/slug/login/e-mail uniques, modules du forfait cohérents avec les permissions, `user_id` Auth existant et correspondant à l'e-mail.
+- EF `onboard-tenant` : JWT vérifié, rôle SA vérifié avant toute création, compensation `deleteUser` si la RPC échoue sans demande déjà terminée, statut idempotent si demande clôturée. Aucune donnée partielle laissée par l'EF.
+- **Développée : oui.** **Défauts connus** : limitation des tentatives d'activation absente ; sessions non invalidées cryptographiquement à la suspension ; notifications non configurées ; policy `permissions_tenant_write` trop large (correctif additive `20261126010000` préparé, non appliqué) ; 2 garages historiques sans permissions.
+
+### 22.2 Correctif profiles (CODE / LOCAL)
+
+Commit `0881b3f…` vérifié : migration `20261126040000` réduite à `grant select on public.profiles to service_role;` ; `COMMENT ON TABLE` supprimé ; rollback `revoke select …` ; aucun `ALTER TABLE`, `DROP POLICY`, RLS modifié, `GRANT` à `anon`/`authenticated`/`PUBLIC` ou autre table. Test de régression **9/9** (défaut reproduit, privilèges, SA/Manager/absent/inactif, ordre avant création, JWT statique, rollback). EF inchangée : JWT absent/invalide → 401, lecture profil via `service_role`, `role==='saas_admin'`, `is_active!==false`, contrôle avant `createUser`/RPC/invitations, aucun `console.*`.
+
+### 22.3 Tests réellement exécutés (LOCAL)
+
+`npm test` **253/253** ; ciblés création/contrat/activation/permissions/profiles/géographie **83/83** ; `tsc` OK ; ESLint **0 erreur / 20 warnings préexistants** ; `next build` OK. Aucun E2E staging, aucune opération distante.
+
+### 22.4 Décision
+
+| Élément | Développé | Testé localement | Testé Staging | Production |
+|---|---|---|---|---|
+| Création garage | oui | oui (RPC contractuelle + PGlite + `npm test`) | non | vérifiée historiquement le 25/11, pas rejouée |
+| Création abonnement | oui | oui | non | idem |
+| Création Manager | oui | oui | non | idem |
+| Vérification Super Admin | oui | oui (9/9) | non | bloquée par ACL avant GRANT |
+| Permissions profiles | oui (GRANT préparé) | oui (9/9) | non | **non appliquées** |
+| Connexion Manager | oui | oui (statique + tests activation) | non | vérifiée historiquement |
+| Isolation garages | oui | oui (PGlite + tests permissions) | non | vérifiée historiquement |
+| Notifications | oui (5 canaux) | oui (simulation) | non | non configurées |
+
+**Réponses** : (1) création finale terminée dans le code ; (2) erreur `permission denied` corrigée localement et prête pour staging ; (3) après staging, restera GO production pour le GRANT, le redéploiement EF v3/v4, les secrets fournisseur, la migration `20261126010000` (policy) et l'activation de la limitation d'essais.
+
+**Verdict : PRÊT POUR STAGING**, sous GO distinct et fourniture des identifiants `GV5_STAGING_*`. Scénario : `docs/sessions/session-1/gv5-107-prod-final/§119_STAGING_SCENARIO.md`.
