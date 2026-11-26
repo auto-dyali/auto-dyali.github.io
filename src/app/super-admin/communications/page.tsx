@@ -23,7 +23,7 @@ const DONNEES_TEST = {
   plan: { code: "gold", label: "GOLD" },
   managerNom: "Aziz Test",
   managerLogin: "aziz.test",
-  lienActivation: `${process.env.NEXT_PUBLIC_ACTIVATION_BASE_URL ?? "https://auto-dyali.staging.local"}/activer?token=abc123def456`,
+  lienActivation: `${process.env.NEXT_PUBLIC_ACTIVATION_BASE_URL ?? "https://auto-dyali.github.io"}/activer?token=abc123def456`,
   dateEcheance: "20/11/2027",
   dateFinEssai: "27/11/2026",
   dateCreation: "20/11/2026",

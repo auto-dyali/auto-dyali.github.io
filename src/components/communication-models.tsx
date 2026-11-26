@@ -13,7 +13,7 @@ import { LogoAnime } from "@/components/logo-animé";
 
 const DEVISE = "MAD";
 const ACTIVATION_BASE_URL =
-  process.env.NEXT_PUBLIC_ACTIVATION_BASE_URL ?? "https://auto-dyali.staging.local";
+  process.env.NEXT_PUBLIC_ACTIVATION_BASE_URL ?? "https://auto-dyali.github.io";
 
 /**
  * Modèle HTML premium pour l'e-mail d'invitation / activation Manager.
