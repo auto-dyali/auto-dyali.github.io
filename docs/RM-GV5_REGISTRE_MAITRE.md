@@ -246,3 +246,49 @@ Aucun statut « livré » n'est produit ; `accepte_par_fournisseur` = HTTP 2xx u
 ### 12.7 Verdict intermédiaire
 
 **PARCOURS NON TERMINÉ** au sens de la mission : création/activation/connexion réelles non rejouées dans cet environnement, notifications réelles non livrées. Tout ce qui était réalisable localement est **CORRIGÉ, TESTÉ ET COMMITÉ**. Production demeure inchangée.
+
+## 13. GV5 §110 — Préparation de la production (26/11)
+
+### 13.1 Tâche 0 — Git
+
+HEAD initial et final de la mission : `c7822b0e94abde37f00c0dac79b78570cf9fce55`. Entre `5e5b1dd` et ce HEAD : 16 commits. Aucun des 9 migrations validées n'a été modifié. `17ac6a8`…`8fc8710` ont modifié **uniquement les scripts d'essai/application** (bloc de contrôle RLS adapté à la forme production) et les EF ; `882df6a` a **ajouté** la migration additive `20261126000000` et son rollback ; `735c509` a ajouté la notification WhatsApp SA et le composant tableau de bord. `main` local = `81ca143…`, `origin/main` = `3a0329b…` (fusion PR #1), branche **0 retard / 19 avance** ; écart explicable, aucun écart inexpliqué.
+
+**Écart de sha de l'essai** : le sha noté `a8806f44…` correspond à une version antérieure du script ; le script actuel est `311baa7e55631ec2b95f189665e6b7f916c3ade783a5ed8f9de25cac71a0e570` (1945 lignes), consécutif aux correctifs du bloc RLS. Les 9 migrations sont inchangées.
+
+### 13.2 Tâche 1 — État Production (LECTURE SEULE)
+
+Requête demandée : **true / true / true** (santé, invitations, `permissions_tenant_write`) → migrations appliquées. EF : `onboard-tenant` **ACTIVE v2**, `send-invitation` **ACTIVE v1**, `activate-manager` **ACTIVE v1** (versions plateforme ; les étiquettes code v3/v4/v1 restent celles des sources). Comptages : 3 établissements, 1 Super Admin, 1 invitation, 1 demande. Utilisateurs par établissement : 1 / 0 / 1 ; tous créés en 2026-11. Aucune donnée personnelle affichée. Les deux garages historiques, sans utilisateurs rattachés pour l'un, ressemblent à des comptes de démonstration — **décision au propriétaire**. Le précontrôle « Environnement non prêt » est bien présent dans le bundle Pages déployé (chunk HTTP 200) ; la santé étant true, il ne bloque pas.
+
+### 13.3 Tâches 2 et 3 — Audit et dossier GO-APPLY
+
+Migration `20261126000000` : additive, non intégrée aux 9, idempotente (`source_request_id` unique), RLS SA, RPC `service_role`, sans faux statut ; compatible ancien front et `onboard-tenant` v1 (si la RPC manque, la création réussit avec `status: indisponible`). EF : CORS, validation contrat v2, contrôle de rôle, aucun jeton/journalisation de lien ; sans fournisseur, résultat « invitation préparée, e-mail non envoyé ». Secrets requis : **tous absents en production** (noms seulement, aucune valeur). Documentation : `docs/SECRETS_FOURNISSEURS.md`.
+
+Dossier hors dépôt `gv5-go-apply` : `apply.sql` (1947 lignes, sha `8fe4987f…`), `trial.sql` (sha `311baa7e…`), 9 rollbacks, `post-checks.sql`, preuves PGlite locales. Diff apply/essai : uniquement timeout `15s → 120s` et `rollback → commit`. Preuves locales : succès `APPLIQUE` ; `SANTE_KO` ; `SA_UNIQUE_KO: 0` ; `SA_UNIQUE_KO: 2` ; `FEATURE_PERDUE` ; rollback 9 scripts (`invitations:false`, `sante:false`, 2 établissements conservés). **Rien n'a été lancé en production.**
+
+### 13.4 Tâche 4 — Staging et navigateur
+
+Staging (lecture seule) : `invitations: true`, policy 109000 présente, santé présente ; EF `ACTIVE` (`onboard-tenant`, `send-invitation`, `activate-manager`, plus `create-test-user`, `stripe-webhook`). **Aucune écriture distante** : autorisation non accordée. E2E navigateur : **BLOQUÉ** — variables attendues `GV5_STAGING_SA_EMAIL` et `GV5_STAGING_SA_PASSWORD` absentes de l'environnement local. Build de production (variables publiques de prod) : 0 occurrence de la référence staging, 0 `staging.local` après correction de deux textes de modèles de communication, 0 secret-service_role exposé. `npm test` **224/224**, `tsc` OK, lint 0 erreur, build OK.
+
+### 13.5 Tâche 5 — Cinq canaux (noms d'après le code)
+
+| Canal | Code | LOCAL | Configuré en production |
+|---|---|---|---|
+| Invitation e-mail Manager | `deliverInvitation` → `sendEmailInvitation` | SIMULATION 20/20 | **NON** |
+| Invitation WhatsApp Manager | `deliverInvitation` → `sendWhatsAppInvitation` | SIMULATION 20/20 | **NON** |
+| E-mail Super Admin | `sendAdminNotificationEmail` | SIMULATION | **NON** |
+| WhatsApp Super Admin | `sendAdminWhatsAppNotification` | SIMULATION | **NON** |
+| Notification interne SA | `admin_notify_new_subscriber` + composant UI | PGlite 5/5 | migration **non appliquée** |
+
+Aucun envoi réel ; aucun statut « livré ».
+
+### 13.6 Tâche 6 — Défauts avant premier client
+
+- `20261126010000_permissions_manager_write.sql` (+ rollback) : **PRÉPARÉ ET TESTÉ EN LOCAL** (PGlite : policy durcie puis restaurée). **Effet sur le front de `main`** : le module de permissions propose aussi les rôles `employee`/`client` ; une restriction aux seuls Managers bloquerait ces écritures. Décision requise avant application ; **non appliqué**.
+- Limitation des essais d'activation, jeton ≥ 128 bits, expiration courte, ancien lien invalidé : **non implémentés** ; la RPC d'acceptation appartient à `100000` (une des 9, non modifiable) → nécessiterait une v2 additive et un changement d'EF, sous GO.
+- Plans (lecture seule production) : `standard` 0.00, `silver`/`gold` NULL ; aucun prix modifié ; Trial sans paiement confirmé par le contrat et les tests. Nouveaux packs Essentiel/Professionnel/Entreprise : **en attente de décision écrite**.
+- Défauts mineurs §102 (saisie libre de ville, libellés « Info admin. ») : non modifiés (risque de régression sans test navigateur).
+- Nettoyage dépôt et sauvegarde régulière plan Free + reprise du compte SA par le propriétaire : **procédures proposées, rien supprimé**.
+
+### 13.7 Verdict §110
+
+**NON TERMINÉ** : l'essai en transaction et l'application réelle doivent être exécutés par le propriétaire après GO-APPLY, puis le parcours complet doit être démontré sur le site. Aucune écriture Production n'a été effectuée.
