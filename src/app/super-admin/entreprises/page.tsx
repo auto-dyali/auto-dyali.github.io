@@ -300,35 +300,55 @@ export default function EntreprisesPage() {
 
   async function supprimerDefinitivement(row: Row) {
     if (!supabase) return;
-    const motif = window.prompt("Motif de la suppression (obligatoire) :");
-    if (!motif?.trim()) {
-      toastError({ title: "Motif requis", message: "Indiquez un motif de suppression." });
+    const confirmName = window.prompt("Saisissez le nom exact du garage à supprimer définitivement :");
+    if (!confirmName?.trim()) {
+      toastError({ title: "Nom requis", message: "La suppression exige le nom exact." });
       return;
     }
-    const confirmation = window.prompt("Tapez SUPPRIMER pour confirmer :");
-    if (confirmation !== "SUPPRIMER") {
-      toastError({ title: "Confirmation refusée", message: "Suppression annulée." });
-      return;
-    }
-    const ok = window.confirm(
-      `SUPPRESSION LOGIQUE de « ${row.name} ».\n\n` +
-      "Cette opération est irréversible. Les données métier et l'historique d'audit sont conservés. " +
-      "Confirmez-vous après avoir vérifié les dépendances ?",
-    );
-    if (!ok) return;
     setTraitement(row.id);
-    const { data, error } = await supabase.rpc("admin_soft_delete_establishment", {
-      p_id: row.id, p_reason: motif.trim(), p_confirmation: "SUPPRIMER",
-    });
-    setTraitement(null);
-    if (error) {
-      toastError({ title: "Suppression refusée", message: error.message });
-    } else {
+    setErreur(null);
+    try {
+      /* 1) Dry-run : aucune écriture, affichage des comptages seulement. */
+      const apercu = await supabase.functions.invoke("purge-establishment", {
+        body: { establishmentId: row.id, confirmName: confirmName.trim(), dryRun: true },
+      });
+      if (apercu.error) throw apercu.error;
+      const a = (apercu.data ?? {}) as Record<string, unknown>;
+      if (a.ok !== true) throw new Error(String(a.error ?? "Aperçu refusé."));
+      const lignes = (a.lignes ?? {}) as Record<string, number>;
+      const detail = Object.entries(lignes).map(([table, n]) => `${table}: ${n}`).join(", ") || "aucune";
+      const ok = window.confirm(
+        `SUPPRESSION DÉFINITIVE — IRRÉVERSIBLE\n\n` +
+        `Aperçu (aucune donnée supprimée) : ${detail}.\n` +
+        `Comptes de connexion concernés : ${String(a.comptes_auth ?? 0)}.\n\n` +
+        "Confirmez-vous la suppression ?",
+      );
+      if (!ok) return;
+
+      /* 2) Application réelle via l'Edge Function sécurisée. */
+      const resultat = await supabase.functions.invoke("purge-establishment", {
+        body: { establishmentId: row.id, confirmName: confirmName.trim(), dryRun: false },
+      });
+      if (resultat.error) throw resultat.error;
+      const r = (resultat.data ?? {}) as Record<string, unknown>;
+      if (r.ok !== true) throw new Error(String(r.error ?? "Suppression refusée."));
       toastSuccess({
-        title: "Suppression logique effectuée",
-        message: `« ${row.name} » supprimé logiquement ; données et audit conservés (${String((data as { mode?: string })?.mode ?? "logique")}).`,
+        title: "Suppression définitive effectuée",
+        message: `Éléments supprimés : ${String(r.comptes_supprimes ?? 0)} compte(s), résidus : ${String(r.comptes_a_nettoyer ?? 0)}.`,
       });
       await charger();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Erreur inconnue";
+      const titre = /ACCES_REFUSE/i.test(message) ? "Accès refusé"
+        : /PROTEGE/i.test(message) ? "Garage protégé"
+        : /NON_MARQUE_TEST/i.test(message) ? "Garage non marqué test"
+        : /NOM_DE_CONFIRMATION/i.test(message) ? "Nom de confirmation incorrect"
+        : /COMPTABLES/i.test(message) ? "Documents comptables présents"
+        : /INCOMPLETE/i.test(message) ? "Suppression incomplète"
+        : "Suppression refusée";
+      toastError({ title: titre, message });
+    } finally {
+      setTraitement(null);
     }
   }
 

@@ -51,10 +51,14 @@ test("audit : acteur, garage, objet, ancien/nouvel état, motif, résultat", () 
 test("interface : actions conditionnées par état et filtres", () => {
   for (const rpc of [
     "admin_set_establishment_status_v2", "admin_archive_establishment_v2",
-    "admin_soft_delete_establishment", "admin_set_subscription_status",
+    "admin_set_subscription_status",
     "admin_archive_subscription", "admin_soft_delete_subscription",
     "admin_renew_subscription_v2",
   ]) assert.ok(UI.includes(`"${rpc}"`), `UI utilise ${rpc}`);
+  assert.ok(
+    UI.includes("admin_soft_delete_establishment") || UI.includes("purge-establishment"),
+    "UI propose une suppression protégée",
+  );
   assert.match(UI, /filtreAbo/);
   assert.match(UI, /window\.prompt\("Motif/);
   for (const a of ["abo_activer", "abo_suspendre", "abo_resilier", "abo_archiver", "abo_restaurer", "abo_supprimer"])
