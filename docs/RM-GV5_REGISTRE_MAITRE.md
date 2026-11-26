@@ -292,3 +292,47 @@ Aucun envoi réel ; aucun statut « livré ».
 ### 13.7 Verdict §110
 
 **NON TERMINÉ** : l'essai en transaction et l'application réelle doivent être exécutés par le propriétaire après GO-APPLY, puis le parcours complet doit être démontré sur le site. Aucune écriture Production n'a été effectuée.
+
+## 14. Gestion complète des garages et abonnements Super Admin
+
+### 14.1 Audit (PHASE 0/1)
+
+- `git fetch` a échoué (DNS indisponible) ; SHA distants connus : `origin/main` `3a0329b…`, branche locale `5d5c3ee…`, divergence **0 retard / 22 avance**. HEAD initial de la mission : `5d5c3ee4d015fb759d46a3eb9eff448abd868c38`.
+- RPC existantes : `admin_set_establishment_status`, `admin_change_plan`, `admin_renew_subscription`, `admin_reactivate_subscription`, `admin_expire_subscription` (0010/0026). **Absentes de la forme production vérifiée** : `admin_archive_establishment`, `admin_purge_establishment`, `admin_renew_subscription` v2, colonnes `archived_at`. L'UI appelait donc des RPC inexistantes.
+- Forme production : pas de `archived_at` sur `establishments`, pas de statut `archived` dans la contrainte `subscriptions.status`. Décision : ajouter des **colonnes dédiées `gv5_*`** et un statut d'archivage séparé, sans dupliquer ni casser les statuts existants (`trial`, `active`, `past_due`, `suspended`, `expired`, `cancelled`).
+- Risques identifiés : suppression physique dangereuse → **suppression logique obligatoire** ; suspension garage ≠ suspension abonnement ; motifs obligatoires ; idempotence ; audit central.
+
+### 14.2 Architecture retenue
+
+Migration additive `20261126020000_garage_subscription_lifecycle.sql` (+ rollback `supabase/rollbacks/gv5108/20261126020000.sql`) :
+- colonnes `gv5_archived_at`, `gv5_archive_reason`, `gv5_suspend_reason`, `gv5_deleted_at`, `gv5_delete_reason` (garages) ; `gv5_archived_at`, `gv5_archive_reason`, `gv5_status_reason`, `gv5_updated_at` (abonnements) ;
+- 9 RPC `security definer` réservées à `public.is_saas_admin()` : journal, suspension/réactivation, archivage/restauration, suppression logique garage, changement de statut, modification dates/formule, renouvellement, archivage/restauration abonnement, suppression logique abonnement ;
+- transitions interdites explicites (ex. `cancelled → active` refusé) ; idempotence par retour `idempotent: true` ; motifs ≥ 5 caractères ; confirmation `SUPPRIMER` ; audit `payload_json` avec ancien/nouvel état, motif, résultat, date ;
+- suspension/archive désactivent les profils du garage (invalidation des accès) ; aucune donnée métier supprimée ; factures/paiements conservés.
+
+### 14.3 Interface
+
+`src/app/super-admin/entreprises/page.tsx` : appel des RPC v2, motifs via invites, confirmation renforcée, filtre par statut d'abonnement, actions conditionnées par état, erreurs serveur affichées. `src/components/super-admin-actions-menu.tsx` : 6 actions abonnement supplémentaires. Responsive hérité du design GV5 existant ; **test navigateur non exécuté** (identifiants Super Admin et Docker absents).
+
+### 14.4 Tests réellement exécutés
+
+- `scripts/test-gv5-lifecycle-pglite.mjs` via `npm run test:lifecycle` : **28/28 OK** — refus Manager, motifs, suspension/réactivation, persistance et profils désactivés, idempotence, archivage/restauration, suppression logique protégée (confirmation, archivage, abonnements actifs), transitions autorisées/interdites, modification/formule inconnue, renouvellement, archivage abonnement, journal d'audit (10 lignes, motif présent), rollback propre.
+- `npm test` **230/230**, `tsc --noEmit` OK, `eslint` **0 erreur / 20 warnings**, `next build` OK.
+- Un test existant a été ajusté (`test-edge-functions-51.mjs`) pour accepter la nouvelle colonne dans le `select`.
+
+### 14.5 Statuts
+
+| Exigence | Statut | Preuve |
+|---|---|---|
+| RPC cycle de vie + RLS SA | **IMPLÉMENTÉ + TESTÉ LOCAL** | PGlite 28/28 |
+| Interface et actions conditionnées | **IMPLÉMENTÉ + TESTÉ STATIQUEMENT + BUILD** | `test-gv5-lifecycle.mjs`, build |
+| Suppression protégée / archivage / restauration | **IMPLÉMENTÉ + TESTÉ LOCAL** | PGlite |
+| Journal d'audit | **IMPLÉMENTÉ + TESTÉ LOCAL** | 10 lignes, motif |
+| Navigation réelle Super Admin | **NON TESTÉ** | identifiants/staging indisponibles |
+| Migration en staging/production | **NON APPLIQUÉE** | aucune autorisation |
+| Limitation tentatives activation | **NON RÉALISÉ** | RPC dans `100000` non modifiable |
+| Révocation cryptographique des sessions | **PARTIEL** | profils désactivés ; expiry JWT à confirmer |
+
+### 14.6 Décision attendue
+
+Appliquer `20261126020000` uniquement après GO distinct, puis valider en staging avec un garage `ZZ-TEST-…`. La page n'est pas déclarée opérationnelle sans cette validation.
