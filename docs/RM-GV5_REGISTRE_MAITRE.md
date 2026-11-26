@@ -194,3 +194,55 @@ Modifiés : `src/components/ChampGeographieMaroc.tsx`, `src/components/abonne-wo
 | PR #2 | **NON FUSIONNÉE** |
 | GitHub Pages | **NON PUBLIÉE** ; production inchangée |
 | Secrets Resend / Meta | **BLOQUÉ PAR CONFIG** — à poser par le propriétaire |
+
+## 12. Reprise et finalisation du parcours complet (26/11)
+
+### 12.1 État Git
+
+- HEAD initial : `257363e315dad8a802024c4919a93bed58056664` ; `origin/main` `3a0329b…` ; divergence **0 retard / 17 avance**.
+- Commit de finalisation : `735c5099523095d57e9cf094d45ee6f8539b16a3`.
+- Aucune opération distante autre que `git fetch` et le push de branche autorisé. `main`, PR #2 et Pages inchangés.
+
+### 12.2 Anomalies corrigées
+
+| Anomalie | Correction | Preuve |
+|---|---|---|
+| `buildAdminNotificationMessage()` commençait par « Bonjour [Manager] » | Message adressé au **Super Admin** ; nom du garage et du Manager conservés comme informations | `providers.ts`, test `test-super-admin-notifications.mjs` |
+| Aucune notification WhatsApp distincte du Super Admin | `sendAdminWhatsAppNotification()` + appel dans `onboard-tenant`, destinataire `SUPER_ADMIN_WHATSAPP`, modèle `WHATSAPP_ADMIN_TEMPLATE_NAME` | `providers.ts`, `onboard-tenant/index.ts`, tests providers |
+| Table `super_admin_notifications` non visible dans l'interface | Composant `SuperAdminNotifications` intégré au tableau de bord SA, lecture/mise à jour `read_at` via RLS | `src/components/super-admin-notifications.tsx`, `src/app/super-admin/page.tsx` |
+| Nouveaux tests absents de `npm test` | Ajout de `test-geographie-final.mjs` et `test-super-admin-notifications.mjs`; script `test:pglite` documenté | `package.json` |
+| Secrets WhatsApp non documentés | Procédure sans valeurs dans `docs/SECRETS_FOURNISSEURS.md` | fichier |
+
+### 12.3 Audits annexes
+
+- `.github/workflows/rehearsal.yml` : **absent de la branche**, toujours présent sur `main`. Suppression intervenue dans `ab661cc` (workflow de répétition privée inutilisable sans secrets). **Aucune fonctionnalité applicative supprimée** ; CI uniquement, non restaurée.
+- `package.json` : seule différence avec `main` est l'extension de la liste de tests (`test-gv5-107-production-readiness.mjs`, puis géographie et notifications) et l'ajout de `test:pglite`. Aucune dépendance payante ajoutée ; PGlite installé localement avec `--no-save`.
+- Migration `20261126000000` et rollback : Structure additive, RLS SA, RPC `service_role`, idempotence `source_request_id`, statuts sans « livré », rollback limité aux objets créés — **vérifiés en PGlite 5/5**.
+- Aucun script SQL annexe ajouté dans cette mission ; aucune migration existante modifiée.
+- Onboarding existant (activation, permissions, contrat RPC, géographie) : **aucune régression** — `npm test` 221/221, tests activation/permissions 14/14, contrat RPC 5/5.
+
+### 12.4 Tests réellement exécutés
+
+`npm test` **221/221** ; `tsc --noEmit` OK ; `eslint` **0 erreur / 20 warnings préexistants** ; `next build` OK ; `test:pglite` **5/5** ; readiness 107 **9/9** ; providers **20/20** ; notifications statiques **7/7** ; géographie **8/8**.
+
+### 12.5 État individuel des cinq canaux
+
+| Canal | État |
+|---|---|
+| 1. Notification interne Super Admin | **IMPLÉMENTÉ + TESTÉ LOCALEMENT** (PGlite, composant UI) — **non appliqué en Production** |
+| 2. E-mail au Super Admin | **IMPLÉMENTÉ, NON ENVOYÉ** — `RESEND_API_KEY` / `EMAIL_FROM` absents |
+| 3. WhatsApp au Super Admin | **IMPLÉMENTÉ, NON ENVOYÉ** — `SUPER_ADMIN_WHATSAPP` / `WHATSAPP_ADMIN_TEMPLATE_NAME` / secrets Meta absents |
+| 4. E-mail d'invitation Manager | **IMPLÉMENTÉ, NON ENVOYÉ** — mêmes secrets absents |
+| 5. WhatsApp d'invitation Manager | **IMPLÉMENTÉ, NON ENVOYÉ** — mêmes secrets absents |
+
+Aucun statut « livré » n'est produit ; `accepte_par_fournisseur` = HTTP 2xx uniquement. Idempotence par `source_request_id`, reprise sans doublon.
+
+### 12.6 Blocages du parcours réel
+
+- **BLOQUÉ PAR CONFIG** : sept secrets Resend/Meta (+ deux nouveaux secrets SA) absents ; aucun message réel ne peut être envoyé.
+- **BLOQUÉ PAR ENVIRONNEMENT/AUTORISATION** : pas de Docker pour `supabase start`, pas d'identifiants Super Admin pour un E2E navigateur, aucune autorisation pour une écriture distante en staging.
+- **EN ATTENTE D'AUTORISATION** : application de la migration `20261126000000`, redéploiement des EF, création réelle d'un abonné, activation et connexion réelles, fusion PR #2, publication Pages.
+
+### 12.7 Verdict intermédiaire
+
+**PARCOURS NON TERMINÉ** au sens de la mission : création/activation/connexion réelles non rejouées dans cet environnement, notifications réelles non livrées. Tout ce qui était réalisable localement est **CORRIGÉ, TESTÉ ET COMMITÉ**. Production demeure inchangée.
