@@ -13,6 +13,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { SUPPORT_EMAIL } from "../_shared/constants.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -141,6 +142,7 @@ async function deliverEmail(apiKey: string | null, from: string | null, message:
       body: JSON.stringify({
         from,
         to: [message.recipientEmail],
+        reply_to: SUPPORT_EMAIL,
         subject: `Votre accès AUTO DYALI — ${message.establishmentName}`,
         html: `<p>Bonjour ${message.managerFullName},</p><p>Votre accès à <strong>${message.establishmentName}</strong> est prêt. Activez votre compte en définissant votre mot de passe :</p><p><a href="${message.activationUrl}">Activer mon compte</a></p><p>Ce lien expire dans ${message.expiresInDays} jours.</p>`,
       }),

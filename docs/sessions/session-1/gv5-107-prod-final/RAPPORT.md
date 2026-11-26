@@ -62,3 +62,5 @@ Provisionnement Manager : compte Auth (EF) / profil (RPC v2) / rattachement `est
 ## 9. Verdict
 
 **NON TERMINÉ.** La cause est identifiée et la correction est répétée en LOCAL et STAGING ; aucune écriture de production n'a été faite. Le passage à « TERMINÉ » exige GO-1 → GO-2 → application → vérification par le propriétaire.
+
+**Suite (25/11) :** la stratégie passe à **8 migrations** avec la corrective `20261125108000` (pgcrypto / `search_path`), validée sur base de test. Voir `RAPPORT_PREPARATION_PROD.md` et `docs/RM-GV5_REGISTRE_MAITRE.md`. Le workflow de répétition abandonné a été retiré. Aucune écriture production.

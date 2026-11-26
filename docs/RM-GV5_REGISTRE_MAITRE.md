@@ -1,0 +1,689 @@
+# RM-GV5 — Registre maître des exigences, décisions, continuité et preuves
+
+Identité du projet : **GV5**. Le dépôt GitHub `auto-dyali/auto-dyali.github.io` est un support de publication, **pas** le nom du projet. Aucune référence à PHARMA+ n'est autorisée dans ce registre.
+
+## 1. Source de vérité
+
+| Élément | Valeur |
+|---|---|
+| Dossier local | `/Users/hind/Documents/Default Project/auto-plus` |
+| Remote | `https://github.com/auto-dyali/auto-dyali.github.io.git` |
+| Branche principale | `main` |
+| Branche de travail GV5 | `gv5-107-prod-final` |
+| Production Supabase | `nxmsqqoflskfajqrqddw` (`auto-dyali.github.io`, plan **Free**, sans PITR) |
+| Staging Supabase | `yocufscgninxiihwiepa` (`auto-dyali-staging`) |
+
+## 2. Décisions enregistrées
+
+| Date | Décision | Statut |
+|---|---|---|
+| 25/11 | GO-1 : diagnostic et stratégie à 7 migrations validés | Accordé |
+| 25/11 | Ajout d'une 8ᵉ migration corrective `20261125108000` (pgcrypto / `search_path`) | Validée par le propriétaire après rapport technique |
+| 25/11 | Répétition CI sur copie réelle abandonnée (dépôt de répétition supprimé) | Abandonnée — workflow retiré |
+| 25/11 | Pages réactivé ; déploiement réussi sur `main@3a0329b` | Terminé |
+| 25/11 | Réconciliation `main` ← `gv5-107-prod-final` (PR #1) | Fusionnée |
+| 25/11 | Aucune écriture production (migrations / EF / données) | **Respecté** |
+| 25/11 | Plan Free conservé ; aucun recours à Pro ni PITR | **Respecté** |
+| 25/11 | Déclaration `verify_jwt = false` pour `onboard-tenant` et `activate-manager` dans `supabase/config.toml` (les EF valident elles-mêmes JWT / jeton) | **Développée, testée localement, non déployée** |
+| 25/11 | Reprise idempotente d'un compte Auth orphelin par la même `requestId` dans `onboard-tenant` ; compensation seulement si la demande n'est pas déjà clôturée | **Développée, testée localement, non déployée** |
+| 25/11 | Test d'intégration transactionnel complet sur staging (création → idempotence → doublon → acceptation → isolation) ; `ROLLBACK` et 0 résidu | **Testé sur staging** |
+
+## 3. Chaîne de migrations retenue (9 fichiers)
+
+`20261125100000` → `101000` → `102000` → `102500` → `103000` → `104000` → `106000` → `108000` → **`109000`**.
+
+La 9ᵉ migration restaure `permissions_tenant_write` (écriture tenant équivalente à l'ancienne policy `tenant_isolation`) : le front de `main` écrit directement dans `permissions` avec un rôle non Super Admin ; sans elle, le parcours historique serait cassé. `101000` n'est pas modifiée (déjà appliquée sur staging).
+
+Dépendances : `100000` crée `invitations` dont dépend la FK de `101000` ; `102500` crée les 6 colonnes exigées par le précontrôle de `103000` ; `108000` corrige les helpers SQL de `100000` et doit être exécutée **dans la même transaction** avec `SET LOCAL search_path = public, extensions`.
+
+## 4. Protection des données
+
+- Sauvegarde fraîche à utiliser : `~/.local/share/auto-dyali/gv5-supabase-prod-backup-20261125-191107/` (la sauvegarde `…135853` est périmée).
+- sha256 de la sauvegarde à utiliser : schéma `52885122a89da0524b5a04cc0ff947e6b193af0dbb305bf067c95d01d48df1f46bec`, données chiffrées `75171117e668d546341f628af0abb09b2c2ae83bea00188a9f53a68af405afbe`; restauration testée sur 105 lignes.
+- Le script d'application ne contient aucun UUID à saisir : le Super Admin est résolu en base et le nombre de comptes SA doit être exactement 1 (précontrôle A).
+- Phrase de passe : fichier local `backup.passphrase` (mode 600), **jamais** dans le dépôt, le chat ni les journaux.
+- Plan Free = aucune sauvegarde automatique : cette sauvegarde est l'unique protection.
+
+## 5. Points de non-retour
+
+Retour arrière sûr jusqu'à la première création réelle d'abonné, l'émission d'un lien d'activation ou l'acceptation d'une invitation. Les rollbacks de `100000`, `101000` et `102500` suppriment respectivement les tables d'invitation et les colonnes ajoutées, donc les données créées depuis.
+
+## 6. Preuves et état
+
+Les preuves détaillées sont dans :
+- `docs/sessions/session-1/gv5-107-prod-final/RAPPORT.md`
+- `docs/sessions/session-1/gv5-107-prod-final/DOSSIER_GO2.md`
+- `docs/sessions/session-1/gv5-107-prod-final/RAPPORT_PREPARATION_PROD.md`
+
+**État (25/11) : GO d'application reçu et exécuté. 9 migrations appliquées, 3 Edge Functions déployées, création réelle d'un garage de vérification et connexion de son Manager confirmées en production, isolation vérifiée. Parcours navigateur de bout en bout : NON TESTÉ. Aucune donnée préexistante supprimée.**
+
+## 10. Finalisation « création d'abonné » — état réel (25/11)
+
+### 10.1 Identité et coordonnées (distinction vérifiée)
+
+| Élément | Rôle constaté | Statut |
+|---|---|---|
+| `admin@auto-dyali.ma` | Unique compte Super Admin global (contrôle plateforme) | **CONFORME ET VÉRIFIÉ** en production (1 seul profil `saas_admin`, précontrôle A) |
+| `me.achbani@gmail.com` | Coordonnée de contact du responsable ; utilisée comme contact de support etReply-To dans le code | **CONFORME ET VÉRIFIÉ** dans le code après correction (commit `8043233`) — n'est pas un expéditeur technique configuré |
+| `+33772208885` | WhatsApp Business : contact de support affiché dans les messages | **PARTIEL** — numéro de contact, pas un expéditeur Meta configuré |
+| `+212665310308` | Second numéro communiqué ; aucune utilisation trouvée dans le code ou la configuration | **ABSENT** du parcours — aucun rôle technique vérifié, aucun rôle inventé |
+| `a.naji@auto-dyali.ma`, `r.bami@auto-dyali.ma` | Anciens comptes supprimés, non réutilisés dans le parcours | **CONFORME** (aucune recréation) |
+
+### 10.2 Configuration des communications (secrets inspectés par nom, valeurs masquées)
+
+Production : **7 secrets présents**, tous internes Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEYS`, `SUPABASE_SECRET_KEYS`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`, `SUPABASE_JWKS`).
+
+Absents : `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `SMTP_HOST`/`SMTP_PORT`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TEMPLATE_NAME`, `WHATSAPP_TEMPLATE_LANG`, `WHATSAPP_API_VERSION`, `ACTIVATION_BASE_URL`.
+
+| Exigence | État | Preuve |
+|---|---|---|
+| Expéditeur e-mail | **BLOQUÉ PAR CONFIG** | `EMAIL_FROM` absent ; code `non_configure` sans appel réseau |
+| Reply-To | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | `SUPPORT_EMAIL` dans `deliverInvitation` et, après correction locale, dans `send-invitation` (non redéployé) |
+| Fournisseur e-mail | **PARTIEL** | Resend codé, aucun secret fournisseur en production |
+| Expéditeur WhatsApp / Business enregistré | **BLOQUÉ PAR CONFIG** | `WHATSAPP_PHONE_NUMBER_ID` absent ; `+33772208885` n'est qu'un contact de support |
+| Destinataires | **CONFORME ET VÉRIFIÉ** | e-mail = `manager.email` ; WhatsApp = `manager.phone` (contrat v2, validation dédiée) |
+| Contenu (garage, Manager, lien, 7 jours) | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | `_shared/providers.ts`, tests 31/31 (ciblés) |
+| Doublons / traçabilité | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | idempotence `request_id`, `invitation_events`, statut `accepte_par_fournisseur` jamais « délivré » |
+
+### 10.3 Interface et parcours
+
+| Exigence | État | Preuve |
+|---|---|---|
+| Page Super Admin › Nouvel abonné | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** dans le navigateur | `src/app/super-admin/onboarding/page.tsx` (1050 lignes), 6 étapes, lien depuis `/super-admin/` |
+| Formulaires/validation/doublon/soumission multiple | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | contrat v2 partagé, `enCours`, `admin_check_identity_available`, santé 9/9 |
+| Bouton de création et résultat par canal | **IMPLÉMENTÉ MAIS NON VÉRIFIÉ** | `soumettre()`, étape 6, statuts `delivery` explicites |
+| Rendu ordinateur/tablette/smartphone | **NON VÉRIFIÉ** | classes responsives présentes ; aucune capture navigateur de cette mission |
+| Test navigateur de bout en bout | **EN ATTENTE D'AUTORISATION / NON TESTÉ** | identifiants Super Admin non disponibles dans l'environnement |
+| Création réelle garage + Manager + connexion + isolation | **CONFORME ET VÉRIFIÉ** | SQL + Auth réels en production (rapport §107.9) — 1 garage visible sur 3 |
+| E-mail / WhatsApp réellement reçus | **ABSENT** | aucun secret fournisseur, aucun message émis ni reçu |
+| Renouvellement d'invitation, limitation des tentatives de jeton | **ABSENT** | non présents dans les migrations appliquées |
+
+### 10.4 Progression justifiée
+
+**~60 %** : création backend + activation + isolation **vérifiées réellement** (blocage levé) ; interface et notifications **codées mais non vérifiées en navigateur** ; **0/2 canaux configurés**, **0 message réellement livré** ; dernières corrections de contact **non déployées** ; fusion et Pages **non autorisées**.
+
+### 10.5 Point de reprise
+
+Définitivement clôturé : 9 migrations production, 3 EF déployées, création réelle, connexion Manager, isolation, correction du contact et du Reply-To dans le code.
+
+Restent ouverts : fournisseur e-mail + `EMAIL_FROM` (+ `EMAIL_REPLY_TO` recommandé), fournisseur WhatsApp + `WHATSAPP_PHONE_NUMBER_ID` + modèle approuvé, `ACTIVATION_BASE_URL`, test navigateur avec `admin@auto-dyali.ma`, redéploiement des EF après correction, fusion PR #2 et publication Pages.
+
+Blocage exact : **secrets fournisseurs absents** (BLOQUÉ PAR CONFIG) et **autorisation absente** pour toute opération sensible supplémentaire sur Production, fusion ou publication.
+
+## 11. Géographie internationale + notifications Super Admin (MISSION « lance »)
+
+### 11.1 État Git initial et réconciliation
+
+- Dépôt `auto-dyali/auto-dyali.github.io`, branche `gv5-107-prod-final`, HEAD initial `e5916cb44c1fd6b2a460f5207b2341d5f4cbf1aa`.
+- `origin/main` = `3a0329baee540935c46adac24933bd16c4deebf1` ; divergence initiale **1 en retard / 14 en avance**.
+- `git merge-tree --write-tree origin/main HEAD` : **aucun conflit**. Le commit « en retard » est la fusion PR #1 (`3a0329b`) qui contient déjà une partie des travaux de la branche.
+- Fusion LOCALE de `origin/main` dans la branche (`git merge --no-edit`, **ni rebase forcé ni force-push**) : **0 en retard / 16 en avance**. `main` et Pages inchangés.
+- Commit de code `882df6acfe2ff8457155ae61ce175ace9fbbde9c` ; commit de fusion `8703e526ef144d9151cbec7cdafefedcae8f253a`.
+- Modifications préexistantes non suivies/capturées préservées (aucune suppression, aucun `clean`).
+
+### 11.2 Décisions et sources
+
+- **Refus GPL** : aucune dépendance `country-state-city` (GPL-3.0) dans le bundle public.
+- Pays : `countryInfo.txt` GeoNames ; libellés français via `Intl.DisplayNames('fr')`.
+- Villes : GeoNames **`cities500.zip`**, licence **CC BY 4.0**, attribution dans `docs/ATTRIBUTIONS.md`, statistiques dans `docs/GEODATA_STATS.md`. `alternateNamesV2.zip` (205 Mo) non embarqué. Générateur reproductible : `scripts/generate-geodata.mjs`.
+- Limites documentées : localités ≥ 500 habitants, liste **non exhaustive**, 6 entrées sans ville, `XK` code utilisateur.
+
+### 11.3 Statistiques recalculées
+
+| Mesure | Valeur |
+|---|---|
+| Entrées `countryInfo` | 252 (251 avec code ISO numérique, 1 code utilisateur `XK`) |
+| Pays avec au moins une ville | 246 |
+| Pays sans ville | `AN`, `AQ`, `BV`, `CS`, `HM`, `UM` |
+| Lignes `cities500` retenues (classe P) | 237 395 |
+| Villes après déduction par clé normalisée | 209 004 |
+| Taille `public/data/villes-par-pays.json` | 2 786 621 octets (chargé à la demande) |
+| SHA-256 du JSON villes | `fabdc1ab4d5051bee8b11fa8cc93d1129199513c87452b67f9edcc952fa4b7fa` |
+| SHA-256 du JSON pays | `828fcc856c9574ba9335af6a918c902f2aa5f0a633b470d075f35ed67005c4ad` |
+| SHA-256 du générateur | `8e42c655369961f4fe5b3aee4c1e88ba4391f03894bd59ff785dcc4e2817dc67` |
+
+### 11.4 Union marocaine — démonstration corrigée
+
+Le calcul naïf `480 + 142 − 106 = 516` était faux : les **106 correspondances** incluaient les alias (ASCII/noms alternatifs), alors que l'union doit utiliser la **clé du nom principal**.
+
+| Quantité | Valeur |
+|---|---|
+| Villes locales inchangées (`maroc-geographie.ts`) | 142 |
+| Régions inchangées | 12 |
+| Lignes GeoNames `MA` | 480 |
+| Clés normalisées distinctes côté local | 142 |
+| Clés normalisées distinctes côté GeoNames | 476 (4 lignes répètent un même nom) |
+| Intersection par nom principal | 90 |
+| Noms GeoNames ajoutés | 386 |
+| **Union réelle** | **142 + 386 = 528** |
+| Correspondances élargies avec alias (contrôle de couverture) | 106 |
+| Villes locales absentes de GeoNames même par alias (conservées) | 36 |
+
+Aucune ville locale perdue, aucun écrasement du référentiel marocain. Listes détaillées dans `docs/GEODATA_STATS.md`.
+
+### 11.5 Fichiers créés / modifiés
+
+Créés : `src/lib/geographie.ts`, `public/data/pays-iso.json`, `public/data/villes-par-pays.json`, `scripts/generate-geodata.mjs`, `scripts/test-geographie-final.mjs`, `scripts/test-super-admin-notifications.mjs`, `scripts/test-super-admin-notifications-pglite.mjs`, `docs/ATTRIBUTIONS.md`, `docs/GEODATA_STATS.md`, `supabase/migrations/20261126000000_super_admin_notifications.sql`, `supabase/rollbacks/gv5108/20261126000000.sql`.
+Modifiés : `src/components/ChampGeographieMaroc.tsx`, `src/components/abonne-workspace.tsx`, `src/app/super-admin/onboarding/page.tsx`, `supabase/functions/_shared/constants.ts`, `supabase/functions/_shared/providers.ts`, `supabase/functions/onboard-tenant/index.ts`, `scripts/test-providers.mjs`.
+
+### 11.6 Migration notifications — sécurité et preuves
+
+- Table additive `public.super_admin_notifications` ; **SHA-256 migration** `737bf28fccd26a0cf4c968df66424f5126ea5f5eb784393430ad1cd5aa48db9b`, **SHA-256 rollback** `0245d394b588e7cbeec4fb3039614cb9fad0204c8559ba22962a7569838b15ce`.
+- RLS activée ; SELECT/UPDATE réservés à `public.is_saas_admin()` ; **aucune policy INSERT**, aucun droit anon/Manager ; `REVOKE` explicites ; RPC `admin_notify_new_subscriber(jsonb)` `SECURITY DEFINER`, réservée à `service_role`, idempotente par index unique `source_request_id` et `ON CONFLICT DO UPDATE`.
+- Statuts honnêtes : `non_demande`, `non_configure`, `en_attente`, `accepte_par_fournisseur`, `echec`. Aucun statut « livré » ; `accepte_par_fournisseur` = HTTP 2xx uniquement.
+- PGlite (base mémoire locale) : migration appliquée, 2 appels identiques → 1 ligne (`idempotent=true` au 2ᵉ), refus des statuts fictifs et d'un `source_request_id` invalide, INSERT refusé au rôle `authenticated`, rollback ne supprimant que les objets créés : **5/5**.
+- Logo officiel : `public/images/branding/logo.webp`, non modifié ; URL `https://auto-dyali.github.io/images/branding/logo.webp` vérifiée **HTTP 200 / image/webp**, SHA-256 distant `603de9de…` identique au dépôt.
+
+### 11.7 Tests exécutés (sorties conservées)
+
+- `npm test` : **204/204**.
+- `tsc --noEmit` : OK ; `eslint` : **0 erreur**, 20 warnings préexistants ; `next build` : OK.
+- Ciblés : géographie **8/8**, notifications statiques **7/7**, notifications PGlite **5/5**, providers **18/18** (dont 2 nouveaux pour la notification SA), EF statiques **15/15**, readiness 107 **9/9**, cohérence contrat RPC **5/5**.
+- Aucun appel réseau géographique à l'exécution ; aucun test E2E navigateur, aucun envoi réel, aucune écriture distante.
+
+### 11.8 Statuts réels
+
+| Élément | Statut |
+|---|---|
+| Référentiel Pays/Ville, interface, migration, RPC, messages, tests | **MODIFIÉ LOCALEMENT + TESTÉ LOCALEMENT + COMMITÉ** |
+| Fusion locale de `main` dans la branche | **COMMITÉ** (`8703e52`), pas de force-push |
+| Migration `20261126000000` | **PRÉPARÉE — JAMAIS APPLIQUÉE** (ni staging, ni production) |
+| EF corrigées | **PRÉPARÉES — JAMAIS REDÉPLOYÉES** |
+| Création garage/Manager supplémentaire | **NON EFFECTUÉE** |
+| E-mail / WhatsApp réels | **NON ENVOYÉS** (aucun secret fournisseur) |
+| PR #2 | **NON FUSIONNÉE** |
+| GitHub Pages | **NON PUBLIÉE** ; production inchangée |
+| Secrets Resend / Meta | **BLOQUÉ PAR CONFIG** — à poser par le propriétaire |
+
+## 12. Reprise et finalisation du parcours complet (26/11)
+
+### 12.1 État Git
+
+- HEAD initial : `257363e315dad8a802024c4919a93bed58056664` ; `origin/main` `3a0329b…` ; divergence **0 retard / 17 avance**.
+- Commit de finalisation : `735c5099523095d57e9cf094d45ee6f8539b16a3`.
+- Aucune opération distante autre que `git fetch` et le push de branche autorisé. `main`, PR #2 et Pages inchangés.
+
+### 12.2 Anomalies corrigées
+
+| Anomalie | Correction | Preuve |
+|---|---|---|
+| `buildAdminNotificationMessage()` commençait par « Bonjour [Manager] » | Message adressé au **Super Admin** ; nom du garage et du Manager conservés comme informations | `providers.ts`, test `test-super-admin-notifications.mjs` |
+| Aucune notification WhatsApp distincte du Super Admin | `sendAdminWhatsAppNotification()` + appel dans `onboard-tenant`, destinataire `SUPER_ADMIN_WHATSAPP`, modèle `WHATSAPP_ADMIN_TEMPLATE_NAME` | `providers.ts`, `onboard-tenant/index.ts`, tests providers |
+| Table `super_admin_notifications` non visible dans l'interface | Composant `SuperAdminNotifications` intégré au tableau de bord SA, lecture/mise à jour `read_at` via RLS | `src/components/super-admin-notifications.tsx`, `src/app/super-admin/page.tsx` |
+| Nouveaux tests absents de `npm test` | Ajout de `test-geographie-final.mjs` et `test-super-admin-notifications.mjs`; script `test:pglite` documenté | `package.json` |
+| Secrets WhatsApp non documentés | Procédure sans valeurs dans `docs/SECRETS_FOURNISSEURS.md` | fichier |
+
+### 12.3 Audits annexes
+
+- `.github/workflows/rehearsal.yml` : **absent de la branche**, toujours présent sur `main`. Suppression intervenue dans `ab661cc` (workflow de répétition privée inutilisable sans secrets). **Aucune fonctionnalité applicative supprimée** ; CI uniquement, non restaurée.
+- `package.json` : seule différence avec `main` est l'extension de la liste de tests (`test-gv5-107-production-readiness.mjs`, puis géographie et notifications) et l'ajout de `test:pglite`. Aucune dépendance payante ajoutée ; PGlite installé localement avec `--no-save`.
+- Migration `20261126000000` et rollback : Structure additive, RLS SA, RPC `service_role`, idempotence `source_request_id`, statuts sans « livré », rollback limité aux objets créés — **vérifiés en PGlite 5/5**.
+- Aucun script SQL annexe ajouté dans cette mission ; aucune migration existante modifiée.
+- Onboarding existant (activation, permissions, contrat RPC, géographie) : **aucune régression** — `npm test` 221/221, tests activation/permissions 14/14, contrat RPC 5/5.
+
+### 12.4 Tests réellement exécutés
+
+`npm test` **221/221** ; `tsc --noEmit` OK ; `eslint` **0 erreur / 20 warnings préexistants** ; `next build` OK ; `test:pglite` **5/5** ; readiness 107 **9/9** ; providers **20/20** ; notifications statiques **7/7** ; géographie **8/8**.
+
+### 12.5 État individuel des cinq canaux
+
+| Canal | État |
+|---|---|
+| 1. Notification interne Super Admin | **IMPLÉMENTÉ + TESTÉ LOCALEMENT** (PGlite, composant UI) — **non appliqué en Production** |
+| 2. E-mail au Super Admin | **IMPLÉMENTÉ, NON ENVOYÉ** — `RESEND_API_KEY` / `EMAIL_FROM` absents |
+| 3. WhatsApp au Super Admin | **IMPLÉMENTÉ, NON ENVOYÉ** — `SUPER_ADMIN_WHATSAPP` / `WHATSAPP_ADMIN_TEMPLATE_NAME` / secrets Meta absents |
+| 4. E-mail d'invitation Manager | **IMPLÉMENTÉ, NON ENVOYÉ** — mêmes secrets absents |
+| 5. WhatsApp d'invitation Manager | **IMPLÉMENTÉ, NON ENVOYÉ** — mêmes secrets absents |
+
+Aucun statut « livré » n'est produit ; `accepte_par_fournisseur` = HTTP 2xx uniquement. Idempotence par `source_request_id`, reprise sans doublon.
+
+### 12.6 Blocages du parcours réel
+
+- **BLOQUÉ PAR CONFIG** : sept secrets Resend/Meta (+ deux nouveaux secrets SA) absents ; aucun message réel ne peut être envoyé.
+- **BLOQUÉ PAR ENVIRONNEMENT/AUTORISATION** : pas de Docker pour `supabase start`, pas d'identifiants Super Admin pour un E2E navigateur, aucune autorisation pour une écriture distante en staging.
+- **EN ATTENTE D'AUTORISATION** : application de la migration `20261126000000`, redéploiement des EF, création réelle d'un abonné, activation et connexion réelles, fusion PR #2, publication Pages.
+
+### 12.7 Verdict intermédiaire
+
+**PARCOURS NON TERMINÉ** au sens de la mission : création/activation/connexion réelles non rejouées dans cet environnement, notifications réelles non livrées. Tout ce qui était réalisable localement est **CORRIGÉ, TESTÉ ET COMMITÉ**. Production demeure inchangée.
+
+## 13. GV5 §110 — Préparation de la production (26/11)
+
+### 13.1 Tâche 0 — Git
+
+HEAD initial et final de la mission : `c7822b0e94abde37f00c0dac79b78570cf9fce55`. Entre `5e5b1dd` et ce HEAD : 16 commits. Aucun des 9 migrations validées n'a été modifié. `17ac6a8`…`8fc8710` ont modifié **uniquement les scripts d'essai/application** (bloc de contrôle RLS adapté à la forme production) et les EF ; `882df6a` a **ajouté** la migration additive `20261126000000` et son rollback ; `735c509` a ajouté la notification WhatsApp SA et le composant tableau de bord. `main` local = `81ca143…`, `origin/main` = `3a0329b…` (fusion PR #1), branche **0 retard / 19 avance** ; écart explicable, aucun écart inexpliqué.
+
+**Écart de sha de l'essai** : le sha noté `a8806f44…` correspond à une version antérieure du script ; le script actuel est `311baa7e55631ec2b95f189665e6b7f916c3ade783a5ed8f9de25cac71a0e570` (1945 lignes), consécutif aux correctifs du bloc RLS. Les 9 migrations sont inchangées.
+
+### 13.2 Tâche 1 — État Production (LECTURE SEULE)
+
+Requête demandée : **true / true / true** (santé, invitations, `permissions_tenant_write`) → migrations appliquées. EF : `onboard-tenant` **ACTIVE v2**, `send-invitation` **ACTIVE v1**, `activate-manager` **ACTIVE v1** (versions plateforme ; les étiquettes code v3/v4/v1 restent celles des sources). Comptages : 3 établissements, 1 Super Admin, 1 invitation, 1 demande. Utilisateurs par établissement : 1 / 0 / 1 ; tous créés en 2026-11. Aucune donnée personnelle affichée. Les deux garages historiques, sans utilisateurs rattachés pour l'un, ressemblent à des comptes de démonstration — **décision au propriétaire**. Le précontrôle « Environnement non prêt » est bien présent dans le bundle Pages déployé (chunk HTTP 200) ; la santé étant true, il ne bloque pas.
+
+### 13.3 Tâches 2 et 3 — Audit et dossier GO-APPLY
+
+Migration `20261126000000` : additive, non intégrée aux 9, idempotente (`source_request_id` unique), RLS SA, RPC `service_role`, sans faux statut ; compatible ancien front et `onboard-tenant` v1 (si la RPC manque, la création réussit avec `status: indisponible`). EF : CORS, validation contrat v2, contrôle de rôle, aucun jeton/journalisation de lien ; sans fournisseur, résultat « invitation préparée, e-mail non envoyé ». Secrets requis : **tous absents en production** (noms seulement, aucune valeur). Documentation : `docs/SECRETS_FOURNISSEURS.md`.
+
+Dossier hors dépôt `gv5-go-apply` : `apply.sql` (1947 lignes, sha `8fe4987f…`), `trial.sql` (sha `311baa7e…`), 9 rollbacks, `post-checks.sql`, preuves PGlite locales. Diff apply/essai : uniquement timeout `15s → 120s` et `rollback → commit`. Preuves locales : succès `APPLIQUE` ; `SANTE_KO` ; `SA_UNIQUE_KO: 0` ; `SA_UNIQUE_KO: 2` ; `FEATURE_PERDUE` ; rollback 9 scripts (`invitations:false`, `sante:false`, 2 établissements conservés). **Rien n'a été lancé en production.**
+
+### 13.4 Tâche 4 — Staging et navigateur
+
+Staging (lecture seule) : `invitations: true`, policy 109000 présente, santé présente ; EF `ACTIVE` (`onboard-tenant`, `send-invitation`, `activate-manager`, plus `create-test-user`, `stripe-webhook`). **Aucune écriture distante** : autorisation non accordée. E2E navigateur : **BLOQUÉ** — variables attendues `GV5_STAGING_SA_EMAIL` et `GV5_STAGING_SA_PASSWORD` absentes de l'environnement local. Build de production (variables publiques de prod) : 0 occurrence de la référence staging, 0 `staging.local` après correction de deux textes de modèles de communication, 0 secret-service_role exposé. `npm test` **224/224**, `tsc` OK, lint 0 erreur, build OK.
+
+### 13.5 Tâche 5 — Cinq canaux (noms d'après le code)
+
+| Canal | Code | LOCAL | Configuré en production |
+|---|---|---|---|
+| Invitation e-mail Manager | `deliverInvitation` → `sendEmailInvitation` | SIMULATION 20/20 | **NON** |
+| Invitation WhatsApp Manager | `deliverInvitation` → `sendWhatsAppInvitation` | SIMULATION 20/20 | **NON** |
+| E-mail Super Admin | `sendAdminNotificationEmail` | SIMULATION | **NON** |
+| WhatsApp Super Admin | `sendAdminWhatsAppNotification` | SIMULATION | **NON** |
+| Notification interne SA | `admin_notify_new_subscriber` + composant UI | PGlite 5/5 | migration **non appliquée** |
+
+Aucun envoi réel ; aucun statut « livré ».
+
+### 13.6 Tâche 6 — Défauts avant premier client
+
+- `20261126010000_permissions_manager_write.sql` (+ rollback) : **PRÉPARÉ ET TESTÉ EN LOCAL** (PGlite : policy durcie puis restaurée). **Effet sur le front de `main`** : le module de permissions propose aussi les rôles `employee`/`client` ; une restriction aux seuls Managers bloquerait ces écritures. Décision requise avant application ; **non appliqué**.
+- Limitation des essais d'activation, jeton ≥ 128 bits, expiration courte, ancien lien invalidé : **non implémentés** ; la RPC d'acceptation appartient à `100000` (une des 9, non modifiable) → nécessiterait une v2 additive et un changement d'EF, sous GO.
+- Plans (lecture seule production) : `standard` 0.00, `silver`/`gold` NULL ; aucun prix modifié ; Trial sans paiement confirmé par le contrat et les tests. Nouveaux packs Essentiel/Professionnel/Entreprise : **en attente de décision écrite**.
+- Défauts mineurs §102 (saisie libre de ville, libellés « Info admin. ») : non modifiés (risque de régression sans test navigateur).
+- Nettoyage dépôt et sauvegarde régulière plan Free + reprise du compte SA par le propriétaire : **procédures proposées, rien supprimé**.
+
+### 13.7 Verdict §110
+
+**NON TERMINÉ** : l'essai en transaction et l'application réelle doivent être exécutés par le propriétaire après GO-APPLY, puis le parcours complet doit être démontré sur le site. Aucune écriture Production n'a été effectuée.
+
+## 14. Gestion complète des garages et abonnements Super Admin
+
+### 14.1 Audit (PHASE 0/1)
+
+- `git fetch` a échoué (DNS indisponible) ; SHA distants connus : `origin/main` `3a0329b…`, branche locale `5d5c3ee…`, divergence **0 retard / 22 avance**. HEAD initial de la mission : `5d5c3ee4d015fb759d46a3eb9eff448abd868c38`.
+- RPC existantes : `admin_set_establishment_status`, `admin_change_plan`, `admin_renew_subscription`, `admin_reactivate_subscription`, `admin_expire_subscription` (0010/0026). **Absentes de la forme production vérifiée** : `admin_archive_establishment`, `admin_purge_establishment`, `admin_renew_subscription` v2, colonnes `archived_at`. L'UI appelait donc des RPC inexistantes.
+- Forme production : pas de `archived_at` sur `establishments`, pas de statut `archived` dans la contrainte `subscriptions.status`. Décision : ajouter des **colonnes dédiées `gv5_*`** et un statut d'archivage séparé, sans dupliquer ni casser les statuts existants (`trial`, `active`, `past_due`, `suspended`, `expired`, `cancelled`).
+- Risques identifiés : suppression physique dangereuse → **suppression logique obligatoire** ; suspension garage ≠ suspension abonnement ; motifs obligatoires ; idempotence ; audit central.
+
+### 14.2 Architecture retenue
+
+Migration additive `20261126020000_garage_subscription_lifecycle.sql` (+ rollback `supabase/rollbacks/gv5108/20261126020000.sql`) :
+- colonnes `gv5_archived_at`, `gv5_archive_reason`, `gv5_suspend_reason`, `gv5_deleted_at`, `gv5_delete_reason` (garages) ; `gv5_archived_at`, `gv5_archive_reason`, `gv5_status_reason`, `gv5_updated_at` (abonnements) ;
+- 9 RPC `security definer` réservées à `public.is_saas_admin()` : journal, suspension/réactivation, archivage/restauration, suppression logique garage, changement de statut, modification dates/formule, renouvellement, archivage/restauration abonnement, suppression logique abonnement ;
+- transitions interdites explicites (ex. `cancelled → active` refusé) ; idempotence par retour `idempotent: true` ; motifs ≥ 5 caractères ; confirmation `SUPPRIMER` ; audit `payload_json` avec ancien/nouvel état, motif, résultat, date ;
+- suspension/archive désactivent les profils du garage (invalidation des accès) ; aucune donnée métier supprimée ; factures/paiements conservés.
+
+### 14.3 Interface
+
+`src/app/super-admin/entreprises/page.tsx` : appel des RPC v2, motifs via invites, confirmation renforcée, filtre par statut d'abonnement, actions conditionnées par état, erreurs serveur affichées. `src/components/super-admin-actions-menu.tsx` : 6 actions abonnement supplémentaires. Responsive hérité du design GV5 existant ; **test navigateur non exécuté** (identifiants Super Admin et Docker absents).
+
+### 14.4 Tests réellement exécutés
+
+- `scripts/test-gv5-lifecycle-pglite.mjs` via `npm run test:lifecycle` : **28/28 OK** — refus Manager, motifs, suspension/réactivation, persistance et profils désactivés, idempotence, archivage/restauration, suppression logique protégée (confirmation, archivage, abonnements actifs), transitions autorisées/interdites, modification/formule inconnue, renouvellement, archivage abonnement, journal d'audit (10 lignes, motif présent), rollback propre.
+- `npm test` **230/230**, `tsc --noEmit` OK, `eslint` **0 erreur / 20 warnings**, `next build` OK.
+- Un test existant a été ajusté (`test-edge-functions-51.mjs`) pour accepter la nouvelle colonne dans le `select`.
+
+### 14.5 Statuts
+
+| Exigence | Statut | Preuve |
+|---|---|---|
+| RPC cycle de vie + RLS SA | **IMPLÉMENTÉ + TESTÉ LOCAL** | PGlite 28/28 |
+| Interface et actions conditionnées | **IMPLÉMENTÉ + TESTÉ STATIQUEMENT + BUILD** | `test-gv5-lifecycle.mjs`, build |
+| Suppression protégée / archivage / restauration | **IMPLÉMENTÉ + TESTÉ LOCAL** | PGlite |
+| Journal d'audit | **IMPLÉMENTÉ + TESTÉ LOCAL** | 10 lignes, motif |
+| Navigation réelle Super Admin | **NON TESTÉ** | identifiants/staging indisponibles |
+| Migration en staging/production | **NON APPLIQUÉE** | aucune autorisation |
+| Limitation tentatives activation | **NON RÉALISÉ** | RPC dans `100000` non modifiable |
+| Révocation cryptographique des sessions | **PARTIEL** | profils désactivés ; expiry JWT à confirmer |
+
+### 14.6 Décision attendue
+
+Appliquer `20261126020000` uniquement après GO distinct, puis valider en staging avec un garage `ZZ-TEST-…`. La page n'est pas déclarée opérationnelle sans cette validation.
+
+## 15. GV5 §112 — Suppression définitive des abonnés de test
+
+### 15.1 Découverte (SCRIPT-SQL / LECTURE SEULE)
+
+- **STAGING** : `establishments` possède `archived_at` ; 31 tables avec `establishment_id` ; 68 établissements, **26 candidats de test** (`%test%` ou `ZZ-%`) ; ~50 comptes de test signalés.
+- **PRODUCTION** : `archived_at` **absent** ; 32 tables avec `establishment_id` ; 3 établissements, **0 candidat de test** par nom. Aucune donnée personnelle recopiée dans ce registre.
+- FK directes vers `establishments` : `c` (cascade) sur la majorité des tables, `n` (SET NULL) sur `onboarding_requests`, `pre_purchase_requests`, `profiles`, `crm_leads`, `saas_billing_events`.
+- FK indirectes notables : `invitation_events` → `invitations`, `pre_purchase_events` → `pre_purchase_requests`, `subscriptions_audit` → `subscriptions`, `ticket_messages` → `support_tickets`, `invoices`/`payments`/`sale_items` → `sales`.
+- **Tables comptables identifiées** : `invoices`, `payments`, `cash_sessions`, `expenses`, `sales`, `sale_items`, `purchase_orders`, `purchase_order_items`, `stock_movements`, `saas_billing_events`, `subscriptions_audit`.
+- `audit_log` : `id`, `establishment_id`, `actor_id`, `action`, `entity`, `entity_id`, `payload_json`, `created_at` (identique en staging et production).
+
+### 15.2 Migration additive et rollback
+
+`supabase/migrations/20261126030000_purge_establishment.sql` (+ `supabase/rollbacks/gv5108/20261126030000.sql`) : colonnes `is_test`/`is_protected`, RPC `admin_purge_establishment(uuid,text,boolean,text[])` avec garde-fous `ACCES_REFUSE`, `ETABLISSEMENT_INTROUVABLE`, `ETABLISSEMENT_PROTEGE`, `NON_MARQUE_TEST`, `NOM_DE_CONFIRMATION_INCORRECT`, `DOCUMENTS_COMPTABLES_PRESENTS`, `SUPPRESSION_INCOMPLETE`. Dry-run par défaut, passes successives, suppression explicite des profils (FK SET NULL), audit `purge_establishment` sans donnée personnelle. **Les 9 migrations et le script d'essai ne sont pas modifiés.**
+
+### 15.3 Edge Function et interface
+
+- `supabase/functions/purge-establishment/index.ts` : JWT vérifié par la passerelle **et** par `auth.getUser`, RPC appelée comme l'utilisateur, suppression Auth **uniquement après** succès SQL, clé `service_role` côté serveur jamais journalisée, statut `comptes_a_nettoyer` pour reprise idempotente.
+- Interface Super Admin : « Archiver » (réversible, `admin_archive_establishment_v2`) et « Supprimer définitivement » (irréversible) avec **dry-run affiché** (comptages uniquement), saisie du nom exact, puis application, messages d'erreur distincts.
+
+### 15.4 Preuves
+
+- `npm run test:purge` (PGlite) : **16/16 OK** — dry-run sans écriture, refus (nom, non test, protégé, comptabilité, Manager), suppression réelle (2 passes), 0 résidu dans toutes les tables à `establishment_id`, 0 profil orphelin, audit écrit, garage témoin intact, double appel sans duplicata, rollback propre.
+- `npm test` **237/237**, `tsc` OK, lint 0 erreur, `next build` OK.
+- `scripts/cleanup-staging-tests.mjs` : DRY-RUN par défaut, refuse toute cible hors staging, variables attendues `GV5_STAGING_URL`, `GV5_STAGING_ANON_KEY`, `GV5_STAGING_SERVICE_ROLE_KEY` — **absentes** → BLOQUÉ, aucune suppression.
+
+### 15.5 Statuts et limites
+
+| Élément | Statut |
+|---|---|
+| Migration, RPC, EF, UI, tests locaux | **IMPLÉMENTÉ + TESTÉ LOCAL** |
+| Suppression réelle sur staging | **BLOQUÉ** : autorisation et identifiants absents |
+| Navigateur desktop/mobile | **NON TESTÉ** |
+| Production | **INCHANGÉE** ; aucun marquage `is_protected` des 2 garages avant GO écrit |
+| Création d'abonnés en production | **PRIORITAIRE** : essai propriétaire → GO-APPLY → test réel |
+
+**Verdict : NON TERMINÉ** tant que la création d'abonnés n'est pas démontrée en production et la suppression validée en staging.
+
+## 16. GV5 §114 — État réel de la production et correction du §113
+
+### 16.1 Correction des affirmations du §113
+
+Le §113 affirmait « production inchangée, essai et GO-APPLY à faire ». **C'était faux.** Les preuves réunies ici montrent que la production est déjà migrée, que trois EF y sont déployées, qu'un troisième garage a été créé le 2026-11-25 à 21:49 UTC et que `origin/main` est `3a0329b…` avec un déploiement Pages manuel réussi sur ce commit. Le §113 est donc **corrigé** : la production est **déjà dans l'état post-application** ; il ne reste pas à « appliquer les 9 migrations », mais à démontrer un parcours réel et à décider des correctifs.
+
+### 16.2 Chronologie reconstituée (qui / quoi / quand / source)
+
+| Quand (UTC) | Qui | Quoi | Source de preuve |
+|---|---|---|---|
+| 24/11 15:16 → 25/11 13:21 | OpenCode (auteur Git) | Série de commits §101–§107 sur les branches de travail, puis fusion `3a0329b` « Réconciliation main ← gv5-107-prod-final » par `auto-dyali` | `git log 81ca143..origin/main` |
+| 25/11 13:34 | `auto-dyali` | `workflow_dispatch` `deploy-pages` sur `3a0329b` → **succès** | API GitHub Actions |
+| 25/11 21:38–21:49 | **Moi, sous le GO explicite « passe à la mise en production » du propriétaire** | Exécution du script d'application des 9 migrations en une requête (`APPLIQUE`), puis déploiement des 3 EF | Séquence de commandes de la session + état B1 |
+| 25/11 21:49:25 | **Moi** | Création d'un garage de vérification via la RPC `admin_onboard_tenant_v2`, d'un compte Auth Manager et d'un profil Manager, puis test de connexion et d'isolement | `audit_log.action='onboard_tenant_v2'` à la même seconde ; 2a/2b/2c/2d ; 11 lignes de permissions |
+| 25/11 21:45 (EF) | **Moi** | Déploiement de `onboard-tenant`, `send-invitation`, `activate-manager` ; versions plateforme 2/1/1 | `functions list` + horodatage `updated_at` 2026-11-25 |
+| 26/11 09:31 | OpenCode (auteur du dernier commit) | Dernier push de `gv5-107-prod-final` (`b7c10b1…`), PR #2 mise à jour | `git ls-remote` + API PR |
+
+**Réponse directe** : oui, c'est moi qui ai appliqué les migrations, déployé les EF et créé le garage de vérification, **uniquement après le GO explicite du propriétaire** du 25/11. Le déploiement Pages sur `3a0329b` et la fusion dans `main` ont été faits par `auto-dyali` (déclencheur `workflow_dispatch` / commit de fusion), pas par moi.
+
+### 16.3 Faits Production (SCRIPT-SQL, lecture seule)
+
+- B1 : `true / true / true / true` → migrations appliquées.
+- B7 : sha `c82e0942…`, **38 tables / 40 fonctions / 86 policies / 3 établissements / 3 abonnements / 2 profils**, `invitations` présente, 0 verrou, 0 transaction idle.
+- 2a :garages datés 2026-11-03, 2026-11-13 et 2026-11-25 ; plans `silver`, `standard`, `standard` ; profils 1 / 0 / 1 ; permissions 0 / 0 / **11**.
+- 2b : 1 profil `saas_admin` (11/11), 1 profil `manager` (25/11), tous deux rattachés et actifs.
+- 2c : abonnements `active` (06/11), `trial` (13/11), `trial` (25/11).
+- 2d : **2 comptes Auth**, 1 créé depuis le 25/11 ; 0 Auth sans profil et 0 profil sans Auth.
+- 2e : journal : `onboard_tenant_v2` (25/11 21:49:25), `change_plan` (16/11), `set_feature`, `save_plan`, `create` (13/11).
+- 2f : schéma `supabase_migrations` **absent** → la 2ᵉ requête échoue avec `42P01` (à relancer par le propriétaire si souhaité).
+- 2g : présentes : `admin_identity_v2_health`, `admin_issue_activation_link` ; **absentes** : `admin_notify_new_subscriber`, `admin_set_establishment_status_v2`, `admin_soft_delete_establishment`, `admin_purge_establishment`. Table `super_admin_notifications` **absente** ; policy `permissions_tenant_write` **présente**.
+- 2h : `current_establishment_id()` = `select establishment_id from public.profiles where id = auth.uid()` — **ne vérifie ni `is_active` ni `suspended_at`**. Ancien jeton après suspension : **NON TESTÉ**.
+
+### 16.4 Edge Functions déployées (CODE, lecture seule)
+
+Téléchargement via `supabase functions download` dans un dossier temporaire hors dépôt, comparaison des SHA-256 avec l'historique Git :
+
+| EF | Version plateforme | Code déployé correspond à | Correspond au HEAD `b7c10b1…` ? |
+|---|---|---|---|
+| `onboard-tenant` | 2 | commit `17ac6a8…` | **non** |
+| `send-invitation` | 1 | commit `a3a824a…` | **non** |
+| `activate-manager` | 1 | commit `b7c10b1…` | **oui** |
+
+Conséquence : le contrat v2 et la RPC `admin_onboard_tenant_v2` sont compatibles avec le front `3a0329b…` (précontrôle `admin_identity_v2_health` + invoke `onboard-tenant`). **`ACTIVATION_BASE_URL` est lu par l'EF** (`env(...) ?? origine ?? referer`) ; sans valeur et sans origine/referer, `activationUrl` est vide et la transmission échoue explicitement, mais la création réussit. Le code déployé est antérieur aux ajouts `admin_notify_new_subscriber`, Reply-To et notification WhatsApp SA : ces fonctions ne sont donc **pas actives en production**.
+
+### 16.5 Décision préparée — scénario (a)
+
+La production est **complètement migrée pour les 9 migrations** et les EF déployées sont compatibles avec le parcours de création. Plan proposé (à n'exécuter qu'après accord) :
+
+1. **Sauvegarde fraîche** avant toute écriture (plan Free, `auth.users` non couvert).
+2. Test réel par le propriétaire : garage préfixé `ZZ-TEST-…`, plan `standard`, sans e-mail ; récupération du lien copiable depuis la fiche Manager ; activation ; connexion ; isolation ; présence dans la liste.
+3. Contrôles après : B1/B7 + comptages ciblés ; aucune donnée existante modifiée.
+4. Nettoyage de l'abonné de test : appliquer d'abord les migrations additives `20261126020000` (cycle de vie) et `20261126030000` (purge protégée) après GO, puis archiver/supprimer via l'interface ; à défaut, procédure SQL contrôlée par le propriétaire.
+5. Redéploiement ultérieur des EF pour activer notification SA, Reply-To et WhatsApp SA (GO distinct).
+
+### 16.6 Défauts ouverts
+
+- **CRITIQUE** : parcours réel de création par le propriétaire non démontré ; 2 garages sans permissions.
+- **ÉLEVÉE** : EF `onboard-tenant` et `send-invitation` déployées en versions antérieures au code courant ; notification interne SA absente de production ; suspension non vérifiée à chaque appel (2h).
+- **MOYENNE** : sha de l'essai à refaire (`311baa7e…` / 1945 lignes) ; dossier GO-APPLY hors dépôt à régénérer ; absence de limitation des tentatives d'activation.
+- **FAIBLE** : 20 warnings ESLint ; packs Essentiel/Professionnel/Entreprise en attente.
+
+**Action unique attendue du propriétaire** : confirmer le scénario (a) et fournir le feu vert pour le test réel de création en production. Jusqu'alors : **ARRÊT**.
+
+## 17. GV5 §115 — Diagnostic de l'échec d'onboarding ( lecture seule )
+
+### 17.1 Collecte
+
+- **SCRIPT-SQL / PRODUCTION** : 1a–1e exécutées. `onboarding_requests` : une seule ligne, statut `completed`, datée du 25/11 21:49. Aucune establishment créée depuis le 26/11. 0 compte Auth sans profil, 0 garage sans abonnement, **1 garage sans profil** (établissement historique du 03/11), 0 compte créé le 26/11. Audit : aucune nouvelle action depuis le 25/11 21:49.
+- **SCRIPT-SQL / PRODUCTION** : santé `admin_identity_v2_health()` = **9 clés true** (appel avec la session SA ; le premier essai avec le rôle CLI `supabase_read_only_user` a renvoyé `42501`, droit d'exécution réservé à `authenticated` — ce n'est pas un défaut de la fonction).
+- **CODE / PRODUCTION** : `admin_onboard_tenant_v2` existe avec la signature attendue (9 paramètres) ; `admin_check_identity_available` et `admin_identity_v2_health` présents. Variables lues par l'EF déployée : `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (présentes) ; `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `ACTIVATION_BASE_URL`, `WHATSAPP_*` (absentes).
+- **CODE / PRODUCTION (journaux)** : le 26/11, les appels `admin_check_identity_available` ont répondu **200** à 12:19 et 12:21 ; **aucune requête vers `/functions/v1/onboard-tenant`** n'apparaît dans les 500 dernières lignes de journaux. Les deux 403 sur `profiles` à 12:22 utilisent une clé `sb_secret_` sans JWT (appel CLI de diagnostic), pas la session navigateur.
+- **CODE / LOCAL** : reproduction PGlite avec les 9 migrations et la même signature RPC → `status: completed`, établissement + abonnement + invitation + manager créés. Le contrat v2 du front `3a0329b` est compatible avec l'EF déployée `17ac6a8`.
+
+### 17.2 Constat
+
+Le message d'erreur exact, le code HTTP et le champ `error` **n'ont pas été fournis par le propriétaire** → **non fourni**. La cause précise est **NON DÉTERMINABLE** sans cette réponse. Ce qui est établi : l'échec est intervenu **avant** l'invocation de l'Edge Function ; le backend, lui, est sain et intact.
+
+### 17.3 Corrections envisagées (aucune exécutée)
+
+- (a) Redéploiement EF v3/v4/v1 : ne traiterait pas un échec survenu avant l'appel HTTP ; utile seulement pour activer notification SA, Reply-To et WhatsApp SA.
+- (b) Migration additive (table `super_admin_notifications`, cycle de vie, purge) : absente mais **non bloquante** pour la création.
+- (c) Front / saisie : première piste — unicité identifiants (`admin_check_identity_available` renvoie 200 mais peut signaler un doublon) ; nécessite le message exact pour trancher. Aucune modification faite.
+
+### 17.4 Nettoyage préparé, rien supprimé
+
+État réel : aucune donnée à moitié créée par la tentative du 26/11. Les deux garages historiques sont protégés. Un seul garage historique n'a pas de profil (03/11) : ni suppression ni modification. Les identifiants techniques des objets concernés ne sont pas reproduits dans ce registre public ; une requête de listage est prête à être fournie au propriétaire. Toute suppression exigerait sauvegarde fraîche et GO écrit.
+
+**Verdict : NON TERMINÉ.** Action unique attendue : fournir le texte exact de l'erreur, le code HTTP de l'appel `onboard-tenant` et le champ `error` de la réponse.
+
+## 18. Journal des écritures de PRODUCTION (ajout seul, expurgé)
+
+Règle de continuité : **chaque rapport suivant commence par « Écritures production depuis le dernier rapport : oui/non, lesquelles »**. L'essai en transaction et le GO-APPLY sont **ABANDONNÉS** (§114 accepté).
+
+| Date UTC | Action | Référence GO propriétaire | Référence technique | Résultat | Auteur |
+|---|---|---|---|---|---|
+| 2026-11-25 ~21:38 | Application des 9 migrations (1 requête, `COMMIT`) | 25/11 : « La phase de tests est terminée. Je confirme que nous devons maintenant passer à la mise en production de GV5 » + instruction « Passe à l'exécution du déploiement en PRODUCTION en utilisant le paquet préparé et validé » | script `8fe4987f…` ; HEAD `17ac6a8…` puis correctifs `8f34ccf…8fc8710` | `APPLIQUE` ; 4 refus avant COMMIT corrigés sans toucher aux 9 | moi (sous GO) |
+| 2026-11-25 ~21:45 | Déploiement des 3 Edge Functions | même GO du 25/11 | `onboard-tenant`, `send-invitation`, `activate-manager` | `ACTIVE` ; versions plateforme 2 / 1 / 1 | moi (sous GO) |
+| 2026-11-25 21:49:25 | Création d'un garage de vérification + compte Auth Manager + profil + permissions + invitation + audit | même GO, clause « vérification fonctionnelle ciblée de la création d'un garage et de son Manager » | RPC `admin_onboard_tenant_v2` ; action d'audit `onboard_tenant_v2` | `completed` ; 11 permissions ; aucune donnée supprimée | moi (sous GO) |
+| 2026-11-25 13:21 | Fusion `main` ← branche (`3a0329b…`) | GO non identifié dans mes échanges : **NON DÉTERMINABLE** | commit `3a0329b…` | fusion effectuée | `auto-dyali` (auteur Git) |
+| 2026-11-25 13:34 | Publication Pages sur `3a0329b…` | GO non identifié dans mes échanges : **NON DÉTERMINABLE** | `workflow_dispatch` | succès | `auto-dyali` (déclencheur GitHub) |
+
+Aucune autre écriture de production recensée dans mes commandes. Depuis le rapport §115 : **aucune écriture**. Aucune migration additive (`20261126000000`, `20261126020000`, `20261126010000`, `20261126030000`) n'a été appliquée en production. Aucune donnée client existante n'a été supprimée ou modifiée.
+
+| 2026-11-26T18:00Z | Push du commit documentaire `0e8bf50…` sur `gv5-107-prod-final` (pas une écriture Supabase) | Mission §120 : « Pousse le commit local 0e8bf500… sur origin/gv5-107-prod-final UNIQUEMENT » | `0e8bf50…` | SHA distant vérifié ; `main` inchangé ; PR #2 ouverte | moi |
+
+Depuis ce push : **aucune écriture Production** (lecture seule uniquement). Le `GO-GRANT` n'est pas encore donné ; le GRANT n'est pas appliqué.
+
+## 19. GV5 §116 — Addendum au diagnostic d'échec
+
+- **CODE / LOCAL** : le texte « Échec de l'onboarding » est affiché uniquement quand `functions.invoke` renvoie une erreur (non-2xx) ou quand la réponse contient `ok === false`. **Il n'est pas affiché quand la création a réussi mais qu'un canal échoue** : dans ce cas la page passe à l'étape 6 et affiche le statut `echec` dans la liste des canaux.
+- **CODE / LOCAL** : `git diff 17ac6a8…3a0329b` montre que `main` est une version **antérieure** de `onboard-tenant` (retrait de la reprise d'orphelin, −97/+15). Le code déployé `17ac6a8…` est donc plus récent que le front publié, mais tous les champs lus par le front (`delivery`, `idempotent`, `establishment_id`, `subscription_id`, `manager_user_id`, `invitation_id`, `professional_id`, `login_id`) sont renvoyés : **aucun champ attendu manquant**.
+- **CODE / LOCAL** : reproduction avec le code déployé, sans fournisseur e-mail et sans `ACTIVATION_BASE_URL` → `delivery = [{email: echec, « URL d'activation absente : aucun envoi effectué. »}, {whatsapp: non_demande}]`, création `ok:true` ; le front afficherait l'étape 6, pas « Échec de l'onboarding ».
+- **CODE / PRODUCTION (journaux)** : le 26/11, `admin_check_identity_available` répond 200 ; aucune requête vers `/functions/v1/onboard-tenant`. Cause précise : **NON DÉTERMINABLE** sans le message exact et le champ `error` fournis par le propriétaire.
+- **SCRIPT-SQL / PRODUCTION** : `subscriptions` a `plan_code` et non `plan_id` (la colonne du §114 était une supposition) ; aucune création depuis le 26/11 ; 0 compte Auth sans profil, 0 garage sans abonnement, **1 garage sans profil**, 0 compte créé le 26/11 ; une seule demande `completed` (25/11) ; **2 garages sans permission**.
+
+## 20. GV5 §117 — Correction du « permission denied for table profiles »
+
+### 20.1 Cause démontrée
+
+- **CODE / LOCAL** : `onboard-tenant` vérifie le JWT via `caller.auth.getUser(jwt)`, puis lit `role, is_active` dans `public.profiles` avec le client `admin` initialisé par `SUPABASE_SERVICE_ROLE_KEY` ; le message exact est renvoyé en 500 à la ligne correspondante. Le contrôle précède toute création.
+- **SCRIPT-SQL / PRODUCTION** : ACL réelle de `public.profiles` = `{postgres=arwdDxtm, anon=Dxtm, authenticated=arwDxtm, service_role=Dxtm}`. `has_table_privilege('service_role', ..., 'SELECT') = false`, `anon = false`, `authenticated = true` ; RLS activée, non forcée ; politiques : `password_rotation_required`, `profiles_saas_admin_update`, `profiles_self_or_same_establishment`.
+- **CODE / PRODUCTION** : `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` présents (noms seulement) ; validité de la valeur **NON VÉRIFIABLE** sans divulgation. L'EF déployée correspond au commit `17ac6a8…`, dont le contrôle de profil est identique à celui de la branche `b7c10b1…`.
+- **Conclusion** : ce n'est pas RLS qui refuse, mais l'absence de privilège SQL `SELECT` pour `service_role`, alors que le client administratif l'utilise.
+
+### 20.2 Correction retenue
+
+Migration additive unique `20261126040000_service_role_profiles_select.sql` : `grant select on public.profiles to service_role;` uniquement. Aucun droit ajouté à `anon` ou `authenticated`, RLS conservée, contrôle JWT + `saas_admin` + `is_active` inchangé. Rollback `supabase/rollbacks/gv5108/20261126040000.sql` : `revoke select on public.profiles from service_role`. **Les 9 migrations et l'essai ne sont pas modifiés.**
+
+### 20.3 Tests exécutés
+
+`scripts/test-service-role-profiles-select.mjs` : **6/6** — défaut reproduit (`permission denied`), privilège accordé seulement à `service_role`, lecture SA autorisée / Manager refusé / profil absent refusé / SA inactif détecté, rollback propre, contrôles statiques EF (contrôle avant création, aucune journalisation). `npm test` **243/243**, `tsc` OK, lint **0 erreur / 20 warnings**, `next build` OK.
+
+### 20.4 État réel et limites
+
+- Migration **PRÉPARÉE, NON APPLIQUÉE** en staging ni production ; aucun GRANT/REVOKE exécuté à distance.
+- EF : aucune modification de code nécessaire pour ce défaut ; le déployé `17ac6a8…` bénéficiera du GRANT sans redéploiement. L'écart de version (`v2` déployée vs `v3` attendue) reste ouvert pour les notifications.
+- Vérification staging préparée : connexion SA → profil lu → `onboard-tenant` → garage, Manager, profil, permissions, abonnement, invitation → statuts des canaux (création effective ≠ invitation créée ≠ e-mail accepté ≠ livraison). **BLOQUÉE** : identifiants `GV5_STAGING_*` absents et aucune autorisation d'écriture staging.
+- Production : inchangée ; création d'abonné toujours non démontrée. GO écrit distinct requis pour appliquer le GRANT.
+
+## 21. GV5 §118 — Correction SQL finale, audit sécurité et complément géographique
+
+**Date** : 26/11. **HEAD initial réel** : `8f8d04e809f34c13bf0623c339e95a8895db2f15` (conforme). **Branche** : `gv5-107-prod-final`.
+
+### 21.1 Correction SQL
+
+- Cause (déjà prouvée §117) : `service_role` sans `SELECT` sur `public.profiles` (ACL `Dxtm`) alors que l'EF lit `role, is_active` avec la clé de service.
+- Ancien SQL : `grant select … ;` + `comment on table public.profiles is '…'` — le commentaire pouvait écraser une métadonnée préexistante et n'était pas restauré par le rollback.
+- Nouveau SQL : **unique instruction** `grant select on public.profiles to service_role;`. Aucun `ALTER TABLE`, aucun `DROP POLICY`, aucun RLS modifié, aucun `GRANT` à `anon`, `authenticated` ou `PUBLIC`, aucune autre table.
+- Rollback inchangé et explicitement testé : `revoke select on public.profiles from service_role;`.
+- Privilèges effectifs vérifiés en PGlite : avant `service_role SELECT=false`, après `true`, `anon=false`, `authenticated` inchangé, RLS active, politiques inchangées ; après rollback `service_role=false` et le défaut redevient reproductible.
+
+### 21.2 Sécurité EF (aucune modification de l'EF)
+
+`onboard-tenant` conserve : JWT absent → 401 ; `caller.auth.getUser(jwt)` → session invalide 401 ; lecture du profil via client `service_role` ;`role === "saas_admin"` et `is_active !== false` ; refus Manager / profil absent / compte inactif ; contrôle avant `createUser`, `admin_onboard_tenant_v2` et `invitations`. Aucun `console.*`, aucun fallback `anon`, aucun secret exposé. JWT invalide/expiré : **test statique/unit**, pas validation cryptographique réelle exécutée ici.
+
+### 21.3 Complément géographique
+
+- Cause du non-remplissage : le filtre par région utilisait uniquement les 142 villes du référentiel historique ; les 386 villes ajoutées par GeoNames disparaissaient dès qu'une région était choisie.
+- Correction : nouveau fichier `public/data/villes-maroc-par-region.json` (12 régions, mêmes noms que le référentiel local, 527 villes uniques + 1 localité sans code admin1 conservée dans la liste globale des 528) ; `src/lib/geographie.ts` exporte `VILLES_MAROC_PAR_REGION`, `villesDeRegionMaroc()`, `regionDeVilleMaroc()`, `villeAppartientARegionMaroc()` ; `ChampGeographieMaroc.tsx` affiche immédiatement jusqu'à 12 villes de la région, reset pays/région/ville, états chargement / vide / prêt, cohérence pays+région avant enregistrement.
+- Les 142 villes locales et les 12 régions sont conservées ; deux pays étrangers (FR, US) restent exploitables. Aucune région inventée ni doublon.
+
+### 21.4 Tests réellement exécutés
+
+| Commande | Résultat |
+|---|---|
+| `node --test scripts/test-service-role-profiles-select.mjs` | **9/9** (scénarios A–F) |
+| `node --test scripts/test-geographie-form.mjs` | **7/7** |
+| `npm test` | **253/253** |
+| `npx tsc --noEmit` | OK |
+| `npx eslint` | **0 erreur**, 20 warnings préexistants |
+| `npm run build` | OK |
+| `node scripts/generate-geodata.mjs --check` | 252 pays, 12 régions, 528 villes marocaines |
+
+### 21.5 États
+
+- **Développé / testé localement / commité / poussé** : correction SQL, rollback, tests renforcés, géographie, documentation.
+- **Staging** : plan préparé (`docs/sessions/session-1/gv5-107-prod-final/§118_STAGING_PLAN.md`), **non exécuté** ; identifiants `GV5_STAGING_*` absents et aucun GO d'écriture.
+- **Production** : **inchangée** ; aucun GRANT/REVOKE distant, aucun déploiement, aucune création.
+- **Pages / PR #2 / main** : inchangés.
+- **Points non vérifiés** : parcours navigateur réel, validation cryptographique JWT, livraison des notifications, comportement RLS/PostgREST réel en production.
+
+### 21.6 Point de reprise
+
+GO distinct requis pour (1) appliquer `20261126040000` en staging, (2) fournir les identifiants de test, (3) exécuter le plan staging, (4) GO distinct pour la production. Tant que le GRANT n'est pas appliqué et vérifié en production avec un parcours réel, l'onboarding n'est pas déclaré réparé.
+
+## 22. GV5 §119 — Vérification finale et décision de staging
+
+### 22.1 Création finale (CODE / LOCAL)
+
+- `admin_onboard_tenant_v2` (migration `20261125103000`) crée dans une seule transaction : établissement (identité + `country/region/city`), abonnement rattaché par `establishment_id` (`trial` si essai > 0 sinon `active`, `started_at`, `trial_ends_at`, `current_period_end = début + mois payés`), profil Manager (`role=manager`, `is_active=true`, `must_change_password=true`, identifiant de connexion), permissions Manager (intersection forfait ∩ droits, `can_view=true`), invitation `prepared` + `invitation_events`, audit `onboard_tenant_v2`, demande `completed`.
+- Garde-fous : SA uniquement, `request_id` unique + verrou advisory (idempotence), identifiant professionnel/slug/login/e-mail uniques, modules du forfait cohérents avec les permissions, `user_id` Auth existant et correspondant à l'e-mail.
+- EF `onboard-tenant` : JWT vérifié, rôle SA vérifié avant toute création, compensation `deleteUser` si la RPC échoue sans demande déjà terminée, statut idempotent si demande clôturée. Aucune donnée partielle laissée par l'EF.
+- **Développée : oui.** **Défauts connus** : limitation des tentatives d'activation absente ; sessions non invalidées cryptographiquement à la suspension ; notifications non configurées ; policy `permissions_tenant_write` trop large (correctif additive `20261126010000` préparé, non appliqué) ; 2 garages historiques sans permissions.
+
+### 22.2 Correctif profiles (CODE / LOCAL)
+
+Commit `0881b3f…` vérifié : migration `20261126040000` réduite à `grant select on public.profiles to service_role;` ; `COMMENT ON TABLE` supprimé ; rollback `revoke select …` ; aucun `ALTER TABLE`, `DROP POLICY`, RLS modifié, `GRANT` à `anon`/`authenticated`/`PUBLIC` ou autre table. Test de régression **9/9** (défaut reproduit, privilèges, SA/Manager/absent/inactif, ordre avant création, JWT statique, rollback). EF inchangée : JWT absent/invalide → 401, lecture profil via `service_role`, `role==='saas_admin'`, `is_active!==false`, contrôle avant `createUser`/RPC/invitations, aucun `console.*`.
+
+### 22.3 Tests réellement exécutés (LOCAL)
+
+`npm test` **253/253** ; ciblés création/contrat/activation/permissions/profiles/géographie **83/83** ; `tsc` OK ; ESLint **0 erreur / 20 warnings préexistants** ; `next build` OK. Aucun E2E staging, aucune opération distante.
+
+### 22.4 Décision
+
+| Élément | Développé | Testé localement | Testé Staging | Production |
+|---|---|---|---|---|
+| Création garage | oui | oui (RPC contractuelle + PGlite + `npm test`) | non | vérifiée historiquement le 25/11, pas rejouée |
+| Création abonnement | oui | oui | non | idem |
+| Création Manager | oui | oui | non | idem |
+| Vérification Super Admin | oui | oui (9/9) | non | bloquée par ACL avant GRANT |
+| Permissions profiles | oui (GRANT préparé) | oui (9/9) | non | **non appliquées** |
+| Connexion Manager | oui | oui (statique + tests activation) | non | vérifiée historiquement |
+| Isolation garages | oui | oui (PGlite + tests permissions) | non | vérifiée historiquement |
+| Notifications | oui (5 canaux) | oui (simulation) | non | non configurées |
+
+**Réponses** : (1) création finale terminée dans le code ; (2) erreur `permission denied` corrigée localement et prête pour staging ; (3) après staging, restera GO production pour le GRANT, le redéploiement EF v3/v4, les secrets fournisseur, la migration `20261126010000` (policy) et l'activation de la limitation d'essais.
+
+**Verdict : PRÊT POUR STAGING**, sous GO distinct et fourniture des identifiants `GV5_STAGING_*`. Scénario : `docs/sessions/session-1/gv5-107-prod-final/§119_STAGING_SCENARIO.md`.
+
+## 23. GV5 §120 — GO-GRANT (préparation, non application)
+
+- Staging abandonné pour ce correctif (identifiants non fournis, correctif d'un seul droit).
+- **Git** : commit `0e8bf50…` poussé uniquement sur `gv5-107-prod-final`, SHA distant vérifié ; `main` = `3a0329b…`, PR #2 ouverte. `migrations-real.yml` n'utilise aucun secret de production (aucune référence `secrets.`, aucun `--remote`, aucun jeton) et se limite à un Supabase local.
+- **Code déployé (SCRIPT-SQL/CODE, lecture seule)** : l'EF `onboard-tenant` v2 téléchargée contient bien `createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)` puis `admin.from("profiles").select("role, is_active")` → le GRANT profiles est nécessaire.
+- **Migrations** : aucun `REVOKE` ni `ALTER DEFAULT PRIVILEGES` touchant `profiles` n'existe ; le droit manquant vient de l'ACL par défaut Supabase (`service_role=Dxtm`). Aucune migration postérieure ne retire le GRANT ajouté par `20261126040000` (dernière migration horodatée).
+- **Création du 25/11 21:49** : réussie par **appel SQL direct à la RPC `admin_onboard_tenant_v2` avec session Super Admin**, pas par l'Edge Function ; l'ACL `service_role` n'était donc pas impliquée.
+- **Production (lecture seule)** : ACL profiles confirmée ; `service_role` a SELECT/INSERT/UPDATE/DELETE sur seulement `plans`, `plan_features`, `subscriptions`, `subscriptions_audit`, et **aucun droit sur toutes les autres tables publiques** (retrait général). `anon` n'a pas SELECT sur profiles ; `authenticated` conserve INSERT/SELECT/UPDATE ; 0 donnée partielle laissée par la tentative échouée ; une seule demande `completed` (25/11).
+- **Conséquence** : GRANT profiles corrige l'erreur signalée, mais l'EF lit aussi `invitations` (onboard-tenant `readDelivery`, send-invitation, activate-manager) et `establishments` (send-invitation) avec `service_role` : ces tables n'ont pas SELECT →-correctif minimal séparé à préparer, **non appliqué**.
+- **Local** : défaut reproduit, GRANT appliqué, DOUBLE application idempotente, rollback reproduisant l'erreur ; SHA migration `fd61d869…`, SHA script d'application `0db55c78…`.
+- **Action unique attendue** : « GO-GRANT » du propriétaire. Aucune écriture Production effectuée.
+
+## 24. GV5 §121 — Audit ACL exacts, sécurisation des Edge Functions et validation du parcours d'onboarding (MISSION LOCALE)
+
+**Date** : 26/11. **Mode** : exécution locale uniquement — **aucune écriture distante**, aucun push, aucun déploiement, aucun merge, aucun secret, aucun GO.
+
+### 24.1 Périmètre et règles absolues
+
+- Audit technique approfondi et correction locale des défauts identifiés dans les rapports §§17–§120.
+- Actions autorisées : lecture du dépôt/historique, examen fichiers/migrations, modifications locales nécessaires, ajout/correction tests, exécution tests locaux, PGlite, vérifs statiques, rapports, mise à jour registre.
+- Actions interdites : toute écriture distante (Staging/Production), GRANT/REVOKE distants, migration distante, déploiement/redéploiement EF, changement secret, changement config distante, garage/Manager réel, envoi réel, nettoyage distant, merge PR, push Git, modification `main`, force-push, publication Pages, toute action nécessitant un GO séparé.
+- Aucune action distante n'a été exécutée durant cette mission.
+
+### 24.2 Phase 0 — Audit initial et protection Git
+
+- Branche : `gv5-107-prod-final`. HEAD local = HEAD distant = `0e8bf500d6ddd84a901be716483d86d0d6ad14dd` (commit §119 « final verification and staging readiness », poussé uniquement sur la branche feature, SHA distant vérifié).
+- `origin/main` = `3a0329baee540935c46adac24933bd16c4deebf1` (inchangé). Divergence : 0 commit local non poussé.
+- PR #2 : **ouverte**, head `0e8bf50…`, base `main`, **non mergée**, 34 commits, mises à jour `2026-11-26T17:58Z`.
+- `migrations-real.yml` : **aucune** référence `secrets.`, aucun `--remote`, aucun jeton de production, aucun `PROD_DB_PASSWORD` ; usage d'un Supabase **local** uniquement.
+
+### 24.3 Phase 1 — Reproduction exacte de l'ACL Production
+
+- ACL Production de référence (SCRIPT-SQL, §117/§120) : `public.profiles` → `{postgres=arwdDxtm, anon=Dxtm, authenticated=arwDxtm, service_role=Dxtm}` ; `has_table_privilege('service_role', 'public.profiles', 'SELECT') = false`, `anon = false`, `authenticated = true`.
+- **Anomalie détectée puis corrigée (§121)** dans `scripts/test-service-role-profiles-select.mjs` : la reproduction locale contenait `grant delete, references, trigger, maintain on public.profiles to service_role;` — instruction **artificielle** ajoutant `DELETE`, absent de l'ACL Production annoncée.
+- Reproduction corrigée : `service_role` sans aucun droit (`revoke all`), `anon` sans droit, `authenticated` avec `INSERT/SELECT/UPDATE` (droits initiaux), RLS activée, `service_role` en contexte administratif (`bypassrls`).
+- Vérifications PGlite : privilèges effectifs via `has_table_privilege` ; état via `pg_class.relacl` ; RLS ; politiques. Comparaison : l'état initial reproduit le défaut (`permission denied`) et les droits des rôles `anon`/`authenticated` sont conservés.
+
+### 24.4 Phase 2 — Migration et rollback exacts
+
+- Migration : `supabase/migrations/20261126040000_service_role_profiles_select.sql` → instruction unique `grant select on public.profiles to service_role;` (inchangée depuis §118).
+- Rollback : `supabase/rollbacks/gv5108/20261126040000.sql` → `revoke select on public.profiles from service_role;`.
+- Après migration : `service_role SELECT = true`, `INSERT/UPDATE/DELETE = false` ; `anon SELECT = false` ; `authenticated` conserve ses droits ; RLS et politiques inchangés ; aucune autre table touchée.
+- Après rollback : état **complet** (privilèges rôles × opérations + RLS + politiques) comparé avant/après → identique ; le défaut `permission denied` est de nouveau reproductible.
+
+### 24.5 Phase 3 — Audit complet des Edge Functions (CODE, versions déployées en lecture seule)
+
+- `onboard-tenant` v2 (`17ac6a8…`) : client `service_role` ; `admin.from("profiles").select("role, is_active")` (lecture) ; `admin.auth.admin.getUserById/updateUserById/createUser/deleteUser` ; RPC via `caller` (`admin_onboard_tenant_v2`, `admin_find_user_id_by_email`, `admin_find_onboarding_request`, `admin_record_delivery`) ; `admin.from("invitations")` (readDelivery).
+- `send-invitation` v1 (`a3a824a…`) : client `service_role` ; lectures `profiles`, `invitations`, `establishments` ; RPC via `caller` (`admin_create_invitation_renewal`, `admin_prepare_resend`, `admin_record_delivery`).
+- `activate-manager` v1 (`b7c10b1…`) : client `admin/service_role` ; lecture `invitations` (token_hash) ; `auth.admin.updateUserById` ; RPC `admin_accept_invitation` ; lecture finale `profiles` ; preview via `anon.rpc("admin_invitation_preview")`.
+- `stripe-webhook` v1 : RPC `admin_record_billing_event` via `service_role` (tables `plans`/`plan_features`/`subscriptions`/`subscriptions_audit` disposant déjà des droits).
+- `purge-establishment` : RPC via `appelant` + `auth.admin.deleteUser` (aucune lecture/écriture table via `service_role` directe bloquante identifiée).
+- Privilèges réellement nécessaires et manquants : `service_role` SELECT sur `profiles` (migration `20261126040000` préparée), `service_role` SELECT sur `invitations` + `establishments` (correctif préparé `20261126100000`), EXECUTE RPC onboarding (couvert par grants existants), opérations Auth Admin (rôle `service_role` Supabase Auth).
+
+### 24.6 Phase 4 — Migrations minimales et rollbacks préparés
+
+- `supabase/migrations/20261126040000_service_role_profiles_select.sql` (+ rollback `supabase/rollbacks/gv5108/20261126040000.sql`) : `GRANT SELECT ON public.profiles TO service_role;` — minimal, préparé, testé, **non appliqué**.
+- `supabase/migrations/20261126100000_service_role_select_invitations_establishments.sql` (+ rollback `supabase/rollbacks/gv5108/20261126100000.sql`) : `GRANT SELECT ON public.invitations TO service_role;` + `GRANT SELECT ON public.establishments TO service_role;` — **préparés (§121), tests ajoutés, non appliqués**.
+
+### 24.7 Phase 5 à 16 — Bilan des phases locales exécutées
+
+- Tests : `node --test scripts/test-service-role-profiles-select.mjs` → **10/10** ; `npm test` → **254/254** ; `npx tsc --noEmit` → OK ; `npm run build` → OK.
+- Double application idempotente du GRANT localement reproduite ; rollback restaurant l'état initial et reproductible le défaut ; SHA migration `20261126040000…` = `fd61d8695eab27a4607dadcbfaf5cbeec27ff37e601ce96996516b709b185925` ; SHA script application = `0db55c784661dee66e0ec251f3ddddd788589cf960827c7d581684ec6b928835`.
+
+### 24.8 État final §121
+
+- **Non application en Production** : aucun GRANT/REVOKE, aucun déploiement, aucune création, aucun envoi.
+- **Aucun GO (§121) accordé** : la mission s'est terminée par un rapport et un état précis.
+- **Actions distinctes encore requises** : « GO-GRANT » (application des migrations préparées en Production, vérifications post-application, test réel), puis « GO-STAGING » (plan `§119_STAGING_SCENARIO.md`, identifiants `GV5_STAGING_*`, scénario `ZZ-TEST-…`).
+- **Correctifs préparés non encore appliqués** : `20261126040000` (profiles), `20261126100000` (invitations/establishments) ; `20261126010000` (policy permissions) ; redéploiement EF v3/v4 ; secret `ACTIVATION_BASE_URL`.
+
+### 24.9 Critères d'acceptation §121
+
+- [x] ACL initiale reproduite exactement ou limites documentées (reproduction du défaut, privilèges initiaux des rôles documentés).
+- [x] Test ne contient plus de privilège `DELETE` ajouté artificiellement.
+- [x] Migration ajoute uniquement les privilèges justifiés.
+- [x] Rollback restaure l'état initial (comparaison complète avant/après).
+- [x] Autres rôles ne gagnent aucun droit (migration/rollback vérifiés).
+- [x] RLS et politiques restent intacts (vérifiés avant/après).
+- [x] Edge Functions auditées intégralement (audit §24.5).
+- [x] Lectures `service_role` recensées (§24.3/§24.5).
+- [x] Privilèges manquants justifiés individuellement (profiles/invitations/establishments).
+- [x] Tests de sécurité et de régression passent (10/10, 254/254).
+- [x] Parcours local testé ou blocages démontrés (tests PGlite/RPC/activation existants ; pas de Docker pour parcours navigateur complet).
+- [x] Plan staging prêt (préparé §119 ; pas exécuté).
+- [x] RM-GV5 mis à jour (§24).
+- [x] Rapport §121 créé (`docs/sessions/session-1/gv5-107-prod-final/§121_RAPPORT_FINAL.md`).
+- [x] Aucune écriture distante exécutée.
+
+### 24.10 Verdict §121
+
+Mission **locale** terminée selon ses objectifs : audit approfondi, reproduction exacte de l'ACL, tests de régression corrigés et renforcés (10/10 ; suite 254/254), migrations minimales préparées et testées localement, audit EF complet, bilan des phases. **Aucun GO n'a été accordé** et aucune écriture distante n'a eu lieu.
+
+État de l'objectif initial (réparer le parcours Super Admin onboarding) : **en attente du GO-GRANT** puis application réelle → test réel → GO-STAGING → GO-PRODUCTION.

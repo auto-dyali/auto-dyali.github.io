@@ -431,3 +431,13 @@ enabled = true
 [functions.send-invitation]
 verify_jwt = false
 
+# Vérifie elle-même le JWT du Super Admin (401 explicite) : la vérification
+# générique de la passerelle empêcherait le message d'erreur métier.
+[functions.onboard-tenant]
+verify_jwt = false
+
+# Parcours public d'activation : le jeton d'invitation est vérifié en base,
+# il n'y a pas de session Supabase à l'entrée.
+[functions.activate-manager]
+verify_jwt = false
+

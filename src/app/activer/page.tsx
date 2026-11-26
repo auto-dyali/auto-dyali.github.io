@@ -231,7 +231,7 @@ function ActiverPage() {
             <Link href="/connexion/" className="rounded-lg border border-[#8FB59B]/40 px-4 py-2 text-sm text-[#DFE7E2] hover:bg-[#344440]">
               Se connecter
             </Link>
-            <a href="mailto:me.achbni@gmail.com" className="rounded-lg border border-[#D6A34D]/40 px-4 py-2 text-sm text-[#D6A34D] hover:bg-[#344440]/10">
+            <a href="mailto:me.achbani@gmail.com" className="rounded-lg border border-[#D6A34D]/40 px-4 py-2 text-sm text-[#D6A34D] hover:bg-[#344440]/10">
               Contacter le support
             </a>
           </div>

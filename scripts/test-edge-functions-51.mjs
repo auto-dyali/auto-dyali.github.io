@@ -51,6 +51,14 @@ test("onboard-tenant crée le compte Auth côté serveur et compense en cas d'é
   assert.equal(/console\.(log|info|debug)/.test(onboard), false);
 });
 
+test("onboard-tenant reprend un compte orphelin de la même requête, jamais un autre", () => {
+  assert.match(onboard, /onboarding_request_id:\s*payload\.requestId/);
+  assert.match(onboard, /canAdoptManager/);
+  assert.match(onboard, /auth\.admin\.getUserById/);
+  assert.match(onboard, /auth\.admin\.updateUserById/);
+  assert.match(onboard, /admin_find_onboarding_request/);
+});
+
 test("onboard-tenant appelle la RPC v2 avec les permissions réelles", () => {
   assert.match(onboard, /admin_onboard_tenant_v2/);
   assert.match(onboard, /p_permissions/);
@@ -123,6 +131,19 @@ test("aucun composant client n'appelle service_role ni ne journalise un mot de p
   assert.match(page, /supabase\.functions\.invoke\("onboard-tenant"/);
 });
 
+test("coordonnées de support exactes et Reply-To aligné sur la relance", () => {
+  const constants = read("_shared/constants.ts");
+  assert.match(constants, /SUPPORT_EMAIL\s*=\s*"me\.achbani@gmail\.com"/);
+  assert.match(constants, /SUPPORT_WHATSAPP\s*=\s*"\+33772208885"/);
+  assert.match(resend, /reply_to:\s*SUPPORT_EMAIL/);
+  const onboarding = readFileSync(
+    join(here, "..", "src", "app", "super-admin", "onboarding", "page.tsx"),
+    "utf8",
+  );
+  assert.match(onboarding, /me\.achbani@gmail\.com/);
+  assert.doesNotMatch(onboarding, /me\.achbni@gmail\.com/);
+});
+
 test("le dossier abonné affiche les identités professionnelle et Manager", () => {
   const page = readFileSync(
     join(here, "..", "src", "app", "super-admin", "entreprises", "page.tsx"),
@@ -131,6 +152,6 @@ test("le dossier abonné affiche les identités professionnelle et Manager", () 
   assert.match(page, /professional_id/);
   assert.match(page, /login_id/);
   assert.match(page, /managerOf/);
-  assert.match(page, /select\("\*, subscriptions/);
+  assert.match(page, /select\("\*,[^)]*subscriptions/);
   assert.match(page, /Repli si l'embed `profiles` est refusé/);
 });

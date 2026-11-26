@@ -146,7 +146,9 @@ function formEtab(d: Enregistrement | null, abonne: AbonneRow): EtabForm {
     address: txt(d?.address ?? abonne.address),
     city: txt(d?.city ?? abonne.city),
     region: txt(d?.region ?? abonne.region),
-    country: txt(d?.country) || historique.country || "",
+    country: (txt(d?.country) || historique.country || "") === "Maroc"
+      ? "MA"
+      : txt(d?.country) || historique.country || "",
     legal_info: txt(d?.legal_info) || historique.legalInfo || "",
     fiscal_info: txt(d?.fiscal_info) || historique.fiscalInfo || "",
     admin_info: txt(d?.admin_info) || historique.adminInfo || "",

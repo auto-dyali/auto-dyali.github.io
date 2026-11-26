@@ -33,11 +33,16 @@ import {
   type OnboardingPayload,
 } from "../_shared/contract.ts";
 import {
+  buildAdminNotificationMessage,
   deliverInvitation,
   generateInvitationToken,
+  sendAdminNotificationEmail,
+  sendAdminWhatsAppNotification,
   sha256Hex,
   type DeliveryResult,
+  type EmailConfig,
   type FetchLike,
+  type WhatsAppConfig,
 } from "../_shared/providers.ts";
 
 const corsHeaders = {
@@ -71,6 +76,28 @@ function errorMessage(error: unknown): string {
 function isMissingFunction(error: unknown): boolean {
   const e = error as { code?: string; message?: string };
   return e?.code === "PGRST202" || /could not find the function/i.test(e?.message ?? "");
+}
+
+/**
+ * Reprise d'un compte Auth orphelin.
+ *
+ * Un incident entre `createUser` et la RPC (timeout, coupure réseau) peut
+ * laisser un compte sans profil ni établissement. On ne le réutilise que s'il
+ * porte la MÊME requête d'onboarding (`onboarding_request_id`) et le même
+ * e-mail : jamais un compte quelconque, jamais un doublon d'identité.
+ */
+async function canAdoptManager(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  email: string,
+  requestId: string,
+): Promise<boolean> {
+  const { data, error } = await admin.auth.admin.getUserById(userId);
+  const user = data?.user;
+  if (error || !user) return false;
+  if ((user.email ?? "").toLowerCase() !== email.toLowerCase()) return false;
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  return meta.onboarding_request_id === requestId;
 }
 
 /** Traduit le payload validé vers les objets JSON attendus par la RPC. */
@@ -258,23 +285,72 @@ Deno.serve(async (req: Request): Promise<Response> => {
       }
       return fail(400, `Vérification du compte Manager impossible : ${errorMessage(findError)}`);
     }
+    const managerMetadata = {
+      full_name: payload.manager.fullName,
+      onboarding_request_id: payload.requestId,
+    };
+
+    /* Le compte est créé OU repris pour cette requête : dans les deux cas il
+       appartient à cette tentative et doit être compensé si la RPC échoue. */
+    let managerOwned = false;
+
     if (typeof foundId === "string" && foundId) {
-      return fail(409, "Un compte existe déjà pour cet e-mail Manager. Choisissez un autre e-mail.");
+      if (!(await canAdoptManager(admin, foundId, payload.manager.email, payload.requestId))) {
+        return fail(409, "Un compte existe déjà pour cet e-mail Manager. Choisissez un autre e-mail.");
+      }
+      /* Compte orphelin de la MÊME requête : on reprend l'identité sans doublon. */
+      const { error: resumeError } = await admin.auth.admin.updateUserById(foundId, {
+        password: payload.manager.temporaryPassword,
+        email_confirm: true,
+        user_metadata: managerMetadata,
+      });
+      if (resumeError) {
+        return fail(500, `Reprise du compte Manager impossible : ${resumeError.message}`);
+      }
+      managerUserId = foundId;
+      managerOwned = true;
     }
 
-    const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
-      email: payload.manager.email,
-      password: payload.manager.temporaryPassword,
-      email_confirm: true,
-      user_metadata: { full_name: payload.manager.fullName },
-    });
-    if (createError || !createdUser?.user) {
-      const message = createError?.message ?? "création impossible";
-      const status = /already|exists|registered/i.test(message) ? 409 : 400;
-      return fail(status, `Création du compte Manager impossible : ${message}`);
+    if (!managerUserId) {
+      const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
+        email: payload.manager.email,
+        password: payload.manager.temporaryPassword,
+        email_confirm: true,
+        user_metadata: managerMetadata,
+      });
+      if (createError || !createdUser?.user) {
+        const message = createError?.message ?? "création impossible";
+        /* Course entre deux essais : reprise uniquement si la requête est identique. */
+        if (/already|exists|registered/i.test(message)) {
+          const { data: racedId } = await caller.rpc("admin_find_user_id_by_email", {
+            p_email: payload.manager.email,
+          });
+          if (
+            typeof racedId === "string" &&
+            racedId &&
+            (await canAdoptManager(admin, racedId, payload.manager.email, payload.requestId))
+          ) {
+            const { error: resumeError } = await admin.auth.admin.updateUserById(racedId, {
+              password: payload.manager.temporaryPassword,
+              email_confirm: true,
+              user_metadata: managerMetadata,
+            });
+            if (!resumeError) {
+              managerUserId = racedId;
+              managerOwned = true;
+            }
+          }
+        }
+        if (!managerUserId) {
+          const status = /already|exists|registered/i.test(message) ? 409 : 400;
+          return fail(status, `Création du compte Manager impossible : ${message}`);
+        }
+      } else {
+        managerUserId = createdUser.user.id;
+        managerOwned = true;
+      }
     }
-    managerUserId = createdUser.user.id;
-    const created = true;
+
     if (!managerUserId) return fail(500, "Compte Manager non créé.");
 
     /* 6) Jeton d'invitation : brut transmis, empreinte seule stockée. */
@@ -289,8 +365,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
 
     if (rpcError) {
-      if (created && managerUserId) {
-        await admin.auth.admin.deleteUser(managerUserId).catch(() => undefined);
+      /* Compensation : ne jamais laisser un compte Auth sans état cohérent.
+         On ne supprime pas si la requête a en réalité été clôturée (réponse
+         perdue) : l'état serveur prime sur l'erreur de transport. */
+      if (managerOwned && managerUserId) {
+        const { data: etat } = await caller.rpc("admin_find_onboarding_request", {
+          p_request_id: payload.requestId,
+        });
+        const dejaTermine = Boolean(
+          etat && (etat as { status?: string }).status === "completed",
+        );
+        if (!dejaTermine) {
+          await admin.auth.admin.deleteUser(managerUserId).catch(() => undefined);
+        }
       }
       if (isMissingFunction(rpcError)) {
         return fail(503, "Onboarding indisponible : migration 0039 non appliquée.");
@@ -302,6 +389,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const invitationId = typeof result.invitation_id === "string" ? result.invitation_id : null;
 
     /* 8) Transmission : canaux indépendants, statuts réels, aucune invention. */
+    const whatsappConfig: WhatsAppConfig = {
+      enabled: Boolean(env("WHATSAPP_ACCESS_TOKEN")),
+      accessToken: env("WHATSAPP_ACCESS_TOKEN"),
+      phoneNumberId: env("WHATSAPP_PHONE_NUMBER_ID"),
+      templateName: env("WHATSAPP_TEMPLATE_NAME"),
+      templateLanguage: env("WHATSAPP_TEMPLATE_LANG"),
+      apiVersion: env("WHATSAPP_API_VERSION"),
+    };
     let delivery: DeliveryResult[] = [];
     if (invitationId) {
       const baseUrl =
@@ -314,26 +409,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
         : "";
 
       const fetchImpl: FetchLike = (input, init) => fetch(input, init);
+      const emailConfig: EmailConfig = {
+        enabled: Boolean(env("RESEND_API_KEY")),
+        apiKey: env("RESEND_API_KEY"),
+        from: env("EMAIL_FROM"),
+        replyTo: env("EMAIL_REPLY_TO"),
+      };
       const results = await deliverInvitation({
         channels: [
           ...(payload.delivery.email ? (["email"] as const) : []),
           ...(payload.delivery.whatsapp ? (["whatsapp"] as const) : []),
         ],
         fetchImpl,
-        emailConfig: {
-          enabled: Boolean(env("RESEND_API_KEY")),
-          apiKey: env("RESEND_API_KEY"),
-          from: env("EMAIL_FROM"),
-          replyTo: env("EMAIL_REPLY_TO"),
-        },
-        whatsappConfig: {
-          enabled: Boolean(env("WHATSAPP_ACCESS_TOKEN")),
-          accessToken: env("WHATSAPP_ACCESS_TOKEN"),
-          phoneNumberId: env("WHATSAPP_PHONE_NUMBER_ID"),
-          templateName: env("WHATSAPP_TEMPLATE_NAME"),
-          templateLanguage: env("WHATSAPP_TEMPLATE_LANG"),
-          apiVersion: env("WHATSAPP_API_VERSION"),
-        },
+        emailConfig,
+        whatsappConfig,
         message: {
           managerFullName: payload.manager.fullName,
           establishmentName: payload.establishment.name,
@@ -372,12 +461,37 @@ Deno.serve(async (req: Request): Promise<Response> => {
         ? "Invitation préparée, e-mail non envoyé (RESEND_API_KEY / EMAIL_FROM absents)."
         : null;
 
+    /* 9) Notification Super Admin : jamais bloquante pour la création. */
+    const superAdminNotification = await notifierSuperAdmin(
+      admin,
+      payload,
+      result,
+      delivery,
+      {
+        enabled: Boolean(env("RESEND_API_KEY")),
+        apiKey: env("RESEND_API_KEY"),
+        from: env("EMAIL_FROM"),
+        replyTo: env("EMAIL_REPLY_TO"),
+      },
+      {
+        enabled: Boolean(env("WHATSAPP_ACCESS_TOKEN")),
+        accessToken: env("WHATSAPP_ACCESS_TOKEN"),
+        phoneNumberId: env("WHATSAPP_PHONE_NUMBER_ID"),
+        templateName: env("WHATSAPP_ADMIN_TEMPLATE_NAME"),
+        templateLanguage: env("WHATSAPP_TEMPLATE_LANG"),
+        apiVersion: env("WHATSAPP_API_VERSION"),
+      },
+      env("SUPER_ADMIN_WHATSAPP") || null,
+      (input, init) => fetch(input, init),
+    );
+
     return json(200, {
       ok: true,
       idempotent: false,
       status: "completed",
       ...result,
       delivery,
+      super_admin_notification: superAdminNotification,
       ...(message ? { message, email_sent: false } : {}),
     });
   } catch (error) {
@@ -412,4 +526,100 @@ async function readDelivery(
       providerRef: row.whatsapp_provider_ref,
     },
   ];
+}
+
+/**
+ * Notification du Super Admin : une ligne persistée via RPC sécurisée,
+ * puis un e-mail séparé si Resend est configuré. Une panne secondaire ne doit
+ * jamais annuler la création du garage / Manager : on retourne un statut
+ * explicite au lieu de lever une erreur.
+ */
+async function notifierSuperAdmin(
+  admin: ReturnType<typeof createClient>,
+  payload: OnboardingPayload,
+  resultat: Record<string, unknown>,
+  livraison: DeliveryResult[],
+  emailConfig: EmailConfig,
+  whatsappAdminConfig: WhatsAppConfig,
+  whatsappAdminTo: string | null,
+  fetchImpl: FetchLike,
+): Promise<Record<string, unknown>> {
+  const message = buildAdminNotificationMessage({
+    establishmentName: payload.establishment.name,
+    managerFullName: payload.manager.fullName,
+    createdAt: new Date().toISOString(),
+    resultat: resultat.status === "completed" ? "création confirmée" : String(resultat.status ?? "inconnu"),
+  });
+
+  let envoiAdmin: DeliveryResult | null = null;
+  try {
+    envoiAdmin = await sendAdminNotificationEmail({
+      config: emailConfig,
+      fetchImpl,
+      message,
+    });
+  } catch (erreur) {
+    envoiAdmin = {
+      channel: "email",
+      status: "echec",
+      providerError: String((erreur as Error)?.message ?? erreur),
+    };
+  }
+
+  let envoiWhatsappAdmin: DeliveryResult | null = null;
+  try {
+    envoiWhatsappAdmin = await sendAdminWhatsAppNotification({
+      config: whatsappAdminConfig,
+      fetchImpl,
+      to: whatsappAdminTo,
+      templateParams: [
+        payload.establishment.name,
+        payload.manager.fullName,
+        message.createdAt,
+        message.resultat,
+      ],
+    });
+  } catch (erreur) {
+    envoiWhatsappAdmin = {
+      channel: "whatsapp",
+      status: "echec",
+      providerError: String((erreur as Error)?.message ?? erreur),
+    };
+  }
+
+  try {
+    const { data, error } = await admin.rpc("admin_notify_new_subscriber", {
+      p_payload: {
+        source_request_id: payload.requestId,
+        title: message.subject,
+        body: message.text,
+        email_status: envoiAdmin?.status ?? "non_configure",
+        whatsapp_status: envoiWhatsappAdmin?.status ?? "non_configure",
+        email_ref: envoiAdmin?.providerRef ?? null,
+        whatsapp_ref: envoiWhatsappAdmin?.providerRef ?? null,
+        last_error: [envoiAdmin?.providerError, envoiWhatsappAdmin?.providerError]
+          .filter(Boolean).join(" | ") || null,
+      },
+    });
+    if (error) {
+      return {
+        status: "indisponible",
+        email_status: envoiAdmin?.status ?? "non_configure",
+        error: errorMessage(error),
+      };
+    }
+    return {
+      status: "enregistre",
+      email_status: envoiAdmin?.status ?? "non_configure",
+      whatsapp_status: envoiWhatsappAdmin?.status ?? "non_configure",
+      ...(data ?? {}),
+    };
+  } catch (erreur) {
+    return {
+      status: "indisponible",
+      email_status: envoiAdmin?.status ?? "non_configure",
+      whatsapp_status: envoiWhatsappAdmin?.status ?? "non_configure",
+      error: String((erreur as Error)?.message ?? erreur),
+    };
+  }
 }
