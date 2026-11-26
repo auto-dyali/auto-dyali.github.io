@@ -427,7 +427,7 @@ export function buildAdminNotificationMessage(input: AdminNotificationInput): {
 } {
   const subject = `AUTO DYALI — Nouvel abonné : ${input.establishmentName}`;
   const text = [
-    `Bonjour ${input.managerFullName},`,
+    "Bonjour Super Admin,",
     "",
     `Un nouvel abonné vient d'être créé : ${input.establishmentName}.`,
     `Manager : ${input.managerFullName}.`,
@@ -443,7 +443,7 @@ export function buildAdminNotificationMessage(input: AdminNotificationInput): {
         <img src="${LOGO_URL}" alt="AUTO DYALI" width="132" height="52" style="display:block;max-width:100%;height:auto" />
       </td></tr>
       <tr><td style="padding:28px">
-        <p>Bonjour ${escapeHtml(input.managerFullName)},</p>
+        <p>Bonjour Super Admin,</p>
         <p>Un nouvel abonné vient d'être créé : <strong>${escapeHtml(input.establishmentName)}</strong>.</p>
         <p>Manager : ${escapeHtml(input.managerFullName)}<br>Date de création : ${escapeHtml(input.createdAt)}<br>Résultat : ${escapeHtml(input.resultat)}</p>
       </td></tr>
@@ -507,4 +507,34 @@ export async function sendAdminNotificationEmail(params: {
       providerError: `Réseau e-mail : ${truncate(String((error as Error)?.message ?? error))}`,
     };
   }
+}
+
+/**
+ * Notification WhatsApp DISTINCTE du Super Admin.
+ *
+ * Destinataire : secret `SUPER_ADMIN_WHATSAPP` (E.164), jamais déduit des
+ * numéros de contact. Modèle : `WHATSAPP_ADMIN_TEMPLATE_NAME` (Utility),
+ * 4 variables : établissement, Manager, date, résultat.
+ * Aucun envoi sans configuration complète : statut `non_configure`.
+ */
+export async function sendAdminWhatsAppNotification(params: {
+  config: WhatsAppConfig;
+  fetchImpl: FetchLike;
+  to?: string | null;
+  templateParams: string[];
+}): Promise<DeliveryResult> {
+  if (!params.to || !isWhatsAppConfigured(params.config)) {
+    return {
+      channel: "whatsapp",
+      status: "non_configure",
+      providerError:
+        "Notification WhatsApp Super Admin non configurée (SUPER_ADMIN_WHATSAPP / WHATSAPP_* / WHATSAPP_ADMIN_TEMPLATE_NAME absents).",
+    };
+  }
+  return sendWhatsAppInvitation({
+    config: params.config,
+    fetchImpl: params.fetchImpl,
+    to: params.to,
+    templateParams: params.templateParams,
+  });
 }

@@ -23,6 +23,7 @@ import { useNotification } from "@/lib/use-notification";
 import { SuperAdminShell } from "@/components/super-admin-shell";
 import { Icone, type NomIcone } from "@/components/icones";
 import { getPageIdentity, PageIdentityBanner } from "@/components/super-admin-page-identity";
+import { SuperAdminNotifications } from "@/components/super-admin-notifications";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                              */
@@ -628,6 +629,8 @@ export default function SuperAdminPage() {
           </ul>
         </div>
       </section>
+
+      <SuperAdminNotifications />
 
       {/* GV5 §66 — Acces directs WhatsApp Business / Chatbot IA (etats honnetes) */}
       <section className="mb-8">

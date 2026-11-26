@@ -65,7 +65,17 @@ test("logo officiel, e-mail Super Admin et formule française", () => {
   assert.match(constants, /SUPER_ADMIN_EMAIL = "admin@auto-dyali\.ma"/);
   assert.match(constants, /LOGO_URL = "https:\/\/auto-dyali\.github\.io\/images\/branding\/logo\.webp"/);
   assert.match(providers, /<img src="\$\{LOGO_URL\}"/);
-  assert.match(providers, /Bonjour \$\{input\.managerFullName\}/);
+  /* Correction obligatoire : le message s'adresse au Super Admin. */
+  assert.match(providers, /Bonjour Super Admin,/);
+  assert.doesNotMatch(providers, /Bonjour \$\{input\.managerFullName\},/);
+  assert.match(providers, /sendAdminWhatsAppNotification/);
+  assert.match(onboard, /WHATSAPP_ADMIN_TEMPLATE_NAME/);
+  assert.match(onboard, /SUPER_ADMIN_WHATSAPP/);
+  const ui = read("src/components/super-admin-notifications.tsx");
+  const tableau = read("src/app/super-admin/page.tsx");
+  assert.match(tableau, /<SuperAdminNotifications \/>/);
+  assert.match(ui, /super_admin_notifications/);
+  assert.match(ui, /Debout|Super Admin|notifications/);
   assert.match(providers, /establishmentName/);
   assert.match(providers, /createdAt/);
   assert.match(providers, /resultat/);

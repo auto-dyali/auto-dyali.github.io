@@ -37,10 +37,12 @@ import {
   deliverInvitation,
   generateInvitationToken,
   sendAdminNotificationEmail,
+  sendAdminWhatsAppNotification,
   sha256Hex,
   type DeliveryResult,
   type EmailConfig,
   type FetchLike,
+  type WhatsAppConfig,
 } from "../_shared/providers.ts";
 
 const corsHeaders = {
@@ -387,6 +389,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const invitationId = typeof result.invitation_id === "string" ? result.invitation_id : null;
 
     /* 8) Transmission : canaux indépendants, statuts réels, aucune invention. */
+    const whatsappConfig: WhatsAppConfig = {
+      enabled: Boolean(env("WHATSAPP_ACCESS_TOKEN")),
+      accessToken: env("WHATSAPP_ACCESS_TOKEN"),
+      phoneNumberId: env("WHATSAPP_PHONE_NUMBER_ID"),
+      templateName: env("WHATSAPP_TEMPLATE_NAME"),
+      templateLanguage: env("WHATSAPP_TEMPLATE_LANG"),
+      apiVersion: env("WHATSAPP_API_VERSION"),
+    };
     let delivery: DeliveryResult[] = [];
     if (invitationId) {
       const baseUrl =
@@ -412,14 +422,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         ],
         fetchImpl,
         emailConfig,
-        whatsappConfig: {
-          enabled: Boolean(env("WHATSAPP_ACCESS_TOKEN")),
-          accessToken: env("WHATSAPP_ACCESS_TOKEN"),
-          phoneNumberId: env("WHATSAPP_PHONE_NUMBER_ID"),
-          templateName: env("WHATSAPP_TEMPLATE_NAME"),
-          templateLanguage: env("WHATSAPP_TEMPLATE_LANG"),
-          apiVersion: env("WHATSAPP_API_VERSION"),
-        },
+        whatsappConfig,
         message: {
           managerFullName: payload.manager.fullName,
           establishmentName: payload.establishment.name,
@@ -470,6 +473,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
         from: env("EMAIL_FROM"),
         replyTo: env("EMAIL_REPLY_TO"),
       },
+      {
+        enabled: Boolean(env("WHATSAPP_ACCESS_TOKEN")),
+        accessToken: env("WHATSAPP_ACCESS_TOKEN"),
+        phoneNumberId: env("WHATSAPP_PHONE_NUMBER_ID"),
+        templateName: env("WHATSAPP_ADMIN_TEMPLATE_NAME"),
+        templateLanguage: env("WHATSAPP_TEMPLATE_LANG"),
+        apiVersion: env("WHATSAPP_API_VERSION"),
+      },
+      env("SUPER_ADMIN_WHATSAPP") || null,
       (input, init) => fetch(input, init),
     );
 
@@ -528,10 +540,10 @@ async function notifierSuperAdmin(
   resultat: Record<string, unknown>,
   livraison: DeliveryResult[],
   emailConfig: EmailConfig,
+  whatsappAdminConfig: WhatsAppConfig,
+  whatsappAdminTo: string | null,
   fetchImpl: FetchLike,
 ): Promise<Record<string, unknown>> {
-  const statut = (canal: string): string =>
-    livraison.find((d) => d.channel === canal)?.status ?? "non_demande";
   const message = buildAdminNotificationMessage({
     establishmentName: payload.establishment.name,
     managerFullName: payload.manager.fullName,
@@ -554,6 +566,27 @@ async function notifierSuperAdmin(
     };
   }
 
+  let envoiWhatsappAdmin: DeliveryResult | null = null;
+  try {
+    envoiWhatsappAdmin = await sendAdminWhatsAppNotification({
+      config: whatsappAdminConfig,
+      fetchImpl,
+      to: whatsappAdminTo,
+      templateParams: [
+        payload.establishment.name,
+        payload.manager.fullName,
+        message.createdAt,
+        message.resultat,
+      ],
+    });
+  } catch (erreur) {
+    envoiWhatsappAdmin = {
+      channel: "whatsapp",
+      status: "echec",
+      providerError: String((erreur as Error)?.message ?? erreur),
+    };
+  }
+
   try {
     const { data, error } = await admin.rpc("admin_notify_new_subscriber", {
       p_payload: {
@@ -561,10 +594,11 @@ async function notifierSuperAdmin(
         title: message.subject,
         body: message.text,
         email_status: envoiAdmin?.status ?? "non_configure",
-        whatsapp_status: statut("whatsapp"),
+        whatsapp_status: envoiWhatsappAdmin?.status ?? "non_configure",
         email_ref: envoiAdmin?.providerRef ?? null,
-        whatsapp_ref: livraison.find((d) => d.channel === "whatsapp")?.providerRef ?? null,
-        last_error: envoiAdmin?.providerError ?? null,
+        whatsapp_ref: envoiWhatsappAdmin?.providerRef ?? null,
+        last_error: [envoiAdmin?.providerError, envoiWhatsappAdmin?.providerError]
+          .filter(Boolean).join(" | ") || null,
       },
     });
     if (error) {
@@ -577,13 +611,14 @@ async function notifierSuperAdmin(
     return {
       status: "enregistre",
       email_status: envoiAdmin?.status ?? "non_configure",
-      whatsapp_status: statut("whatsapp"),
+      whatsapp_status: envoiWhatsappAdmin?.status ?? "non_configure",
       ...(data ?? {}),
     };
   } catch (erreur) {
     return {
       status: "indisponible",
       email_status: envoiAdmin?.status ?? "non_configure",
+      whatsapp_status: envoiWhatsappAdmin?.status ?? "non_configure",
       error: String((erreur as Error)?.message ?? erreur),
     };
   }

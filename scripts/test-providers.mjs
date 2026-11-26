@@ -16,6 +16,7 @@ import {
   isWhatsAppConfigured,
   sendEmailInvitation,
   sendAdminNotificationEmail,
+  sendAdminWhatsAppNotification,
   sendWhatsAppInvitation,
   sha256Hex,
 } from "../supabase/functions/_shared/providers.ts";
@@ -253,5 +254,33 @@ test("notification Super Admin : HTTP 2xx = accepté par le fournisseur seulemen
   });
   assert.equal(result.status, "accepte_par_fournisseur");
   assert.equal(result.providerRef, "prov-test");
+  assert.notEqual(result.status, "livre");
+});
+
+
+test("WhatsApp Super Admin distinct : non configuré sans destinataire ni modèle", async () => {
+  const result = await sendAdminWhatsAppNotification({
+    config: { enabled: false },
+    fetchImpl: async () => { throw new Error("aucun appel réseau attendu"); },
+    to: null,
+    templateParams: ["Garage Atlas", "Youssef Alami", "date", "création confirmée"],
+  });
+  assert.equal(result.status, "non_configure");
+  assert.match(result.providerError ?? "", /Super Admin non configurée/);
+});
+
+test("WhatsApp Super Admin : HTTP 2xx = accepté, jamais livré", async () => {
+  const result = await sendAdminWhatsAppNotification({
+    config: {
+      enabled: true,
+      accessToken: "jeton-de-test",
+      phoneNumberId: "id-de-test",
+      templateName: "modele_admin_test",
+    },
+    fetchImpl: async () => ({ ok: true, status: 200, text: async () => '{"messages":[{"id":"wa-test"}]}' }),
+    to: "+212600000000",
+    templateParams: ["Garage Atlas", "Youssef Alami", "date", "création confirmée"],
+  });
+  assert.equal(result.status, "accepte_par_fournisseur");
   assert.notEqual(result.status, "livre");
 });
