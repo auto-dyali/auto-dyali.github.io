@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test scripts/test-crm-csv.mjs scripts/test-onboarding.mjs scripts/test-csv-export.mjs scripts/test-crm.mjs scripts/test-pre-purchase.mjs scripts/test-invitations.mjs scripts/test-employes.mjs scripts/test-onboarding-contract.mjs scripts/test-activation.mjs scripts/test-permissions.mjs scripts/test-providers.mjs scripts/test-migrations-51.mjs scripts/test-edge-functions-51.mjs scripts/test-excel-safe.mjs scripts/test-security-062.mjs scripts/test-maroc-geographie.mjs scripts/test-contract-rpc-067.mjs scripts/test-staging-reconciliation.mjs scripts/test-gv5-103.mjs scripts/test-gv5-107-production-readiness.mjs scripts/test-geographie-final.mjs scripts/test-super-admin-notifications.mjs",
+    "test": "node --test scripts/test-crm-csv.mjs scripts/test-onboarding.mjs scripts/test-csv-export.mjs scripts/test-crm.mjs scripts/test-pre-purchase.mjs scripts/test-invitations.mjs scripts/test-employes.mjs scripts/test-onboarding-contract.mjs scripts/test-activation.mjs scripts/test-permissions.mjs scripts/test-providers.mjs scripts/test-migrations-51.mjs scripts/test-edge-functions-51.mjs scripts/test-excel-safe.mjs scripts/test-security-062.mjs scripts/test-maroc-geographie.mjs scripts/test-contract-rpc-067.mjs scripts/test-staging-reconciliation.mjs scripts/test-gv5-103.mjs scripts/test-gv5-107-production-readiness.mjs scripts/test-geographie-final.mjs scripts/test-super-admin-notifications.mjs scripts/test-gv5-110.mjs",
     "test:staging": "bash scripts/verify-staging-migrations.sh",
     "test:pglite": "node --test scripts/test-super-admin-notifications-pglite.mjs",
     "test:isolation": "node scripts/test-isolation-local.mjs",
